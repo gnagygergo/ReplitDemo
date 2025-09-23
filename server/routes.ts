@@ -99,6 +99,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      if (error instanceof Error && error.message === "Account not found") {
+        return res.status(400).json({ message: "Account not found" });
+      }
       res.status(500).json({ message: "Failed to create opportunity" });
     }
   });
@@ -114,6 +117,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Account not found") {
+        return res.status(400).json({ message: "Account not found" });
       }
       res.status(500).json({ message: "Failed to update opportunity" });
     }

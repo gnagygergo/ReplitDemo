@@ -92,6 +92,12 @@ export class MemStorage implements IStorage {
   }
 
   async createOpportunity(insertOpportunity: InsertOpportunity): Promise<Opportunity> {
+    // Verify account exists
+    const account = this.accounts.get(insertOpportunity.accountId);
+    if (!account) {
+      throw new Error("Account not found");
+    }
+    
     const id = randomUUID();
     const opportunity: Opportunity = { 
       ...insertOpportunity, 
@@ -106,10 +112,18 @@ export class MemStorage implements IStorage {
     const existing = this.opportunities.get(id);
     if (!existing) return undefined;
     
+    // If updating accountId, verify the new account exists
+    if (updates.accountId) {
+      const account = this.accounts.get(updates.accountId);
+      if (!account) {
+        throw new Error("Account not found");
+      }
+    }
+    
     const updated: Opportunity = { 
       ...existing, 
       ...updates,
-      totalRevenue: updates.totalRevenue ? updates.totalRevenue.toString() : existing.totalRevenue
+      totalRevenue: updates.totalRevenue !== undefined ? updates.totalRevenue.toString() : existing.totalRevenue
     };
     this.opportunities.set(id, updated);
     return updated;

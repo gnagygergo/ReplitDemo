@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
+import { FileText, Search, Filter, Plus, Edit, Trash2, Mail } from "lucide-react";
 import { type CaseWithAccount, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import CaseForm from "@/components/cases/case-form";
+import EmailDialog from "@/components/cases/email-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +18,8 @@ export default function Cases() {
   const [editingCase, setEditingCase] = useState<CaseWithAccount | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailingCase, setEmailingCase] = useState<CaseWithAccount | undefined>();
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -66,9 +69,19 @@ export default function Cases() {
     }
   };
 
+  const handleSendEmail = (caseItem: CaseWithAccount) => {
+    setEmailingCase(caseItem);
+    setShowEmailDialog(true);
+  };
+
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingCase(undefined);
+  };
+
+  const handleCloseEmailDialog = () => {
+    setShowEmailDialog(false);
+    setEmailingCase(undefined);
   };
 
   return (
@@ -225,6 +238,15 @@ export default function Cases() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleSendEmail(caseItem)}
+                            className="text-blue-600 hover:text-blue-700"
+                            data-testid={`button-send-email-${caseItem.id}`}
+                          >
+                            <Mail className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleEdit(caseItem)}
                             className="text-primary hover:text-primary/80"
                             data-testid={`button-edit-${caseItem.id}`}
@@ -275,6 +297,12 @@ export default function Cases() {
         open={showForm} 
         onClose={handleCloseForm} 
         case={editingCase}
+      />
+
+      <EmailDialog
+        open={showEmailDialog}
+        onClose={handleCloseEmailDialog}
+        case={emailingCase}
       />
     </>
   );

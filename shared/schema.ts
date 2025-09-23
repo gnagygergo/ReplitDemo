@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
 import { pgTable, text, varchar, decimal, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -17,6 +17,18 @@ export const opportunities = pgTable("opportunities", {
   totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).notNull(),
   accountId: varchar("account_id").notNull().references(() => accounts.id),
 });
+
+// Define relations
+export const accountsRelations = relations(accounts, ({ many }) => ({
+  opportunities: many(opportunities),
+}));
+
+export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
+  account: one(accounts, {
+    fields: [opportunities.accountId],
+    references: [accounts.id],
+  }),
+}));
 
 export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,

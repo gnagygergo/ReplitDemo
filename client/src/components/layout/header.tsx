@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Building, Target, ChartLine, Bell } from "lucide-react";
+import { Building, Target, FileText, ChartLine, Bell } from "lucide-react";
 
 export default function Header() {
   const [location] = useLocation();
@@ -8,6 +8,7 @@ export default function Header() {
     { path: "/", label: "Dashboard", icon: ChartLine },
     { path: "/accounts", label: "Accounts", icon: Building },
     { path: "/opportunities", label: "Opportunities", icon: Target },
+    { path: "/cases", label: "Cases", icon: FileText },
   ];
 
   return (

@@ -4,8 +4,8 @@ import { insertOpportunitySchema, type InsertOpportunity, type Opportunity, type
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Lookup } from "@/components/ui/lookup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -109,20 +109,20 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
                   <FormLabel>
                     Account <span className="text-destructive">*</span>
                   </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-account">
-                        <SelectValue placeholder="Select an account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {accounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <Lookup
+                      options={accounts.map(account => ({
+                        value: account.id,
+                        label: account.name
+                      }))}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      placeholder="Search and select an account"
+                      searchPlaceholder="Type to search accounts..."
+                      emptyMessage="No accounts found"
+                      data-testid="lookup-account"
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertOpportunitySchema, type InsertOpportunity, type Opportunity, type Account } from "@shared/schema";
@@ -86,6 +86,25 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
   const handleCloseAccountLookup = () => {
     setShowAccountLookup(false);
   };
+
+  // Reset form when opportunity changes (for edit mode)
+  useEffect(() => {
+    if (opportunity) {
+      form.reset({
+        name: opportunity.name,
+        accountId: opportunity.accountId,
+        closeDate: opportunity.closeDate,
+        totalRevenue: parseFloat(opportunity.totalRevenue),
+      });
+    } else {
+      form.reset({
+        name: "",
+        accountId: "",
+        closeDate: "",
+        totalRevenue: 0,
+      });
+    }
+  }, [opportunity, form]);
 
   return (
     <>

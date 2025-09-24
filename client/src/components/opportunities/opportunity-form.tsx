@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertOpportunitySchema, type InsertOpportunity, type Opportunity, type Account } from "@shared/schema";
@@ -6,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Lookup } from "@/components/ui/lookup";
+import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +23,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!opportunity;
+  const [showAccountLookup, setShowAccountLookup] = useState(false);
 
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
@@ -71,8 +74,22 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
     form.reset();
   };
 
+  const handleOpenAccountLookup = () => {
+    setShowAccountLookup(true);
+  };
+
+  const handleAccountSelect = (account: Account) => {
+    form.setValue("accountId", account.id);
+    setShowAccountLookup(false);
+  };
+
+  const handleCloseAccountLookup = () => {
+    setShowAccountLookup(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
@@ -120,6 +137,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
                       placeholder="Search and select an account"
                       searchPlaceholder="Type to search accounts..."
                       emptyMessage="No accounts found"
+                      onEnterPressed={handleOpenAccountLookup}
                       data-testid="lookup-account"
                     />
                   </FormControl>
@@ -199,5 +217,12 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
         </Form>
       </DialogContent>
     </Dialog>
+    <AccountLookupDialog
+      open={showAccountLookup}
+      onSelect={handleAccountSelect}
+      onClose={handleCloseAccountLookup}
+      selectedAccountId={form.getValues("accountId")}
+    />
+    </>
   );
 }

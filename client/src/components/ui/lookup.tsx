@@ -21,6 +21,7 @@ interface LookupProps {
   disabled?: boolean;
   className?: string;
   "data-testid"?: string;
+  onEnterPressed?: () => void;
 }
 
 export function Lookup({
@@ -33,6 +34,7 @@ export function Lookup({
   disabled = false,
   className,
   "data-testid": testId,
+  onEnterPressed,
 }: LookupProps) {
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -54,6 +56,14 @@ export function Lookup({
     e.stopPropagation();
     onValueChange("");
     setSearchValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && onEnterPressed) {
+      e.preventDefault();
+      setOpen(false);
+      onEnterPressed();
+    }
   };
 
   useEffect(() => {
@@ -100,6 +110,7 @@ export function Lookup({
               placeholder={searchPlaceholder}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               data-testid={testId ? `${testId}-search` : undefined}
             />

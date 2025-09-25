@@ -2,12 +2,14 @@ import { type Account, type InsertAccount, type Opportunity, type InsertOpportun
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import * as bcrypt from "bcrypt";
 
 export interface IStorage {
   // User methods - Required for Replit Auth
   getUser(id: string): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, user: Partial<UpsertUser>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
   
@@ -70,6 +72,22 @@ export class DatabaseStorage implements IStorage {
           updatedAt: new Date(),
         },
       })
+      .returning();
+    return user;
+  }
+
+  async createUser(userData: UpsertUser): Promise<User> {
+    const saltRounds = 10;
+    const hashedUserData = { ...userData };
+    
+    // Hash password if provided
+    if (userData.password) {
+      hashedUserData.password = await bcrypt.hash(userData.password, saltRounds);
+    }
+    
+    const [user] = await db
+      .insert(users)
+      .values(hashedUserData)
       .returning();
     return user;
   }

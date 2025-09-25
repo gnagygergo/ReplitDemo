@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, date, timestamp, jsonb, boolean, index, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, date, timestamp, jsonb, boolean, index, unique, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -32,7 +32,7 @@ export const cases = pgTable("cases", {
 export const companyRoles = pgTable("company_roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  parentCompanyRoleId: varchar("parent_company_role_id").references(() => companyRoles.id, { onDelete: "restrict" }),
+  parentCompanyRoleId: varchar("parent_company_role_id").references((): AnyPgColumn => companyRoles.id, { onDelete: "restrict" }),
 });
 
 export const userRoleAssignments = pgTable("user_role_assignments", {
@@ -61,6 +61,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  password: text("password"),
   isAdmin: boolean("is_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

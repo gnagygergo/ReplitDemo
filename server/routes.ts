@@ -301,7 +301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: z.string().email().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
-        profileImageUrl: z.string().optional()
+        profileImageUrl: z.string().optional(),
+        isAdmin: z.boolean().optional()
       });
       
       const validatedData = userUpdateSchema.parse(req.body);

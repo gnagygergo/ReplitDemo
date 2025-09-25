@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +69,7 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       profileImageUrl: user.profileImageUrl || "",
+      isAdmin: user.isAdmin || false,
     },
   });
 
@@ -166,6 +168,25 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                   <Input placeholder="Enter profile image URL (optional)" {...field} data-testid="input-user-profile-image" />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="isAdmin"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="checkbox-user-is-admin"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Is Admin</FormLabel>
+                </div>
               </FormItem>
             )}
           />

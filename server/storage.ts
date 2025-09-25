@@ -1,4 +1,4 @@
-import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type Case, type InsertCase, type CaseWithAccount, type User, type UpsertUser, accounts, opportunities, cases, users } from "@shared/schema";
+import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, accounts, opportunities, cases, users } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -11,22 +11,22 @@ export interface IStorage {
   deleteUser(id: string): Promise<boolean>;
   
   // Account methods
-  getAccounts(): Promise<Account[]>;
-  getAccount(id: string): Promise<Account | undefined>;
+  getAccounts(): Promise<AccountWithOwner[]>;
+  getAccount(id: string): Promise<AccountWithOwner | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(id: string, account: Partial<InsertAccount>): Promise<Account | undefined>;
   deleteAccount(id: string): Promise<boolean>;
   
   // Opportunity methods
-  getOpportunities(): Promise<OpportunityWithAccount[]>;
-  getOpportunity(id: string): Promise<OpportunityWithAccount | undefined>;
+  getOpportunities(): Promise<OpportunityWithAccountAndOwner[]>;
+  getOpportunity(id: string): Promise<OpportunityWithAccountAndOwner | undefined>;
   createOpportunity(opportunity: InsertOpportunity): Promise<Opportunity>;
   updateOpportunity(id: string, opportunity: Partial<InsertOpportunity>): Promise<Opportunity | undefined>;
   deleteOpportunity(id: string): Promise<boolean>;
   
   // Case methods
-  getCases(): Promise<CaseWithAccount[]>;
-  getCase(id: string): Promise<CaseWithAccount | undefined>;
+  getCases(): Promise<CaseWithAccountAndOwner[]>;
+  getCase(id: string): Promise<CaseWithAccountAndOwner | undefined>;
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case | undefined>;
   deleteCase(id: string): Promise<boolean>;
@@ -69,25 +69,61 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<boolean> {
+    // Check if user owns any accounts, opportunities, or cases
+    const ownedAccounts = await db.select().from(accounts).where(eq(accounts.ownerId, id));
+    const ownedOpportunities = await db.select().from(opportunities).where(eq(opportunities.ownerId, id));
+    const ownedCases = await db.select().from(cases).where(eq(cases.ownerId, id));
+    
+    if (ownedAccounts.length > 0 || ownedOpportunities.length > 0 || ownedCases.length > 0) {
+      return false; // Cannot delete user who owns records
+    }
+    
     const result = await db.delete(users).where(eq(users.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getAccounts(): Promise<Account[]> {
-    return await db.select().from(accounts);
+  async getAccounts(): Promise<AccountWithOwner[]> {
+    return await db.select().from(accounts)
+      .innerJoin(users, eq(accounts.ownerId, users.id))
+      .then(rows => rows.map(row => ({
+        ...row.accounts,
+        owner: row.users
+      })));
   }
 
-  async getAccount(id: string): Promise<Account | undefined> {
-    const [account] = await db.select().from(accounts).where(eq(accounts.id, id));
-    return account || undefined;
+  async getAccount(id: string): Promise<AccountWithOwner | undefined> {
+    const [result] = await db.select().from(accounts)
+      .innerJoin(users, eq(accounts.ownerId, users.id))
+      .where(eq(accounts.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.accounts,
+      owner: result.users
+    };
   }
 
   async createAccount(insertAccount: InsertAccount): Promise<Account> {
+    // Verify owner exists
+    const owner = await this.getUser(insertAccount.ownerId);
+    if (!owner) {
+      throw new Error("Owner not found");
+    }
+    
     const [account] = await db.insert(accounts).values(insertAccount).returning();
     return account;
   }
 
   async updateAccount(id: string, updates: Partial<InsertAccount>): Promise<Account | undefined> {
+    // If updating ownerId, verify the new owner exists
+    if (updates.ownerId) {
+      const owner = await this.getUser(updates.ownerId);
+      if (!owner) {
+        throw new Error("Owner not found");
+      }
+    }
+    
     const [account] = await db.update(accounts).set(updates).where(eq(accounts.id, id)).returning();
     return account || undefined;
   }
@@ -105,24 +141,29 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getOpportunities(): Promise<OpportunityWithAccount[]> {
-    return await db.select().from(opportunities).innerJoin(accounts, eq(opportunities.accountId, accounts.id))
+  async getOpportunities(): Promise<OpportunityWithAccountAndOwner[]> {
+    return await db.select().from(opportunities)
+      .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
+      .innerJoin(users, eq(opportunities.ownerId, users.id))
       .then(rows => rows.map(row => ({
         ...row.opportunities,
-        account: row.accounts
+        account: row.accounts,
+        owner: row.users
       })));
   }
 
-  async getOpportunity(id: string): Promise<OpportunityWithAccount | undefined> {
+  async getOpportunity(id: string): Promise<OpportunityWithAccountAndOwner | undefined> {
     const [result] = await db.select().from(opportunities)
       .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
+      .innerJoin(users, eq(opportunities.ownerId, users.id))
       .where(eq(opportunities.id, id));
     
     if (!result) return undefined;
     
     return {
       ...result.opportunities,
-      account: result.accounts
+      account: result.accounts,
+      owner: result.users
     };
   }
 
@@ -131,6 +172,12 @@ export class DatabaseStorage implements IStorage {
     const account = await this.getAccount(insertOpportunity.accountId);
     if (!account) {
       throw new Error("Account not found");
+    }
+    
+    // Verify owner exists
+    const owner = await this.getUser(insertOpportunity.ownerId);
+    if (!owner) {
+      throw new Error("Owner not found");
     }
     
     const opportunityData = {
@@ -151,6 +198,14 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
+    // If updating ownerId, verify the new owner exists
+    if (updates.ownerId) {
+      const owner = await this.getUser(updates.ownerId);
+      if (!owner) {
+        throw new Error("Owner not found");
+      }
+    }
+    
     const updateData: any = { ...updates };
     if (updates.totalRevenue !== undefined) {
       updateData.totalRevenue = updates.totalRevenue.toString();
@@ -165,24 +220,29 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getCases(): Promise<CaseWithAccount[]> {
-    return await db.select().from(cases).innerJoin(accounts, eq(cases.accountId, accounts.id))
+  async getCases(): Promise<CaseWithAccountAndOwner[]> {
+    return await db.select().from(cases)
+      .innerJoin(accounts, eq(cases.accountId, accounts.id))
+      .innerJoin(users, eq(cases.ownerId, users.id))
       .then(rows => rows.map(row => ({
         ...row.cases,
-        account: row.accounts
+        account: row.accounts,
+        owner: row.users
       })));
   }
 
-  async getCase(id: string): Promise<CaseWithAccount | undefined> {
+  async getCase(id: string): Promise<CaseWithAccountAndOwner | undefined> {
     const [result] = await db.select().from(cases)
       .innerJoin(accounts, eq(cases.accountId, accounts.id))
+      .innerJoin(users, eq(cases.ownerId, users.id))
       .where(eq(cases.id, id));
     
     if (!result) return undefined;
     
     return {
       ...result.cases,
-      account: result.accounts
+      account: result.accounts,
+      owner: result.users
     };
   }
 
@@ -191,6 +251,12 @@ export class DatabaseStorage implements IStorage {
     const account = await this.getAccount(insertCase.accountId);
     if (!account) {
       throw new Error("Account not found");
+    }
+    
+    // Verify owner exists
+    const owner = await this.getUser(insertCase.ownerId);
+    if (!owner) {
+      throw new Error("Owner not found");
     }
     
     const [caseRecord] = await db.insert(cases).values(insertCase).returning();
@@ -203,6 +269,14 @@ export class DatabaseStorage implements IStorage {
       const account = await this.getAccount(updates.accountId);
       if (!account) {
         throw new Error("Account not found");
+      }
+    }
+    
+    // If updating ownerId, verify the new owner exists
+    if (updates.ownerId) {
+      const owner = await this.getUser(updates.ownerId);
+      if (!owner) {
+        throw new Error("Owner not found");
       }
     }
     

@@ -1,8 +1,12 @@
-import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type Case, type InsertCase, type CaseWithAccount, accounts, opportunities, cases } from "@shared/schema";
+import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type Case, type InsertCase, type CaseWithAccount, type User, type UpsertUser, accounts, opportunities, cases, users } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
+  // User methods - Required for Replit Auth
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // Account methods
   getAccounts(): Promise<Account[]>;
   getAccount(id: string): Promise<Account | undefined>;
@@ -26,6 +30,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User methods - Required for Replit Auth
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async getAccounts(): Promise<Account[]> {
     return await db.select().from(accounts);
   }

@@ -52,6 +52,12 @@ Preferred communication style: Simple, everyday language.
 - **Neon Database**: Serverless PostgreSQL database with connection pooling
 - **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect
 
+### Authentication & Security
+- **Replit Auth**: Multi-provider authentication (Google, GitHub, X, Apple, email/password)
+- **Express Session**: Secure session management with PostgreSQL store
+- **Passport.js**: Authentication middleware for OIDC integration
+- **Enterprise Security**: Session fixation prevention, CSRF protection, API route protection
+
 ### UI and Styling
 - **Radix UI**: Unstyled, accessible UI primitives for core components
 - **Tailwind CSS**: Utility-first CSS framework for responsive design
@@ -67,3 +73,21 @@ Preferred communication style: Simple, everyday language.
 - **Zod**: Schema validation and TypeScript integration
 - **Wouter**: Lightweight routing library
 - **date-fns**: Date manipulation and formatting utilities
+
+## Security Implementation
+
+### Enterprise-Grade Authentication
+- **Multi-Provider Support**: Replit Auth integration supporting Google, GitHub, X, Apple, and email/password authentication
+- **Session Security**: 
+  - Session fixation prevention with ID regeneration on login/logout
+  - Secure session cookies with `httpOnly`, `secure`, and `sameSite` protection
+  - 7-day session TTL with proper cleanup
+- **API Protection**: All CRM endpoints require authentication (`/api/accounts`, `/api/opportunities`, `/api/cases`, `/api/send-email`)
+- **CSRF Protection**: Implemented via `sameSite: 'lax'` session cookie configuration
+- **Token Refresh**: Automatic refresh with session persistence for seamless user experience
+
+### Security Architecture Notes
+- Session middleware enforces `sameSite: 'lax'` on every request to prevent CSRF attacks
+- PostgreSQL session store with graceful fallback to MemoryStore for development
+- Session regeneration on login/logout prevents session fixation vulnerabilities
+- Explicit session cookie clearing on logout ensures complete session cleanup

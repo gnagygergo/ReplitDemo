@@ -1,8 +1,19 @@
 import { Link, useLocation } from "wouter";
-import { Building, Target, FileText, ChartLine, Bell } from "lucide-react";
+import { Building, Target, FileText, ChartLine, Bell, LogOut, User } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: ChartLine },
@@ -42,9 +53,57 @@ export default function Header() {
             >
               <Bell className="w-5 h-5" />
             </button>
-            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
-              JD
-            </div>
+            
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="button-user-menu">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                      src={user?.profileImageUrl || ""} 
+                      alt={user?.firstName || "User"} 
+                      className="object-cover"
+                    />
+                    <AvatarFallback>
+                      {user?.firstName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none" data-testid="text-user-name">
+                      {user?.firstName && user?.lastName 
+                        ? `${user.firstName} ${user.lastName}` 
+                        : user?.email?.split('@')[0] || 'User'}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground" data-testid="text-user-email">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button variant="ghost" className="w-full justify-start cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start cursor-pointer text-red-600 hover:text-red-700"
+                    onClick={() => window.location.href = "/api/logout"}
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

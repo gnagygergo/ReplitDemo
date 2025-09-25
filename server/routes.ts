@@ -4,8 +4,27 @@ import { storage } from "./storage";
 import { insertAccountSchema, insertOpportunitySchema, insertCaseSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication - Required for Replit Auth
+  await setupAuth(app);
+
+  // Auth routes - Required for Replit Auth
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Protected routes - Apply authentication to all CRM endpoints
+  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email"], isAuthenticated);
+
   // Account routes
   app.get("/api/accounts", async (req, res) => {
     try {

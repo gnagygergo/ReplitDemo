@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Building, Target, FileText, ChartLine, Bell, LogOut, User } from "lucide-react";
+import { Building, Target, FileText, ChartLine, Bell, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +53,18 @@ export default function Header() {
             >
               <Bell className="w-5 h-5" />
             </button>
+
+            {/* Setup/Settings Link */}
+            <Link href="/setup">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-setup"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
             
             {/* User Menu */}
             <DropdownMenu>

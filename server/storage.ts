@@ -5,7 +5,10 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   // User methods - Required for Replit Auth
   getUser(id: string): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<UpsertUser>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
   
   // Account methods
   getAccounts(): Promise<Account[]>;
@@ -36,6 +39,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -49,6 +56,21 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, updates: Partial<UpsertUser>): Promise<User | undefined> {
+    const updateData = {
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    const [user] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
+    return user || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getAccounts(): Promise<Account[]> {

@@ -1,0 +1,126 @@
+import { useState } from "react";
+import { Search, Users, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+
+// Setup menu items
+const setupMenuItems = [
+  {
+    id: "users",
+    label: "Users",
+    icon: Users,
+    description: "Manage user accounts and permissions",
+  },
+];
+
+import UserManagement from "@/components/setup/user-management";
+
+// Users management component
+function UsersSetup() {
+  return <UserManagement />;
+}
+
+export default function Setup() {
+  const [selectedItem, setSelectedItem] = useState("users");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredMenuItems = setupMenuItems.filter(item =>
+    item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const renderContent = () => {
+    switch (selectedItem) {
+      case "users":
+        return <UsersSetup />;
+      default:
+        return (
+          <div className="flex items-center justify-center h-full text-muted-foreground">
+            <p>Select a setup option from the menu</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header Pane - Empty for now */}
+      <div className="border-b border-border bg-card">
+        <div className="flex items-center justify-between p-4">
+          <div>
+            <h1 className="text-2xl font-bold">Setup</h1>
+            <p className="text-sm text-muted-foreground">
+              Configure your application settings
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content area with sidebar and content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Pane - Setup Menu */}
+        <div className="w-80 border-r border-border bg-card flex flex-col">
+          <div className="p-4 border-b border-border">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search setup options..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                data-testid="input-setup-search"
+              />
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="space-y-2">
+              {filteredMenuItems.map((item) => {
+                const Icon = item.icon;
+                const isSelected = selectedItem === item.id;
+                
+                return (
+                  <Button
+                    key={item.id}
+                    variant={isSelected ? "secondary" : "ghost"}
+                    className="w-full justify-start p-3 h-auto"
+                    onClick={() => setSelectedItem(item.id)}
+                    data-testid={`button-setup-${item.id}`}
+                  >
+                    <div className="flex items-center space-x-3 w-full">
+                      <Icon className="h-5 w-5 flex-shrink-0" />
+                      <div className="flex-1 text-left space-y-1">
+                        <div className="font-medium">{item.label}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.description}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                      )}
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+
+            {filteredMenuItems.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Search className="mx-auto h-8 w-8 mb-2 opacity-50" />
+                <p className="text-sm">No setup options match your search</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Content Pane */}
+        <div className="flex-1 overflow-y-auto p-6">
+          {renderContent()}
+        </div>
+      </div>
+    </div>
+  );
+}

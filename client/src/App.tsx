@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Accounts from "@/pages/accounts";
 import Opportunities from "@/pages/opportunities";
 import Cases from "@/pages/cases";
+import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 
 function AuthenticatedRouter() {
@@ -20,6 +21,7 @@ function AuthenticatedRouter() {
         <Route path="/accounts" component={Accounts} />
         <Route path="/opportunities" component={Opportunities} />
         <Route path="/cases" component={Cases} />
+        <Route path="/setup" component={Setup} />
         <Route component={NotFound} />
       </Switch>
     </>

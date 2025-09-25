@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected routes - Apply authentication to all CRM endpoints
-  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email"], isAuthenticated);
+  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users"], isAuthenticated);
 
   // Account routes
   app.get("/api/accounts", async (req, res) => {
@@ -255,6 +255,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to send email" });
+    }
+  });
+
+  // User management routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const userUpdateSchema = z.object({
+        email: z.string().email().optional(),
+        firstName: z.string().optional(),
+        lastName: z.string().optional(),
+        profileImageUrl: z.string().optional()
+      });
+      
+      const validatedData = userUpdateSchema.parse(req.body);
+      const user = await storage.updateUser(req.params.id, validatedData);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteUser(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 

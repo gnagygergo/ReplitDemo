@@ -84,7 +84,7 @@ export default function RoleHierarchy() {
   const [isCreatingRole, setIsCreatingRole] = useState(false);
   const [isEditingRole, setIsEditingRole] = useState(false);
   const [newRoleName, setNewRoleName] = useState("");
-  const [newRoleParentId, setNewRoleParentId] = useState<string>("");
+  const [newRoleParentId, setNewRoleParentId] = useState<string>("null");
   const [isAssigningUser, setIsAssigningUser] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   
@@ -114,7 +114,7 @@ export default function RoleHierarchy() {
       queryClient.invalidateQueries({ queryKey: ['/api/company-roles'] });
       setIsCreatingRole(false);
       setNewRoleName("");
-      setNewRoleParentId("");
+      setNewRoleParentId("null");
       toast({ title: "Company role created successfully" });
     },
     onError: (error: any) => {
@@ -134,7 +134,7 @@ export default function RoleHierarchy() {
       queryClient.invalidateQueries({ queryKey: ['/api/company-roles'] });
       setIsEditingRole(false);
       setNewRoleName("");
-      setNewRoleParentId("");
+      setNewRoleParentId("null");
       toast({ title: "Company role updated successfully" });
     },
     onError: (error: any) => {
@@ -221,7 +221,7 @@ export default function RoleHierarchy() {
     
     createRoleMutation.mutate({
       name: newRoleName.trim(),
-      parentCompanyRoleId: newRoleParentId || undefined,
+      parentCompanyRoleId: newRoleParentId === "null" ? undefined : newRoleParentId || undefined,
     });
   };
 
@@ -234,7 +234,7 @@ export default function RoleHierarchy() {
     updateRoleMutation.mutate({
       id: selectedRole.id,
       name: newRoleName.trim(),
-      parentCompanyRoleId: newRoleParentId || undefined,
+      parentCompanyRoleId: newRoleParentId === "null" ? undefined : newRoleParentId || undefined,
     });
   };
 
@@ -268,7 +268,7 @@ export default function RoleHierarchy() {
   useEffect(() => {
     if (selectedRole && isEditingRole) {
       setNewRoleName(selectedRole.name);
-      setNewRoleParentId(selectedRole.parentCompanyRoleId || "");
+      setNewRoleParentId(selectedRole.parentCompanyRoleId || "null");
     }
   }, [selectedRole, isEditingRole]);
 
@@ -352,7 +352,7 @@ export default function RoleHierarchy() {
                         <SelectValue placeholder="Select parent role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No Parent (Root Role)</SelectItem>
+                        <SelectItem value="null">No Parent (Root Role)</SelectItem>
                         {companyRoles.map((role: CompanyRoleWithParent) => (
                           <SelectItem key={role.id} value={role.id}>
                             {role.name}
@@ -375,7 +375,7 @@ export default function RoleHierarchy() {
                       onClick={() => {
                         setIsCreatingRole(false);
                         setNewRoleName("");
-                        setNewRoleParentId("");
+                        setNewRoleParentId("null");
                       }}
                       data-testid="button-cancel-new-role"
                     >
@@ -576,7 +576,7 @@ export default function RoleHierarchy() {
                             <SelectValue placeholder="Select parent role" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No Parent (Root Role)</SelectItem>
+                            <SelectItem value="null">No Parent (Root Role)</SelectItem>
                             {companyRoles
                               .filter((role: CompanyRoleWithParent) => role.id !== selectedRole.id)
                               .map((role: CompanyRoleWithParent) => (
@@ -601,7 +601,7 @@ export default function RoleHierarchy() {
                           onClick={() => {
                             setIsEditingRole(false);
                             setNewRoleName("");
-                            setNewRoleParentId("");
+                            setNewRoleParentId("null");
                           }}
                           data-testid="button-cancel-edit-role"
                         >

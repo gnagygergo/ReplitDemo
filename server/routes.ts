@@ -56,6 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
+      }
       res.status(500).json({ message: "Failed to create account" });
     }
   });
@@ -71,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
       }
       res.status(500).json({ message: "Failed to update account" });
     }
@@ -119,8 +125,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      if (error instanceof Error && error.message === "Account not found") {
-        return res.status(400).json({ message: "Account not found" });
+      if (error instanceof Error) {
+        if (error.message === "Account not found") {
+          return res.status(400).json({ message: "Account not found" });
+        }
+        if (error.message === "Owner not found") {
+          return res.status(400).json({ message: "Owner not found" });
+        }
       }
       res.status(500).json({ message: "Failed to create opportunity" });
     }
@@ -138,8 +149,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      if (error instanceof Error && error.message === "Account not found") {
-        return res.status(400).json({ message: "Account not found" });
+      if (error instanceof Error) {
+        if (error.message === "Account not found") {
+          return res.status(400).json({ message: "Account not found" });
+        }
+        if (error.message === "Owner not found") {
+          return res.status(400).json({ message: "Owner not found" });
+        }
       }
       res.status(500).json({ message: "Failed to update opportunity" });
     }
@@ -188,8 +204,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      if (error instanceof Error && error.message === "Account not found") {
-        return res.status(400).json({ message: "Account not found" });
+      if (error instanceof Error) {
+        if (error.message === "Account not found") {
+          return res.status(400).json({ message: "Account not found" });
+        }
+        if (error.message === "Owner not found") {
+          return res.status(400).json({ message: "Owner not found" });
+        }
       }
       res.status(500).json({ message: "Failed to create case" });
     }
@@ -207,8 +228,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });
       }
-      if (error instanceof Error && error.message === "Account not found") {
-        return res.status(400).json({ message: "Account not found" });
+      if (error instanceof Error) {
+        if (error.message === "Account not found") {
+          return res.status(400).json({ message: "Account not found" });
+        }
+        if (error.message === "Owner not found") {
+          return res.status(400).json({ message: "Owner not found" });
+        }
       }
       res.status(500).json({ message: "Failed to update case" });
     }
@@ -299,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteUser(req.params.id);
       if (!deleted) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(400).json({ message: "Cannot delete user who owns accounts, opportunities, or cases" });
       }
       res.json({ message: "User deleted successfully" });
     } catch (error) {

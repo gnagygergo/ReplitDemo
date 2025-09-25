@@ -52,6 +52,7 @@ const userUpdateSchema = z.object({
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
   profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  isAdmin: z.boolean().optional(),
 });
 
 type UserUpdate = z.infer<typeof userUpdateSchema>;

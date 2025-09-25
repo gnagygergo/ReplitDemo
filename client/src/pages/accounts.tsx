@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
-import { type Account } from "@shared/schema";
+import { type Account, type AccountWithOwner } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,14 +16,14 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Accounts() {
   const [showForm, setShowForm] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<Account | undefined>();
+  const [editingAccount, setEditingAccount] = useState<AccountWithOwner | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: accounts = [], isLoading } = useQuery<Account[]>({
+  const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
     queryKey: ["/api/accounts"],
   });
 
@@ -50,15 +51,39 @@ export default function Accounts() {
     return matchesSearch && matchesIndustry;
   });
 
-  const handleEdit = (account: Account) => {
+  const handleEdit = (account: AccountWithOwner) => {
     setEditingAccount(account);
     setShowForm(true);
   };
 
-  const handleDelete = (account: Account) => {
+  const handleDelete = (account: AccountWithOwner) => {
     if (confirm(`Are you sure you want to delete "${account.name}"?`)) {
       deleteMutation.mutate(account.id);
     }
+  };
+  
+  const getUserDisplayName = (account: AccountWithOwner) => {
+    if (!account.owner) return 'Unknown User';
+    const { firstName, lastName, email } = account.owner;
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return email || 'Unknown User';
+  };
+
+  const getUserInitials = (account: AccountWithOwner) => {
+    if (!account.owner) return 'U';
+    const { firstName, lastName, email } = account.owner;
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName[0].toUpperCase();
+    }
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return 'U';
   };
 
   const handleCloseForm = () => {
@@ -164,6 +189,7 @@ export default function Accounts() {
                     </div>
                   </TableHead>
                   <TableHead>Address</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -188,6 +214,15 @@ export default function Accounts() {
                         <Skeleton className="h-4 w-48" />
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center">
+                          <Skeleton className="w-8 h-8 rounded-full mr-3" />
+                          <div>
+                            <Skeleton className="h-3 w-20 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex justify-end space-x-2">
                           <Skeleton className="h-8 w-8" />
                           <Skeleton className="h-8 w-8" />
@@ -197,7 +232,7 @@ export default function Accounts() {
                   ))
                 ) : filteredAccounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8">
+                    <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <Building className="w-8 h-8 text-muted-foreground" />
                         <p className="text-muted-foreground">
@@ -227,6 +262,24 @@ export default function Accounts() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground" data-testid={`text-address-${account.id}`}>
                         {account.address || "No address provided"}
+                      </TableCell>
+                      <TableCell data-testid={`text-owner-${account.id}`}>
+                        <div className="flex items-center">
+                          <Avatar className="h-8 w-8 mr-3">
+                            <AvatarImage src={account.owner?.profileImageUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {getUserInitials(account)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-foreground truncate">
+                              {getUserDisplayName(account)}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {account.owner?.email || 'No email'}
+                            </div>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end space-x-2">

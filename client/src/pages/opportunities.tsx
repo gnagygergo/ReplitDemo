@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Target, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
-import { type OpportunityWithAccount, type Account } from "@shared/schema";
+import { type OpportunityWithAccountAndOwner, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,14 +16,14 @@ import { format } from "date-fns";
 
 export default function Opportunities() {
   const [showForm, setShowForm] = useState(false);
-  const [editingOpportunity, setEditingOpportunity] = useState<OpportunityWithAccount | undefined>();
+  const [editingOpportunity, setEditingOpportunity] = useState<OpportunityWithAccountAndOwner | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: opportunities = [], isLoading } = useQuery<OpportunityWithAccount[]>({
+  const { data: opportunities = [], isLoading } = useQuery<OpportunityWithAccountAndOwner[]>({
     queryKey: ["/api/opportunities"],
   });
 
@@ -54,15 +55,39 @@ export default function Opportunities() {
     return matchesSearch && matchesAccount;
   });
 
-  const handleEdit = (opportunity: OpportunityWithAccount) => {
+  const handleEdit = (opportunity: OpportunityWithAccountAndOwner) => {
     setEditingOpportunity(opportunity);
     setShowForm(true);
   };
 
-  const handleDelete = (opportunity: OpportunityWithAccount) => {
+  const handleDelete = (opportunity: OpportunityWithAccountAndOwner) => {
     if (confirm(`Are you sure you want to delete "${opportunity.name}"?`)) {
       deleteMutation.mutate(opportunity.id);
     }
+  };
+  
+  const getUserDisplayName = (opportunity: OpportunityWithAccountAndOwner) => {
+    if (!opportunity.owner) return 'Unknown User';
+    const { firstName, lastName, email } = opportunity.owner;
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return email || 'Unknown User';
+  };
+
+  const getUserInitials = (opportunity: OpportunityWithAccountAndOwner) => {
+    if (!opportunity.owner) return 'U';
+    const { firstName, lastName, email } = opportunity.owner;
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName[0].toUpperCase();
+    }
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return 'U';
   };
 
   const handleCloseForm = () => {
@@ -173,6 +198,7 @@ export default function Opportunities() {
                       <span>Total Revenue</span>
                     </div>
                   </TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -200,6 +226,15 @@ export default function Opportunities() {
                         <Skeleton className="h-4 w-20" />
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center">
+                          <Skeleton className="w-8 h-8 rounded-full mr-3" />
+                          <div>
+                            <Skeleton className="h-3 w-20 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex justify-end space-x-2">
                           <Skeleton className="h-8 w-8" />
                           <Skeleton className="h-8 w-8" />
@@ -209,7 +244,7 @@ export default function Opportunities() {
                   ))
                 ) : filteredOpportunities.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <Target className="w-8 h-8 text-muted-foreground" />
                         <p className="text-muted-foreground">
@@ -242,6 +277,24 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell className="text-sm font-medium text-green-600" data-testid={`text-revenue-${opportunity.id}`}>
                         {formatCurrency(opportunity.totalRevenue)}
+                      </TableCell>
+                      <TableCell data-testid={`text-owner-${opportunity.id}`}>
+                        <div className="flex items-center">
+                          <Avatar className="h-8 w-8 mr-3">
+                            <AvatarImage src={opportunity.owner?.profileImageUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {getUserInitials(opportunity)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-foreground truncate">
+                              {getUserDisplayName(opportunity)}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {opportunity.owner?.email || 'No email'}
+                            </div>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end space-x-2">

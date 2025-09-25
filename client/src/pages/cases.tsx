@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { FileText, Search, Filter, Plus, Edit, Trash2, Mail } from "lucide-react";
-import { type CaseWithAccount, type Account } from "@shared/schema";
+import { type CaseWithAccountAndOwner, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,16 +16,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Cases() {
   const [showForm, setShowForm] = useState(false);
-  const [editingCase, setEditingCase] = useState<CaseWithAccount | undefined>();
+  const [editingCase, setEditingCase] = useState<CaseWithAccountAndOwner | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const [emailingCase, setEmailingCase] = useState<CaseWithAccount | undefined>();
+  const [emailingCase, setEmailingCase] = useState<CaseWithAccountAndOwner | undefined>();
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: cases = [], isLoading } = useQuery<CaseWithAccount[]>({
+  const { data: cases = [], isLoading } = useQuery<CaseWithAccountAndOwner[]>({
     queryKey: ["/api/cases"],
   });
 
@@ -57,21 +58,45 @@ export default function Cases() {
     return matchesSearch && matchesAccount;
   });
 
-  const handleEdit = (caseItem: CaseWithAccount) => {
+  const handleEdit = (caseItem: CaseWithAccountAndOwner) => {
     setEditingCase(caseItem);
     setShowForm(true);
   };
 
-  const handleDelete = (caseItem: CaseWithAccount) => {
+  const handleDelete = (caseItem: CaseWithAccountAndOwner) => {
     const caseTitle = caseItem.subject || `Case from ${caseItem.fromEmail}`;
     if (confirm(`Are you sure you want to delete "${caseTitle}"?`)) {
       deleteMutation.mutate(caseItem.id);
     }
   };
 
-  const handleSendEmail = (caseItem: CaseWithAccount) => {
+  const handleSendEmail = (caseItem: CaseWithAccountAndOwner) => {
     setEmailingCase(caseItem);
     setShowEmailDialog(true);
+  };
+  
+  const getUserDisplayName = (caseItem: CaseWithAccountAndOwner) => {
+    if (!caseItem.owner) return 'Unknown User';
+    const { firstName, lastName, email } = caseItem.owner;
+    if (firstName || lastName) {
+      return `${firstName || ''} ${lastName || ''}`.trim();
+    }
+    return email || 'Unknown User';
+  };
+
+  const getUserInitials = (caseItem: CaseWithAccountAndOwner) => {
+    if (!caseItem.owner) return 'U';
+    const { firstName, lastName, email } = caseItem.owner;
+    if (firstName && lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    if (firstName) {
+      return firstName[0].toUpperCase();
+    }
+    if (email) {
+      return email[0].toUpperCase();
+    }
+    return 'U';
   };
 
   const handleCloseForm = () => {
@@ -161,6 +186,7 @@ export default function Cases() {
                   <TableHead>Account</TableHead>
                   <TableHead>From Email</TableHead>
                   <TableHead>Description</TableHead>
+                  <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -188,6 +214,15 @@ export default function Cases() {
                         <Skeleton className="h-4 w-48" />
                       </TableCell>
                       <TableCell>
+                        <div className="flex items-center">
+                          <Skeleton className="w-8 h-8 rounded-full mr-3" />
+                          <div>
+                            <Skeleton className="h-3 w-20 mb-1" />
+                            <Skeleton className="h-3 w-16" />
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex justify-end space-x-2">
                           <Skeleton className="h-8 w-8" />
                           <Skeleton className="h-8 w-8" />
@@ -197,7 +232,7 @@ export default function Cases() {
                   ))
                 ) : filteredCases.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
+                    <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center space-y-2">
                         <FileText className="w-8 h-8 text-muted-foreground" />
                         <p className="text-muted-foreground">
@@ -231,6 +266,24 @@ export default function Cases() {
                       <TableCell className="text-sm text-muted-foreground max-w-xs" data-testid={`text-description-${caseItem.id}`}>
                         <div className="truncate">
                           {caseItem.description || "No description"}
+                        </div>
+                      </TableCell>
+                      <TableCell data-testid={`text-owner-${caseItem.id}`}>
+                        <div className="flex items-center">
+                          <Avatar className="h-8 w-8 mr-3">
+                            <AvatarImage src={caseItem.owner?.profileImageUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {getUserInitials(caseItem)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-foreground truncate">
+                              {getUserDisplayName(caseItem)}
+                            </div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {caseItem.owner?.email || 'No email'}
+                            </div>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>

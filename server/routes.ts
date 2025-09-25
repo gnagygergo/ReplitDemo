@@ -295,6 +295,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/users", async (req, res) => {
+    try {
+      const userCreateSchema = z.object({
+        email: z.string().email("Please enter a valid email address"),
+        firstName: z.string().min(1, "First name is required").optional(),
+        lastName: z.string().min(1, "Last name is required").optional(),
+        profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        isAdmin: z.boolean().optional()
+      });
+      
+      const validatedData = userCreateSchema.parse(req.body);
+      const user = await storage.createUser(validatedData);
+      
+      res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
   app.put("/api/users/:id", async (req, res) => {
     try {
       const userUpdateSchema = z.object({

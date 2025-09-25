@@ -1,6 +1,7 @@
 import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, alias } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 export interface IStorage {
   // User methods - Required for Replit Auth

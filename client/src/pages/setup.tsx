@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Users, ChevronRight } from "lucide-react";
+import { Search, Users, ChevronRight, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,13 +14,25 @@ const setupMenuItems = [
     icon: Users,
     description: "Manage user accounts and permissions",
   },
+  {
+    id: "company-roles",
+    label: "Company Roles",
+    icon: Shield,
+    description: "Manage company role hierarchy and assignments",
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
+import RoleHierarchy from "@/components/setup/role-hierarchy";
 
 // Users management component
 function UsersSetup() {
   return <UserManagement />;
+}
+
+// Company Roles management component
+function CompanyRolesSetup() {
+  return <RoleHierarchy />;
 }
 
 export default function Setup() {
@@ -36,6 +48,8 @@ export default function Setup() {
     switch (selectedItem) {
       case "users":
         return <UsersSetup />;
+      case "company-roles":
+        return <CompanyRolesSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

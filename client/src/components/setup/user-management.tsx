@@ -56,7 +56,17 @@ const userUpdateSchema = z.object({
   isAdmin: z.boolean().optional(),
 });
 
+const userCreateSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  firstName: z.string().min(1, "First name is required").optional(),
+  lastName: z.string().min(1, "Last name is required").optional(),
+  profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  isAdmin: z.boolean().optional(),
+});
+
 type UserUpdate = z.infer<typeof userUpdateSchema>;
+type UserCreate = z.infer<typeof userCreateSchema>;
 
 function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void }) {
   const { toast } = useToast();
@@ -205,9 +215,172 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
   );
 }
 
+function UserCreateDialog({ onClose }: { onClose: () => void }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const form = useForm<UserCreate>({
+    resolver: zodResolver(userCreateSchema),
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      profileImageUrl: "",
+      password: "",
+      isAdmin: false,
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: UserCreate) => {
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+      onClose();
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to create user",
+      });
+    },
+  });
+
+  const onSubmit = (data: UserCreate) => {
+    createUserMutation.mutate(data);
+  };
+
+  return (
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>Create User</DialogTitle>
+      </DialogHeader>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter email address" {...field} data-testid="input-create-user-email" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter first name" {...field} data-testid="input-create-user-first-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter last name" {...field} data-testid="input-create-user-last-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="profileImageUrl"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Profile Image URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter profile image URL (optional)" {...field} data-testid="input-create-user-profile-image" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password *</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="Enter password (min 6 characters)" {...field} data-testid="input-create-user-password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="isAdmin"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    data-testid="checkbox-create-user-is-admin"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Is Admin</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createUserMutation.isPending} data-testid="button-save-create-user">
+              {createUserMutation.isPending ? "Creating..." : "Create User"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </DialogContent>
+  );
+}
+
 export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState<UserType | null>(null);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -299,6 +472,10 @@ export default function UserManagement() {
             Manage user accounts and access permissions
           </p>
         </div>
+        <Button onClick={() => setIsCreatingUser(true)} data-testid="button-create-user">
+          <Plus className="mr-2 h-4 w-4" />
+          Create User
+        </Button>
       </div>
 
       {/* Search Bar */}
@@ -419,6 +596,15 @@ export default function UserManagement() {
           <UserEditDialog
             user={editingUser}
             onClose={() => setEditingUser(null)}
+          />
+        )}
+      </Dialog>
+
+      {/* Create User Dialog */}
+      <Dialog open={isCreatingUser} onOpenChange={(open) => !open && setIsCreatingUser(false)}>
+        {isCreatingUser && (
+          <UserCreateDialog
+            onClose={() => setIsCreatingUser(false)}
           />
         )}
       </Dialog>

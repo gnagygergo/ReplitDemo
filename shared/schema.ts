@@ -8,6 +8,7 @@ export const accounts = pgTable("accounts", {
   name: text("name").notNull(),
   address: text("address"),
   industry: text("industry").notNull(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
 });
 
 export const opportunities = pgTable("opportunities", {
@@ -16,6 +17,7 @@ export const opportunities = pgTable("opportunities", {
   closeDate: date("close_date").notNull(),
   totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).notNull(),
   accountId: varchar("account_id").notNull().references(() => accounts.id),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
 });
 
 export const cases = pgTable("cases", {
@@ -24,6 +26,7 @@ export const cases = pgTable("cases", {
   subject: text("subject"),
   description: text("description"),
   fromEmail: text("from_email").notNull(),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
 });
 
 // Session storage table - Required for Replit Auth
@@ -49,15 +52,23 @@ export const users = pgTable("users", {
 });
 
 // Define relations
-export const accountsRelations = relations(accounts, ({ many }) => ({
+export const accountsRelations = relations(accounts, ({ many, one }) => ({
   opportunities: many(opportunities),
   cases: many(cases),
+  owner: one(users, {
+    fields: [accounts.ownerId],
+    references: [users.id],
+  }),
 }));
 
 export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
   account: one(accounts, {
     fields: [opportunities.accountId],
     references: [accounts.id],
+  }),
+  owner: one(users, {
+    fields: [opportunities.ownerId],
+    references: [users.id],
   }),
 }));
 
@@ -66,12 +77,17 @@ export const casesRelations = relations(cases, ({ one }) => ({
     fields: [cases.accountId],
     references: [accounts.id],
   }),
+  owner: one(users, {
+    fields: [cases.ownerId],
+    references: [users.id],
+  }),
 }));
 
 export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,
 }).extend({
   industry: z.enum(["tech", "construction", "services"]),
+  ownerId: z.string().min(1, "Owner is required"),
 });
 
 export const insertOpportunitySchema = createInsertSchema(opportunities).omit({
@@ -79,12 +95,14 @@ export const insertOpportunitySchema = createInsertSchema(opportunities).omit({
 }).extend({
   totalRevenue: z.number().min(0.01, "Total revenue must be greater than 0"),
   closeDate: z.string().min(1, "Close date is required"),
+  ownerId: z.string().min(1, "Owner is required"),
 });
 
 export const insertCaseSchema = createInsertSchema(cases).omit({
   id: true,
 }).extend({
   fromEmail: z.string().email("Please enter a valid email address"),
+  ownerId: z.string().min(1, "Owner is required"),
 });
 
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -94,12 +112,26 @@ export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertCase = z.infer<typeof insertCaseSchema>;
 export type Case = typeof cases.$inferSelect;
 
+export type AccountWithOwner = Account & {
+  owner: User;
+};
+
 export type OpportunityWithAccount = Opportunity & {
   account: Account;
 };
 
+export type OpportunityWithAccountAndOwner = Opportunity & {
+  account: Account;
+  owner: User;
+};
+
 export type CaseWithAccount = Case & {
   account: Account;
+};
+
+export type CaseWithAccountAndOwner = Case & {
+  account: Account;
+  owner: User;
 };
 
 // User types - Required for Replit Auth

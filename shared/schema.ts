@@ -29,6 +29,18 @@ export const cases = pgTable("cases", {
   ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
 });
 
+export const companyRoles = pgTable("company_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  parentCompanyRoleId: varchar("parent_company_role_id"),
+});
+
+export const userRoleAssignments = pgTable("user_role_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  companyRoleId: varchar("company_role_id").notNull().references(() => companyRoles.id, { onDelete: "cascade" }),
+});
+
 // Session storage table - Required for Replit Auth
 export const sessions = pgTable(
   "sessions",
@@ -83,6 +95,29 @@ export const casesRelations = relations(cases, ({ one }) => ({
   }),
 }));
 
+export const companyRolesRelations = relations(companyRoles, ({ one, many }) => ({
+  parentCompanyRole: one(companyRoles, {
+    fields: [companyRoles.parentCompanyRoleId],
+    references: [companyRoles.id],
+    relationName: "companyRoleHierarchy",
+  }),
+  childCompanyRoles: many(companyRoles, {
+    relationName: "companyRoleHierarchy",
+  }),
+  userRoleAssignments: many(userRoleAssignments),
+}));
+
+export const userRoleAssignmentsRelations = relations(userRoleAssignments, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoleAssignments.userId],
+    references: [users.id],
+  }),
+  companyRole: one(companyRoles, {
+    fields: [userRoleAssignments.companyRoleId],
+    references: [companyRoles.id],
+  }),
+}));
+
 export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,
 }).extend({
@@ -105,12 +140,29 @@ export const insertCaseSchema = createInsertSchema(cases).omit({
   ownerId: z.string().min(1, "Owner is required"),
 });
 
+export const insertCompanyRoleSchema = createInsertSchema(companyRoles).omit({
+  id: true,
+}).extend({
+  name: z.string().min(1, "Role name is required"),
+});
+
+export const insertUserRoleAssignmentSchema = createInsertSchema(userRoleAssignments).omit({
+  id: true,
+}).extend({
+  userId: z.string().min(1, "User is required"),
+  companyRoleId: z.string().min(1, "Company role is required"),
+});
+
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Account = typeof accounts.$inferSelect;
 export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
 export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertCase = z.infer<typeof insertCaseSchema>;
 export type Case = typeof cases.$inferSelect;
+export type InsertCompanyRole = z.infer<typeof insertCompanyRoleSchema>;
+export type CompanyRole = typeof companyRoles.$inferSelect;
+export type InsertUserRoleAssignment = z.infer<typeof insertUserRoleAssignmentSchema>;
+export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
 
 export type AccountWithOwner = Account & {
   owner: User;
@@ -132,6 +184,15 @@ export type CaseWithAccount = Case & {
 export type CaseWithAccountAndOwner = Case & {
   account: Account;
   owner: User;
+};
+
+export type CompanyRoleWithParent = CompanyRole & {
+  parentCompanyRole?: CompanyRole | null;
+};
+
+export type UserRoleAssignmentWithUserAndRole = UserRoleAssignment & {
+  user: User;
+  companyRole: CompanyRole;
 };
 
 // User types - Required for Replit Auth

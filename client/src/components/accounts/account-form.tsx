@@ -127,6 +127,25 @@ export default function AccountForm({ open, onClose, account }: AccountFormProps
       setSelectedOwner(account.owner);
     }
   }, [account, isEditing]);
+  
+  // Reset form when account changes (for edit mode)
+  useEffect(() => {
+    if (account) {
+      form.reset({
+        name: account.name,
+        address: account.address || "",
+        industry: account.industry as "tech" | "construction" | "services",
+        ownerId: account.ownerId,
+      });
+    } else {
+      form.reset({
+        name: "",
+        address: "",
+        industry: "tech",
+        ownerId: "",
+      });
+    }
+  }, [account, form]);
 
   const industryOptions = [
     { value: "tech", label: "Technology" },

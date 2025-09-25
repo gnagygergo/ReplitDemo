@@ -1,6 +1,6 @@
 import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, alias } from "drizzle-orm";
 
 export interface IStorage {
   // User methods - Required for Replit Auth
@@ -306,25 +306,50 @@ export class DatabaseStorage implements IStorage {
 
   // Company Role methods
   async getCompanyRoles(): Promise<CompanyRoleWithParent[]> {
+    const parentRole = alias(companyRoles, "parent_role");
     return await db.select().from(companyRoles)
-      .leftJoin(companyRoles as any, eq(companyRoles.parentCompanyRoleId, (companyRoles as any).id))
+      .leftJoin(parentRole, eq(companyRoles.parentCompanyRoleId, parentRole.id))
       .then(rows => rows.map(row => ({
         ...row.company_roles,
-        parentCompanyRole: row.company_roles_1 || null
+        parentCompanyRole: row.parent_role || null
       })));
   }
 
   async getCompanyRole(id: string): Promise<CompanyRoleWithParent | undefined> {
+    const parentRole = alias(companyRoles, "parent_role");
     const [result] = await db.select().from(companyRoles)
-      .leftJoin(companyRoles as any, eq(companyRoles.parentCompanyRoleId, (companyRoles as any).id))
+      .leftJoin(parentRole, eq(companyRoles.parentCompanyRoleId, parentRole.id))
       .where(eq(companyRoles.id, id));
     
     if (!result) return undefined;
     
     return {
       ...result.company_roles,
-      parentCompanyRole: result.company_roles_1 || null
+      parentCompanyRole: result.parent_role || null
     };
+  }
+
+  private async checkRoleHierarchyCycle(roleId: string, parentRoleId: string): Promise<boolean> {
+    if (roleId === parentRoleId) {
+      return true; // Direct self-reference
+    }
+    
+    let currentParentId = parentRoleId;
+    const visited = new Set<string>();
+    
+    while (currentParentId && !visited.has(currentParentId)) {
+      visited.add(currentParentId);
+      const parentRole = await this.getCompanyRole(currentParentId);
+      if (!parentRole || !parentRole.parentCompanyRole) {
+        break;
+      }
+      currentParentId = parentRole.parentCompanyRole.id;
+      if (currentParentId === roleId) {
+        return true; // Cycle detected
+      }
+    }
+    
+    return false;
   }
 
   async createCompanyRole(insertCompanyRole: InsertCompanyRole): Promise<CompanyRole> {
@@ -341,15 +366,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompanyRole(id: string, updates: Partial<InsertCompanyRole>): Promise<CompanyRole | undefined> {
-    // If updating parentCompanyRoleId, verify the new parent exists
+    // If updating parentCompanyRoleId, verify the new parent exists and check for cycles
     if (updates.parentCompanyRoleId !== undefined) {
-      if (updates.parentCompanyRoleId === id) {
-        throw new Error("Company role cannot be its own parent");
-      }
       if (updates.parentCompanyRoleId) {
         const parentRole = await this.getCompanyRole(updates.parentCompanyRoleId);
         if (!parentRole) {
           throw new Error("Parent company role not found");
+        }
+        
+        // Check for cycles in the hierarchy
+        const wouldCreateCycle = await this.checkRoleHierarchyCycle(id, updates.parentCompanyRoleId);
+        if (wouldCreateCycle) {
+          throw new Error("Cannot create circular reference in company role hierarchy");
         }
       }
     }

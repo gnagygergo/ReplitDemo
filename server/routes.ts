@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAccountSchema, insertOpportunitySchema, insertCaseSchema } from "@shared/schema";
+import { insertAccountSchema, insertOpportunitySchema, insertCaseSchema, insertCompanyRoleSchema, insertUserRoleAssignmentSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -23,7 +23,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected routes - Apply authentication to all CRM endpoints
-  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users"], isAuthenticated);
+  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
 
   // Account routes
   app.get("/api/accounts", async (req, res) => {
@@ -331,6 +331,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user:", error);
       res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Company Role routes
+  app.get("/api/company-roles", async (req, res) => {
+    try {
+      const companyRoles = await storage.getCompanyRoles();
+      res.json(companyRoles);
+    } catch (error) {
+      console.error("Error fetching company roles:", error);
+      res.status(500).json({ message: "Failed to fetch company roles" });
+    }
+  });
+
+  app.get("/api/company-roles/:id", async (req, res) => {
+    try {
+      const companyRole = await storage.getCompanyRole(req.params.id);
+      if (!companyRole) {
+        return res.status(404).json({ message: "Company role not found" });
+      }
+      res.json(companyRole);
+    } catch (error) {
+      console.error("Error fetching company role:", error);
+      res.status(500).json({ message: "Failed to fetch company role" });
+    }
+  });
+
+  app.post("/api/company-roles", async (req, res) => {
+    try {
+      const validatedData = insertCompanyRoleSchema.parse(req.body);
+      const companyRole = await storage.createCompanyRole(validatedData);
+      res.status(201).json(companyRole);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Parent company role not found") {
+        return res.status(400).json({ message: "Parent company role not found" });
+      }
+      console.error("Error creating company role:", error);
+      res.status(500).json({ message: "Failed to create company role" });
+    }
+  });
+
+  app.patch("/api/company-roles/:id", async (req, res) => {
+    try {
+      const validatedData = insertCompanyRoleSchema.partial().parse(req.body);
+      const companyRole = await storage.updateCompanyRole(req.params.id, validatedData);
+      if (!companyRole) {
+        return res.status(404).json({ message: "Company role not found" });
+      }
+      res.json(companyRole);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error) {
+        if (error.message === "Parent company role not found") {
+          return res.status(400).json({ message: "Parent company role not found" });
+        }
+        if (error.message === "Cannot create circular reference in company role hierarchy") {
+          return res.status(400).json({ message: "Cannot create circular reference in company role hierarchy" });
+        }
+      }
+      console.error("Error updating company role:", error);
+      res.status(500).json({ message: "Failed to update company role" });
+    }
+  });
+
+  app.delete("/api/company-roles/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteCompanyRole(req.params.id);
+      if (!deleted) {
+        return res.status(400).json({ message: "Cannot delete company role with child roles or user assignments" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting company role:", error);
+      res.status(500).json({ message: "Failed to delete company role" });
+    }
+  });
+
+  // User Role Assignment routes
+  app.get("/api/user-role-assignments", async (req, res) => {
+    try {
+      const assignments = await storage.getUserRoleAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching user role assignments:", error);
+      res.status(500).json({ message: "Failed to fetch user role assignments" });
+    }
+  });
+
+  app.get("/api/user-role-assignments/by-role/:roleId", async (req, res) => {
+    try {
+      const assignments = await storage.getUserRoleAssignmentsByRole(req.params.roleId);
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching user role assignments by role:", error);
+      res.status(500).json({ message: "Failed to fetch user role assignments" });
+    }
+  });
+
+  app.get("/api/user-role-assignments/:id", async (req, res) => {
+    try {
+      const assignment = await storage.getUserRoleAssignment(req.params.id);
+      if (!assignment) {
+        return res.status(404).json({ message: "User role assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error fetching user role assignment:", error);
+      res.status(500).json({ message: "Failed to fetch user role assignment" });
+    }
+  });
+
+  app.post("/api/user-role-assignments", async (req, res) => {
+    try {
+      const validatedData = insertUserRoleAssignmentSchema.parse(req.body);
+      const assignment = await storage.createUserRoleAssignment(validatedData);
+      res.status(201).json(assignment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error) {
+        if (error.message === "User not found") {
+          return res.status(400).json({ message: "User not found" });
+        }
+        if (error.message === "Company role not found") {
+          return res.status(400).json({ message: "Company role not found" });
+        }
+        if (error.message === "User is already assigned to this role") {
+          return res.status(400).json({ message: "User is already assigned to this role" });
+        }
+      }
+      console.error("Error creating user role assignment:", error);
+      res.status(500).json({ message: "Failed to create user role assignment" });
+    }
+  });
+
+  app.patch("/api/user-role-assignments/:id", async (req, res) => {
+    try {
+      const validatedData = insertUserRoleAssignmentSchema.partial().parse(req.body);
+      const assignment = await storage.updateUserRoleAssignment(req.params.id, validatedData);
+      if (!assignment) {
+        return res.status(404).json({ message: "User role assignment not found" });
+      }
+      res.json(assignment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error) {
+        if (error.message === "User not found") {
+          return res.status(400).json({ message: "User not found" });
+        }
+        if (error.message === "Company role not found") {
+          return res.status(400).json({ message: "Company role not found" });
+        }
+      }
+      console.error("Error updating user role assignment:", error);
+      res.status(500).json({ message: "Failed to update user role assignment" });
+    }
+  });
+
+  app.delete("/api/user-role-assignments/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteUserRoleAssignment(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "User role assignment not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting user role assignment:", error);
+      res.status(500).json({ message: "Failed to delete user role assignment" });
     }
   });
 

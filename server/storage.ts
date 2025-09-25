@@ -1,6 +1,6 @@
-import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, accounts, opportunities, cases, users } from "@shared/schema";
+import { type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods - Required for Replit Auth
@@ -30,6 +30,21 @@ export interface IStorage {
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(id: string, caseData: Partial<InsertCase>): Promise<Case | undefined>;
   deleteCase(id: string): Promise<boolean>;
+  
+  // Company Role methods
+  getCompanyRoles(): Promise<CompanyRoleWithParent[]>;
+  getCompanyRole(id: string): Promise<CompanyRoleWithParent | undefined>;
+  createCompanyRole(companyRole: InsertCompanyRole): Promise<CompanyRole>;
+  updateCompanyRole(id: string, companyRole: Partial<InsertCompanyRole>): Promise<CompanyRole | undefined>;
+  deleteCompanyRole(id: string): Promise<boolean>;
+  
+  // User Role Assignment methods
+  getUserRoleAssignments(): Promise<UserRoleAssignmentWithUserAndRole[]>;
+  getUserRoleAssignmentsByRole(companyRoleId: string): Promise<UserRoleAssignmentWithUserAndRole[]>;
+  getUserRoleAssignment(id: string): Promise<UserRoleAssignmentWithUserAndRole | undefined>;
+  createUserRoleAssignment(userRoleAssignment: InsertUserRoleAssignment): Promise<UserRoleAssignment>;
+  updateUserRoleAssignment(id: string, userRoleAssignment: Partial<InsertUserRoleAssignment>): Promise<UserRoleAssignment | undefined>;
+  deleteUserRoleAssignment(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -286,6 +301,170 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCase(id: string): Promise<boolean> {
     const result = await db.delete(cases).where(eq(cases.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Company Role methods
+  async getCompanyRoles(): Promise<CompanyRoleWithParent[]> {
+    return await db.select().from(companyRoles)
+      .leftJoin(companyRoles as any, eq(companyRoles.parentCompanyRoleId, (companyRoles as any).id))
+      .then(rows => rows.map(row => ({
+        ...row.company_roles,
+        parentCompanyRole: row.company_roles_1 || null
+      })));
+  }
+
+  async getCompanyRole(id: string): Promise<CompanyRoleWithParent | undefined> {
+    const [result] = await db.select().from(companyRoles)
+      .leftJoin(companyRoles as any, eq(companyRoles.parentCompanyRoleId, (companyRoles as any).id))
+      .where(eq(companyRoles.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.company_roles,
+      parentCompanyRole: result.company_roles_1 || null
+    };
+  }
+
+  async createCompanyRole(insertCompanyRole: InsertCompanyRole): Promise<CompanyRole> {
+    // If parent role is specified, verify it exists
+    if (insertCompanyRole.parentCompanyRoleId) {
+      const parentRole = await this.getCompanyRole(insertCompanyRole.parentCompanyRoleId);
+      if (!parentRole) {
+        throw new Error("Parent company role not found");
+      }
+    }
+    
+    const [companyRole] = await db.insert(companyRoles).values(insertCompanyRole).returning();
+    return companyRole;
+  }
+
+  async updateCompanyRole(id: string, updates: Partial<InsertCompanyRole>): Promise<CompanyRole | undefined> {
+    // If updating parentCompanyRoleId, verify the new parent exists
+    if (updates.parentCompanyRoleId !== undefined) {
+      if (updates.parentCompanyRoleId === id) {
+        throw new Error("Company role cannot be its own parent");
+      }
+      if (updates.parentCompanyRoleId) {
+        const parentRole = await this.getCompanyRole(updates.parentCompanyRoleId);
+        if (!parentRole) {
+          throw new Error("Parent company role not found");
+        }
+      }
+    }
+    
+    const [companyRole] = await db.update(companyRoles).set(updates).where(eq(companyRoles.id, id)).returning();
+    return companyRole || undefined;
+  }
+
+  async deleteCompanyRole(id: string): Promise<boolean> {
+    // Check if role has child roles
+    const childRoles = await db.select().from(companyRoles).where(eq(companyRoles.parentCompanyRoleId, id));
+    if (childRoles.length > 0) {
+      return false; // Cannot delete role with child roles
+    }
+    
+    // Check if role has user assignments
+    const userAssignments = await db.select().from(userRoleAssignments).where(eq(userRoleAssignments.companyRoleId, id));
+    if (userAssignments.length > 0) {
+      return false; // Cannot delete role with user assignments
+    }
+    
+    const result = await db.delete(companyRoles).where(eq(companyRoles.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // User Role Assignment methods
+  async getUserRoleAssignments(): Promise<UserRoleAssignmentWithUserAndRole[]> {
+    return await db.select().from(userRoleAssignments)
+      .innerJoin(users, eq(userRoleAssignments.userId, users.id))
+      .innerJoin(companyRoles, eq(userRoleAssignments.companyRoleId, companyRoles.id))
+      .then(rows => rows.map(row => ({
+        ...row.user_role_assignments,
+        user: row.users,
+        companyRole: row.company_roles
+      })));
+  }
+
+  async getUserRoleAssignmentsByRole(companyRoleId: string): Promise<UserRoleAssignmentWithUserAndRole[]> {
+    return await db.select().from(userRoleAssignments)
+      .innerJoin(users, eq(userRoleAssignments.userId, users.id))
+      .innerJoin(companyRoles, eq(userRoleAssignments.companyRoleId, companyRoles.id))
+      .where(eq(userRoleAssignments.companyRoleId, companyRoleId))
+      .then(rows => rows.map(row => ({
+        ...row.user_role_assignments,
+        user: row.users,
+        companyRole: row.company_roles
+      })));
+  }
+
+  async getUserRoleAssignment(id: string): Promise<UserRoleAssignmentWithUserAndRole | undefined> {
+    const [result] = await db.select().from(userRoleAssignments)
+      .innerJoin(users, eq(userRoleAssignments.userId, users.id))
+      .innerJoin(companyRoles, eq(userRoleAssignments.companyRoleId, companyRoles.id))
+      .where(eq(userRoleAssignments.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.user_role_assignments,
+      user: result.users,
+      companyRole: result.company_roles
+    };
+  }
+
+  async createUserRoleAssignment(insertUserRoleAssignment: InsertUserRoleAssignment): Promise<UserRoleAssignment> {
+    // Verify user exists
+    const user = await this.getUser(insertUserRoleAssignment.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    
+    // Verify company role exists
+    const companyRole = await this.getCompanyRole(insertUserRoleAssignment.companyRoleId);
+    if (!companyRole) {
+      throw new Error("Company role not found");
+    }
+    
+    // Check if assignment already exists
+    const existingAssignment = await db.select().from(userRoleAssignments)
+      .where(and(
+        eq(userRoleAssignments.userId, insertUserRoleAssignment.userId),
+        eq(userRoleAssignments.companyRoleId, insertUserRoleAssignment.companyRoleId)
+      ));
+    
+    if (existingAssignment.length > 0) {
+      throw new Error("User is already assigned to this role");
+    }
+    
+    const [userRoleAssignment] = await db.insert(userRoleAssignments).values(insertUserRoleAssignment).returning();
+    return userRoleAssignment;
+  }
+
+  async updateUserRoleAssignment(id: string, updates: Partial<InsertUserRoleAssignment>): Promise<UserRoleAssignment | undefined> {
+    // If updating userId, verify the new user exists
+    if (updates.userId) {
+      const user = await this.getUser(updates.userId);
+      if (!user) {
+        throw new Error("User not found");
+      }
+    }
+    
+    // If updating companyRoleId, verify the new role exists
+    if (updates.companyRoleId) {
+      const companyRole = await this.getCompanyRole(updates.companyRoleId);
+      if (!companyRole) {
+        throw new Error("Company role not found");
+      }
+    }
+    
+    const [userRoleAssignment] = await db.update(userRoleAssignments).set(updates).where(eq(userRoleAssignments.id, id)).returning();
+    return userRoleAssignment || undefined;
+  }
+
+  async deleteUserRoleAssignment(id: string): Promise<boolean> {
+    const result = await db.delete(userRoleAssignments).where(eq(userRoleAssignments.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 }

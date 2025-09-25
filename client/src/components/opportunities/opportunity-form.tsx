@@ -1,22 +1,25 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertOpportunitySchema, type InsertOpportunity, type Opportunity, type Account } from "@shared/schema";
+import { insertOpportunitySchema, type InsertOpportunity, type Opportunity, type Account, type OpportunityWithAccountAndOwner, type User } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Lookup } from "@/components/ui/lookup";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
+import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Users } from "lucide-react";
 
 interface OpportunityFormProps {
   open: boolean;
   onClose: () => void;
-  opportunity?: Opportunity & { account: Account };
+  opportunity?: OpportunityWithAccountAndOwner;
 }
 
 export default function OpportunityForm({ open, onClose, opportunity }: OpportunityFormProps) {
@@ -24,6 +27,14 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
   const queryClient = useQueryClient();
   const isEditing = !!opportunity;
   const [showAccountLookup, setShowAccountLookup] = useState(false);
+  const [showUserLookup, setShowUserLookup] = useState(false);
+  const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
+  
+  // Get current user for default owner
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["/api/auth/user"],
+    enabled: open && !isEditing,
+  });
 
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
@@ -37,6 +48,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
       accountId: opportunity?.accountId || "",
       closeDate: opportunity?.closeDate || "",
       totalRevenue: opportunity?.totalRevenue ? parseFloat(opportunity.totalRevenue) : 0,
+      ownerId: opportunity?.ownerId || "",
     },
   });
 
@@ -72,6 +84,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
   const handleClose = () => {
     onClose();
     form.reset();
+    setSelectedOwner(null);
   };
 
   const handleOpenAccountLookup = () => {
@@ -86,7 +99,56 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
   const handleCloseAccountLookup = () => {
     setShowAccountLookup(false);
   };
+  
+  const handleOpenUserLookup = () => {
+    setShowUserLookup(true);
+  };
 
+  const handleUserSelect = (user: User) => {
+    setSelectedOwner(user);
+    form.setValue("ownerId", user.id);
+    setShowUserLookup(false);
+  };
+
+  const handleCloseUserLookup = () => {
+    setShowUserLookup(false);
+  };
+  
+  const getUserDisplayName = (user: User) => {
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return user.email || 'Unknown User';
+  };
+
+  const getUserInitials = (user: User) => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) {
+      return user.firstName[0].toUpperCase();
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
+  // Set default owner when creating new opportunity
+  useEffect(() => {
+    if (!isEditing && currentUser && !form.getValues("ownerId")) {
+      setSelectedOwner(currentUser);
+      form.setValue("ownerId", currentUser.id);
+    }
+  }, [currentUser, isEditing, form]);
+  
+  // Set selected owner when editing
+  useEffect(() => {
+    if (isEditing && opportunity?.owner) {
+      setSelectedOwner(opportunity.owner);
+    }
+  }, [opportunity, isEditing]);
+  
   // Reset form when opportunity changes (for edit mode)
   useEffect(() => {
     if (opportunity) {
@@ -95,6 +157,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
         accountId: opportunity.accountId,
         closeDate: opportunity.closeDate,
         totalRevenue: parseFloat(opportunity.totalRevenue),
+        ownerId: opportunity.ownerId,
       });
     } else {
       form.reset({
@@ -102,6 +165,7 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
         accountId: "",
         closeDate: "",
         totalRevenue: 0,
+        ownerId: "",
       });
     }
   }, [opportunity, form]);
@@ -214,6 +278,52 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="ownerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Owner <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start h-auto p-3"
+                      onClick={handleOpenUserLookup}
+                      data-testid="button-owner-lookup"
+                    >
+                      {selectedOwner ? (
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={selectedOwner.profileImageUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {getUserInitials(selectedOwner)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium" data-testid={`text-owner-${selectedOwner.id}`}>
+                              {getUserDisplayName(selectedOwner)}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              {selectedOwner.email}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2 text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>Select owner</span>
+                        </div>
+                      )}
+                    </Button>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end space-x-3 pt-4">
               <Button 
@@ -241,6 +351,12 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
       onSelect={handleAccountSelect}
       onClose={handleCloseAccountLookup}
       selectedAccountId={form.getValues("accountId")}
+    />
+    <UserLookupDialog
+      open={showUserLookup}
+      onClose={handleCloseUserLookup}
+      onSelect={handleUserSelect}
+      selectedUserId={selectedOwner?.id}
     />
     </>
   );

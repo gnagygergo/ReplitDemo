@@ -3,6 +3,14 @@ import { pgTable, text, varchar, decimal, date, timestamp, jsonb, boolean, index
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const companies = pgTable("companies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyOfficialName: text("company_official_name").notNull(),
+  companyAlias: text("company_alias"),
+  companyRegistrationId: text("company_registration_id"),
+  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+});
+
 export const accounts = pgTable("accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -68,6 +76,13 @@ export const users = pgTable("users", {
 });
 
 // Define relations
+export const companiesRelations = relations(companies, ({ one }) => ({
+  owner: one(users, {
+    fields: [companies.ownerId],
+    references: [users.id],
+  }),
+}));
+
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
   opportunities: many(opportunities),
   cases: many(cases),
@@ -122,6 +137,13 @@ export const userRoleAssignmentsRelations = relations(userRoleAssignments, ({ on
   }),
 }));
 
+export const insertCompanySchema = createInsertSchema(companies).omit({
+  id: true,
+}).extend({
+  companyOfficialName: z.string().min(1, "Company official name is required"),
+  ownerId: z.string().min(1, "Owner is required"),
+});
+
 export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,
 }).extend({
@@ -157,6 +179,8 @@ export const insertUserRoleAssignmentSchema = createInsertSchema(userRoleAssignm
   companyRoleId: z.string().min(1, "Company role is required"),
 });
 
+export type InsertCompany = z.infer<typeof insertCompanySchema>;
+export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Account = typeof accounts.$inferSelect;
 export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
@@ -167,6 +191,10 @@ export type InsertCompanyRole = z.infer<typeof insertCompanyRoleSchema>;
 export type CompanyRole = typeof companyRoles.$inferSelect;
 export type InsertUserRoleAssignment = z.infer<typeof insertUserRoleAssignmentSchema>;
 export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
+
+export type CompanyWithOwner = Company & {
+  owner: User;
+};
 
 export type AccountWithOwner = Account & {
   owner: User;

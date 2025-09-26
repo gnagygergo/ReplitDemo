@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertAccountSchema, insertOpportunitySchema, insertCaseSchema, insertCompanyRoleSchema, insertUserRoleAssignmentSchema } from "@shared/schema";
+import { insertCompanySchema, insertAccountSchema, insertOpportunitySchema, insertCaseSchema, insertCompanyRoleSchema, insertUserRoleAssignmentSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -118,7 +118,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected routes - Apply authentication to all CRM endpoints
-  app.use(["/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
+  app.use(["/api/companies", "/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
+
+  // Company routes
+  app.get("/api/companies", async (req, res) => {
+    try {
+      const companies = await storage.getCompanies();
+      res.json(companies);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch companies" });
+    }
+  });
+
+  app.get("/api/companies/:id", async (req, res) => {
+    try {
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      res.json(company);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch company" });
+    }
+  });
+
+  app.post("/api/companies", async (req, res) => {
+    try {
+      const validatedData = insertCompanySchema.parse(req.body);
+      const company = await storage.createCompany(validatedData);
+      res.status(201).json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
+      }
+      res.status(500).json({ message: "Failed to create company" });
+    }
+  });
+
+  app.patch("/api/companies/:id", async (req, res) => {
+    try {
+      const validatedData = insertCompanySchema.partial().parse(req.body);
+      const company = await storage.updateCompany(req.params.id, validatedData);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      res.json(company);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
+      }
+      res.status(500).json({ message: "Failed to update company" });
+    }
+  });
+
+  app.delete("/api/companies/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteCompany(req.params.id);
+      if (!deleted) {
+        return res.status(400).json({ message: "Failed to delete company" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete company" });
+    }
+  });
 
   // Account routes
   app.get("/api/accounts", async (req, res) => {

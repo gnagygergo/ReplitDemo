@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Users, ChevronRight, Shield } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,12 @@ import { Separator } from "@/components/ui/separator";
 
 // Setup menu items
 const setupMenuItems = [
+  {
+    id: "companies",
+    label: "Companies",
+    icon: Building2,
+    description: "Manage company information and details",
+  },
   {
     id: "users",
     label: "Users",
@@ -24,6 +30,12 @@ const setupMenuItems = [
 
 import UserManagement from "@/components/setup/user-management";
 import RoleHierarchy from "@/components/setup/role-hierarchy";
+import CompanyManagement from "@/components/setup/company-management";
+
+// Companies management component
+function CompaniesSetup() {
+  return <CompanyManagement />;
+}
 
 // Users management component
 function UsersSetup() {
@@ -36,7 +48,7 @@ function CompanyRolesSetup() {
 }
 
 export default function Setup() {
-  const [selectedItem, setSelectedItem] = useState("users");
+  const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredMenuItems = setupMenuItems.filter(item =>
@@ -46,6 +58,8 @@ export default function Setup() {
 
   const renderContent = () => {
     switch (selectedItem) {
+      case "companies":
+        return <CompaniesSetup />;
       case "users":
         return <UsersSetup />;
       case "company-roles":

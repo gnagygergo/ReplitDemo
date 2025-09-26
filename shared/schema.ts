@@ -17,6 +17,7 @@ export const accounts = pgTable("accounts", {
   address: text("address"),
   industry: text("industry").notNull(),
   ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id"),
 });
 
 export const opportunities = pgTable("opportunities", {
@@ -26,6 +27,7 @@ export const opportunities = pgTable("opportunities", {
   totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).notNull(),
   accountId: varchar("account_id").notNull().references(() => accounts.id),
   ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id"),
 });
 
 export const cases = pgTable("cases", {
@@ -35,12 +37,14 @@ export const cases = pgTable("cases", {
   description: text("description"),
   fromEmail: text("from_email").notNull(),
   ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id"),
 });
 
 export const companyRoles = pgTable("company_roles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   parentCompanyRoleId: varchar("parent_company_role_id").references((): AnyPgColumn => companyRoles.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id"),
 });
 
 export const userRoleAssignments = pgTable("user_role_assignments", {
@@ -71,6 +75,7 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   password: text("password"),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  companyId: varchar("company_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

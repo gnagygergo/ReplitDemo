@@ -244,7 +244,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const [account] = await db.update(accounts).set(updates).where(eq(accounts.id, id)).returning();
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+    
+    const [account] = await db.update(accounts).set(allowedUpdates).where(eq(accounts.id, id)).returning();
     return account || undefined;
   }
 
@@ -328,9 +331,12 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const updateData: any = { ...updates };
-    if (updates.totalRevenue !== undefined) {
-      updateData.totalRevenue = updates.totalRevenue.toString();
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...filteredUpdates } = updates as any;
+    
+    const updateData: any = { ...filteredUpdates };
+    if (filteredUpdates.totalRevenue !== undefined) {
+      updateData.totalRevenue = filteredUpdates.totalRevenue.toString();
     }
     
     const [opportunity] = await db.update(opportunities).set(updateData).where(eq(opportunities.id, id)).returning();
@@ -408,7 +414,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
     
-    const [caseRecord] = await db.update(cases).set(updates).where(eq(cases.id, id)).returning();
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+    
+    const [caseRecord] = await db.update(cases).set(allowedUpdates).where(eq(cases.id, id)).returning();
     return caseRecord || undefined;
   }
 

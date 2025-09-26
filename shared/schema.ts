@@ -139,7 +139,6 @@ export const insertCompanySchema = createInsertSchema(companies).omit({
   id: true,
 }).extend({
   companyOfficialName: z.string().min(1, "Company official name is required"),
-  ownerId: z.string().min(1, "Owner is required"),
 });
 
 export const insertAccountSchema = createInsertSchema(accounts).omit({

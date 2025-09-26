@@ -80,12 +80,6 @@ export const users = pgTable("users", {
 });
 
 // Define relations
-export const companiesRelations = relations(companies, ({ one }) => ({
-  owner: one(users, {
-    fields: [companies.ownerId],
-    references: [users.id],
-  }),
-}));
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
   opportunities: many(opportunities),

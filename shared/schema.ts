@@ -8,7 +8,6 @@ export const companies = pgTable("companies", {
   companyOfficialName: text("company_official_name").notNull(),
   companyAlias: text("company_alias"),
   companyRegistrationId: text("company_registration_id"),
-  ownerId: varchar("owner_id").notNull().references(() => users.id, { onDelete: "restrict" }),
 });
 
 export const accounts = pgTable("accounts", {

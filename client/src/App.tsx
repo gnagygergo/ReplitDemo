@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
+import QuickWinsLogin from "@/pages/quickwins-login";
 import Accounts from "@/pages/accounts";
 import Opportunities from "@/pages/opportunities";
 import Cases from "@/pages/cases";
@@ -31,9 +32,9 @@ function AuthenticatedRouter() {
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show landing page while loading or if not authenticated
+  // Show QuickWins login page while loading or if not authenticated
   if (isLoading || !isAuthenticated) {
-    return <Landing />;
+    return <QuickWinsLogin />;
   }
 
   // Show authenticated CRM interface

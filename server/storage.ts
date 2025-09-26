@@ -8,10 +8,12 @@ export interface IStorage {
   // User methods - Required for Replit Auth
   getUser(id: string): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, user: Partial<UpsertUser>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
+  verifyUserPassword(email: string, password: string): Promise<User | null>;
   
   // Account methods
   getAccounts(): Promise<AccountWithOwner[]>;
@@ -59,6 +61,25 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async verifyUserPassword(email: string, password: string): Promise<User | null> {
+    const user = await this.getUserByEmail(email);
+    if (!user || !user.password) {
+      return null;
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return null;
+    }
+    
+    return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

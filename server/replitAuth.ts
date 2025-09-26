@@ -170,6 +170,29 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
+    const sessionUser = (req.session as any).user;
+    
+    // Handle database user logout
+    if (sessionUser && sessionUser.isDbUser) {
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error("Session destruction error on logout:", err);
+        }
+        
+        // Clear the session cookie explicitly
+        res.clearCookie("connect.sid", {
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax"
+        });
+        
+        res.redirect("/");
+      });
+      return;
+    }
+    
+    // Handle OIDC user logout (original Replit Auth)
     req.logout(() => {
       // Destroy session and clear session cookie
       req.session.destroy((err: any) => {
@@ -198,8 +221,15 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
+  const sessionUser = (req.session as any).user;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  // Check for database user authentication (email/password login)
+  if (sessionUser && sessionUser.isDbUser) {
+    return next();
+  }
+
+  // Check for OIDC authentication (original Replit Auth)
+  if (!req.isAuthenticated() || !user || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

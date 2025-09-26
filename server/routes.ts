@@ -10,12 +10,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
   await setupAuth(app);
 
-  // Auth routes - Required for Replit Auth
+  // Email/Password login endpoint
+  app.post('/api/auth/login', async (req: any, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email and password are required" });
+      }
+      
+      const user = await storage.verifyUserPassword(email, password);
+      if (!user) {
+        return res.status(401).json({ message: "Invalid email or password" });
+      }
+      
+      // Regenerate session ID for security BEFORE setting user data
+      req.session.regenerate((err: any) => {
+        if (err) {
+          console.error("Session regeneration error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        
+        // Set session data after regeneration
+        req.session.user = {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          isAdmin: user.isAdmin,
+          isDbUser: true // Flag to distinguish from OIDC users
+        };
+        
+        // Save session and respond
+        req.session.save((saveErr: any) => {
+          if (saveErr) {
+            console.error("Session save error:", saveErr);
+            return res.status(500).json({ message: "Session save failed" });
+          }
+          
+          res.json({ 
+            message: "Login successful",
+            user: {
+              id: user.id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              profileImageUrl: user.profileImageUrl,
+              isAdmin: user.isAdmin
+            }
+          });
+        });
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Auth routes - Handle both OIDC and database users
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
+      const sessionUser = (req.session as any).user;
+      
+      // Handle database user (email/password login)
+      if (sessionUser && sessionUser.isDbUser) {
+        const user = await storage.getUser(sessionUser.id);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        // Return only safe fields, exclude password hash
+        res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          isAdmin: user.isAdmin,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        });
+        return;
+      }
+      
+      // Handle OIDC user (original Replit Auth)
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      res.json(user);
+      if (user) {
+        // Return only safe fields, exclude password hash
+        res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImageUrl: user.profileImageUrl,
+          isAdmin: user.isAdmin,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt
+        });
+      } else {
+        res.json(user);
+      }
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });

@@ -225,7 +225,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Owner not found");
     }
     
-    const [account] = await db.insert(accounts).values(insertAccount).returning();
+    // Automatically populate CompanyId from owner's CompanyId
+    const accountData = {
+      ...insertAccount,
+      companyId: owner.companyId || null
+    };
+    
+    const [account] = await db.insert(accounts).values(accountData).returning();
     return account;
   }
 
@@ -294,9 +300,11 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Owner not found");
     }
     
+    // Automatically populate CompanyId from owner's CompanyId
     const opportunityData = {
       ...insertOpportunity,
-      totalRevenue: insertOpportunity.totalRevenue.toString()
+      totalRevenue: insertOpportunity.totalRevenue.toString(),
+      companyId: owner.companyId || null
     };
     
     const [opportunity] = await db.insert(opportunities).values(opportunityData).returning();
@@ -373,7 +381,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Owner not found");
     }
     
-    const [caseRecord] = await db.insert(cases).values(insertCase).returning();
+    // Automatically populate CompanyId from owner's CompanyId
+    const caseData = {
+      ...insertCase,
+      companyId: owner.companyId || null
+    };
+    
+    const [caseRecord] = await db.insert(cases).values(caseData).returning();
     return caseRecord;
   }
 

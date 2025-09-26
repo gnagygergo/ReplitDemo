@@ -51,24 +51,19 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Company as CompanyType, CompanyWithOwner, User as UserType, InsertCompany } from "@shared/schema";
+import type { Company as CompanyType, User as UserType, InsertCompany } from "@shared/schema";
 
 const companySchema = z.object({
   companyOfficialName: z.string().min(1, "Company official name is required"),
   companyAlias: z.string().optional(),
   companyRegistrationId: z.string().optional(),
-  ownerId: z.string().min(1, "Owner is required"),
 });
 
 type CompanyForm = z.infer<typeof companySchema>;
 
-function CompanyEditDialog({ company, onClose }: { company: CompanyWithOwner; onClose: () => void }) {
+function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: users = [] } = useQuery<UserType[]>({
-    queryKey: ["/api/users"],
-  });
 
   const form = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
@@ -76,7 +71,6 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyWithOwner; on
       companyOfficialName: company.companyOfficialName || "",
       companyAlias: company.companyAlias || "",
       companyRegistrationId: company.companyRegistrationId || "",
-      ownerId: company.ownerId,
     },
   });
 
@@ -161,30 +155,6 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyWithOwner; on
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="ownerId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Owner</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-company-owner">
-                      <SelectValue placeholder="Select an owner" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
@@ -203,17 +173,12 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: users = [] } = useQuery<UserType[]>({
-    queryKey: ["/api/users"],
-  });
-
   const form = useForm<CompanyForm>({
     resolver: zodResolver(companySchema),
     defaultValues: {
       companyOfficialName: "",
       companyAlias: "",
       companyRegistrationId: "",
-      ownerId: "",
     },
   });
 
@@ -298,30 +263,6 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="ownerId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Owner</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-create-company-owner">
-                      <SelectValue placeholder="Select an owner" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
-                        {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
@@ -338,12 +279,12 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
 
 export default function CompanyManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingCompany, setEditingCompany] = useState<CompanyWithOwner | null>(null);
+  const [editingCompany, setEditingCompany] = useState<CompanyType | null>(null);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: companies = [], isLoading } = useQuery<CompanyWithOwner[]>({
+  const { data: companies = [], isLoading } = useQuery<CompanyType[]>({
     queryKey: ["/api/companies"],
   });
 
@@ -374,13 +315,12 @@ export default function CompanyManagement() {
     },
   });
 
-  const filteredCompanies = companies.filter((company: CompanyWithOwner) => {
+  const filteredCompanies = companies.filter((company: CompanyType) => {
     const query = searchQuery.toLowerCase();
     return (
       company.companyOfficialName?.toLowerCase().includes(query) ||
       company.companyAlias?.toLowerCase().includes(query) ||
-      company.companyRegistrationId?.toLowerCase().includes(query) ||
-      company.owner?.email?.toLowerCase().includes(query)
+      company.companyRegistrationId?.toLowerCase().includes(query)
     );
   });
 
@@ -461,12 +401,11 @@ export default function CompanyManagement() {
                   <TableHead>Official Name</TableHead>
                   <TableHead>Alias</TableHead>
                   <TableHead>Registration ID</TableHead>
-                  <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredCompanies.map((company: CompanyWithOwner) => (
+                {filteredCompanies.map((company: CompanyType) => (
                   <TableRow key={company.id} data-testid={`company-row-${company.id}`}>
                     <TableCell className="font-medium">
                       <div className="flex items-center space-x-3">
@@ -483,11 +422,6 @@ export default function CompanyManagement() {
                     </TableCell>
                     <TableCell data-testid={`text-company-registration-${company.id}`}>
                       {company.companyRegistrationId || "-"}
-                    </TableCell>
-                    <TableCell data-testid={`text-company-owner-${company.id}`}>
-                      {company.owner && (company.owner.firstName || company.owner.lastName) 
-                        ? `${company.owner.firstName || ""} ${company.owner.lastName || ""}`.trim()
-                        : company.owner?.email || "Unknown"}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

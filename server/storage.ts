@@ -1,4 +1,4 @@
-import { type Company, type InsertCompany, type CompanyWithOwner, type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, companies, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
+import { type Company, type InsertCompany, type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, companies, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -16,8 +16,8 @@ export interface IStorage {
   verifyUserPassword(email: string, password: string): Promise<User | null>;
   
   // Company methods
-  getCompanies(): Promise<CompanyWithOwner[]>;
-  getCompany(id: string): Promise<CompanyWithOwner | undefined>;
+  getCompanies(): Promise<Company[]>;
+  getCompany(id: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: string, company: Partial<InsertCompany>): Promise<Company | undefined>;
   deleteCompany(id: string): Promise<boolean>;
@@ -145,48 +145,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Company methods
-  async getCompanies(): Promise<CompanyWithOwner[]> {
-    return await db.select().from(companies)
-      .innerJoin(users, eq(companies.ownerId, users.id))
-      .then(rows => rows.map(row => ({
-        ...row.companies,
-        owner: row.users
-      })));
+  async getCompanies(): Promise<Company[]> {
+    return await db.select().from(companies);
   }
 
-  async getCompany(id: string): Promise<CompanyWithOwner | undefined> {
-    const [result] = await db.select().from(companies)
-      .innerJoin(users, eq(companies.ownerId, users.id))
+  async getCompany(id: string): Promise<Company | undefined> {
+    const [company] = await db.select().from(companies)
       .where(eq(companies.id, id));
     
-    if (!result) return undefined;
-    
-    return {
-      ...result.companies,
-      owner: result.users
-    };
+    return company || undefined;
   }
 
   async createCompany(insertCompany: InsertCompany): Promise<Company> {
-    // Verify owner exists
-    const owner = await this.getUser(insertCompany.ownerId);
-    if (!owner) {
-      throw new Error("Owner not found");
-    }
-    
     const [company] = await db.insert(companies).values(insertCompany).returning();
     return company;
   }
 
   async updateCompany(id: string, updates: Partial<InsertCompany>): Promise<Company | undefined> {
-    // If updating ownerId, verify the new owner exists
-    if (updates.ownerId) {
-      const owner = await this.getUser(updates.ownerId);
-      if (!owner) {
-        throw new Error("Owner not found");
-      }
-    }
-    
     const [company] = await db.update(companies).set(updates).where(eq(companies.id, id)).returning();
     return company || undefined;
   }

@@ -189,9 +189,6 @@ export type CompanyRole = typeof companyRoles.$inferSelect;
 export type InsertUserRoleAssignment = z.infer<typeof insertUserRoleAssignmentSchema>;
 export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
 
-export type CompanyWithOwner = Company & {
-  owner: User;
-};
 
 export type AccountWithOwner = Account & {
   owner: User;

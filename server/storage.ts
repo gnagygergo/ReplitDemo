@@ -225,13 +225,26 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Owner not found");
     }
     
+    // Debug: Log owner details
+    console.log("DEBUG createAccount - Owner:", {
+      id: owner.id,
+      email: owner.email,
+      companyId: owner.companyId,
+      fullOwner: owner
+    });
+    
     // Automatically populate CompanyId from owner's CompanyId
     const accountData = {
       ...insertAccount,
       companyId: owner.companyId || null
     };
     
+    console.log("DEBUG createAccount - Account data to insert:", accountData);
+    
     const [account] = await db.insert(accounts).values(accountData).returning();
+    
+    console.log("DEBUG createAccount - Created account:", account);
+    
     return account;
   }
 

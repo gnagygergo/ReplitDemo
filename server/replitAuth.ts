@@ -157,11 +157,23 @@ export async function setupAuth(app: Express) {
           }
 
           // Save session explicitly to ensure persistence
-          req.session.save((saveErr: any) => {
+          req.session.save(async (saveErr: any) => {
             if (saveErr) {
               console.error("Session save error:", saveErr);
               return res.redirect("/api/login");
             }
+            
+            // Set company context after successful OIDC login
+            try {
+              const userId = user.claims?.sub;
+              if (userId) {
+                await storage.setCompanyContext(userId);
+              }
+            } catch (contextErr) {
+              console.error("Failed to set company context for OIDC user:", contextErr);
+              // Continue with login even if context setting fails
+            }
+            
             res.redirect("/");
           });
         });
@@ -169,11 +181,19 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
+  app.get("/api/logout", async (req, res) => {
     const sessionUser = (req.session as any).user;
     
     // Handle database user logout
     if (sessionUser && sessionUser.isDbUser) {
+      // Clear company context before destroying session
+      try {
+        await storage.clearCompanyContext(sessionUser.id);
+      } catch (contextErr) {
+        console.error("Failed to clear company context on logout:", contextErr);
+        // Continue with logout even if context clearing fails
+      }
+      
       req.session.destroy((err: any) => {
         if (err) {
           console.error("Session destruction error on logout:", err);
@@ -193,7 +213,18 @@ export async function setupAuth(app: Express) {
     }
     
     // Handle OIDC user logout (original Replit Auth)
-    req.logout(() => {
+    req.logout(async () => {
+      // Clear company context for OIDC user before destroying session
+      try {
+        const userId = (req.user as any)?.claims?.sub;
+        if (userId) {
+          await storage.clearCompanyContext(userId);
+        }
+      } catch (contextErr) {
+        console.error("Failed to clear company context for OIDC user on logout:", contextErr);
+        // Continue with logout even if context clearing fails
+      }
+      
       // Destroy session and clear session cookie
       req.session.destroy((err: any) => {
         if (err) {

@@ -613,16 +613,31 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Row Level Security context methods
-  async setCompanyContext(companyId: string): Promise<void> {
-    // Use SET LOCAL to scope the variable to the current transaction/request only  
-    // This prevents data leakage in pooled connections
-    console.log('[RLS DEBUG] Setting LOCAL session variable to:', companyId);
-    // Note: SET LOCAL doesn't support parameterized queries
-    // We use raw SQL string - UUID format is safe from SQL injection
-    const query = `SET LOCAL app.current_company_id = '${companyId}'`;
-    console.log('[RLS DEBUG] Executing query:', query);
-    await pool.query(query);
-    console.log('[RLS DEBUG] Session variable set successfully');
+  async setCompanyContext(userId: string): Promise<void> {
+    // Get user record to find their company_id
+    const user = await this.getUser(userId);
+    if (!user || !user.companyId) {
+      throw new Error('User not found or has no company association');
+    }
+    
+    // Update user's company_context field to their company_id
+    await db.update(users).set({ 
+      companyContext: user.companyId 
+    }).where(eq(users.id, userId));
+    
+    // Set session variable for RLS policies to identify current user
+    await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
+    
+    console.log('[RLS DEBUG] Set company context for user:', userId, 'to company:', user.companyId);
+  }
+  
+  async clearCompanyContext(userId: string): Promise<void> {
+    // Clear user's company_context field
+    await db.update(users).set({ 
+      companyContext: null 
+    }).where(eq(users.id, userId));
+    
+    console.log('[RLS DEBUG] Cleared company context for user:', userId);
   }
   
   // Transaction-scoped operations for RLS

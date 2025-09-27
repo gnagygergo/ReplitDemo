@@ -43,10 +43,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         // Save session and respond
-        req.session.save((saveErr: any) => {
+        req.session.save(async (saveErr: any) => {
           if (saveErr) {
             console.error("Session save error:", saveErr);
             return res.status(500).json({ message: "Session save failed" });
+          }
+          
+          // Set company context after successful login
+          try {
+            await storage.setCompanyContext(user.id);
+          } catch (contextErr) {
+            console.error("Failed to set company context:", contextErr);
+            // Continue with login even if context setting fails
           }
           
           res.json({ 
@@ -122,43 +130,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(["/api/companies", "/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
 
-  // Set user's company_id as session variable for Row Level Security
+  // Set current user ID session variable for RLS policies on each request
   app.use(["/api/accounts", "/api/opportunities", "/api/cases"], async (req: any, res, next) => {
     try {
-      console.log('[RLS DEBUG] Middleware called for:', req.path);
       const sessionUser = (req.session as any).user;
       let userId;
-      
-      console.log('[RLS DEBUG] Session user:', sessionUser);
-      console.log('[RLS DEBUG] OIDC user claims:', req.user?.claims);
       
       // Get user ID from session (database user) or claims (OIDC user)
       if (sessionUser && sessionUser.isDbUser) {
         userId = sessionUser.id;
-        console.log('[RLS DEBUG] Using session user ID:', userId);
       } else {
         userId = req.user?.claims?.sub;
-        console.log('[RLS DEBUG] Using OIDC user ID:', userId);
       }
       
       if (userId) {
-        const user = await storage.getUser(userId);
-        console.log('[RLS DEBUG] Retrieved user:', user ? { id: user.id, email: user.email, companyId: user.companyId } : 'null');
-        if (user && user.companyId) {
-          // Set the user's company_id as a session variable for RLS
-          console.log('[RLS DEBUG] Setting company context to:', user.companyId);
-          await storage.setCompanyContext(user.companyId);
-          console.log('[RLS DEBUG] Company context set successfully');
-        } else {
-          console.log('[RLS DEBUG] No company ID found for user');
-        }
-      } else {
-        console.log('[RLS DEBUG] No user ID found');
+        // Set session variable for RLS function to identify current user
+        await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
+        console.log('[RLS DEBUG] Set current_user_id session variable for:', userId);
       }
       
       next();
     } catch (error) {
-      console.error("[RLS DEBUG] Error setting company context:", error);
+      console.error("[RLS DEBUG] Error setting current user context:", error);
       // Continue even if setting context fails - don't block the request
       next();
     }

@@ -11,5 +11,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// Parse DATABASE_URL and replace credentials with app_user for RLS security
+function createAppUserConnectionString(originalUrl: string): string {
+  const url = new URL(originalUrl);
+  // Replace username and password with app_user credentials
+  url.username = 'app_user';
+  url.password = 'app_secure_password_2024';
+  return url.toString();
+}
+
+const appUserConnectionString = createAppUserConnectionString(process.env.DATABASE_URL);
+
+export const pool = new Pool({ connectionString: appUserConnectionString });
 export const db = drizzle({ client: pool, schema });

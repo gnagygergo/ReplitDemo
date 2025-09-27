@@ -1,7 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCompanySchema, insertAccountSchema, insertOpportunitySchema, insertCaseSchema, insertCompanyRoleSchema, insertUserRoleAssignmentSchema } from "@shared/schema";
+import {
+  insertCompanySchema,
+  insertAccountSchema,
+  insertOpportunitySchema,
+  insertCaseSchema,
+  insertCompanyRoleSchema,
+  insertUserRoleAssignmentSchema,
+} from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -12,26 +19,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Email/Password login endpoint
-  app.post('/api/auth/login', async (req: any, res) => {
+  app.post("/api/auth/login", async (req: any, res) => {
     try {
       const { email, password } = req.body;
-      
+
       if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+        return res
+          .status(400)
+          .json({ message: "Email and password are required" });
       }
-      
+
       const user = await storage.verifyUserPassword(email, password);
       if (!user) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
-      
+
       // Regenerate session ID for security BEFORE setting user data
       req.session.regenerate((err: any) => {
         if (err) {
           console.error("Session regeneration error:", err);
           return res.status(500).json({ message: "Session error" });
         }
-        
+
         // Set session data after regeneration
         req.session.user = {
           id: user.id,
@@ -40,16 +49,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
           isAdmin: user.isAdmin,
-          isDbUser: true // Flag to distinguish from OIDC users
+          isDbUser: true, // Flag to distinguish from OIDC users
         };
-        
+
         // Save session and respond
         req.session.save(async (saveErr: any) => {
           if (saveErr) {
             console.error("Session save error:", saveErr);
             return res.status(500).json({ message: "Session save failed" });
           }
-          
+
           // Set company context after successful login
           try {
             await storage.setCompanyContext(user.id);
@@ -57,8 +66,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error("Failed to set company context:", contextErr);
             // Continue with login even if context setting fails
           }
-          
-          res.json({ 
+
+          res.json({
             message: "Login successful",
             user: {
               id: user.id,
@@ -66,8 +75,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               firstName: user.firstName,
               lastName: user.lastName,
               profileImageUrl: user.profileImageUrl,
-              isAdmin: user.isAdmin
-            }
+              isAdmin: user.isAdmin,
+            },
           });
         });
       });
@@ -78,10 +87,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes - Handle both OIDC and database users
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
     try {
       const sessionUser = (req.session as any).user;
-      
+
       // Handle database user (email/password login)
       if (sessionUser && sessionUser.isDbUser) {
         const user = await storage.getUser(sessionUser.id);
@@ -98,11 +107,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAdmin: user.isAdmin,
           companyId: user.companyId,
           createdAt: user.createdAt,
-          updatedAt: user.updatedAt
+          updatedAt: user.updatedAt,
         });
         return;
       }
-      
+
       // Handle OIDC user (original Replit Auth)
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -117,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           isAdmin: user.isAdmin,
           companyId: user.companyId,
           createdAt: user.createdAt,
-          updatedAt: user.updatedAt
+          updatedAt: user.updatedAt,
         });
       } else {
         res.json(user);
@@ -129,34 +138,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Protected routes - Apply authentication to all CRM endpoints
-  app.use(["/api/companies", "/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
+  app.use(
+    [
+      "/api/companies",
+      "/api/accounts",
+      "/api/opportunities",
+      "/api/cases",
+      "/api/send-email",
+      "/api/users",
+      "/api/company-roles",
+      "/api/user-role-assignments",
+    ],
+    isAuthenticated,
+  );
 
   // Set current user ID session variable for RLS policies on each request
-  app.use(["/api/accounts", "/api/opportunities", "/api/cases"], async (req: any, res, next) => {
-    try {
-      const sessionUser = (req.session as any).user;
-      let userId;
-      
-      // Get user ID from session (database user) or claims (OIDC user)
-      if (sessionUser && sessionUser.isDbUser) {
-        userId = sessionUser.id;
-      } else {
-        userId = req.user?.claims?.sub;
+  app.use(
+    ["/api/accounts", "/api/opportunities", "/api/cases"],
+    async (req: any, res, next) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+
+        // Get user ID from session (database user) or claims (OIDC user)
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (userId) {
+          // Set session variable for RLS function to identify current user
+          await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
+          console.log(
+            "[RLS DEBUG] Set current_user_id session variable for:",
+            userId,
+          );
+        }
+
+        next();
+      } catch (error) {
+        console.error("[RLS DEBUG] Error setting current user context:", error);
+        // Continue even if setting context fails - don't block the request
+        next();
       }
-      
-      if (userId) {
-        // Set session variable for RLS function to identify current user
-        await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
-        console.log('[RLS DEBUG] Set current_user_id session variable for:', userId);
-      }
-      
-      next();
-    } catch (error) {
-      console.error("[RLS DEBUG] Error setting current user context:", error);
-      // Continue even if setting context fails - don't block the request
-      next();
-    }
-  });
+    },
+  );
 
   // Company routes
   app.get("/api/companies", async (req, res) => {
@@ -187,7 +214,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(company);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error && error.message === "Owner not found") {
         return res.status(400).json({ message: "Owner not found" });
@@ -206,7 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(company);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error && error.message === "Owner not found") {
         return res.status(400).json({ message: "Owner not found" });
@@ -228,74 +259,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Account routes
-  app.get("/api/accounts", async (req: any, res) => {
+  app.get("/api/accounts", async (req, res) => {
     try {
-      // Get current user ID (same logic as middleware)
-      const sessionUser = (req.session as any).user;
-      let userId;
-      
-      if (sessionUser && sessionUser.isDbUser) {
-        userId = sessionUser.id;
-      } else {
-        userId = req.user?.claims?.sub;
-      }
-      
-      console.log('[API DEBUG] GET /api/accounts for user:', userId);
-      
-      // Pass user ID to filter accounts by their company
-      const accounts = await storage.getAccounts(userId);
-      console.log('[API DEBUG] Returning', accounts.length, 'accounts');
+      const accounts = await storage.getAccounts();
       res.json(accounts);
     } catch (error) {
-      console.error('[API DEBUG] Error in GET /api/accounts:', error);
       res.status(500).json({ message: "Failed to fetch accounts" });
-    }
-  });
-
-  app.get("/api/accounts/:id", async (req, res) => {
-    try {
-      const account = await storage.getAccount(req.params.id);
-      if (!account) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-      res.json(account);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch account" });
-    }
-  });
-
-  app.post("/api/accounts", async (req, res) => {
-    try {
-      const validatedData = insertAccountSchema.parse(req.body);
-      const account = await storage.createAccount(validatedData);
-      res.status(201).json(account);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      if (error instanceof Error && error.message === "Owner not found") {
-        return res.status(400).json({ message: "Owner not found" });
-      }
-      res.status(500).json({ message: "Failed to create account" });
-    }
-  });
-
-  app.patch("/api/accounts/:id", async (req, res) => {
-    try {
-      const validatedData = insertAccountSchema.partial().parse(req.body);
-      const account = await storage.updateAccount(req.params.id, validatedData);
-      if (!account) {
-        return res.status(404).json({ message: "Account not found" });
-      }
-      res.json(account);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
-      }
-      if (error instanceof Error && error.message === "Owner not found") {
-        return res.status(400).json({ message: "Owner not found" });
-      }
-      res.status(500).json({ message: "Failed to update account" });
     }
   });
 
@@ -303,7 +272,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteAccount(req.params.id);
       if (!deleted) {
-        return res.status(400).json({ message: "Cannot delete account with active opportunities or cases" });
+        return res
+          .status(400)
+          .json({
+            message: "Cannot delete account with active opportunities or cases",
+          });
       }
       res.status(204).send();
     } catch (error) {
@@ -340,7 +313,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "Account not found") {
@@ -357,14 +332,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/opportunities/:id", async (req, res) => {
     try {
       const validatedData = insertOpportunitySchema.partial().parse(req.body);
-      const opportunity = await storage.updateOpportunity(req.params.id, validatedData);
+      const opportunity = await storage.updateOpportunity(
+        req.params.id,
+        validatedData,
+      );
       if (!opportunity) {
         return res.status(404).json({ message: "Opportunity not found" });
       }
       res.json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "Account not found") {
@@ -419,7 +399,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(caseRecord);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "Account not found") {
@@ -443,7 +425,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(caseRecord);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "Account not found") {
@@ -474,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     to: z.string().email("Invalid recipient email"),
     from: z.string().email("Invalid sender email"),
     subject: z.string().min(1, "Subject is required"),
-    body: z.string().min(1, "Email body is required")
+    body: z.string().min(1, "Email body is required"),
   });
 
   app.post("/api/send-email", async (req, res) => {
@@ -485,17 +469,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         from: validatedData.from,
         subject: validatedData.subject,
         text: validatedData.body,
-        html: validatedData.body.replace(/\n/g, '<br>')
+        html: validatedData.body.replace(/\n/g, "<br>"),
       });
-      
+
       if (result.success) {
         res.json({ message: "Email sent successfully" });
       } else {
-        res.status(400).json({ message: result.error || "Failed to send email" });
+        res
+          .status(400)
+          .json({ message: result.error || "Failed to send email" });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to send email" });
     }
@@ -519,48 +507,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: z.string().email("Please enter a valid email address"),
         firstName: z.string().min(1, "First name is required").optional(),
         lastName: z.string().min(1, "Last name is required").optional(),
-        profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-        password: z.string().min(6, "Password must be at least 6 characters")
+        profileImageUrl: z
+          .string()
+          .url("Please enter a valid URL")
+          .optional()
+          .or(z.literal("")),
+        password: z.string().min(6, "Password must be at least 6 characters"),
       });
-      
+
       const validatedData = userCreateSchema.parse(req.body);
-      
+
       // Get current logged-in user's company_id to assign to new user
       const sessionUser = (req.session as any).user;
       let currentUserId;
-      
+
       // Get user ID from session (database user) or claims (OIDC user)
       if (sessionUser && sessionUser.isDbUser) {
         currentUserId = sessionUser.id;
       } else {
         currentUserId = req.user?.claims?.sub;
       }
-      
+
       if (!currentUserId) {
-        return res.status(400).json({ message: "Unable to identify current user" });
+        return res
+          .status(400)
+          .json({ message: "Unable to identify current user" });
       }
-      
+
       const currentUser = await storage.getUser(currentUserId);
       if (!currentUser || !currentUser.companyId) {
-        return res.status(400).json({ 
-          message: "Your account is not associated with a company; cannot create users" 
+        return res.status(400).json({
+          message:
+            "Your account is not associated with a company; cannot create users",
         });
       }
-      
+
       // Add current user's company_id to the new user data
       // Security: isAdmin defaults to false and cannot be set by regular users
       const userDataWithCompany = {
         ...validatedData,
         companyId: currentUser.companyId,
-        isAdmin: false // Security: Force to false, only admin endpoints should set this
+        isAdmin: false, // Security: Force to false, only admin endpoints should set this
       };
-      
+
       const user = await storage.createUser(userDataWithCompany);
-      
+
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating user:", error);
       res.status(500).json({ message: "Failed to create user" });
@@ -574,23 +571,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: z.string().email().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
-        profileImageUrl: z.string().optional()
+        profileImageUrl: z.string().optional(),
         // isAdmin removed - only admin endpoints should change this
       });
-      
+
       const validatedData = userUpdateSchema.parse(req.body);
       const user = await storage.updateUser(req.params.id, validatedData);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // Security: Remove sensitive fields from response
       const { password, ...safeUser } = user as any;
       res.json(safeUser);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error updating user:", error);
       res.status(500).json({ message: "Failed to update user" });
@@ -601,7 +600,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteUser(req.params.id);
       if (!deleted) {
-        return res.status(400).json({ message: "Cannot delete user who owns accounts, opportunities, or cases" });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Cannot delete user who owns accounts, opportunities, or cases",
+          });
       }
       res.json({ message: "User deleted successfully" });
     } catch (error) {
@@ -641,10 +645,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(companyRole);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
-      if (error instanceof Error && error.message === "Parent company role not found") {
-        return res.status(400).json({ message: "Parent company role not found" });
+      if (
+        error instanceof Error &&
+        error.message === "Parent company role not found"
+      ) {
+        return res
+          .status(400)
+          .json({ message: "Parent company role not found" });
       }
       console.error("Error creating company role:", error);
       res.status(500).json({ message: "Failed to create company role" });
@@ -654,21 +665,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/company-roles/:id", async (req, res) => {
     try {
       const validatedData = insertCompanyRoleSchema.partial().parse(req.body);
-      const companyRole = await storage.updateCompanyRole(req.params.id, validatedData);
+      const companyRole = await storage.updateCompanyRole(
+        req.params.id,
+        validatedData,
+      );
       if (!companyRole) {
         return res.status(404).json({ message: "Company role not found" });
       }
       res.json(companyRole);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "Parent company role not found") {
-          return res.status(400).json({ message: "Parent company role not found" });
+          return res
+            .status(400)
+            .json({ message: "Parent company role not found" });
         }
-        if (error.message === "Cannot create circular reference in company role hierarchy") {
-          return res.status(400).json({ message: "Cannot create circular reference in company role hierarchy" });
+        if (
+          error.message ===
+          "Cannot create circular reference in company role hierarchy"
+        ) {
+          return res
+            .status(400)
+            .json({
+              message:
+                "Cannot create circular reference in company role hierarchy",
+            });
         }
       }
       console.error("Error updating company role:", error);
@@ -680,7 +706,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteCompanyRole(req.params.id);
       if (!deleted) {
-        return res.status(400).json({ message: "Cannot delete company role with child roles or user assignments" });
+        return res
+          .status(400)
+          .json({
+            message:
+              "Cannot delete company role with child roles or user assignments",
+          });
       }
       res.status(204).send();
     } catch (error) {
@@ -696,17 +727,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching user role assignments:", error);
-      res.status(500).json({ message: "Failed to fetch user role assignments" });
+      res
+        .status(500)
+        .json({ message: "Failed to fetch user role assignments" });
     }
   });
 
   app.get("/api/user-role-assignments/by-role/:roleId", async (req, res) => {
     try {
-      const assignments = await storage.getUserRoleAssignmentsByRole(req.params.roleId);
+      const assignments = await storage.getUserRoleAssignmentsByRole(
+        req.params.roleId,
+      );
       res.json(assignments);
     } catch (error) {
       console.error("Error fetching user role assignments by role:", error);
-      res.status(500).json({ message: "Failed to fetch user role assignments" });
+      res
+        .status(500)
+        .json({ message: "Failed to fetch user role assignments" });
     }
   });
 
@@ -714,7 +751,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const assignment = await storage.getUserRoleAssignment(req.params.id);
       if (!assignment) {
-        return res.status(404).json({ message: "User role assignment not found" });
+        return res
+          .status(404)
+          .json({ message: "User role assignment not found" });
       }
       res.json(assignment);
     } catch (error) {
@@ -730,7 +769,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(assignment);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "User not found") {
@@ -740,25 +781,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: "Company role not found" });
         }
         if (error.message === "User is already assigned to this role") {
-          return res.status(400).json({ message: "User is already assigned to this role" });
+          return res
+            .status(400)
+            .json({ message: "User is already assigned to this role" });
         }
       }
       console.error("Error creating user role assignment:", error);
-      res.status(500).json({ message: "Failed to create user role assignment" });
+      res
+        .status(500)
+        .json({ message: "Failed to create user role assignment" });
     }
   });
 
   app.patch("/api/user-role-assignments/:id", async (req, res) => {
     try {
-      const validatedData = insertUserRoleAssignmentSchema.partial().parse(req.body);
-      const assignment = await storage.updateUserRoleAssignment(req.params.id, validatedData);
+      const validatedData = insertUserRoleAssignmentSchema
+        .partial()
+        .parse(req.body);
+      const assignment = await storage.updateUserRoleAssignment(
+        req.params.id,
+        validatedData,
+      );
       if (!assignment) {
-        return res.status(404).json({ message: "User role assignment not found" });
+        return res
+          .status(404)
+          .json({ message: "User role assignment not found" });
       }
       res.json(assignment);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
       }
       if (error instanceof Error) {
         if (error.message === "User not found") {
@@ -769,7 +823,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       console.error("Error updating user role assignment:", error);
-      res.status(500).json({ message: "Failed to update user role assignment" });
+      res
+        .status(500)
+        .json({ message: "Failed to update user role assignment" });
     }
   });
 
@@ -777,12 +833,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteUserRoleAssignment(req.params.id);
       if (!deleted) {
-        return res.status(404).json({ message: "User role assignment not found" });
+        return res
+          .status(404)
+          .json({ message: "User role assignment not found" });
       }
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting user role assignment:", error);
-      res.status(500).json({ message: "Failed to delete user role assignment" });
+      res
+        .status(500)
+        .json({ message: "Failed to delete user role assignment" });
     }
   });
 

@@ -196,55 +196,41 @@ export class DatabaseStorage implements IStorage {
     }
     
     console.log('[FILTER DEBUG] Filtering accounts for user:', userId, 'company:', user.companyContext);
-    console.log('[FILTER DEBUG] User companyContext type:', typeof user.companyContext, 'value:', JSON.stringify(user.companyContext));
     
-    // First, let's see what accounts exist in the database (this query is affected by RLS!)
-    const allAccounts = await db.select({ 
-      id: accounts.id, 
-      name: accounts.name, 
-      companyId: accounts.companyId 
-    }).from(accounts);
-    console.log('[FILTER DEBUG] All accounts in DB (RLS filtered):', JSON.stringify(allAccounts, null, 2));
-    
-    // Also check what accounts exist without RLS filtering (if we set session properly)
-    try {
-      await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
-      const allAccountsWithSession = await db.select({ 
-        id: accounts.id, 
-        name: accounts.name, 
-        companyId: accounts.companyId 
-      }).from(accounts);
-      console.log('[FILTER DEBUG] All accounts in DB (with session):', JSON.stringify(allAccountsWithSession, null, 2));
-    } catch (sessionError) {
-      console.log('[FILTER DEBUG] Error setting session for debug query:', sessionError);
-    }
-    
-    // Filter accounts by company_id matching user's company_context
-    console.log('[FILTER DEBUG] About to query with companyContext:', user.companyContext);
-    
-    // First try a simple query without join to isolate the issue
-    const matchingAccounts = await db.select().from(accounts)
-      .where(eq(accounts.companyId, user.companyContext));
-    console.log('[FILTER DEBUG] Direct account query found:', matchingAccounts.length, 'accounts');
-    console.log('[FILTER DEBUG] Direct query results:', JSON.stringify(matchingAccounts, null, 2));
-    
-    // Now the full query with join
-    const result = await db.select().from(accounts)
-      .innerJoin(users, eq(accounts.ownerId, users.id))
-      .where(eq(accounts.companyId, user.companyContext));
-    
-    console.log('[FILTER DEBUG] Full join query found:', result.length, 'accounts for company:', user.companyContext);
-    console.log('[FILTER DEBUG] Matched accounts:', JSON.stringify(result.map(r => ({ 
-      id: r.accounts.id, 
-      name: r.accounts.name, 
-      companyId: r.accounts.companyId,
-      ownerEmail: r.users.email 
-    })), null, 2));
-    
-    return result.map(row => ({
-      ...row.accounts,
-      owner: row.users
-    }));
+    // Use a transaction to ensure session variable and query use the same connection
+    return await db.transaction(async (tx) => {
+      try {
+        // Set session variable within this transaction (using secure parameterized set_config)
+        await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
+        console.log('[FILTER DEBUG] Set session variable in transaction for user:', userId);
+      } catch (setError) {
+        console.log('[FILTER DEBUG] Error setting session variable in transaction:', setError);
+        throw setError;
+      }
+      
+      try {
+        // Now query accounts within the same transaction
+        const result = await tx.select().from(accounts)
+          .innerJoin(users, eq(accounts.ownerId, users.id))
+          .where(eq(accounts.companyId, user.companyContext));
+        
+        console.log('[FILTER DEBUG] Transaction query found:', result.length, 'accounts for company:', user.companyContext);
+        console.log('[FILTER DEBUG] Transaction results:', JSON.stringify(result.map(r => ({ 
+          id: r.accounts.id, 
+          name: r.accounts.name, 
+          companyId: r.accounts.companyId,
+          ownerEmail: r.users.email 
+        })), null, 2));
+        
+        return result.map(row => ({
+          ...row.accounts,
+          owner: row.users
+        }));
+      } catch (queryError) {
+        console.log('[FILTER DEBUG] Error in transaction query:', queryError);
+        throw queryError;
+      }
+    });
   }
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {

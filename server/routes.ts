@@ -152,39 +152,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
   );
 
-  // Set current user ID session variable for RLS policies on each request
-  app.use(
-    ["/api/accounts", "/api/opportunities", "/api/cases"],
-    async (req: any, res, next) => {
-      try {
-        const sessionUser = (req.session as any).user;
-        let userId;
-
-        // Get user ID from session (database user) or claims (OIDC user)
-        if (sessionUser && sessionUser.isDbUser) {
-          userId = sessionUser.id;
-        } else {
-          userId = req.user?.claims?.sub;
-        }
-
-        if (userId) {
-          // Set session variable for RLS function to identify current user
-          await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
-          console.log(
-            "[RLS DEBUG] Set current_user_id session variable for:",
-            userId,
-          );
-        }
-
-        next();
-      } catch (error) {
-        console.error("[RLS DEBUG] Error setting current user context:", error);
-        // Continue even if setting context fails - don't block the request
-        next();
-      }
-    },
-  );
-
   // Company routes
   app.get("/api/companies", async (req, res) => {
     try {
@@ -272,11 +239,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteAccount(req.params.id);
       if (!deleted) {
-        return res
-          .status(400)
-          .json({
-            message: "Cannot delete account with active opportunities or cases",
-          });
+        return res.status(400).json({
+          message: "Cannot delete account with active opportunities or cases",
+        });
       }
       res.status(204).send();
     } catch (error) {
@@ -600,12 +565,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteUser(req.params.id);
       if (!deleted) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Cannot delete user who owns accounts, opportunities, or cases",
-          });
+        return res.status(400).json({
+          message:
+            "Cannot delete user who owns accounts, opportunities, or cases",
+        });
       }
       res.json({ message: "User deleted successfully" });
     } catch (error) {
@@ -689,12 +652,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           error.message ===
           "Cannot create circular reference in company role hierarchy"
         ) {
-          return res
-            .status(400)
-            .json({
-              message:
-                "Cannot create circular reference in company role hierarchy",
-            });
+          return res.status(400).json({
+            message:
+              "Cannot create circular reference in company role hierarchy",
+          });
         }
       }
       console.error("Error updating company role:", error);
@@ -706,12 +667,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const deleted = await storage.deleteCompanyRole(req.params.id);
       if (!deleted) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Cannot delete company role with child roles or user assignments",
-          });
+        return res.status(400).json({
+          message:
+            "Cannot delete company role with child roles or user assignments",
+        });
       }
       res.status(204).send();
     } catch (error) {

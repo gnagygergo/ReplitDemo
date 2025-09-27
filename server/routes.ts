@@ -492,13 +492,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/users", async (req: any, res) => {
     try {
+      // Security: Remove isAdmin from client schema - only admins can set this
       const userCreateSchema = z.object({
         email: z.string().email("Please enter a valid email address"),
         firstName: z.string().min(1, "First name is required").optional(),
         lastName: z.string().min(1, "Last name is required").optional(),
         profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-        isAdmin: z.boolean().optional()
+        password: z.string().min(6, "Password must be at least 6 characters")
       });
       
       const validatedData = userCreateSchema.parse(req.body);
@@ -514,18 +514,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentUserId = req.user?.claims?.sub;
       }
       
-      let currentUserCompanyId = null;
-      if (currentUserId) {
-        const currentUser = await storage.getUser(currentUserId);
-        if (currentUser && currentUser.companyId) {
-          currentUserCompanyId = currentUser.companyId;
-        }
+      if (!currentUserId) {
+        return res.status(400).json({ message: "Unable to identify current user" });
+      }
+      
+      const currentUser = await storage.getUser(currentUserId);
+      if (!currentUser || !currentUser.companyId) {
+        return res.status(400).json({ 
+          message: "Your account is not associated with a company; cannot create users" 
+        });
       }
       
       // Add current user's company_id to the new user data
+      // Security: isAdmin defaults to false and cannot be set by regular users
       const userDataWithCompany = {
         ...validatedData,
-        companyId: currentUserCompanyId
+        companyId: currentUser.companyId,
+        isAdmin: false // Security: Force to false, only admin endpoints should set this
       };
       
       const user = await storage.createUser(userDataWithCompany);
@@ -542,12 +547,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/users/:id", async (req, res) => {
     try {
+      // Security: Remove isAdmin from update schema - privilege escalation protection
       const userUpdateSchema = z.object({
         email: z.string().email().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
-        profileImageUrl: z.string().optional(),
-        isAdmin: z.boolean().optional()
+        profileImageUrl: z.string().optional()
+        // isAdmin removed - only admin endpoints should change this
       });
       
       const validatedData = userUpdateSchema.parse(req.body);
@@ -557,7 +563,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json(user);
+      // Security: Remove sensitive fields from response
+      const { password, ...safeUser } = user as any;
+      res.json(safeUser);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Invalid data", errors: error.errors });

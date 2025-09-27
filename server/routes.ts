@@ -5,6 +5,7 @@ import { insertCompanySchema, insertAccountSchema, insertOpportunitySchema, inse
 import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
@@ -227,11 +228,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Account routes
-  app.get("/api/accounts", async (req, res) => {
+  app.get("/api/accounts", async (req: any, res) => {
     try {
-      const accounts = await storage.getAccounts();
+      // Get current user ID (same logic as middleware)
+      const sessionUser = (req.session as any).user;
+      let userId;
+      
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+      
+      console.log('[API DEBUG] GET /api/accounts for user:', userId);
+      
+      // Pass user ID to filter accounts by their company
+      const accounts = await storage.getAccounts(userId);
+      console.log('[API DEBUG] Returning', accounts.length, 'accounts');
       res.json(accounts);
     } catch (error) {
+      console.error('[API DEBUG] Error in GET /api/accounts:', error);
       res.status(500).json({ message: "Failed to fetch accounts" });
     }
   });

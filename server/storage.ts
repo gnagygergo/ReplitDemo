@@ -177,13 +177,74 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getAccounts(): Promise<AccountWithOwner[]> {
-    return await db.select().from(accounts)
+  async getAccounts(userId?: string): Promise<AccountWithOwner[]> {
+    if (!userId) {
+      // If no user ID provided, return all accounts (for admin/system use)
+      return await db.select().from(accounts)
+        .innerJoin(users, eq(accounts.ownerId, users.id))
+        .then(rows => rows.map(row => ({
+          ...row.accounts,
+          owner: row.users
+        })));
+    }
+    
+    // Get the user's company_context first
+    const user = await this.getUser(userId);
+    if (!user?.companyContext) {
+      console.log('[FILTER DEBUG] User has no company context, returning empty array:', userId);
+      return []; // No company context = no access
+    }
+    
+    console.log('[FILTER DEBUG] Filtering accounts for user:', userId, 'company:', user.companyContext);
+    console.log('[FILTER DEBUG] User companyContext type:', typeof user.companyContext, 'value:', JSON.stringify(user.companyContext));
+    
+    // First, let's see what accounts exist in the database (this query is affected by RLS!)
+    const allAccounts = await db.select({ 
+      id: accounts.id, 
+      name: accounts.name, 
+      companyId: accounts.companyId 
+    }).from(accounts);
+    console.log('[FILTER DEBUG] All accounts in DB (RLS filtered):', JSON.stringify(allAccounts, null, 2));
+    
+    // Also check what accounts exist without RLS filtering (if we set session properly)
+    try {
+      await pool.query(`SET LOCAL app.current_user_id = '${userId}'`);
+      const allAccountsWithSession = await db.select({ 
+        id: accounts.id, 
+        name: accounts.name, 
+        companyId: accounts.companyId 
+      }).from(accounts);
+      console.log('[FILTER DEBUG] All accounts in DB (with session):', JSON.stringify(allAccountsWithSession, null, 2));
+    } catch (sessionError) {
+      console.log('[FILTER DEBUG] Error setting session for debug query:', sessionError);
+    }
+    
+    // Filter accounts by company_id matching user's company_context
+    console.log('[FILTER DEBUG] About to query with companyContext:', user.companyContext);
+    
+    // First try a simple query without join to isolate the issue
+    const matchingAccounts = await db.select().from(accounts)
+      .where(eq(accounts.companyId, user.companyContext));
+    console.log('[FILTER DEBUG] Direct account query found:', matchingAccounts.length, 'accounts');
+    console.log('[FILTER DEBUG] Direct query results:', JSON.stringify(matchingAccounts, null, 2));
+    
+    // Now the full query with join
+    const result = await db.select().from(accounts)
       .innerJoin(users, eq(accounts.ownerId, users.id))
-      .then(rows => rows.map(row => ({
-        ...row.accounts,
-        owner: row.users
-      })));
+      .where(eq(accounts.companyId, user.companyContext));
+    
+    console.log('[FILTER DEBUG] Full join query found:', result.length, 'accounts for company:', user.companyContext);
+    console.log('[FILTER DEBUG] Matched accounts:', JSON.stringify(result.map(r => ({ 
+      id: r.accounts.id, 
+      name: r.accounts.name, 
+      companyId: r.accounts.companyId,
+      ownerEmail: r.users.email 
+    })), null, 2));
+    
+    return result.map(row => ({
+      ...row.accounts,
+      owner: row.users
+    }));
   }
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {

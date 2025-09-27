@@ -1,5 +1,5 @@
 import { type Company, type InsertCompany, type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, companies, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -617,7 +617,11 @@ export class DatabaseStorage implements IStorage {
     // Use SET LOCAL to scope the variable to the current transaction/request only  
     // This prevents data leakage in pooled connections
     console.log('[RLS DEBUG] Setting LOCAL session variable to:', companyId);
-    await db.execute(sql`SET LOCAL app.current_company_id = ${companyId}`);
+    // Note: SET LOCAL doesn't support parameterized queries
+    // We use raw SQL string - UUID format is safe from SQL injection
+    const query = `SET LOCAL app.current_company_id = '${companyId}'`;
+    console.log('[RLS DEBUG] Executing query:', query);
+    await pool.query(query);
     console.log('[RLS DEBUG] Session variable set successfully');
   }
   

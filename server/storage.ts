@@ -57,6 +57,9 @@ export interface IStorage {
   createUserRoleAssignment(userRoleAssignment: InsertUserRoleAssignment): Promise<UserRoleAssignment>;
   updateUserRoleAssignment(id: string, userRoleAssignment: Partial<InsertUserRoleAssignment>): Promise<UserRoleAssignment | undefined>;
   deleteUserRoleAssignment(id: string): Promise<boolean>;
+  
+  // Row Level Security context methods
+  setCompanyContext(companyId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -604,6 +607,11 @@ export class DatabaseStorage implements IStorage {
   async deleteUserRoleAssignment(id: string): Promise<boolean> {
     const result = await db.delete(userRoleAssignments).where(eq(userRoleAssignments.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Row Level Security context methods
+  async setCompanyContext(companyId: string): Promise<void> {
+    await db.execute(`SET app.current_company_id = '${companyId}'`);
   }
 }
 

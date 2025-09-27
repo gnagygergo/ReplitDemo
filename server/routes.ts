@@ -87,6 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
           isAdmin: user.isAdmin,
+          companyId: user.companyId,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt
         });
@@ -105,6 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: user.lastName,
           profileImageUrl: user.profileImageUrl,
           isAdmin: user.isAdmin,
+          companyId: user.companyId,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt
         });
@@ -119,6 +121,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(["/api/companies", "/api/accounts", "/api/opportunities", "/api/cases", "/api/send-email", "/api/users", "/api/company-roles", "/api/user-role-assignments"], isAuthenticated);
+
+  // Set user's company_id as session variable for Row Level Security
+  app.use(["/api/accounts", "/api/opportunities", "/api/cases"], async (req: any, res, next) => {
+    try {
+      const sessionUser = (req.session as any).user;
+      let userId;
+      
+      // Get user ID from session (database user) or claims (OIDC user)
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+      
+      if (userId) {
+        const user = await storage.getUser(userId);
+        if (user && user.companyId) {
+          // Set the user's company_id as a session variable for RLS
+          await storage.setCompanyContext(user.companyId);
+        }
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Error setting company context:", error);
+      // Continue even if setting context fails - don't block the request
+      next();
+    }
+  });
 
   // Company routes
   app.get("/api/companies", async (req, res) => {

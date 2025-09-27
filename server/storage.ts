@@ -60,6 +60,9 @@ export interface IStorage {
   
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
+  
+  // Transaction-scoped operations for RLS
+  runWithCompanyContext<T>(companyId: string, operation: () => Promise<T>): Promise<T>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -612,6 +615,17 @@ export class DatabaseStorage implements IStorage {
   // Row Level Security context methods
   async setCompanyContext(companyId: string): Promise<void> {
     await db.execute(`SET app.current_company_id = '${companyId}'`);
+  }
+  
+  // Transaction-scoped operations for RLS
+  async runWithCompanyContext<T>(companyId: string, operation: () => Promise<T>): Promise<T> {
+    return await db.transaction(async (tx) => {
+      // Set company context using SET LOCAL (transaction-scoped)
+      await tx.execute(`SET LOCAL app.current_company_id = '${companyId}'`);
+      
+      // Execute the operation within this transaction
+      return await operation();
+    });
   }
 }
 

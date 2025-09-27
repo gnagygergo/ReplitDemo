@@ -490,7 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  app.post("/api/users", async (req: any, res) => {
     try {
       const userCreateSchema = z.object({
         email: z.string().email("Please enter a valid email address"),
@@ -502,7 +502,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const validatedData = userCreateSchema.parse(req.body);
-      const user = await storage.createUser(validatedData);
+      
+      // Get current logged-in user's company_id to assign to new user
+      const sessionUser = (req.session as any).user;
+      let currentUserId;
+      
+      // Get user ID from session (database user) or claims (OIDC user)
+      if (sessionUser && sessionUser.isDbUser) {
+        currentUserId = sessionUser.id;
+      } else {
+        currentUserId = req.user?.claims?.sub;
+      }
+      
+      let currentUserCompanyId = null;
+      if (currentUserId) {
+        const currentUser = await storage.getUser(currentUserId);
+        if (currentUser && currentUser.companyId) {
+          currentUserCompanyId = currentUser.companyId;
+        }
+      }
+      
+      // Add current user's company_id to the new user data
+      const userDataWithCompany = {
+        ...validatedData,
+        companyId: currentUserCompanyId
+      };
+      
+      const user = await storage.createUser(userDataWithCompany);
       
       res.status(201).json(user);
     } catch (error) {

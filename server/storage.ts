@@ -1,6 +1,6 @@
 import { type Company, type InsertCompany, type Account, type InsertAccount, type Opportunity, type InsertOpportunity, type OpportunityWithAccount, type OpportunityWithAccountAndOwner, type Case, type InsertCase, type CaseWithAccount, type CaseWithAccountAndOwner, type AccountWithOwner, type User, type UpsertUser, type CompanyRole, type InsertCompanyRole, type UserRoleAssignment, type InsertUserRoleAssignment, type CompanyRoleWithParent, type UserRoleAssignmentWithUserAndRole, companies, accounts, opportunities, cases, users, companyRoles, userRoleAssignments } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
 
@@ -614,7 +614,11 @@ export class DatabaseStorage implements IStorage {
 
   // Row Level Security context methods
   async setCompanyContext(companyId: string): Promise<void> {
-    await db.execute(`SET app.current_company_id = '${companyId}'`);
+    // Use SET LOCAL to scope the variable to the current transaction/request only  
+    // This prevents data leakage in pooled connections
+    console.log('[RLS DEBUG] Setting LOCAL session variable to:', companyId);
+    await db.execute(sql`SET LOCAL app.current_company_id = ${companyId}`);
+    console.log('[RLS DEBUG] Session variable set successfully');
   }
   
   // Transaction-scoped operations for RLS

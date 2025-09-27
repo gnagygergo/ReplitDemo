@@ -125,27 +125,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set user's company_id as session variable for Row Level Security
   app.use(["/api/accounts", "/api/opportunities", "/api/cases"], async (req: any, res, next) => {
     try {
+      console.log('[RLS DEBUG] Middleware called for:', req.path);
       const sessionUser = (req.session as any).user;
       let userId;
+      
+      console.log('[RLS DEBUG] Session user:', sessionUser);
+      console.log('[RLS DEBUG] OIDC user claims:', req.user?.claims);
       
       // Get user ID from session (database user) or claims (OIDC user)
       if (sessionUser && sessionUser.isDbUser) {
         userId = sessionUser.id;
+        console.log('[RLS DEBUG] Using session user ID:', userId);
       } else {
         userId = req.user?.claims?.sub;
+        console.log('[RLS DEBUG] Using OIDC user ID:', userId);
       }
       
       if (userId) {
         const user = await storage.getUser(userId);
+        console.log('[RLS DEBUG] Retrieved user:', user ? { id: user.id, email: user.email, companyId: user.companyId } : 'null');
         if (user && user.companyId) {
           // Set the user's company_id as a session variable for RLS
+          console.log('[RLS DEBUG] Setting company context to:', user.companyId);
           await storage.setCompanyContext(user.companyId);
+          console.log('[RLS DEBUG] Company context set successfully');
+        } else {
+          console.log('[RLS DEBUG] No company ID found for user');
         }
+      } else {
+        console.log('[RLS DEBUG] No user ID found');
       }
       
       next();
     } catch (error) {
-      console.error("Error setting company context:", error);
+      console.error("[RLS DEBUG] Error setting company context:", error);
       // Continue even if setting context fails - don't block the request
       next();
     }

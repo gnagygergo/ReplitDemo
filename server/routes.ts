@@ -251,6 +251,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/accounts", async (req, res) => {
+    try {
+      const validatedData = insertAccountSchema.parse(req.body);
+      const account = await storage.createAccount(validatedData);
+      res.status(201).json(account);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
+      }
+      res.status(500).json({ message: "Failed to create account" });
+    }
+  });
+
   app.delete("/api/accounts/:id", async (req, res) => {
     try {
       const deleted = await storage.deleteAccount(req.params.id);

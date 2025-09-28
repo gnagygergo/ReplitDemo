@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Building, Target, FileText, ChartLine, Bell, LogOut, User, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 export default function Header() {
   const [location] = useLocation();
   const { user } = useAuth();
+
+  // Fetch company name for current user
+  const { data: companyData } = useQuery<{ companyName: string }>({
+    queryKey: ["/api/auth/company-name"],
+    enabled: !!user, // Only fetch if user is authenticated
+  });
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: ChartLine },
@@ -92,6 +99,9 @@ export default function Header() {
                     </p>
                     <p className="text-xs leading-none text-muted-foreground" data-testid="text-user-email">
                       {user?.email}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground" data-testid="text-company-name">
+                      {companyData?.companyName || 'No company'}
                     </p>
                   </div>
                 </div>

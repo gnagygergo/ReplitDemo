@@ -137,6 +137,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company name for current user
+  app.get("/api/auth/company-name", isAuthenticated, async (req: any, res) => {
+    try {
+      const companyName = await storage.GetCompanyNameBasedOnContext(req);
+      if (companyName) {
+        res.json({ companyName });
+      } else {
+        res.status(404).json({ message: "Company not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching company name:", error);
+      res.status(500).json({ message: "Failed to fetch company name" });
+    }
+  });
+
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(
     [

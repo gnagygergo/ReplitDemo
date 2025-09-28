@@ -116,6 +116,7 @@ export interface IStorage {
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
   GetCompanyContext(req: any): Promise<string | null>; // Method called by all GETTERs of business objects
+  GetCompanyNameBasedOnContext(req: any): Promise<string | null>; // Method to get company name based on current user's company context
 
   // Transaction-scoped operations for RLS
   runWithCompanyContext<T>(
@@ -143,6 +144,26 @@ export class DatabaseStorage implements IStorage {
       return user?.companyContext || null;
     } catch (error) {
       console.error("Error getting company context:", error);
+      return null;
+    }
+  }
+
+  // Method to get company name based on current user's company context
+  async GetCompanyNameBasedOnContext(req: any): Promise<string | null> {
+    try {
+      // Use existing method to get company context ID
+      const companyId = await this.GetCompanyContext(req);
+      if (!companyId) return null;
+
+      // Query companies table to get company name
+      const company = await db.select()
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+
+      return company[0]?.companyOfficialName || null;
+    } catch (error) {
+      console.error('Error getting company name:', error);
       return null;
     }
   }

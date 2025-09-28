@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2 } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,11 +32,18 @@ const setupMenuItems = [
     icon: Shield,
     description: "Manage reporting hierarchy",
   },
+  {
+    id: "releases",
+    label: "Release Plan",
+    icon: Rocket,
+    description: "Manage release planning and tracking",
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
 import RoleHierarchy from "@/components/setup/role-hierarchy";
 import CompanyManagement from "@/components/setup/company-management";
+import ReleaseManagement from "@/components/setup/release-management";
 
 // Companies management component
 function CompaniesSetup() {
@@ -51,6 +58,11 @@ function UsersSetup() {
 // Company Roles management component
 function CompanyRolesSetup() {
   return <RoleHierarchy />;
+}
+
+// Release Plan management component
+function ReleasesSetup() {
+  return <ReleaseManagement />;
 }
 
 export default function Setup() {
@@ -95,6 +107,8 @@ export default function Setup() {
         return <UsersSetup />;
       case "company-roles":
         return <CompanyRolesSetup />;
+      case "releases":
+        return <ReleasesSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

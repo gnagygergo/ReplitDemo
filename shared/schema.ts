@@ -1,5 +1,5 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, date, timestamp, jsonb, boolean, index, unique, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, date, timestamp, jsonb, boolean, index, unique, integer, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -79,6 +79,17 @@ export const users = pgTable("users", {
   isGlobalAdmin: boolean("is_global_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const releases = pgTable("releases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  releaseName: text("release_name").notNull(),
+  releaseDescription: text("release_description"),
+  order: integer("order").notNull(),
+  commits: text("commits"),
+  status: varchar("status", { length: 20 }).notNull().default("Planned"),
+  createdDate: timestamp("created_date").defaultNow().notNull(),
+  companyId: varchar("company_id"),
 });
 
 // Define relations
@@ -178,6 +189,15 @@ export const insertUserRoleAssignmentSchema = createInsertSchema(userRoleAssignm
   companyRoleId: z.string().min(1, "Company role is required"),
 });
 
+export const insertReleaseSchema = createInsertSchema(releases).omit({
+  id: true,
+  createdDate: true,
+}).extend({
+  releaseName: z.string().min(1, "Release name is required"),
+  order: z.number().min(1, "Order must be a positive number"),
+  status: z.enum(["Planned", "In Progress", "Completed", "Dropped"]),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -190,6 +210,8 @@ export type InsertCompanyRole = z.infer<typeof insertCompanyRoleSchema>;
 export type CompanyRole = typeof companyRoles.$inferSelect;
 export type InsertUserRoleAssignment = z.infer<typeof insertUserRoleAssignmentSchema>;
 export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
+export type InsertRelease = z.infer<typeof insertReleaseSchema>;
+export type Release = typeof releases.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

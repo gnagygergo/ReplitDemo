@@ -20,6 +20,8 @@ import {
   type InsertUserRoleAssignment,
   type CompanyRoleWithParent,
   type UserRoleAssignmentWithUserAndRole,
+  type Release,
+  type InsertRelease,
   companies,
   accounts,
   opportunities,
@@ -27,6 +29,7 @@ import {
   users,
   companyRoles,
   userRoleAssignments,
+  releases,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -116,6 +119,17 @@ export interface IStorage {
     userRoleAssignment: Partial<InsertUserRoleAssignment>,
   ): Promise<UserRoleAssignment | undefined>;
   deleteUserRoleAssignment(id: string): Promise<boolean>;
+
+  // Release methods
+  getReleases(companyContext?: string): Promise<Release[]>;
+  getRelease(id: string, companyContext?: string): Promise<Release | undefined>;
+  createRelease(release: InsertRelease): Promise<Release>;
+  updateRelease(
+    id: string,
+    release: Partial<InsertRelease>,
+    companyContext?: string,
+  ): Promise<Release | undefined>;
+  deleteRelease(id: string, companyContext?: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -945,6 +959,71 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(userRoleAssignments)
       .where(eq(userRoleAssignments.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Release methods
+  async getReleases(companyContext?: string): Promise<Release[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(releases)
+      .where(eq(releases.companyId, companyContext))
+      .orderBy(releases.order);
+  }
+
+  async getRelease(id: string, companyContext?: string): Promise<Release | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+    
+    const [release] = await db
+      .select()
+      .from(releases)
+      .where(and(eq(releases.id, id), eq(releases.companyId, companyContext)));
+    return release || undefined;
+  }
+
+  async createRelease(insertRelease: InsertRelease): Promise<Release> {
+    const [release] = await db
+      .insert(releases)
+      .values(insertRelease)
+      .returning();
+    return release;
+  }
+
+  async updateRelease(
+    id: string,
+    updates: Partial<InsertRelease>,
+    companyContext?: string,
+  ): Promise<Release | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+
+    const [release] = await db
+      .update(releases)
+      .set(allowedUpdates)
+      .where(and(eq(releases.id, id), eq(releases.companyId, companyContext)))
+      .returning();
+    return release || undefined;
+  }
+
+  async deleteRelease(id: string, companyContext?: string): Promise<boolean> {
+    if (!companyContext) {
+      return false;
+    }
+
+    const result = await db
+      .delete(releases)
+      .where(and(eq(releases.id, id), eq(releases.companyId, companyContext)));
     return (result.rowCount ?? 0) > 0;
   }
 

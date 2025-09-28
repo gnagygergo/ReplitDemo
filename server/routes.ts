@@ -8,6 +8,7 @@ import {
   insertCaseSchema,
   insertCompanyRoleSchema,
   insertUserRoleAssignmentSchema,
+  insertReleaseSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -178,6 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       "/api/users",
       "/api/company-roles",
       "/api/user-role-assignments",
+      "/api/releases",
     ],
     isAuthenticated,
   );
@@ -864,6 +866,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res
         .status(500)
         .json({ message: "Failed to delete user role assignment" });
+    }
+  });
+
+  // Release routes respecting company context
+  app.get("/api/releases", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const releases = await storage.getReleases(companyContext || undefined);
+      res.json(releases);
+    } catch (error) {
+      console.error("Error fetching releases:", error);
+      res.status(500).json({ message: "Failed to fetch releases" });
+    }
+  });
+
+  app.get("/api/releases/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const release = await storage.getRelease(req.params.id, companyContext || undefined);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+      res.json(release);
+    } catch (error) {
+      console.error("Error fetching release:", error);
+      res.status(500).json({ message: "Failed to fetch release" });
+    }
+  });
+
+  app.post("/api/releases", async (req: any, res) => {
+    try {
+      const validatedData = insertReleaseSchema.parse(req.body);
+
+      // Get current user's company context to assign to new release
+      const sessionUser = (req.session as any).user;
+      let currentUserId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        currentUserId = sessionUser.id;
+      } else {
+        currentUserId = req.user?.claims?.sub;
+      }
+
+      if (!currentUserId) {
+        return res
+          .status(400)
+          .json({ message: "Unable to identify current user" });
+      }
+
+      const currentUser = await storage.getUser(currentUserId);
+      if (!currentUser || !currentUser.companyId) {
+        return res.status(400).json({
+          message:
+            "Your account is not associated with a company; cannot create releases",
+        });
+      }
+
+      // Add current user's company_id to the release data
+      const releaseDataWithCompany = {
+        ...validatedData,
+        companyId: currentUser.companyId,
+      };
+
+      const release = await storage.createRelease(releaseDataWithCompany);
+      res.status(201).json(release);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating release:", error);
+      res.status(500).json({ message: "Failed to create release" });
+    }
+  });
+
+  app.patch("/api/releases/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const validatedData = insertReleaseSchema.partial().parse(req.body);
+      const release = await storage.updateRelease(req.params.id, validatedData, companyContext || undefined);
+      if (!release) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+      res.json(release);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating release:", error);
+      res.status(500).json({ message: "Failed to update release" });
+    }
+  });
+
+  app.delete("/api/releases/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const deleted = await storage.deleteRelease(req.params.id, companyContext || undefined);
+      if (!deleted) {
+        return res.status(404).json({ message: "Release not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting release:", error);
+      res.status(500).json({ message: "Failed to delete release" });
     }
   });
 

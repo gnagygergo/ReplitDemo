@@ -240,6 +240,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/companies/:companyId/users", async (req, res) => {
+    try {
+      const users = await storage.getUsersByCompany(req, req.params.companyId);
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users for company" });
+    }
+  });
+
   // Account routes respecting company context
   app.get("/api/accounts", async (req, res) => {
     try {

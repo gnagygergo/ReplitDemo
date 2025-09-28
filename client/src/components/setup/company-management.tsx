@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, Search, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Building2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -281,11 +281,18 @@ export default function CompanyManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCompany, setEditingCompany] = useState<CompanyType | null>(null);
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: companies = [], isLoading } = useQuery<CompanyType[]>({
     queryKey: ["/api/companies"],
+  });
+
+  // Fetch users for the selected company
+  const { data: selectedCompanyUsers = [], isLoading: isLoadingUsers } = useQuery<UserType[]>({
+    queryKey: ["/api/companies", selectedCompanyId, "users"],
+    enabled: !!selectedCompanyId,
   });
 
   const deleteCompanyMutation = useMutation({
@@ -356,7 +363,7 @@ export default function CompanyManagement() {
         <div>
           <h3 className="text-lg font-semibold">Companies</h3>
           <p className="text-sm text-muted-foreground">
-            Manage company information and details
+            Manage company information and select a company to view its users
           </p>
         </div>
         <Button onClick={() => setIsCreatingCompany(true)} data-testid="button-create-company">
@@ -365,112 +372,197 @@ export default function CompanyManagement() {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search companies by name, alias, or registration ID..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-              data-testid="input-company-search"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Two-Pane Layout */}
+      <div className="grid grid-cols-2 gap-6 h-[600px]">
+        {/* Left Pane - Companies */}
+        <div className="space-y-4">
+          {/* Search Bar */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search companies..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                  data-testid="input-company-search"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Company Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Companies ({filteredCompanies.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredCompanies.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p>
-                {searchQuery ? "No companies match your search" : "No companies found"}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Official Name</TableHead>
-                  <TableHead>Alias</TableHead>
-                  <TableHead>Registration ID</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCompanies.map((company: CompanyType) => (
-                  <TableRow key={company.id} data-testid={`company-row-${company.id}`}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                          <Building2 className="h-4 w-4 text-primary" />
-                        </div>
-                        <span data-testid={`text-company-name-${company.id}`}>
-                          {company.companyOfficialName}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell data-testid={`text-company-alias-${company.id}`}>
-                      {company.companyAlias || "-"}
-                    </TableCell>
-                    <TableCell data-testid={`text-company-registration-${company.id}`}>
-                      {company.companyRegistrationId || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingCompany(company)}
-                          data-testid={`button-edit-company-${company.id}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
+          {/* Company List */}
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle>Companies ({filteredCompanies.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="h-[450px] overflow-y-auto">
+              {filteredCompanies.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p>
+                    {searchQuery ? "No companies match your search" : "No companies found"}
+                  </p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Company</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCompanies.map((company: CompanyType) => (
+                      <TableRow 
+                        key={company.id} 
+                        data-testid={`company-row-${company.id}`}
+                        className={`cursor-pointer hover:bg-muted/50 ${
+                          selectedCompanyId === company.id ? "bg-muted" : ""
+                        }`}
+                        onClick={() => setSelectedCompanyId(company.id)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                              <Building2 className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <span data-testid={`text-company-name-${company.id}`}>
+                                {company.companyOfficialName}
+                              </span>
+                              {company.companyAlias && (
+                                <div className="text-xs text-muted-foreground">
+                                  {company.companyAlias}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              data-testid={`button-delete-company-${company.id}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCompany(company);
+                              }}
+                              data-testid={`button-edit-company-${company.id}`}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Pencil className="h-4 w-4" />
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Company</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete "{company.companyOfficialName}"? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteCompany(company.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                data-testid={`button-confirm-delete-company-${company.id}`}
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                  data-testid={`button-delete-company-${company.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Company</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{company.companyOfficialName}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteCompany(company.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    data-testid={`button-confirm-delete-company-${company.id}`}
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Pane - Users for Selected Company */}
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {selectedCompanyId 
+                ? `Users in ${companies.find(c => c.id === selectedCompanyId)?.companyOfficialName || "Selected Company"}`
+                : "Company Users"
+              }
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[500px] overflow-y-auto">
+            {!selectedCompanyId ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p>Select a company to view its users</p>
+              </div>
+            ) : isLoadingUsers ? (
+              <div className="text-center py-12">
+                <div className="animate-pulse">Loading users...</div>
+              </div>
+            ) : selectedCompanyUsers.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Users className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                <p>No users found for this company</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Admin</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {selectedCompanyUsers.map((user: UserType) => (
+                    <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Users className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <span data-testid={`text-user-name-${user.id}`}>
+                            {user.firstName && user.lastName 
+                              ? `${user.firstName} ${user.lastName}` 
+                              : user.email?.split('@')[0] || 'User'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell data-testid={`text-user-email-${user.id}`}>
+                        {user.email}
+                      </TableCell>
+                      <TableCell data-testid={`text-user-admin-${user.id}`}>
+                        {user.isGlobalAdmin ? (
+                          <span className="text-green-600 font-medium">Global Admin</span>
+                        ) : user.isAdmin ? (
+                          <span className="text-blue-600 font-medium">Admin</span>
+                        ) : (
+                          <span className="text-muted-foreground">User</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Create Company Dialog */}
       {isCreatingCompany && (

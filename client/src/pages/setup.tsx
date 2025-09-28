@@ -1,10 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Users, ChevronRight, Shield, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useQuery } from "@tanstack/react-query";
+
+// Type for global admin check response
+type AdminCheckResponse = {
+  isGlobalAdmin: boolean;
+};
 
 // Setup menu items
 const setupMenuItems = [
@@ -51,10 +57,33 @@ export default function Setup() {
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredMenuItems = setupMenuItems.filter(item =>
+  // Query to check if user is global admin
+  const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<AdminCheckResponse>({
+    queryKey: ["/api/auth/verify-global-admin"],
+  });
+
+  // Filter menu items based on admin status and search query
+  const availableMenuItems = setupMenuItems.filter(item => {
+    // Hide companies menu item if user is not global admin
+    if (item.id === "companies" && !adminCheck?.isGlobalAdmin) {
+      return false;
+    }
+    return true;
+  });
+
+  const filteredMenuItems = availableMenuItems.filter(item =>
     item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // If selected item is companies but user is not admin, default to first available item
+  useEffect(() => {
+    if (selectedItem === "companies" && adminCheck?.isGlobalAdmin === false) {
+      if (availableMenuItems.length > 0) {
+        setSelectedItem(availableMenuItems[0].id);
+      }
+    }
+  }, [adminCheck?.isGlobalAdmin, selectedItem, availableMenuItems]);
 
   const renderContent = () => {
     switch (selectedItem) {

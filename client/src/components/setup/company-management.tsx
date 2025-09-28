@@ -57,6 +57,11 @@ import type {
   InsertCompany,
 } from "@shared/schema";
 
+// Type for global admin check response
+type AdminCheckResponse = {
+  isGlobalAdmin: boolean;
+};
+
 const companySchema = z.object({
   companyOfficialName: z.string().min(1, "Company official name is required"),
   companyAlias: z.string().optional(),
@@ -324,6 +329,14 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
 }
 
 export default function CompanyManagement() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Check if user is global admin
+  const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<AdminCheckResponse>({
+    queryKey: ["/api/auth/verify-global-admin"],
+  });
+
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCompany, setEditingCompany] = useState<CompanyType | null>(
     null,
@@ -332,8 +345,30 @@ export default function CompanyManagement() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
     null,
   );
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+
+  // Show loading while checking admin status
+  if (isCheckingAdmin) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show access denied if not global admin
+  if (!adminCheck?.isGlobalAdmin) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-4">
+          <div className="text-muted-foreground">
+            <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium">Access Restricted</p>
+            <p className="text-sm">Global administrator privileges are required to manage companies.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { data: companies = [], isLoading } = useQuery<CompanyType[]>({
     queryKey: ["/api/companies"],

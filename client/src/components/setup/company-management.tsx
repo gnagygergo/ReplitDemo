@@ -332,11 +332,7 @@ export default function CompanyManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Check if user is global admin
-  const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<AdminCheckResponse>({
-    queryKey: ["/api/auth/verify-global-admin"],
-  });
-
+  // State declarations
   const [searchQuery, setSearchQuery] = useState("");
   const [editingCompany, setEditingCompany] = useState<CompanyType | null>(
     null,
@@ -346,39 +342,24 @@ export default function CompanyManagement() {
     null,
   );
 
-  // Show loading while checking admin status
-  if (isCheckingAdmin) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  // Show access denied if not global admin
-  if (!adminCheck?.isGlobalAdmin) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center space-y-4">
-          <div className="text-muted-foreground">
-            <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p className="text-lg font-medium">Access Restricted</p>
-            <p className="text-sm">Global administrator privileges are required to manage companies.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const { data: companies = [], isLoading } = useQuery<CompanyType[]>({
-    queryKey: ["/api/companies"],
+  // ALL HOOKS MUST BE CALLED FIRST - BEFORE ANY CONDITIONAL RETURNS
+  
+  // Check if user is global admin
+  const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<AdminCheckResponse>({
+    queryKey: ["/api/auth/verify-global-admin"],
   });
 
-  // Fetch users for the selected company
+  // Only fetch companies if user is global admin
+  const { data: companies = [], isLoading } = useQuery<CompanyType[]>({
+    queryKey: ["/api/companies"],
+    enabled: adminCheck?.isGlobalAdmin === true,
+  });
+
+  // Fetch users for the selected company (only if global admin and company selected)
   const { data: selectedCompanyUsers = [], isLoading: isLoadingUsers } =
     useQuery<UserType[]>({
       queryKey: ["/api/companies", selectedCompanyId, "users"],
-      enabled: !!selectedCompanyId,
+      enabled: !!selectedCompanyId && adminCheck?.isGlobalAdmin === true,
     });
 
   const deleteCompanyMutation = useMutation({
@@ -407,6 +388,32 @@ export default function CompanyManagement() {
       });
     },
   });
+
+  // CONDITIONAL RENDERING - AFTER ALL HOOKS ARE CALLED
+
+  // Show loading while checking admin status
+  if (isCheckingAdmin) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show access denied if not global admin
+  if (!adminCheck?.isGlobalAdmin) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-4">
+          <div className="text-muted-foreground">
+            <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p className="text-lg font-medium">Access Restricted</p>
+            <p className="text-sm">Global administrator privileges are required to manage companies.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const filteredCompanies = companies.filter((company: CompanyType) => {
     const query = searchQuery.toLowerCase();

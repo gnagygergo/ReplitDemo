@@ -55,7 +55,7 @@ export interface IStorage {
   deleteCompany(id: string): Promise<boolean>;
 
   // Account methods
-  getAccounts(): Promise<AccountWithOwner[]>;
+  getAccounts(companyContext?: string): Promise<AccountWithOwner[]>;
   getAccount(id: string): Promise<AccountWithOwner | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(
@@ -314,11 +314,17 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getAccounts(): Promise<AccountWithOwner[]> {
+  async getAccounts(companyContext?: string): Promise<AccountWithOwner[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+
     return await db
       .select()
       .from(accounts)
       .innerJoin(users, eq(accounts.ownerId, users.id))
+      .where(eq(accounts.companyId, companyContext))
       .then((rows) =>
         rows.map((row) => ({
           ...row.accounts,

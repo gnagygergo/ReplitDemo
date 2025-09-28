@@ -228,7 +228,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Account routes
   app.get("/api/accounts", async (req, res) => {
     try {
-      const accounts = await storage.getAccounts();
+      const companyContext = await storage.GetCompanyContext(req);
+      const accounts = await storage.getAccounts(companyContext || undefined);
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch accounts" });

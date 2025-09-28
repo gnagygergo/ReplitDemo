@@ -76,6 +76,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   companyId: varchar("company_id"),
   companyContext: varchar("company_context"), // RLS context field - set during login, cleared during logout
+  isGlobalAdmin: boolean("is_global_admin").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

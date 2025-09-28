@@ -34,15 +34,17 @@ import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
 
 export interface IStorage {
-  // User methods - Required for Replit Auth
+  // User methods
   getUser(id: string): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
+  getUsersByCompany(companyId?: string): Promise<User[]>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: UpsertUser): Promise<User>;
   updateUser(id: string, user: Partial<UpsertUser>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
   verifyUserPassword(email: string, password: string): Promise<User | null>;
+  verifyGlobalAdmin(req: any): Promise<boolean>;
 
   // Company methods
   getCompanies(): Promise<Company[]>;
@@ -171,7 +173,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // User methods - Required for Replit Auth
+  // User methods
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -179,6 +181,22 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getUsersByCompany(req: any, companyId?: string): Promise<User[]> {
+    // First check if user is global admin
+    const isGlobalAdmin = await this.verifyGlobalAdmin(req);
+    if (!isGlobalAdmin) {
+      return [];  // Return empty results if not admin
+    }
+    // If no company ID provided, return empty results for security
+    if (!companyId) {
+      return [];
+    }
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.companyId, companyId));
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -276,6 +294,30 @@ export class DatabaseStorage implements IStorage {
 
     const result = await db.delete(users).where(eq(users.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async verifyGlobalAdmin(req: any): Promise<boolean> {
+    try {
+      // Extract user ID from session (same pattern as GetCompanyContext)
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+
+      if (!userId) return false;
+
+      // Get user record from database
+      const user = await this.getUser(userId);
+
+      // Return the is_global_admin value (false if user not found)
+      return user?.isGlobalAdmin  || false;
+    } catch (error) {
+      console.error("Error verifying global admin:", error);
+      return false;
+    }
   }
 
   // Company methods

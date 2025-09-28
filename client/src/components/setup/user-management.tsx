@@ -515,6 +515,7 @@ export default function UserManagement() {
                   <TableHead>Email</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Last Updated</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -538,6 +539,19 @@ export default function UserManagement() {
                     </TableCell>
                     <TableCell>
                       {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "N/A"}
+                    </TableCell>
+                    <TableCell data-testid={`text-user-admin-${user.id}`}>
+                      {user.isGlobalAdmin ? (
+                        <span className="text-green-600 font-medium">
+                          Global Admin
+                        </span>
+                      ) : user.isAdmin ? (
+                        <span className="text-blue-600 font-medium">
+                          Admin
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">User</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">

@@ -65,7 +65,9 @@ export interface IStorage {
   deleteAccount(id: string): Promise<boolean>;
 
   // Opportunity methods
-  getOpportunities(): Promise<OpportunityWithAccountAndOwner[]>;
+  getOpportunities(
+    companyContext?: string,
+  ): Promise<OpportunityWithAccountAndOwner[]>;
   getOpportunity(
     id: string,
   ): Promise<OpportunityWithAccountAndOwner | undefined>;
@@ -156,14 +158,15 @@ export class DatabaseStorage implements IStorage {
       if (!companyId) return null;
 
       // Query companies table to get company name
-      const company = await db.select()
+      const company = await db
+        .select()
         .from(companies)
         .where(eq(companies.id, companyId))
         .limit(1);
 
       return company[0]?.companyOfficialName || null;
     } catch (error) {
-      console.error('Error getting company name:', error);
+      console.error("Error getting company name:", error);
       return null;
     }
   }
@@ -420,12 +423,20 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getOpportunities(): Promise<OpportunityWithAccountAndOwner[]> {
+  async getOpportunities(
+    companyContext?: string,
+  ): Promise<OpportunityWithAccountAndOwner[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+
     return await db
       .select()
       .from(opportunities)
       .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
       .innerJoin(users, eq(opportunities.ownerId, users.id))
+      .where(eq(opportunities.companyId, companyContext))
       .then((rows) =>
         rows.map((row) => ({
           ...row.opportunities,

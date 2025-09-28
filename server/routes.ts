@@ -240,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Account routes
+  // Account routes respecting company context
   app.get("/api/accounts", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
@@ -265,10 +265,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Opportunity routes
+  // Opportunity routes respecting company context
   app.get("/api/opportunities", async (req, res) => {
     try {
-      const opportunities = await storage.getOpportunities();
+      const companyContext = await storage.GetCompanyContext(req);
+      const opportunities = await storage.getOpportunities(companyContext || undefined);
       res.json(opportunities);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch opportunities" });

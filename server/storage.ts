@@ -36,8 +36,8 @@ import * as bcrypt from "bcrypt";
 export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
-  getUsers(): Promise<User[]>;
-  getUsersByCompany(req: any, companyId?: string): Promise<User[]>;
+  getUsers(companyContext?: string): Promise<User[]>;
+  getUsersByCompany(companyId?: string): Promise<User[]>;
   getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   createUser(user: UpsertUser): Promise<User>;
@@ -179,24 +179,28 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUsers(): Promise<User[]> {
-    return await db.select().from(users);
+  async getUsers(companyContext?: string): Promise<User[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.companyId, companyContext));
   }
 
   async getUsersByCompany(req: any, companyId?: string): Promise<User[]> {
     // First check if user is global admin
     const isGlobalAdmin = await this.verifyGlobalAdmin(req);
     if (!isGlobalAdmin) {
-      return [];  // Return empty results if not admin
+      return []; // Return empty results if not admin
     }
     // If no company ID provided, return empty results for security
     if (!companyId) {
       return [];
     }
-    return await db
-      .select()
-      .from(users)
-      .where(eq(users.companyId, companyId));
+    return await db.select().from(users).where(eq(users.companyId, companyId));
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -313,7 +317,7 @@ export class DatabaseStorage implements IStorage {
       const user = await this.getUser(userId);
 
       // Return the is_global_admin value (false if user not found)
-      return user?.isGlobalAdmin  || false;
+      return user?.isGlobalAdmin || false;
     } catch (error) {
       console.error("Error verifying global admin:", error);
       return false;

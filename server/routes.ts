@@ -153,15 +153,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Global admin verification endpoint
-  app.get("/api/auth/verify-global-admin", isAuthenticated, async (req: any, res) => {
-    try {
-      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
-      res.json({ isGlobalAdmin });
-    } catch (error) {
-      console.error("Error verifying global admin status:", error);
-      res.status(500).json({ message: "Failed to verify admin status" });
-    }
-  });
+  app.get(
+    "/api/auth/verify-global-admin",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+        res.json({ isGlobalAdmin });
+      } catch (error) {
+        console.error("Error verifying global admin status:", error);
+        res.status(500).json({ message: "Failed to verify admin status" });
+      }
+    },
+  );
 
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(
@@ -307,7 +311,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/opportunities", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const opportunities = await storage.getOpportunities(companyContext || undefined);
+      const opportunities = await storage.getOpportunities(
+        companyContext || undefined,
+      );
       res.json(opportunities);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch opportunities" });
@@ -512,7 +518,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User management routes
   app.get("/api/users", async (req, res) => {
     try {
-      const users = await storage.getUsers();
+      const companyContext = await storage.GetCompanyContext(req);
+      const users = await storage.getUsers(companyContext || undefined);
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);

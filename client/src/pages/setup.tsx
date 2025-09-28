@@ -28,9 +28,9 @@ const setupMenuItems = [
   },
   {
     id: "company-roles",
-    label: "Company Roles",
+    label: "Company Roles (in dev)",
     icon: Shield,
-    description: "Manage company role hierarchy and assignments",
+    description: "Manage reporting hierarchy",
   },
 ];
 
@@ -58,12 +58,13 @@ export default function Setup() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Query to check if user is global admin
-  const { data: adminCheck, isLoading: isCheckingAdmin } = useQuery<AdminCheckResponse>({
-    queryKey: ["/api/auth/verify-global-admin"],
-  });
+  const { data: adminCheck, isLoading: isCheckingAdmin } =
+    useQuery<AdminCheckResponse>({
+      queryKey: ["/api/auth/verify-global-admin"],
+    });
 
   // Filter menu items based on admin status and search query
-  const availableMenuItems = setupMenuItems.filter(item => {
+  const availableMenuItems = setupMenuItems.filter((item) => {
     // Hide companies menu item if user is not global admin
     if (item.id === "companies" && !adminCheck?.isGlobalAdmin) {
       return false;
@@ -71,9 +72,10 @@ export default function Setup() {
     return true;
   });
 
-  const filteredMenuItems = availableMenuItems.filter(item =>
-    item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMenuItems = availableMenuItems.filter(
+    (item) =>
+      item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // If selected item is companies but user is not admin, default to first available item
@@ -138,7 +140,7 @@ export default function Setup() {
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
                 const isSelected = selectedItem === item.id;
-                
+
                 return (
                   <Button
                     key={item.id}
@@ -174,9 +176,7 @@ export default function Setup() {
         </div>
 
         {/* Content Pane */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {renderContent()}
-        </div>
+        <div className="flex-1 overflow-y-auto p-6">{renderContent()}</div>
       </div>
     </div>
   );

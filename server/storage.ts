@@ -115,6 +115,7 @@ export interface IStorage {
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
+  GetCompanyContext(req: any): Promise<string | null>; // Method called by all GETTERs of business objects
 
   // Transaction-scoped operations for RLS
   runWithCompanyContext<T>(
@@ -124,6 +125,28 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Method called by all GETTERs of business objects
+  async GetCompanyContext(req: any): Promise<string | null> {
+    try {
+      // Extract user ID from session
+      const sessionUser = (req.session as any).user;
+      let userId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+      if (!userId) return null;
+      // Get user's company context
+      const user = await this.getUser(userId);
+      return user?.companyContext || null;
+    } catch (error) {
+      console.error("Error getting company context:", error);
+      return null;
+    }
+  }
+
   // User methods - Required for Replit Auth
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

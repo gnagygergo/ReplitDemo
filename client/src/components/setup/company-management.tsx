@@ -51,7 +51,11 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Company as CompanyType, User as UserType, InsertCompany } from "@shared/schema";
+import type {
+  Company as CompanyType,
+  User as UserType,
+  InsertCompany,
+} from "@shared/schema";
 
 const companySchema = z.object({
   companyOfficialName: z.string().min(1, "Company official name is required"),
@@ -61,7 +65,13 @@ const companySchema = z.object({
 
 type CompanyForm = z.infer<typeof companySchema>;
 
-function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose: () => void }) {
+function CompanyEditDialog({
+  company,
+  onClose,
+}: {
+  company: CompanyType;
+  onClose: () => void;
+}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -123,7 +133,11 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose
               <FormItem>
                 <FormLabel>Company Official Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter company official name" {...field} data-testid="input-company-official-name" />
+                  <Input
+                    placeholder="Enter company official name"
+                    {...field}
+                    data-testid="input-company-official-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -136,7 +150,11 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose
               <FormItem>
                 <FormLabel>Company Alias</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter company alias (optional)" {...field} data-testid="input-company-alias" />
+                  <Input
+                    placeholder="Enter company alias (optional)"
+                    {...field}
+                    data-testid="input-company-alias"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -149,7 +167,11 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose
               <FormItem>
                 <FormLabel>Company Registration ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter registration ID (optional)" {...field} data-testid="input-company-registration-id" />
+                  <Input
+                    placeholder="Enter registration ID (optional)"
+                    {...field}
+                    data-testid="input-company-registration-id"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,8 +181,14 @@ function CompanyEditDialog({ company, onClose }: { company: CompanyType; onClose
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateCompanyMutation.isPending} data-testid="button-update-company">
-              {updateCompanyMutation.isPending ? "Updating..." : "Update Company"}
+            <Button
+              type="submit"
+              disabled={updateCompanyMutation.isPending}
+              data-testid="button-update-company"
+            >
+              {updateCompanyMutation.isPending
+                ? "Updating..."
+                : "Update Company"}
             </Button>
           </div>
         </form>
@@ -231,7 +259,11 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Company Official Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter company official name" {...field} data-testid="input-create-company-official-name" />
+                  <Input
+                    placeholder="Enter company official name"
+                    {...field}
+                    data-testid="input-create-company-official-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -244,7 +276,11 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Company Alias</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter company alias (optional)" {...field} data-testid="input-create-company-alias" />
+                  <Input
+                    placeholder="Enter company alias (optional)"
+                    {...field}
+                    data-testid="input-create-company-alias"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -257,7 +293,11 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Company Registration ID</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter registration ID (optional)" {...field} data-testid="input-create-company-registration-id" />
+                  <Input
+                    placeholder="Enter registration ID (optional)"
+                    {...field}
+                    data-testid="input-create-company-registration-id"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -267,8 +307,14 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createCompanyMutation.isPending} data-testid="button-create-company-submit">
-              {createCompanyMutation.isPending ? "Creating..." : "Create Company"}
+            <Button
+              type="submit"
+              disabled={createCompanyMutation.isPending}
+              data-testid="button-create-company-submit"
+            >
+              {createCompanyMutation.isPending
+                ? "Creating..."
+                : "Create Company"}
             </Button>
           </div>
         </form>
@@ -279,9 +325,13 @@ function CompanyCreateDialog({ onClose }: { onClose: () => void }) {
 
 export default function CompanyManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingCompany, setEditingCompany] = useState<CompanyType | null>(null);
+  const [editingCompany, setEditingCompany] = useState<CompanyType | null>(
+    null,
+  );
   const [isCreatingCompany, setIsCreatingCompany] = useState(false);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    null,
+  );
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -290,10 +340,11 @@ export default function CompanyManagement() {
   });
 
   // Fetch users for the selected company
-  const { data: selectedCompanyUsers = [], isLoading: isLoadingUsers } = useQuery<UserType[]>({
-    queryKey: ["/api/companies", selectedCompanyId, "users"],
-    enabled: !!selectedCompanyId,
-  });
+  const { data: selectedCompanyUsers = [], isLoading: isLoadingUsers } =
+    useQuery<UserType[]>({
+      queryKey: ["/api/companies", selectedCompanyId, "users"],
+      enabled: !!selectedCompanyId,
+    });
 
   const deleteCompanyMutation = useMutation({
     mutationFn: async (companyId: string) => {
@@ -309,7 +360,7 @@ export default function CompanyManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
       toast({
-        title: "Success", 
+        title: "Success",
         description: "Company deleted successfully",
       });
     },
@@ -366,7 +417,10 @@ export default function CompanyManagement() {
             Manage company information and select a company to view its users
           </p>
         </div>
-        <Button onClick={() => setIsCreatingCompany(true)} data-testid="button-create-company">
+        <Button
+          onClick={() => setIsCreatingCompany(true)}
+          data-testid="button-create-company"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Create Company
         </Button>
@@ -402,7 +456,9 @@ export default function CompanyManagement() {
                 <div className="text-center py-8 text-muted-foreground">
                   <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
                   <p>
-                    {searchQuery ? "No companies match your search" : "No companies found"}
+                    {searchQuery
+                      ? "No companies match your search"
+                      : "No companies found"}
                   </p>
                 </div>
               ) : (
@@ -415,8 +471,8 @@ export default function CompanyManagement() {
                   </TableHeader>
                   <TableBody>
                     {filteredCompanies.map((company: CompanyType) => (
-                      <TableRow 
-                        key={company.id} 
+                      <TableRow
+                        key={company.id}
                         data-testid={`company-row-${company.id}`}
                         className={`cursor-pointer hover:bg-muted/50 ${
                           selectedCompanyId === company.id ? "bg-muted" : ""
@@ -429,7 +485,9 @@ export default function CompanyManagement() {
                               <Building2 className="h-4 w-4 text-primary" />
                             </div>
                             <div>
-                              <span data-testid={`text-company-name-${company.id}`}>
+                              <span
+                                data-testid={`text-company-name-${company.id}`}
+                              >
                                 {company.companyOfficialName}
                               </span>
                               {company.companyAlias && (
@@ -466,15 +524,21 @@ export default function CompanyManagement() {
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Company</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Delete Company
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to delete "{company.companyOfficialName}"? This action cannot be undone.
+                                    Are you sure you want to delete "
+                                    {company.companyOfficialName}"? This action
+                                    cannot be undone.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleDeleteCompany(company.id)}
+                                    onClick={() =>
+                                      handleDeleteCompany(company.id)
+                                    }
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                     data-testid={`button-confirm-delete-company-${company.id}`}
                                   >
@@ -498,10 +562,9 @@ export default function CompanyManagement() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {selectedCompanyId 
-                ? `Users in ${companies.find(c => c.id === selectedCompanyId)?.companyOfficialName || "Selected Company"}`
-                : "Company Users"
-              }
+              {selectedCompanyId
+                ? `Users in ${companies.find((c) => c.id === selectedCompanyId)?.companyOfficialName || "Selected Company"}`
+                : "Company Users"}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[500px] overflow-y-auto">
@@ -525,7 +588,7 @@ export default function CompanyManagement() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
-                    <TableHead>Admin</TableHead>
+                    <TableHead>Type</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -537,9 +600,9 @@ export default function CompanyManagement() {
                             <Users className="h-4 w-4 text-blue-600" />
                           </div>
                           <span data-testid={`text-user-name-${user.id}`}>
-                            {user.firstName && user.lastName 
-                              ? `${user.firstName} ${user.lastName}` 
-                              : user.email?.split('@')[0] || 'User'}
+                            {user.firstName && user.lastName
+                              ? `${user.firstName} ${user.lastName}`
+                              : user.email?.split("@")[0] || "User"}
                           </span>
                         </div>
                       </TableCell>
@@ -548,9 +611,13 @@ export default function CompanyManagement() {
                       </TableCell>
                       <TableCell data-testid={`text-user-admin-${user.id}`}>
                         {user.isGlobalAdmin ? (
-                          <span className="text-green-600 font-medium">Global Admin</span>
+                          <span className="text-green-600 font-medium">
+                            Global Admin
+                          </span>
                         ) : user.isAdmin ? (
-                          <span className="text-blue-600 font-medium">Admin</span>
+                          <span className="text-blue-600 font-medium">
+                            Admin
+                          </span>
                         ) : (
                           <span className="text-muted-foreground">User</span>
                         )}
@@ -573,8 +640,14 @@ export default function CompanyManagement() {
 
       {/* Edit Company Dialog */}
       {editingCompany && (
-        <Dialog open={!!editingCompany} onOpenChange={() => setEditingCompany(null)}>
-          <CompanyEditDialog company={editingCompany} onClose={() => setEditingCompany(null)} />
+        <Dialog
+          open={!!editingCompany}
+          onOpenChange={() => setEditingCompany(null)}
+        >
+          <CompanyEditDialog
+            company={editingCompany}
+            onClose={() => setEditingCompany(null)}
+          />
         </Dialog>
       )}
     </div>

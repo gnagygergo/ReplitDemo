@@ -44,6 +44,7 @@ import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -276,10 +277,10 @@ export default function AccountDetail() {
         </div>
       </div>
 
-      {/* Two-Pane Layout */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left Pane */}
-        <div className="col-span-6">
+      {/* Resizable Two-Pane Layout */}
+      <PanelGroup direction="horizontal" className="min-h-[600px]">
+        {/* Left Pane - Account Information */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
           <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
@@ -491,10 +492,12 @@ export default function AccountDetail() {
               )}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Right Pane */}
-        <div className="col-span-6">
+        </Panel>
+        
+        <PanelResizeHandle className="w-2 bg-border hover:bg-muted-foreground/20 transition-colors" />
+        
+        {/* Right Pane - Opportunities */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -558,8 +561,8 @@ export default function AccountDetail() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </Panel>
+      </PanelGroup>
 
       <UserLookupDialog
         open={showUserLookup}

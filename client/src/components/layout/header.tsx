@@ -22,6 +22,16 @@ export default function Header() {
     enabled: !!user, // Only fetch if user is authenticated
   });
 
+  // Fetch admin status for current user
+  const { data: adminStatus } = useQuery<{ 
+    isGlobalAdmin: boolean; 
+    isCompanyAdmin: boolean; 
+    hasAdminAccess: boolean; 
+  }>({
+    queryKey: ["/api/auth/verify-admin-status"],
+    enabled: !!user, // Only fetch if user is authenticated
+  });
+
   const navItems = [
     { path: "/", label: "Dashboard", icon: ChartLine },
     { path: "/accounts", label: "Accounts", icon: Building },
@@ -61,17 +71,19 @@ export default function Header() {
               <Bell className="w-5 h-5" />
             </button>
 
-            {/* Setup/Settings Link */}
-            <Link href="/setup">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="button-setup"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-            </Link>
+            {/* Setup/Settings Link - Only show for Company Admin or Global Admin */}
+            {adminStatus?.hasAdminAccess && (
+              <Link href="/setup">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="button-setup"
+                >
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </Link>
+            )}
             
             {/* User Menu */}
             <DropdownMenu>

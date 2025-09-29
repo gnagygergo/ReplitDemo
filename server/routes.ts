@@ -168,6 +168,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Combined admin status verification endpoint
+  app.get(
+    "/api/auth/verify-admin-status", 
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const [isGlobalAdmin, isCompanyAdmin] = await Promise.all([
+          storage.verifyGlobalAdmin(req),
+          storage.verifyCompanyAdmin(req)
+        ]);
+        res.json({ 
+          isGlobalAdmin, 
+          isCompanyAdmin,
+          hasAdminAccess: isGlobalAdmin || isCompanyAdmin
+        });
+      } catch (error) {
+        console.error("Error verifying admin status:", error);
+        res.status(500).json({ message: "Failed to verify admin status" });
+      }
+    },
+  );
+
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(
     [

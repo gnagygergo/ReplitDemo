@@ -342,6 +342,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/accounts/:accountId/opportunities", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const opportunities = await storage.getOpportunitiesByAccount(
+        req.params.accountId,
+        companyContext || undefined
+      );
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch opportunities for account" });
+    }
+  });
+
   // Opportunity routes respecting company context
   app.get("/api/opportunities", async (req, res) => {
     try {

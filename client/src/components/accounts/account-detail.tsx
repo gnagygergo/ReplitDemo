@@ -3,7 +3,7 @@ import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type AccountWithOwner, type InsertAccount, insertAccountSchema, type User } from "@shared/schema";
+import { type AccountWithOwner, type InsertAccount, insertAccountSchema, type User, type OpportunityWithAccountAndOwner } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Building, Edit, Save, X, Users } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Building, Edit, Save, X, Users, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -27,8 +28,14 @@ export default function AccountDetail() {
   const { toast } = useToast();
 
   // Fetch account data
-  const { data: account, isLoading } = useQuery<AccountWithOwner>({
+  const { data: account, isLoading: isLoadingAccount } = useQuery<AccountWithOwner>({
     queryKey: ["/api/accounts", params?.id],
+    enabled: !!params?.id,
+  });
+
+  // Fetch opportunities for this account
+  const { data: opportunities = [], isLoading: isLoadingOpportunities } = useQuery<OpportunityWithAccountAndOwner[]>({
+    queryKey: ["/api/accounts", params?.id, "opportunities"],
     enabled: !!params?.id,
   });
 
@@ -126,6 +133,18 @@ export default function AccountDetail() {
     return variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800";
   };
 
+  const formatCurrency = (amount: string | number) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(num);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   // Initialize form when account data is loaded
   useEffect(() => {
     if (account) {
@@ -139,7 +158,7 @@ export default function AccountDetail() {
     }
   }, [account, form]);
 
-  if (isLoading) {
+  if (isLoadingAccount) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse">Loading account details...</div>
@@ -220,180 +239,244 @@ export default function AccountDetail() {
         </div>
       </div>
 
-      {/* Account Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isEditing ? (
-            <Form {...form}>
-              <form className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Account Name <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Enter account name"
-                          data-testid="input-edit-account-name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      {/* Three-Pane Layout */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Left Pane - Empty */}
+        <div className="col-span-2">
+          {/* Reserved for future content */}
+        </div>
 
-                <FormField
-                  control={form.control}
-                  name="industry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Industry <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-edit-industry">
-                            <SelectValue placeholder="Select an industry" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="tech">Technology</SelectItem>
-                          <SelectItem value="construction">Construction</SelectItem>
-                          <SelectItem value="services">Services</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* Mid Pane - Account Information */}
+        <div className="col-span-5">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isEditing ? (
+                <Form {...form}>
+                  <form className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Account Name <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="Enter account name"
+                              data-testid="input-edit-account-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          value={field.value || ""} 
-                          rows={3}
-                          placeholder="Enter full address"
-                          className="resize-none"
-                          data-testid="input-edit-address"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="ownerId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Owner <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-start h-auto p-3"
-                          onClick={() => setShowUserLookup(true)}
-                          data-testid="button-edit-owner-lookup"
-                        >
-                          {selectedOwner ? (
-                            <div className="flex items-center space-x-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={selectedOwner.profileImageUrl || undefined} />
-                                <AvatarFallback className="text-xs">
-                                  {getUserInitials(selectedOwner)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex flex-col items-start">
-                                <span className="font-medium" data-testid={`text-edit-owner-${selectedOwner.id}`}>
-                                  {getUserDisplayName(selectedOwner)}
-                                </span>
-                                <span className="text-sm text-muted-foreground">
-                                  {selectedOwner.email}
-                                </span>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center space-x-2 text-muted-foreground">
-                              <Users className="h-4 w-4" />
-                              <span>Select owner</span>
-                            </div>
-                          )}
-                        </Button>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-          ) : (
-            <div className="space-y-6">
-              {/* Account Name */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Account Name</label>
-                <div className="mt-1 text-foreground" data-testid="text-account-name-value">
-                  {account.name}
-                </div>
-              </div>
+                    <FormField
+                      control={form.control}
+                      name="industry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Industry <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-edit-industry">
+                                <SelectValue placeholder="Select an industry" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="tech">Technology</SelectItem>
+                              <SelectItem value="construction">Construction</SelectItem>
+                              <SelectItem value="services">Services</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              {/* Industry */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Industry</label>
-                <div className="mt-1" data-testid="text-account-industry-value">
-                  <Badge className={getIndustryBadgeClass(account.industry)}>
-                    {getIndustryLabel(account.industry)}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Address</label>
-                <div className="mt-1 text-foreground whitespace-pre-wrap" data-testid="text-account-address-value">
-                  {account.address || "No address provided"}
-                </div>
-              </div>
-
-              {/* Owner */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Account Owner</label>
-                <div className="mt-1 flex items-center space-x-3" data-testid="text-account-owner-value">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={account.owner?.profileImageUrl || undefined} />
-                    <AvatarFallback>
-                      {getUserInitials(account.owner)}
-                    </AvatarFallback>
-                  </Avatar>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              value={field.value || ""} 
+                              rows={3}
+                              placeholder="Enter full address"
+                              className="resize-none"
+                              data-testid="input-edit-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="ownerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Owner <span className="text-destructive">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start h-auto p-3"
+                              onClick={() => setShowUserLookup(true)}
+                              data-testid="button-edit-owner-lookup"
+                            >
+                              {selectedOwner ? (
+                                <div className="flex items-center space-x-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={selectedOwner.profileImageUrl || undefined} />
+                                    <AvatarFallback className="text-xs">
+                                      {getUserInitials(selectedOwner)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium" data-testid={`text-edit-owner-${selectedOwner.id}`}>
+                                      {getUserDisplayName(selectedOwner)}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {selectedOwner.email}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2 text-muted-foreground">
+                                  <Users className="h-4 w-4" />
+                                  <span>Select owner</span>
+                                </div>
+                              )}
+                            </Button>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              ) : (
+                <div className="space-y-6">
+                  {/* Account Name */}
                   <div>
-                    <div className="font-medium text-foreground">
-                      {getUserDisplayName(account.owner)}
+                    <label className="text-sm font-medium text-muted-foreground">Account Name</label>
+                    <div className="mt-1 text-foreground" data-testid="text-account-name-value">
+                      {account.name}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {account.owner?.email}
+                  </div>
+
+                  {/* Industry */}
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Industry</label>
+                    <div className="mt-1" data-testid="text-account-industry-value">
+                      <Badge className={getIndustryBadgeClass(account.industry)}>
+                        {getIndustryLabel(account.industry)}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Address */}
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Address</label>
+                    <div className="mt-1 text-foreground whitespace-pre-wrap" data-testid="text-account-address-value">
+                      {account.address || "No address provided"}
+                    </div>
+                  </div>
+
+                  {/* Owner */}
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Account Owner</label>
+                    <div className="mt-1 flex items-center space-x-3" data-testid="text-account-owner-value">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={account.owner?.profileImageUrl || undefined} />
+                        <AvatarFallback>
+                          {getUserInitials(account.owner)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-foreground">
+                          {getUserDisplayName(account.owner)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {account.owner?.email}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Pane - Opportunities */}
+        <div className="col-span-5">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <TrendingUp className="w-5 h-5" />
+                <span>Opportunities</span>
+                <Badge variant="secondary" className="ml-2">
+                  {opportunities.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingOpportunities ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <div className="animate-pulse">Loading opportunities...</div>
+                </div>
+              ) : opportunities.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <TrendingUp className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                  <p>No opportunities found for this account</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Opportunity Name</TableHead>
+                        <TableHead>Close Date</TableHead>
+                        <TableHead className="text-right">Total Revenue</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {opportunities.map((opportunity) => (
+                        <TableRow key={opportunity.id} data-testid={`row-opportunity-${opportunity.id}`}>
+                          <TableCell className="font-medium" data-testid={`text-opportunity-name-${opportunity.id}`}>
+                            {opportunity.name}
+                          </TableCell>
+                          <TableCell data-testid={`text-opportunity-close-date-${opportunity.id}`}>
+                            {formatDate(opportunity.closeDate)}
+                          </TableCell>
+                          <TableCell className="text-right font-medium" data-testid={`text-opportunity-revenue-${opportunity.id}`}>
+                            {formatCurrency(opportunity.totalRevenue)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <UserLookupDialog
         open={showUserLookup}

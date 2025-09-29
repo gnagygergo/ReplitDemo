@@ -73,6 +73,10 @@ export interface IStorage {
   getOpportunities(
     companyContext?: string,
   ): Promise<OpportunityWithAccountAndOwner[]>;
+  getOpportunitiesByAccount(
+    accountId: string,
+    companyContext?: string,
+  ): Promise<OpportunityWithAccountAndOwner[]>;
   getOpportunity(
     id: string,
   ): Promise<OpportunityWithAccountAndOwner | undefined>;
@@ -497,6 +501,35 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
       .innerJoin(users, eq(opportunities.ownerId, users.id))
       .where(eq(opportunities.companyId, companyContext))
+      .then((rows) =>
+        rows.map((row) => ({
+          ...row.opportunities,
+          account: row.accounts,
+          owner: row.users,
+        })),
+      );
+  }
+
+  async getOpportunitiesByAccount(
+    accountId: string,
+    companyContext?: string,
+  ): Promise<OpportunityWithAccountAndOwner[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(opportunities)
+      .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
+      .innerJoin(users, eq(opportunities.ownerId, users.id))
+      .where(
+        and(
+          eq(opportunities.accountId, accountId),
+          eq(opportunities.companyId, companyContext)
+        )
+      )
       .then((rows) =>
         rows.map((row) => ({
           ...row.opportunities,

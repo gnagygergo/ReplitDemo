@@ -48,6 +48,7 @@ export interface IStorage {
   deleteUser(id: string): Promise<boolean>;
   verifyUserPassword(email: string, password: string): Promise<User | null>;
   verifyGlobalAdmin(req: any): Promise<boolean>;
+  verifyCompanyAdmin(req: any): Promise<boolean>;
 
   // Company methods
   getCompanies(): Promise<Company[]>;
@@ -342,6 +343,30 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async verifyCompanyAdmin(req: any): Promise<boolean> {
+    try {
+      // Extract user ID from session (same pattern as GetCompanyContext)
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+
+      if (!userId) return false;
+
+      // Get user record from database
+      const user = await this.getUser(userId);
+
+      // Return the is_admin value (false if user not found)
+      return user?.isAdmin || false;
+    } catch (error) {
+      console.error("Error verifying global admin:", error);
+      return false;
+    }
+  }
+
   // Company methods
   async getCompanies(): Promise<Company[]> {
     return await db.select().from(companies);
@@ -527,8 +552,8 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(opportunities.accountId, accountId),
-          eq(opportunities.companyId, companyContext)
-        )
+          eq(opportunities.companyId, companyContext),
+        ),
       )
       .then((rows) =>
         rows.map((row) => ({
@@ -1009,11 +1034,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(releases.order);
   }
 
-  async getRelease(id: string, companyContext?: string): Promise<Release | undefined> {
+  async getRelease(
+    id: string,
+    companyContext?: string,
+  ): Promise<Release | undefined> {
     if (!companyContext) {
       return undefined;
     }
-    
+
     const [release] = await db
       .select()
       .from(releases)

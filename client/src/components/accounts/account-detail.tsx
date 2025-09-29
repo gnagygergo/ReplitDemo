@@ -279,7 +279,7 @@ export default function AccountDetail() {
       {/* Two-Pane Layout */}
       <div className="grid grid-cols-12 gap-6">
         {/* Left Pane */}
-        <div className="col-span-5">
+        <div className="col-span-6">
           <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
@@ -494,7 +494,7 @@ export default function AccountDetail() {
         </div>
 
         {/* Right Pane */}
-        <div className="col-span-5">
+        <div className="col-span-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">

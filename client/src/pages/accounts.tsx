@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Building, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
+import { Link } from "wouter";
 import { type Account, type AccountWithOwner } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -250,9 +251,11 @@ export default function Accounts() {
                             <Building className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <div className="text-sm font-medium text-foreground" data-testid={`text-account-name-${account.id}`}>
-                              {account.name}
-                            </div>
+                            <Link href={`/accounts/${account.id}`}>
+                              <div className="text-sm font-medium text-foreground hover:text-primary cursor-pointer" data-testid={`link-account-name-${account.id}`}>
+                                {account.name}
+                              </div>
+                            </Link>
                             <div className="text-sm text-muted-foreground">Account</div>
                           </div>
                         </div>

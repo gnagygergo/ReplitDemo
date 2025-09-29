@@ -295,6 +295,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/accounts/:id", async (req, res) => {
+    try {
+      const account = await storage.getAccount(req.params.id);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch account" });
+    }
+  });
+
+  app.patch("/api/accounts/:id", async (req, res) => {
+    try {
+      const validatedData = insertAccountSchema.partial().parse(req.body);
+      const account = await storage.updateAccount(req.params.id, validatedData);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+      res.json(account);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      if (error instanceof Error && error.message === "Owner not found") {
+        return res.status(400).json({ message: "Owner not found" });
+      }
+      res.status(500).json({ message: "Failed to update account" });
+    }
+  });
+
   app.delete("/api/accounts/:id", async (req, res) => {
     try {
       const deleted = await storage.deleteAccount(req.params.id);

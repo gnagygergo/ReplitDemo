@@ -160,7 +160,7 @@ export default function AccountDetail() {
 
   if (isLoadingAccount) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="animate-pulse">Loading account details...</div>
       </div>
     );
@@ -168,7 +168,7 @@ export default function AccountDetail() {
 
   if (!account) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center py-12">
           <Building className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Account not found</h3>
@@ -182,7 +182,7 @@ export default function AccountDetail() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
         <Link href="/accounts" className="hover:text-foreground">

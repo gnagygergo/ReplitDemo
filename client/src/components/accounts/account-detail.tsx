@@ -3,16 +3,42 @@ import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type AccountWithOwner, type InsertAccount, insertAccountSchema, type User, type OpportunityWithAccountAndOwner } from "@shared/schema";
+import {
+  type AccountWithOwner,
+  type InsertAccount,
+  insertAccountSchema,
+  type User,
+  type OpportunityWithAccountAndOwner,
+} from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Building, Edit, Save, X, Users, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -28,16 +54,18 @@ export default function AccountDetail() {
   const { toast } = useToast();
 
   // Fetch account data
-  const { data: account, isLoading: isLoadingAccount } = useQuery<AccountWithOwner>({
-    queryKey: ["/api/accounts", params?.id],
-    enabled: !!params?.id,
-  });
+  const { data: account, isLoading: isLoadingAccount } =
+    useQuery<AccountWithOwner>({
+      queryKey: ["/api/accounts", params?.id],
+      enabled: !!params?.id,
+    });
 
   // Fetch opportunities for this account
-  const { data: opportunities = [], isLoading: isLoadingOpportunities } = useQuery<OpportunityWithAccountAndOwner[]>({
-    queryKey: ["/api/accounts", params?.id, "opportunities"],
-    enabled: !!params?.id,
-  });
+  const { data: opportunities = [], isLoading: isLoadingOpportunities } =
+    useQuery<OpportunityWithAccountAndOwner[]>({
+      queryKey: ["/api/accounts", params?.id, "opportunities"],
+      enabled: !!params?.id,
+    });
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
@@ -56,7 +84,9 @@ export default function AccountDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", params?.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/accounts", params?.id],
+      });
       toast({
         title: "Account updated successfully",
       });
@@ -97,9 +127,9 @@ export default function AccountDetail() {
 
   const getUserDisplayName = (user: User) => {
     if (user.firstName || user.lastName) {
-      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
     }
-    return user.email || 'Unknown User';
+    return user.email || "Unknown User";
   };
 
   const getUserInitials = (user: User) => {
@@ -112,7 +142,7 @@ export default function AccountDetail() {
     if (user.email) {
       return user.email[0].toUpperCase();
     }
-    return 'U';
+    return "U";
   };
 
   const getIndustryLabel = (industry: string) => {
@@ -130,14 +160,16 @@ export default function AccountDetail() {
       construction: "bg-orange-100 text-orange-800",
       services: "bg-green-100 text-green-800",
     };
-    return variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800";
+    return (
+      variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"
+    );
   };
 
   const formatCurrency = (amount: string | number) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    const num = typeof amount === "string" ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(num);
   };
 
@@ -172,7 +204,9 @@ export default function AccountDetail() {
         <div className="text-center py-12">
           <Building className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <h3 className="text-lg font-medium mb-2">Account not found</h3>
-          <p className="text-muted-foreground mb-4">The account you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-4">
+            The account you're looking for doesn't exist.
+          </p>
           <Link href="/accounts">
             <Button variant="outline">Back to Accounts</Button>
           </Link>
@@ -199,13 +233,16 @@ export default function AccountDetail() {
             <Building className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground" data-testid="text-account-name">
+            <h1
+              className="text-3xl font-bold text-foreground"
+              data-testid="text-account-name"
+            >
               {account.name}
             </h1>
             <p className="text-muted-foreground">Account Details</p>
           </div>
         </div>
-        
+
         <div className="flex space-x-3">
           {isEditing ? (
             <>
@@ -218,7 +255,7 @@ export default function AccountDetail() {
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={form.handleSubmit(onSubmit)}
                 disabled={updateMutation.isPending}
                 data-testid="button-save-edit"
@@ -239,14 +276,9 @@ export default function AccountDetail() {
         </div>
       </div>
 
-      {/* Three-Pane Layout */}
+      {/* Two-Pane Layout */}
       <div className="grid grid-cols-12 gap-6">
-        {/* Left Pane - Empty */}
-        <div className="col-span-2">
-          {/* Reserved for future content */}
-        </div>
-
-        {/* Mid Pane - Account Information */}
+        {/* Left Pane */}
         <div className="col-span-5">
           <Card>
             <CardHeader>
@@ -262,11 +294,12 @@ export default function AccountDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Account Name <span className="text-destructive">*</span>
+                            Account Name{" "}
+                            <span className="text-destructive">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input 
-                              {...field} 
+                            <Input
+                              {...field}
                               placeholder="Enter account name"
                               data-testid="input-edit-account-name"
                             />
@@ -284,7 +317,10 @@ export default function AccountDetail() {
                           <FormLabel>
                             Industry <span className="text-destructive">*</span>
                           </FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger data-testid="select-edit-industry">
                                 <SelectValue placeholder="Select an industry" />
@@ -292,7 +328,9 @@ export default function AccountDetail() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="tech">Technology</SelectItem>
-                              <SelectItem value="construction">Construction</SelectItem>
+                              <SelectItem value="construction">
+                                Construction
+                              </SelectItem>
                               <SelectItem value="services">Services</SelectItem>
                             </SelectContent>
                           </Select>
@@ -308,9 +346,9 @@ export default function AccountDetail() {
                         <FormItem>
                           <FormLabel>Address</FormLabel>
                           <FormControl>
-                            <Textarea 
-                              {...field} 
-                              value={field.value || ""} 
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
                               rows={3}
                               placeholder="Enter full address"
                               className="resize-none"
@@ -321,7 +359,7 @@ export default function AccountDetail() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="ownerId"
@@ -341,13 +379,21 @@ export default function AccountDetail() {
                               {selectedOwner ? (
                                 <div className="flex items-center space-x-3">
                                   <Avatar className="h-8 w-8">
-                                    <AvatarImage src={selectedOwner.profileImageUrl || undefined} />
+                                    <AvatarImage
+                                      src={
+                                        selectedOwner.profileImageUrl ||
+                                        undefined
+                                      }
+                                    />
                                     <AvatarFallback className="text-xs">
                                       {getUserInitials(selectedOwner)}
                                     </AvatarFallback>
                                   </Avatar>
                                   <div className="flex flex-col items-start">
-                                    <span className="font-medium" data-testid={`text-edit-owner-${selectedOwner.id}`}>
+                                    <span
+                                      className="font-medium"
+                                      data-testid={`text-edit-owner-${selectedOwner.id}`}
+                                    >
                                       {getUserDisplayName(selectedOwner)}
                                     </span>
                                     <span className="text-sm text-muted-foreground">
@@ -373,17 +419,29 @@ export default function AccountDetail() {
                 <div className="space-y-6">
                   {/* Account Name */}
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Account Name</label>
-                    <div className="mt-1 text-foreground" data-testid="text-account-name-value">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Account Name
+                    </label>
+                    <div
+                      className="mt-1 text-foreground"
+                      data-testid="text-account-name-value"
+                    >
                       {account.name}
                     </div>
                   </div>
 
                   {/* Industry */}
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Industry</label>
-                    <div className="mt-1" data-testid="text-account-industry-value">
-                      <Badge className={getIndustryBadgeClass(account.industry)}>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Industry
+                    </label>
+                    <div
+                      className="mt-1"
+                      data-testid="text-account-industry-value"
+                    >
+                      <Badge
+                        className={getIndustryBadgeClass(account.industry)}
+                      >
                         {getIndustryLabel(account.industry)}
                       </Badge>
                     </div>
@@ -391,18 +449,30 @@ export default function AccountDetail() {
 
                   {/* Address */}
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Address</label>
-                    <div className="mt-1 text-foreground whitespace-pre-wrap" data-testid="text-account-address-value">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Address
+                    </label>
+                    <div
+                      className="mt-1 text-foreground whitespace-pre-wrap"
+                      data-testid="text-account-address-value"
+                    >
                       {account.address || "No address provided"}
                     </div>
                   </div>
 
                   {/* Owner */}
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Account Owner</label>
-                    <div className="mt-1 flex items-center space-x-3" data-testid="text-account-owner-value">
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Account Owner
+                    </label>
+                    <div
+                      className="mt-1 flex items-center space-x-3"
+                      data-testid="text-account-owner-value"
+                    >
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={account.owner?.profileImageUrl || undefined} />
+                        <AvatarImage
+                          src={account.owner?.profileImageUrl || undefined}
+                        />
                         <AvatarFallback>
                           {getUserInitials(account.owner)}
                         </AvatarFallback>
@@ -423,7 +493,7 @@ export default function AccountDetail() {
           </Card>
         </div>
 
-        {/* Right Pane - Opportunities */}
+        {/* Right Pane */}
         <div className="col-span-5">
           <Card>
             <CardHeader>
@@ -452,19 +522,32 @@ export default function AccountDetail() {
                       <TableRow>
                         <TableHead>Opportunity Name</TableHead>
                         <TableHead>Close Date</TableHead>
-                        <TableHead className="text-right">Total Revenue</TableHead>
+                        <TableHead className="text-right">
+                          Total Revenue
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {opportunities.map((opportunity) => (
-                        <TableRow key={opportunity.id} data-testid={`row-opportunity-${opportunity.id}`}>
-                          <TableCell className="font-medium" data-testid={`text-opportunity-name-${opportunity.id}`}>
+                        <TableRow
+                          key={opportunity.id}
+                          data-testid={`row-opportunity-${opportunity.id}`}
+                        >
+                          <TableCell
+                            className="font-medium"
+                            data-testid={`text-opportunity-name-${opportunity.id}`}
+                          >
                             {opportunity.name}
                           </TableCell>
-                          <TableCell data-testid={`text-opportunity-close-date-${opportunity.id}`}>
+                          <TableCell
+                            data-testid={`text-opportunity-close-date-${opportunity.id}`}
+                          >
                             {formatDate(opportunity.closeDate)}
                           </TableCell>
-                          <TableCell className="text-right font-medium" data-testid={`text-opportunity-revenue-${opportunity.id}`}>
+                          <TableCell
+                            className="text-right font-medium"
+                            data-testid={`text-opportunity-revenue-${opportunity.id}`}
+                          >
                             {formatCurrency(opportunity.totalRevenue)}
                           </TableCell>
                         </TableRow>

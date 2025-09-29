@@ -226,7 +226,7 @@ export default function AccountDetail() {
         <span className="text-foreground font-medium">{account.name}</span>
       </div>
 
-      {/* Header */}
+      {/* Account Headline */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">

@@ -22,6 +22,8 @@ import {
   type UserRoleAssignmentWithUserAndRole,
   type Release,
   type InsertRelease,
+  type UnitOfMeasure,
+  type InsertUnitOfMeasure,
   companies,
   accounts,
   opportunities,
@@ -30,6 +32,7 @@ import {
   companyRoles,
   userRoleAssignments,
   releases,
+  unitOfMeasures,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -135,6 +138,17 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Release | undefined>;
   deleteRelease(id: string, companyContext?: string): Promise<boolean>;
+
+  // Unit of Measure methods
+  getUnitOfMeasures(companyContext?: string): Promise<UnitOfMeasure[]>;
+  getUnitOfMeasure(id: string, companyContext?: string): Promise<UnitOfMeasure | undefined>;
+  createUnitOfMeasure(unitOfMeasure: InsertUnitOfMeasure): Promise<UnitOfMeasure>;
+  updateUnitOfMeasure(
+    id: string,
+    unitOfMeasure: Partial<InsertUnitOfMeasure>,
+    companyContext?: string,
+  ): Promise<UnitOfMeasure | undefined>;
+  deleteUnitOfMeasure(id: string, companyContext?: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1085,6 +1099,74 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(releases)
       .where(and(eq(releases.id, id), eq(releases.companyId, companyContext)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Unit of Measure methods
+  async getUnitOfMeasures(companyContext?: string): Promise<UnitOfMeasure[]> {
+    // If no company context provided, return empty results for security
+    if (!companyContext) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(unitOfMeasures)
+      .where(eq(unitOfMeasures.companyId, companyContext))
+      .orderBy(unitOfMeasures.type, unitOfMeasures.uomName);
+  }
+
+  async getUnitOfMeasure(
+    id: string,
+    companyContext?: string,
+  ): Promise<UnitOfMeasure | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    const [unitOfMeasure] = await db
+      .select()
+      .from(unitOfMeasures)
+      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)));
+    return unitOfMeasure || undefined;
+  }
+
+  async createUnitOfMeasure(insertUnitOfMeasure: InsertUnitOfMeasure): Promise<UnitOfMeasure> {
+    const [unitOfMeasure] = await db
+      .insert(unitOfMeasures)
+      .values(insertUnitOfMeasure)
+      .returning();
+    return unitOfMeasure;
+  }
+
+  async updateUnitOfMeasure(
+    id: string,
+    updates: Partial<InsertUnitOfMeasure>,
+    companyContext?: string,
+  ): Promise<UnitOfMeasure | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+
+    const [unitOfMeasure] = await db
+      .update(unitOfMeasures)
+      .set(allowedUpdates)
+      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)))
+      .returning();
+    return unitOfMeasure || undefined;
+  }
+
+  async deleteUnitOfMeasure(id: string, companyContext?: string): Promise<boolean> {
+    if (!companyContext) {
+      return false;
+    }
+
+    const result = await db
+      .delete(unitOfMeasures)
+      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)));
     return (result.rowCount ?? 0) > 0;
   }
 

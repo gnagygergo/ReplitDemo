@@ -92,6 +92,14 @@ export const releases = pgTable("releases", {
   companyId: varchar("company_id"),
 });
 
+export const unitOfMeasures = pgTable("unit_of_measures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(),
+  uomName: text("uom_name").notNull(),
+  baseToType: boolean("base_to_type").notNull().default(false),
+  companyId: varchar("company_id"),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -198,6 +206,14 @@ export const insertReleaseSchema = createInsertSchema(releases).omit({
   status: z.enum(["Planned", "In Progress", "Completed", "Dropped"]),
 });
 
+export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures).omit({
+  id: true,
+}).extend({
+  type: z.string().min(1, "Type is required"),
+  uomName: z.string().min(1, "UoM Name is required"),
+  baseToType: z.boolean(),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -212,6 +228,8 @@ export type InsertUserRoleAssignment = z.infer<typeof insertUserRoleAssignmentSc
 export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
 export type InsertRelease = z.infer<typeof insertReleaseSchema>;
 export type Release = typeof releases.$inferSelect;
+export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
+export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

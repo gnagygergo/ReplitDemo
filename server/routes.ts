@@ -9,6 +9,7 @@ import {
   insertCompanyRoleSchema,
   insertUserRoleAssignmentSchema,
   insertReleaseSchema,
+  insertUnitOfMeasureSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -202,6 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       "/api/company-roles",
       "/api/user-role-assignments",
       "/api/releases",
+      "/api/unit-of-measures",
     ],
     isAuthenticated,
   );
@@ -1041,6 +1043,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting release:", error);
       res.status(500).json({ message: "Failed to delete release" });
+    }
+  });
+
+  // Unit of Measures routes respecting company context
+  app.get("/api/unit-of-measures", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const unitOfMeasures = await storage.getUnitOfMeasures(companyContext || undefined);
+      res.json(unitOfMeasures);
+    } catch (error) {
+      console.error("Error fetching unit of measures:", error);
+      res.status(500).json({ message: "Failed to fetch unit of measures" });
+    }
+  });
+
+  app.get("/api/unit-of-measures/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const unitOfMeasure = await storage.getUnitOfMeasure(req.params.id, companyContext || undefined);
+      if (!unitOfMeasure) {
+        return res.status(404).json({ message: "Unit of measure not found" });
+      }
+      res.json(unitOfMeasure);
+    } catch (error) {
+      console.error("Error fetching unit of measure:", error);
+      res.status(500).json({ message: "Failed to fetch unit of measure" });
+    }
+  });
+
+  app.post("/api/unit-of-measures", async (req: any, res) => {
+    try {
+      const validatedData = insertUnitOfMeasureSchema.parse(req.body);
+
+      // Get current user's company context to assign to new unit of measure
+      const sessionUser = (req.session as any).user;
+      let currentUserId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        currentUserId = sessionUser.id;
+      } else {
+        currentUserId = req.user?.claims?.sub;
+      }
+
+      if (!currentUserId) {
+        return res
+          .status(401)
+          .json({ message: "User not authenticated" });
+      }
+
+      const user = await storage.getUser(currentUserId);
+      if (!user || !user.companyContext) {
+        return res
+          .status(400)
+          .json({ message: "User has no company context" });
+      }
+
+      const unitOfMeasureDataWithCompany = {
+        ...validatedData,
+        companyId: user.companyContext,
+      };
+
+      const unitOfMeasure = await storage.createUnitOfMeasure(unitOfMeasureDataWithCompany);
+      res.status(201).json(unitOfMeasure);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating unit of measure:", error);
+      res.status(500).json({ message: "Failed to create unit of measure" });
+    }
+  });
+
+  app.patch("/api/unit-of-measures/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const validatedData = insertUnitOfMeasureSchema.partial().parse(req.body);
+      const unitOfMeasure = await storage.updateUnitOfMeasure(req.params.id, validatedData, companyContext || undefined);
+      if (!unitOfMeasure) {
+        return res.status(404).json({ message: "Unit of measure not found" });
+      }
+      res.json(unitOfMeasure);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating unit of measure:", error);
+      res.status(500).json({ message: "Failed to update unit of measure" });
+    }
+  });
+
+  app.delete("/api/unit-of-measures/:id", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const deleted = await storage.deleteUnitOfMeasure(req.params.id, companyContext || undefined);
+      if (!deleted) {
+        return res.status(404).json({ message: "Unit of measure not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting unit of measure:", error);
+      res.status(500).json({ message: "Failed to delete unit of measure" });
     }
   });
 

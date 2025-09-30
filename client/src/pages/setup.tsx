@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,12 +38,20 @@ const setupMenuItems = [
     icon: Rocket,
     description: "Manage release planning and tracking",
   },
+  {
+    id: "unit-of-measures",
+    label: "Unit of Measures",
+    icon: Ruler,
+    description: "Manage measurement units and conversions",
+    globalAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
 import RoleHierarchy from "@/components/setup/role-hierarchy";
 import CompanyManagement from "@/components/setup/company-management";
 import ReleaseManagement from "@/components/setup/release-management";
+import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 
 // Companies management component
 function CompaniesSetup() {
@@ -65,6 +73,11 @@ function ReleasesSetup() {
   return <ReleaseManagement />;
 }
 
+// Unit of Measures management component
+function UnitOfMeasuresSetup() {
+  return <UnitOfMeasuresManagement />;
+}
+
 export default function Setup() {
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,6 +92,10 @@ export default function Setup() {
   const availableMenuItems = setupMenuItems.filter((item) => {
     // Hide companies menu item if user is not global admin
     if (item.id === "companies" && !adminCheck?.isGlobalAdmin) {
+      return false;
+    }
+    // Hide unit-of-measures menu item if user is not global admin
+    if ((item as any).globalAdminOnly && !adminCheck?.isGlobalAdmin) {
       return false;
     }
     return true;
@@ -109,6 +126,8 @@ export default function Setup() {
         return <CompanyRolesSetup />;
       case "releases":
         return <ReleasesSetup />;
+      case "unit-of-measures":
+        return <UnitOfMeasuresSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

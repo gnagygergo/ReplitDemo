@@ -140,15 +140,16 @@ export interface IStorage {
   deleteRelease(id: string, companyContext?: string): Promise<boolean>;
 
   // Unit of Measure methods
-  getUnitOfMeasures(companyContext?: string): Promise<UnitOfMeasure[]>;
-  getUnitOfMeasure(id: string, companyContext?: string): Promise<UnitOfMeasure | undefined>;
-  createUnitOfMeasure(unitOfMeasure: InsertUnitOfMeasure): Promise<UnitOfMeasure>;
+  getUnitOfMeasures(): Promise<UnitOfMeasure[]>;
+  getUnitOfMeasure(id: string): Promise<UnitOfMeasure | undefined>;
+  createUnitOfMeasure(
+    unitOfMeasure: InsertUnitOfMeasure,
+  ): Promise<UnitOfMeasure>;
   updateUnitOfMeasure(
     id: string,
     unitOfMeasure: Partial<InsertUnitOfMeasure>,
-    companyContext?: string,
   ): Promise<UnitOfMeasure | undefined>;
-  deleteUnitOfMeasure(id: string, companyContext?: string): Promise<boolean>;
+  deleteUnitOfMeasure(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1103,35 +1104,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Unit of Measure methods
-  async getUnitOfMeasures(companyContext?: string): Promise<UnitOfMeasure[]> {
-    // If no company context provided, return empty results for security
-    if (!companyContext) {
-      return [];
-    }
-
+  async getUnitOfMeasures(): Promise<UnitOfMeasure[]> {
     return await db
       .select()
       .from(unitOfMeasures)
-      .where(eq(unitOfMeasures.companyId, companyContext))
       .orderBy(unitOfMeasures.type, unitOfMeasures.uomName);
   }
 
-  async getUnitOfMeasure(
-    id: string,
-    companyContext?: string,
-  ): Promise<UnitOfMeasure | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
+  async getUnitOfMeasure(id: string): Promise<UnitOfMeasure | undefined> {
     const [unitOfMeasure] = await db
       .select()
       .from(unitOfMeasures)
-      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)));
+      .where(and(eq(unitOfMeasures.id, id)));
     return unitOfMeasure || undefined;
   }
 
-  async createUnitOfMeasure(insertUnitOfMeasure: InsertUnitOfMeasure): Promise<UnitOfMeasure> {
+  async createUnitOfMeasure(
+    insertUnitOfMeasure: InsertUnitOfMeasure,
+  ): Promise<UnitOfMeasure> {
     const [unitOfMeasure] = await db
       .insert(unitOfMeasures)
       .values(insertUnitOfMeasure)
@@ -1142,31 +1132,31 @@ export class DatabaseStorage implements IStorage {
   async updateUnitOfMeasure(
     id: string,
     updates: Partial<InsertUnitOfMeasure>,
-    companyContext?: string,
   ): Promise<UnitOfMeasure | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    // Remove companyId from updates - it cannot be changed once set
-    const { companyId, ...allowedUpdates } = updates as any;
-
     const [unitOfMeasure] = await db
       .update(unitOfMeasures)
-      .set(allowedUpdates)
-      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)))
+      .set(updates)
+      .where(eq(unitOfMeasures.id, id))
       .returning();
     return unitOfMeasure || undefined;
   }
 
-  async deleteUnitOfMeasure(id: string, companyContext?: string): Promise<boolean> {
+  async deleteUnitOfMeasure(
+    id: string,
+    companyContext?: string,
+  ): Promise<boolean> {
     if (!companyContext) {
       return false;
     }
 
     const result = await db
       .delete(unitOfMeasures)
-      .where(and(eq(unitOfMeasures.id, id), eq(unitOfMeasures.companyId, companyContext)));
+      .where(
+        and(
+          eq(unitOfMeasures.id, id),
+          eq(unitOfMeasures.companyId, companyContext),
+        ),
+      );
     return (result.rowCount ?? 0) > 0;
   }
 

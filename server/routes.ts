@@ -171,18 +171,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Combined admin status verification endpoint
   app.get(
-    "/api/auth/verify-admin-status", 
+    "/api/auth/verify-admin-status",
     isAuthenticated,
     async (req: any, res) => {
       try {
         const [isGlobalAdmin, isCompanyAdmin] = await Promise.all([
           storage.verifyGlobalAdmin(req),
-          storage.verifyCompanyAdmin(req)
+          storage.verifyCompanyAdmin(req),
         ]);
-        res.json({ 
-          isGlobalAdmin, 
+        res.json({
+          isGlobalAdmin,
           isCompanyAdmin,
-          hasAdminAccess: isGlobalAdmin || isCompanyAdmin
+          hasAdminAccess: isGlobalAdmin || isCompanyAdmin,
         });
       } catch (error) {
         console.error("Error verifying admin status:", error);
@@ -371,11 +371,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const companyContext = await storage.GetCompanyContext(req);
       const opportunities = await storage.getOpportunitiesByAccount(
         req.params.accountId,
-        companyContext || undefined
+        companyContext || undefined,
       );
       res.json(opportunities);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch opportunities for account" });
+      res
+        .status(500)
+        .json({ message: "Failed to fetch opportunities for account" });
     }
   });
 
@@ -954,7 +956,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/releases/:id", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const release = await storage.getRelease(req.params.id, companyContext || undefined);
+      const release = await storage.getRelease(
+        req.params.id,
+        companyContext || undefined,
+      );
       if (!release) {
         return res.status(404).json({ message: "Release not found" });
       }
@@ -1016,7 +1021,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const companyContext = await storage.GetCompanyContext(req);
       const validatedData = insertReleaseSchema.partial().parse(req.body);
-      const release = await storage.updateRelease(req.params.id, validatedData, companyContext || undefined);
+      const release = await storage.updateRelease(
+        req.params.id,
+        validatedData,
+        companyContext || undefined,
+      );
       if (!release) {
         return res.status(404).json({ message: "Release not found" });
       }
@@ -1035,7 +1044,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/releases/:id", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const deleted = await storage.deleteRelease(req.params.id, companyContext || undefined);
+      const deleted = await storage.deleteRelease(
+        req.params.id,
+        companyContext || undefined,
+      );
       if (!deleted) {
         return res.status(404).json({ message: "Release not found" });
       }
@@ -1049,8 +1061,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unit of Measures routes respecting company context
   app.get("/api/unit-of-measures", async (req, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req);
-      const unitOfMeasures = await storage.getUnitOfMeasures(companyContext || undefined);
+      const unitOfMeasures = await storage.getUnitOfMeasures();
       res.json(unitOfMeasures);
     } catch (error) {
       console.error("Error fetching unit of measures:", error);
@@ -1060,8 +1071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/unit-of-measures/:id", async (req, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req);
-      const unitOfMeasure = await storage.getUnitOfMeasure(req.params.id, companyContext || undefined);
+      const unitOfMeasure = await storage.getUnitOfMeasure(req.params.id);
       if (!unitOfMeasure) {
         return res.status(404).json({ message: "Unit of measure not found" });
       }
@@ -1076,7 +1086,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertUnitOfMeasureSchema.parse(req.body);
 
-      // Get current user's company context to assign to new unit of measure
       const sessionUser = (req.session as any).user;
       let currentUserId;
 
@@ -1087,24 +1096,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!currentUserId) {
-        return res
-          .status(401)
-          .json({ message: "User not authenticated" });
+        return res.status(401).json({ message: "User not authenticated" });
       }
 
-      const user = await storage.getUser(currentUserId);
-      if (!user || !user.companyContext) {
-        return res
-          .status(400)
-          .json({ message: "User has no company context" });
-      }
-
-      const unitOfMeasureDataWithCompany = {
-        ...validatedData,
-        companyId: user.companyContext,
-      };
-
-      const unitOfMeasure = await storage.createUnitOfMeasure(unitOfMeasureDataWithCompany);
+      const unitOfMeasure = await storage.createUnitOfMeasure(validatedData);
       res.status(201).json(unitOfMeasure);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1119,9 +1114,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/unit-of-measures/:id", async (req, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req);
       const validatedData = insertUnitOfMeasureSchema.partial().parse(req.body);
-      const unitOfMeasure = await storage.updateUnitOfMeasure(req.params.id, validatedData, companyContext || undefined);
+      const unitOfMeasure = await storage.updateUnitOfMeasure(
+        req.params.id,
+        validatedData,
+      );
       if (!unitOfMeasure) {
         return res.status(404).json({ message: "Unit of measure not found" });
       }
@@ -1140,7 +1137,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/unit-of-measures/:id", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const deleted = await storage.deleteUnitOfMeasure(req.params.id, companyContext || undefined);
+      const deleted = await storage.deleteUnitOfMeasure(
+        req.params.id,
+        companyContext || undefined,
+      );
       if (!deleted) {
         return res.status(404).json({ message: "Unit of measure not found" });
       }

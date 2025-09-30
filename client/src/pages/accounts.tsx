@@ -11,10 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import AccountForm from "@/components/accounts/account-form";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Accounts() {
+  const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   
@@ -79,6 +81,10 @@ export default function Accounts() {
     return 'U';
   };
 
+  const handleCloseForm = () => {
+    setShowForm(false);
+  };
+
   const getIndustryBadge = (industry: string) => {
     const variants = {
       tech: "bg-blue-100 text-blue-800",
@@ -109,9 +115,9 @@ export default function Accounts() {
             <p className="text-muted-foreground mt-1">Manage your customer accounts and their information</p>
           </div>
           <Button 
+            onClick={() => setShowForm(true)}
             className="flex items-center space-x-2"
             data-testid="button-create-account"
-            disabled
           >
             <Plus className="w-4 h-4" />
             <span>Create Account</span>
@@ -322,6 +328,11 @@ export default function Accounts() {
           )}
         </Card>
       </div>
+
+      <AccountForm 
+        open={showForm} 
+        onClose={handleCloseForm}
+      />
     </>
   );
 }

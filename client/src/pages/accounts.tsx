@@ -11,13 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import AccountForm from "@/components/accounts/account-form";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Accounts() {
-  const [showForm, setShowForm] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<AccountWithOwner | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   
@@ -52,11 +49,6 @@ export default function Accounts() {
     return matchesSearch && matchesIndustry;
   });
 
-  const handleEdit = (account: AccountWithOwner) => {
-    setEditingAccount(account);
-    setShowForm(true);
-  };
-
   const handleDelete = (account: AccountWithOwner) => {
     if (confirm(`Are you sure you want to delete "${account.name}"?`)) {
       deleteMutation.mutate(account.id);
@@ -85,11 +77,6 @@ export default function Accounts() {
       return email[0].toUpperCase();
     }
     return 'U';
-  };
-
-  const handleCloseForm = () => {
-    setShowForm(false);
-    setEditingAccount(undefined);
   };
 
   const getIndustryBadge = (industry: string) => {
@@ -122,9 +109,9 @@ export default function Accounts() {
             <p className="text-muted-foreground mt-1">Manage your customer accounts and their information</p>
           </div>
           <Button 
-            onClick={() => setShowForm(true)}
             className="flex items-center space-x-2"
             data-testid="button-create-account"
+            disabled
           >
             <Plus className="w-4 h-4" />
             <span>Create Account</span>
@@ -286,15 +273,16 @@ export default function Accounts() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(account)}
-                            className="text-primary hover:text-primary/80"
-                            data-testid={`button-edit-${account.id}`}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                          <Link href={`/accounts/${account.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-primary hover:text-primary/80"
+                              data-testid={`button-edit-${account.id}`}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -334,12 +322,6 @@ export default function Accounts() {
           )}
         </Card>
       </div>
-
-      <AccountForm 
-        open={showForm} 
-        onClose={handleCloseForm} 
-        account={editingAccount}
-      />
     </>
   );
 }

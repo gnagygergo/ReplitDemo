@@ -26,6 +26,7 @@ import {
   type InsertUnitOfMeasure,
   type Product,
   type InsertProduct,
+  type ProductWithUom,
   companies,
   accounts,
   opportunities,
@@ -155,8 +156,8 @@ export interface IStorage {
   deleteUnitOfMeasure(id: string): Promise<boolean>;
 
   // Product methods
-  getProducts(companyContext?: string): Promise<Product[]>;
-  getProduct(id: string, companyContext?: string): Promise<Product | undefined>;
+  getProducts(companyContext?: string): Promise<ProductWithUom[]>;
+  getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(
     id: string,
@@ -1175,28 +1176,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Product methods
-  async getProducts(companyContext?: string): Promise<Product[]> {
+  async getProducts(companyContext?: string): Promise<ProductWithUom[]> {
     if (!companyContext) {
       return [];
     }
 
-    return await db
-      .select()
+    const result = await db
+      .select({
+        id: products.id,
+        salesCategory: products.salesCategory,
+        productName: products.productName,
+        salesUomId: products.salesUomId,
+        salesUnitPrice: products.salesUnitPrice,
+        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
+        vatPercent: products.vatPercent,
+        companyId: products.companyId,
+        salesUomName: unitOfMeasures.uomName,
+      })
       .from(products)
+      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
       .where(eq(products.companyId, companyContext))
       .orderBy(products.productName);
+
+    return result as ProductWithUom[];
   }
 
-  async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
+  async getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined> {
     if (!companyContext) {
       return undefined;
     }
 
     const [product] = await db
-      .select()
+      .select({
+        id: products.id,
+        salesCategory: products.salesCategory,
+        productName: products.productName,
+        salesUomId: products.salesUomId,
+        salesUnitPrice: products.salesUnitPrice,
+        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
+        vatPercent: products.vatPercent,
+        companyId: products.companyId,
+        salesUomName: unitOfMeasures.uomName,
+      })
       .from(products)
+      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
       .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
-    return product || undefined;
+    return product as ProductWithUom | undefined;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {

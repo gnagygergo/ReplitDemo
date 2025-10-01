@@ -1200,15 +1200,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const productData = {
-      ...insertProduct,
-      salesUnitPrice: insertProduct.salesUnitPrice.toString(),
-      vatPercent: insertProduct.vatPercent.toString(),
-    };
-
     const [product] = await db
       .insert(products)
-      .values(productData)
+      .values(insertProduct)
       .returning();
     return product;
   }

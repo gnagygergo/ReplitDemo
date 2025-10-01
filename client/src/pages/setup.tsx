@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,13 @@ const setupMenuItems = [
     description: "Manage measurement units and conversions",
     globalAdminOnly: true,
   },
+  {
+    id: "languages",
+    label: "Languages",
+    icon: Languages,
+    description: "Manage system languages",
+    globalAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -52,6 +59,7 @@ import RoleHierarchy from "@/components/setup/role-hierarchy";
 import CompanyManagement from "@/components/setup/company-management";
 import ReleaseManagement from "@/components/setup/release-management";
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
+import LanguagesManagement from "@/components/setup/languages";
 
 // Companies management component
 function CompaniesSetup() {
@@ -76,6 +84,11 @@ function ReleasesSetup() {
 // Unit of Measures management component
 function UnitOfMeasuresSetup() {
   return <UnitOfMeasuresManagement />;
+}
+
+// Languages management component
+function LanguagesSetup() {
+  return <LanguagesManagement />;
 }
 
 export default function Setup() {
@@ -128,6 +141,8 @@ export default function Setup() {
         return <ReleasesSetup />;
       case "unit-of-measures":
         return <UnitOfMeasuresSetup />;
+      case "languages":
+        return <LanguagesSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

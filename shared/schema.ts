@@ -117,6 +117,13 @@ export const languages = pgTable("languages", {
   languageName: text("language_name").notNull(),
 });
 
+export const translations = pgTable("translations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  labelCode: text("label_code").notNull(),
+  labelContent: text("label_content").notNull(),
+  languageCode: text("language_code").notNull().references(() => languages.languageCode, { onDelete: "restrict" }),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -256,6 +263,14 @@ export const insertLanguageSchema = createInsertSchema(languages).omit({
   languageName: z.string().min(1, "Language name is required"),
 });
 
+export const insertTranslationSchema = createInsertSchema(translations).omit({
+  id: true,
+}).extend({
+  labelCode: z.string().min(1, "Label code is required"),
+  labelContent: z.string().min(1, "Label content is required"),
+  languageCode: z.string().min(1, "Language code is required"),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -276,6 +291,8 @@ export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
 export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Language = typeof languages.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
+export type Translation = typeof translations.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

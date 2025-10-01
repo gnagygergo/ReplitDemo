@@ -105,9 +105,9 @@ export const products = pgTable("products", {
   salesCategory: text("sales_category").notNull(),
   productName: text("product_name").notNull(),
   salesUomId: varchar("sales_uom_id").notNull().references(() => unitOfMeasures.id, { onDelete: "restrict" }),
-  salesUnitPrice: decimal("sales_unit_price", { precision: 12, scale: 2 }).notNull(),
+  salesUnitPrice: decimal("sales_unit_price", { precision: 12, scale: 3 }).notNull(),
   salesUnitPriceCurrency: text("sales_unit_price_currency").notNull(),
-  vatPercent: decimal("vat_percent", { precision: 5, scale: 2 }).notNull(),
+  vatPercent: decimal("vat_percent", { precision: 5, scale: 3 }).notNull(),
   companyId: varchar("company_id"),
 });
 

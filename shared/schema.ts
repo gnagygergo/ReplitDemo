@@ -71,6 +71,7 @@ export const users = pgTable("users", {
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  preferredLanguage: text("preferred_language").references(() => languages.languageCode, { onDelete: "set null" }),
   profileImageUrl: varchar("profile_image_url"),
   password: text("password"),
   isAdmin: boolean("is_admin").default(false).notNull(),

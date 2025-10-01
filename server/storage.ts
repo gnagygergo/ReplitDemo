@@ -27,6 +27,8 @@ import {
   type Product,
   type InsertProduct,
   type ProductWithUom,
+  type Language,
+  type InsertLanguage,
   companies,
   accounts,
   opportunities,
@@ -37,6 +39,7 @@ import {
   releases,
   unitOfMeasures,
   products,
+  languages,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -165,6 +168,16 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Product | undefined>;
   deleteProduct(id: string, companyContext?: string): Promise<boolean>;
+
+  // Language methods (Global - no company context)
+  getLanguages(): Promise<Language[]>;
+  getLanguage(id: string): Promise<Language | undefined>;
+  createLanguage(language: InsertLanguage): Promise<Language>;
+  updateLanguage(
+    id: string,
+    language: Partial<InsertLanguage>,
+  ): Promise<Language | undefined>;
+  deleteLanguage(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;

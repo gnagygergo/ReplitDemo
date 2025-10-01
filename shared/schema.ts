@@ -294,6 +294,10 @@ export type UserRoleAssignmentWithUserAndRole = UserRoleAssignment & {
   companyRole: CompanyRole;
 };
 
+export type ProductWithUom = Product & {
+  salesUomName: string;
+};
+
 // User types - Required for Replit Auth
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;

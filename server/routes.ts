@@ -12,6 +12,7 @@ import {
   insertUnitOfMeasureSchema,
   insertProductSchema,
   insertLanguageSchema,
+  insertTranslationSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1349,6 +1350,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting language:", error);
       res.status(500).json({ message: "Failed to delete language" });
+    }
+  });
+
+  // Translation routes (Global - no company context, read: all users, write: global admins only)
+  app.get("/api/translations", isAuthenticated, async (req, res) => {
+    try {
+      const translations = await storage.getTranslations();
+      res.json(translations);
+    } catch (error) {
+      console.error("Error fetching translations:", error);
+      res.status(500).json({ message: "Failed to fetch translations" });
+    }
+  });
+
+  app.get("/api/translations/:id", isAuthenticated, async (req, res) => {
+    try {
+      const translation = await storage.getTranslation(req.params.id);
+      if (!translation) {
+        return res.status(404).json({ message: "Translation not found" });
+      }
+      res.json(translation);
+    } catch (error) {
+      console.error("Error fetching translation:", error);
+      res.status(500).json({ message: "Failed to fetch translation" });
+    }
+  });
+
+  app.post("/api/translations", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create translations" });
+      }
+
+      const validatedData = insertTranslationSchema.parse(req.body);
+      const translation = await storage.createTranslation(validatedData);
+      res.status(201).json(translation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating translation:", error);
+      res.status(500).json({ message: "Failed to create translation" });
+    }
+  });
+
+  app.patch("/api/translations/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update translations" });
+      }
+
+      const validatedData = insertTranslationSchema.partial().parse(req.body);
+      const translation = await storage.updateTranslation(req.params.id, validatedData);
+      if (!translation) {
+        return res.status(404).json({ message: "Translation not found" });
+      }
+      res.json(translation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating translation:", error);
+      res.status(500).json({ message: "Failed to update translation" });
+    }
+  });
+
+  app.delete("/api/translations/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete translations" });
+      }
+
+      const deleted = await storage.deleteTranslation(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Translation not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting translation:", error);
+      res.status(500).json({ message: "Failed to delete translation" });
     }
   });
 

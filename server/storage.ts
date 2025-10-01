@@ -1225,18 +1225,9 @@ export class DatabaseStorage implements IStorage {
     // Remove companyId from updates - it cannot be changed once set
     const { companyId, ...allowedUpdates } = updates as any;
 
-    // Convert decimal fields to strings for database
-    const productData: any = { ...allowedUpdates };
-    if (productData.salesUnitPrice !== undefined) {
-      productData.salesUnitPrice = productData.salesUnitPrice.toString();
-    }
-    if (productData.vatPercent !== undefined) {
-      productData.vatPercent = productData.vatPercent.toString();
-    }
-
     const [product] = await db
       .update(products)
-      .set(productData)
+      .set(allowedUpdates)
       .where(and(eq(products.id, id), eq(products.companyId, companyContext)))
       .returning();
     return product || undefined;

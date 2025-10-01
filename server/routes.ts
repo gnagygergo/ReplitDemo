@@ -11,6 +11,7 @@ import {
   insertReleaseSchema,
   insertUnitOfMeasureSchema,
   insertProductSchema,
+  insertLanguageSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1261,6 +1262,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting product:", error);
       res.status(500).json({ message: "Failed to delete product" });
+    }
+  });
+
+  // Language routes (Global - no company context, read: all users, write: global admins only)
+  app.get("/api/languages", isAuthenticated, async (req, res) => {
+    try {
+      const languages = await storage.getLanguages();
+      res.json(languages);
+    } catch (error) {
+      console.error("Error fetching languages:", error);
+      res.status(500).json({ message: "Failed to fetch languages" });
+    }
+  });
+
+  app.get("/api/languages/:id", isAuthenticated, async (req, res) => {
+    try {
+      const language = await storage.getLanguage(req.params.id);
+      if (!language) {
+        return res.status(404).json({ message: "Language not found" });
+      }
+      res.json(language);
+    } catch (error) {
+      console.error("Error fetching language:", error);
+      res.status(500).json({ message: "Failed to fetch language" });
+    }
+  });
+
+  app.post("/api/languages", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create languages" });
+      }
+
+      const validatedData = insertLanguageSchema.parse(req.body);
+      const language = await storage.createLanguage(validatedData);
+      res.status(201).json(language);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating language:", error);
+      res.status(500).json({ message: "Failed to create language" });
+    }
+  });
+
+  app.patch("/api/languages/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update languages" });
+      }
+
+      const validatedData = insertLanguageSchema.partial().parse(req.body);
+      const language = await storage.updateLanguage(req.params.id, validatedData);
+      if (!language) {
+        return res.status(404).json({ message: "Language not found" });
+      }
+      res.json(language);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating language:", error);
+      res.status(500).json({ message: "Failed to update language" });
+    }
+  });
+
+  app.delete("/api/languages/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete languages" });
+      }
+
+      const deleted = await storage.deleteLanguage(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Language not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting language:", error);
+      res.status(500).json({ message: "Failed to delete language" });
     }
   });
 

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Package, Search, Filter, Plus, Trash2 } from "lucide-react";
 import { Link } from "wouter";
-import { type Product } from "@shared/schema";
+import { type ProductWithUom } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,7 +22,7 @@ export default function Products() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: products = [], isLoading } = useQuery<Product[]>({
+  const { data: products = [], isLoading } = useQuery<ProductWithUom[]>({
     queryKey: ["/api/products"],
   });
 
@@ -50,7 +50,7 @@ export default function Products() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleDelete = (product: Product) => {
+  const handleDelete = (product: ProductWithUom) => {
     if (confirm(`Are you sure you want to delete "${product.productName}"?`)) {
       deleteMutation.mutate(product.id);
     }
@@ -217,7 +217,7 @@ export default function Products() {
                         {getCategoryBadge(product.salesCategory)}
                       </TableCell>
                       <TableCell data-testid={`text-sales-uom-${product.id}`}>
-                        {product.salesUomId}
+                        {product.salesUomName}
                       </TableCell>
                       <TableCell data-testid={`text-unit-price-${product.id}`}>
                         {parseFloat(product.salesUnitPrice).toFixed(2)}

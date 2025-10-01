@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  type Product,
+  type ProductWithUom,
   type InsertProduct,
   insertProductSchema,
   type UnitOfMeasure,
@@ -40,7 +40,7 @@ export default function ProductDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: product, isLoading: isLoadingProduct } = useQuery<Product>({
+  const { data: product, isLoading: isLoadingProduct } = useQuery<ProductWithUom>({
     queryKey: ["/api/products", params?.id],
     enabled: !!params?.id,
   });
@@ -109,11 +109,6 @@ export default function ProductDetail() {
       "Quoting only": "bg-blue-100 text-blue-800",
     };
     return variants[category as keyof typeof variants] || "bg-gray-100 text-gray-800";
-  };
-
-  const getUomName = (uomId: string) => {
-    const uom = unitOfMeasures.find(u => u.id === uomId);
-    return uom?.uomName || uomId;
   };
 
   useEffect(() => {
@@ -405,7 +400,7 @@ export default function ProductDetail() {
                       className="mt-1 text-foreground"
                       data-testid="text-sales-uom-value"
                     >
-                      {getUomName(product.salesUomId)}
+                      {product.salesUomName}
                     </div>
                   </div>
 

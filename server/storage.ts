@@ -1332,6 +1332,49 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Translation methods (Global - no company context filtering)
+  async getTranslations(): Promise<Translation[]> {
+    return await db
+      .select()
+      .from(translations)
+      .orderBy(translations.labelCode);
+  }
+
+  async getTranslation(id: string): Promise<Translation | undefined> {
+    const [translation] = await db
+      .select()
+      .from(translations)
+      .where(eq(translations.id, id));
+    return translation || undefined;
+  }
+
+  async createTranslation(insertTranslation: InsertTranslation): Promise<Translation> {
+    const [translation] = await db
+      .insert(translations)
+      .values(insertTranslation)
+      .returning();
+    return translation;
+  }
+
+  async updateTranslation(
+    id: string,
+    updates: Partial<InsertTranslation>,
+  ): Promise<Translation | undefined> {
+    const [translation] = await db
+      .update(translations)
+      .set(updates)
+      .where(eq(translations.id, id))
+      .returning();
+    return translation || undefined;
+  }
+
+  async deleteTranslation(id: string): Promise<boolean> {
+    const result = await db
+      .delete(translations)
+      .where(eq(translations.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
   // Row Level Security context methods
   async setCompanyContext(userId: string): Promise<void> {
     // Get user record to find their company_id

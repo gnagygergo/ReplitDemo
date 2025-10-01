@@ -675,6 +675,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: z.string().email().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
+        preferredLanguage: z.string().optional(),
         profileImageUrl: z.string().optional(),
         // isAdmin removed - only admin endpoints should change this
       });

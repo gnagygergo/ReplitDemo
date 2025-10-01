@@ -111,6 +111,12 @@ export const products = pgTable("products", {
   companyId: varchar("company_id"),
 });
 
+export const languages = pgTable("languages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  languageCode: text("language_code").notNull(),
+  languageName: text("language_name").notNull(),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -243,6 +249,13 @@ export const insertProductSchema = createInsertSchema(products).omit({
   vatPercent: z.number().min(0).max(100, "VAT % must be between 0 and 100"),
 });
 
+export const insertLanguageSchema = createInsertSchema(languages).omit({
+  id: true,
+}).extend({
+  languageCode: z.string().min(1, "Language code is required"),
+  languageName: z.string().min(1, "Language name is required"),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -261,6 +274,8 @@ export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
+export type Language = typeof languages.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

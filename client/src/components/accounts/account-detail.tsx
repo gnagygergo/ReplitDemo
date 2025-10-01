@@ -493,9 +493,9 @@ export default function AccountDetail() {
             </CardContent>
           </Card>
         </Panel>
-        
-        <PanelResizeHandle className="w-2 bg-border hover:bg-muted-foreground/20 transition-colors" />
-        
+
+        <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
+
         {/* Right Pane - Opportunities */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <Card>

@@ -29,6 +29,8 @@ import {
   type ProductWithUom,
   type Language,
   type InsertLanguage,
+  type Translation,
+  type InsertTranslation,
   companies,
   accounts,
   opportunities,
@@ -40,6 +42,7 @@ import {
   unitOfMeasures,
   products,
   languages,
+  translations,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -178,6 +181,16 @@ export interface IStorage {
     language: Partial<InsertLanguage>,
   ): Promise<Language | undefined>;
   deleteLanguage(id: string): Promise<boolean>;
+
+  // Translation methods (Global - no company context)
+  getTranslations(): Promise<Translation[]>;
+  getTranslation(id: string): Promise<Translation | undefined>;
+  createTranslation(translation: InsertTranslation): Promise<Translation>;
+  updateTranslation(
+    id: string,
+    translation: Partial<InsertTranslation>,
+  ): Promise<Translation | undefined>;
+  deleteTranslation(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;

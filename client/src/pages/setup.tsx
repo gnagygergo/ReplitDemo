@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +52,13 @@ const setupMenuItems = [
     description: "Manage system languages",
     globalAdminOnly: true,
   },
+  {
+    id: "translations",
+    label: "Translations",
+    icon: FileText,
+    description: "Manage translation labels and content",
+    globalAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -60,6 +67,7 @@ import CompanyManagement from "@/components/setup/company-management";
 import ReleaseManagement from "@/components/setup/release-management";
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import LanguagesManagement from "@/components/setup/languages";
+import TranslationsManagement from "@/components/setup/translations";
 
 // Companies management component
 function CompaniesSetup() {
@@ -89,6 +97,11 @@ function UnitOfMeasuresSetup() {
 // Languages management component
 function LanguagesSetup() {
   return <LanguagesManagement />;
+}
+
+// Translations management component
+function TranslationsSetup() {
+  return <TranslationsManagement />;
 }
 
 export default function Setup() {
@@ -143,6 +156,8 @@ export default function Setup() {
         return <UnitOfMeasuresSetup />;
       case "languages":
         return <LanguagesSetup />;
+      case "translations":
+        return <TranslationsSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

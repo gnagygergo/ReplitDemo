@@ -113,7 +113,7 @@ export const products = pgTable("products", {
 
 export const languages = pgTable("languages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  languageCode: text("language_code").notNull(),
+  languageCode: text("language_code").notNull().unique(),
   languageName: text("language_name").notNull(),
 });
 

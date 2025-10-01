@@ -9,10 +9,12 @@ import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
 import Accounts from "@/pages/accounts";
 import Opportunities from "@/pages/opportunities";
+import Products from "@/pages/products";
 import Cases from "@/pages/cases";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
+import ProductDetail from "@/pages/product-detail";
 
 function AuthenticatedRouter() {
   return (
@@ -23,6 +25,8 @@ function AuthenticatedRouter() {
         <Route path="/accounts/:id" component={AccountDetail} />
         <Route path="/accounts" component={Accounts} />
         <Route path="/opportunities" component={Opportunities} />
+        <Route path="/products/:id" component={ProductDetail} />
+        <Route path="/products" component={Products} />
         <Route path="/cases" component={Cases} />
         <Route path="/setup" component={Setup} />
         <Route component={NotFound} />

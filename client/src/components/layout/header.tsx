@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Building, Target, FileText, ChartLine, Bell, LogOut, User, Settings } from "lucide-react";
+import { Building, Target, FileText, ChartLine, Bell, LogOut, User, Settings, Package } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export default function Header() {
     { path: "/", label: "Dashboard", icon: ChartLine },
     { path: "/accounts", label: "Accounts", icon: Building },
     { path: "/opportunities", label: "Opportunities", icon: Target },
+    { path: "/products", label: "Products", icon: Package },
     { path: "/cases", label: "Cases", icon: FileText },
   ];
 

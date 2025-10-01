@@ -100,6 +100,17 @@ export const unitOfMeasures = pgTable("unit_of_measures", {
   companyId: varchar("company_id"),
 });
 
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  salesCategory: text("sales_category").notNull(),
+  productName: text("product_name").notNull(),
+  salesUomId: varchar("sales_uom_id").notNull().references(() => unitOfMeasures.id, { onDelete: "restrict" }),
+  salesUnitPrice: decimal("sales_unit_price", { precision: 12, scale: 2 }).notNull(),
+  salesUnitPriceCurrency: text("sales_unit_price_currency").notNull(),
+  vatPercent: decimal("vat_percent", { precision: 5, scale: 2 }).notNull(),
+  companyId: varchar("company_id"),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -153,6 +164,13 @@ export const userRoleAssignmentsRelations = relations(userRoleAssignments, ({ on
   companyRole: one(companyRoles, {
     fields: [userRoleAssignments.companyRoleId],
     references: [companyRoles.id],
+  }),
+}));
+
+export const productsRelations = relations(products, ({ one }) => ({
+  salesUom: one(unitOfMeasures, {
+    fields: [products.salesUomId],
+    references: [unitOfMeasures.id],
   }),
 }));
 
@@ -214,6 +232,17 @@ export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures).omit
   baseToType: z.boolean(),
 });
 
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+}).extend({
+  salesCategory: z.enum(["Saleable", "Quoting only"]),
+  productName: z.string().min(1, "Product name is required"),
+  salesUomId: z.string().min(1, "Sales UoM is required"),
+  salesUnitPrice: z.number().min(0, "Sales unit price must be 0 or greater"),
+  salesUnitPriceCurrency: z.string().min(1, "Currency is required"),
+  vatPercent: z.number().min(0).max(100, "VAT % must be between 0 and 100"),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -230,6 +259,8 @@ export type InsertRelease = z.infer<typeof insertReleaseSchema>;
 export type Release = typeof releases.$inferSelect;
 export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

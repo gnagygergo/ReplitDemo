@@ -24,6 +24,8 @@ import {
   type InsertRelease,
   type UnitOfMeasure,
   type InsertUnitOfMeasure,
+  type Product,
+  type InsertProduct,
   companies,
   accounts,
   opportunities,
@@ -33,6 +35,7 @@ import {
   userRoleAssignments,
   releases,
   unitOfMeasures,
+  products,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -150,6 +153,17 @@ export interface IStorage {
     unitOfMeasure: Partial<InsertUnitOfMeasure>,
   ): Promise<UnitOfMeasure | undefined>;
   deleteUnitOfMeasure(id: string): Promise<boolean>;
+
+  // Product methods
+  getProducts(companyContext?: string): Promise<Product[]>;
+  getProduct(id: string, companyContext?: string): Promise<Product | undefined>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(
+    id: string,
+    product: Partial<InsertProduct>,
+    companyContext?: string,
+  ): Promise<Product | undefined>;
+  deleteProduct(id: string, companyContext?: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1157,6 +1171,85 @@ export class DatabaseStorage implements IStorage {
           eq(unitOfMeasures.companyId, companyContext),
         ),
       );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Product methods
+  async getProducts(companyContext?: string): Promise<Product[]> {
+    if (!companyContext) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(products)
+      .where(eq(products.companyId, companyContext))
+      .orderBy(products.productName);
+  }
+
+  async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
+    return product || undefined;
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const productData = {
+      ...insertProduct,
+      salesUnitPrice: insertProduct.salesUnitPrice.toString(),
+      vatPercent: insertProduct.vatPercent.toString(),
+    };
+
+    const [product] = await db
+      .insert(products)
+      .values(productData)
+      .returning();
+    return product;
+  }
+
+  async updateProduct(
+    id: string,
+    updates: Partial<InsertProduct>,
+    companyContext?: string,
+  ): Promise<Product | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+
+    // Convert decimal fields to strings for database
+    const productData: any = { ...allowedUpdates };
+    if (productData.salesUnitPrice !== undefined) {
+      productData.salesUnitPrice = productData.salesUnitPrice.toString();
+    }
+    if (productData.vatPercent !== undefined) {
+      productData.vatPercent = productData.vatPercent.toString();
+    }
+
+    const [product] = await db
+      .update(products)
+      .set(productData)
+      .where(and(eq(products.id, id), eq(products.companyId, companyContext)))
+      .returning();
+    return product || undefined;
+  }
+
+  async deleteProduct(id: string, companyContext?: string): Promise<boolean> {
+    if (!companyContext) {
+      return false;
+    }
+
+    const result = await db
+      .delete(products)
+      .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
     return (result.rowCount ?? 0) > 0;
   }
 

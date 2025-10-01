@@ -7,6 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -46,12 +53,13 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User as UserType } from "@shared/schema";
+import type { User as UserType, Language } from "@shared/schema";
 
 const userUpdateSchema = z.object({
   email: z.string().email("Please enter a valid email address").optional(),
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
+  preferredLanguage: z.string().optional(),
   profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   isAdmin: z.boolean().optional(),
 });
@@ -72,12 +80,17 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const { data: languages = [] } = useQuery<Language[]>({
+    queryKey: ["/api/languages"],
+  });
+
   const form = useForm<UserUpdate>({
     resolver: zodResolver(userUpdateSchema),
     defaultValues: {
       email: user.email || "",
       firstName: user.firstName || "",
       lastName: user.lastName || "",
+      preferredLanguage: user.preferredLanguage || "",
       profileImageUrl: user.profileImageUrl || "",
       isAdmin: user.isAdmin || false,
     },
@@ -163,6 +176,35 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                 <FormControl>
                   <Input placeholder="Enter last name" {...field} data-testid="input-user-last-name" />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="preferredLanguage"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Preferred Language</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-user-preferred-language">
+                      <SelectValue placeholder="Select a language" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {languages.map((language) => (
+                      <SelectItem
+                        key={language.id}
+                        value={language.languageCode}
+                        data-testid={`option-language-${language.languageCode}`}
+                      >
+                        {language.languageCode} - {language.languageName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

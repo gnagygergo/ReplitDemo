@@ -146,6 +146,7 @@ export const devPatterns = pgTable("dev_patterns", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   description: text("description"),
+  pattern: text("pattern"),
 });
 
 // Define relations
@@ -310,6 +311,7 @@ export const insertDevPatternSchema = createInsertSchema(devPatterns).omit({
 }).extend({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
+  pattern: z.string().optional(),
 });
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;

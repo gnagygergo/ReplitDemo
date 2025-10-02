@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,8 @@ import {
 import { Edit, Save, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TiptapEditor } from "@/components/ui/tiptap-editor";
+import DOMPurify from 'dompurify';
 
 interface DevPatternDetailProps {
   devPattern: DevPattern;
@@ -37,6 +39,7 @@ export default function DevPatternDetail({ devPattern }: DevPatternDetailProps) 
     defaultValues: {
       name: "",
       description: "",
+      pattern: "",
     },
   });
 
@@ -70,6 +73,7 @@ export default function DevPatternDetail({ devPattern }: DevPatternDetailProps) 
       form.reset({
         name: devPattern.name,
         description: devPattern.description || "",
+        pattern: devPattern.pattern || "",
       });
     }
   };
@@ -79,9 +83,14 @@ export default function DevPatternDetail({ devPattern }: DevPatternDetailProps) 
       form.reset({
         name: devPattern.name,
         description: devPattern.description || "",
+        pattern: devPattern.pattern || "",
       });
     }
   }, [devPattern, form]);
+
+  const sanitizedPattern = useMemo(() => {
+    return DOMPurify.sanitize(devPattern.pattern || "<p>No pattern provided</p>");
+  }, [devPattern.pattern]);
 
   return (
     <Card>
@@ -155,10 +164,28 @@ export default function DevPatternDetail({ devPattern }: DevPatternDetailProps) 
                       <Textarea
                         {...field}
                         value={field.value || ""}
-                        rows={10}
+                        rows={3}
                         placeholder="Enter pattern description"
                         className="resize-none"
                         data-testid="input-edit-dev-pattern-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="pattern"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pattern (Rich Text)</FormLabel>
+                    <FormControl>
+                      <TiptapEditor
+                        content={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder="Enter pattern details with formatting..."
                       />
                     </FormControl>
                     <FormMessage />
@@ -191,6 +218,17 @@ export default function DevPatternDetail({ devPattern }: DevPatternDetailProps) 
               >
                 {devPattern.description || "No description provided"}
               </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Pattern
+              </label>
+              <div
+                className="mt-1 prose prose-sm max-w-none"
+                data-testid="text-dev-pattern-pattern-value"
+                dangerouslySetInnerHTML={{ __html: sanitizedPattern }}
+              />
             </div>
           </div>
         )}

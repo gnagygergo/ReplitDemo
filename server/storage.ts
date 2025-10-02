@@ -31,6 +31,8 @@ import {
   type InsertLanguage,
   type Translation,
   type InsertTranslation,
+  type Quote,
+  type InsertQuote,
   companies,
   accounts,
   opportunities,
@@ -43,6 +45,7 @@ import {
   products,
   languages,
   translations,
+  quotes,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -191,6 +194,17 @@ export interface IStorage {
     translation: Partial<InsertTranslation>,
   ): Promise<Translation | undefined>;
   deleteTranslation(id: string): Promise<boolean>;
+
+  // Quote methods
+  getQuotes(companyContext?: string): Promise<Quote[]>;
+  getQuote(id: string, companyContext?: string): Promise<Quote | undefined>;
+  createQuote(quote: InsertQuote): Promise<Quote>;
+  updateQuote(
+    id: string,
+    quote: Partial<InsertQuote>,
+    companyContext?: string,
+  ): Promise<Quote | undefined>;
+  deleteQuote(id: string, companyContext?: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;

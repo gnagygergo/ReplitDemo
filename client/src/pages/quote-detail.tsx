@@ -57,7 +57,6 @@ export default function QuoteDetail() {
       sellerPhone: "",
       quoteExpirationDate: "",
       createdBy: user?.id || "",
-      createdDate: new Date().toISOString(),
     },
   });
 
@@ -124,7 +123,7 @@ export default function QuoteDetail() {
           customerId: quote.customerId,
           customerName: quote.customerName || "",
           customerAddress: quote.customerAddress || "",
-          companyId: quote.companyId,
+          companyId: quote.companyId || "",
           sellerName: quote.sellerName || "",
           sellerAddress: quote.sellerAddress || "",
           sellerBankAccount: quote.sellerBankAccount || "",
@@ -132,7 +131,6 @@ export default function QuoteDetail() {
           sellerPhone: quote.sellerPhone || "",
           quoteExpirationDate: quote.quoteExpirationDate || "",
           createdBy: quote.createdBy,
-          createdDate: quote.createdDate,
         });
       }
     }
@@ -145,7 +143,7 @@ export default function QuoteDetail() {
         customerId: quote.customerId,
         customerName: quote.customerName || "",
         customerAddress: quote.customerAddress || "",
-        companyId: quote.companyId,
+        companyId: quote.companyId || "",
         sellerName: quote.sellerName || "",
         sellerAddress: quote.sellerAddress || "",
         sellerBankAccount: quote.sellerBankAccount || "",
@@ -153,7 +151,6 @@ export default function QuoteDetail() {
         sellerPhone: quote.sellerPhone || "",
         quoteExpirationDate: quote.quoteExpirationDate || "",
         createdBy: quote.createdBy,
-        createdDate: quote.createdDate,
       });
     }
   }, [quote, form]);
@@ -330,6 +327,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter customer address"
                             data-testid="input-edit-customer-address"
                           />
@@ -348,6 +346,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter seller name"
                             data-testid="input-edit-seller-name"
                           />
@@ -366,6 +365,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter seller address"
                             data-testid="input-edit-seller-address"
                           />
@@ -384,6 +384,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter bank account"
                             data-testid="input-edit-seller-bank-account"
                           />
@@ -402,6 +403,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             type="email"
                             placeholder="Enter seller email"
                             data-testid="input-edit-seller-email"
@@ -421,6 +423,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter seller phone"
                             data-testid="input-edit-seller-phone"
                           />
@@ -439,6 +442,7 @@ export default function QuoteDetail() {
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             type="date"
                             data-testid="input-edit-expiration-date"
                           />

@@ -8,12 +8,14 @@ import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
 import Accounts from "@/pages/accounts";
+import Quotes from "@/pages/quotes";
 import Opportunities from "@/pages/opportunities";
 import Products from "@/pages/products";
 import Cases from "@/pages/cases";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
+import QuoteDetail from "@/pages/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
 
 function AuthenticatedRouter() {
@@ -31,6 +33,8 @@ function AuthenticatedRouter() {
         />
         <Route path="/accounts/:id" component={AccountDetail} />
         <Route path="/accounts" component={Accounts} />
+        <Route path="/quotes/:id" component={QuoteDetail} />
+        <Route path="/quotes" component={Quotes} />
         <Route path="/opportunities" component={Opportunities} />
         <Route path="/products/:id" component={ProductDetail} />
         <Route path="/products" component={Products} />

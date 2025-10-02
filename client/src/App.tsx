@@ -15,7 +15,7 @@ import Cases from "@/pages/cases";
 import Setup from "@/pages/setup";
 import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
-import QuoteDetail from "@/pages/quote-detail";
+import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
 
 function AuthenticatedRouter() {

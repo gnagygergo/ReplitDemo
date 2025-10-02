@@ -295,10 +295,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Account routes respecting company context
+  // Account routes getter - user's company context queried and handed over to method
   app.get("/api/accounts", async (req, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req);
+      const companyContext = await storage.GetCompanyContext(req); 
       const accounts = await storage.getAccounts(companyContext || undefined);
       res.json(accounts);
     } catch (error) {

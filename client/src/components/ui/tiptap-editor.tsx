@@ -1,5 +1,9 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import { Extension } from '@tiptap/core';
+import '@tiptap/extension-text-style';
 import { 
   Bold, 
   Italic, 
@@ -12,16 +16,102 @@ import {
   Strikethrough,
   Undo,
   Redo,
-  FileCode
+  FileCode,
+  Type,
+  Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+declare module '@tiptap/core' {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (size: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
+}
+
+const FontSize = Extension.create({
+  name: 'fontSize',
+  
+  addOptions() {
+    return {
+      types: ['textStyle'],
+    };
+  },
+
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: element => element.style.fontSize.replace(/['"]+/g, ''),
+            renderHTML: attributes => {
+              if (!attributes.fontSize) {
+                return {};
+              }
+              return {
+                style: `font-size: ${attributes.fontSize}`,
+              };
+            },
+          },
+        },
+      },
+    ];
+  },
+
+  addCommands() {
+    return {
+      setFontSize: fontSize => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { fontSize })
+          .run();
+      },
+      unsetFontSize: () => ({ chain }) => {
+        return chain()
+          .setMark('textStyle', { fontSize: null })
+          .removeEmptyTextStyle()
+          .run();
+      },
+    };
+  },
+});
 
 interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
 }
+
+const fontSizes = [
+  { label: 'Small', value: '12px' },
+  { label: 'Normal', value: '16px' },
+  { label: 'Large', value: '20px' },
+  { label: 'Extra Large', value: '24px' },
+  { label: 'Huge', value: '32px' },
+];
+
+const colors = [
+  { label: 'Black', value: '#000000' },
+  { label: 'Gray', value: '#6B7280' },
+  { label: 'Red', value: '#EF4444' },
+  { label: 'Orange', value: '#F97316' },
+  { label: 'Yellow', value: '#EAB308' },
+  { label: 'Green', value: '#10B981' },
+  { label: 'Blue', value: '#3B82F6' },
+  { label: 'Purple', value: '#8B5CF6' },
+  { label: 'Pink', value: '#EC4899' },
+];
 
 export function TiptapEditor({ content, onChange, placeholder = 'Start typing...' }: TiptapEditorProps) {
   const editor = useEditor({
@@ -31,6 +121,9 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           levels: [1, 2, 3],
         },
       }),
+      TextStyle,
+      Color,
+      FontSize,
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -155,6 +248,66 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           icon={FileCode}
           label="Code Block"
         />
+        
+        <Separator orientation="vertical" className="h-6 mx-1" />
+        
+        <div className="flex items-center gap-1">
+          <Type className="h-4 w-4 text-muted-foreground mr-1" />
+          <Select
+            value={editor.getAttributes('textStyle').fontSize || '16px'}
+            onValueChange={(value) => {
+              if (value === 'default') {
+                editor.chain().focus().unsetFontSize().run();
+              } else {
+                editor.chain().focus().setFontSize(value).run();
+              }
+            }}
+          >
+            <SelectTrigger className="h-8 w-[120px]" data-testid="select-font-size">
+              <SelectValue placeholder="Font Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              {fontSizes.map((size) => (
+                <SelectItem key={size.value} value={size.value}>
+                  {size.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-1">
+          <Palette className="h-4 w-4 text-muted-foreground mr-1" />
+          <Select
+            value={editor.getAttributes('textStyle').color || '#000000'}
+            onValueChange={(value) => {
+              if (value === 'default') {
+                editor.chain().focus().unsetColor().run();
+              } else {
+                editor.chain().focus().setColor(value).run();
+              }
+            }}
+          >
+            <SelectTrigger className="h-8 w-[120px]" data-testid="select-text-color">
+              <SelectValue placeholder="Text Color" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              {colors.map((color) => (
+                <SelectItem key={color.value} value={color.value}>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded border" 
+                      style={{ backgroundColor: color.value }}
+                    />
+                    {color.label}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       
       <EditorContent editor={editor} />

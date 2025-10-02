@@ -125,6 +125,23 @@ export const translations = pgTable("translations", {
   languageCode: text("language_code").notNull().references(() => languages.languageCode, { onDelete: "restrict" }),
 });
 
+export const quotes = pgTable("quotes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  quoteName: text("quote_name").notNull(),
+  customerId: varchar("customer_id").notNull().references(() => accounts.id, { onDelete: "restrict" }),
+  customerName: text("customer_name").notNull(),
+  customerAddress: text("customer_address"),
+  companyId: varchar("company_id"),
+  sellerName: text("seller_name"),
+  sellerAddress: text("seller_address"),
+  sellerBankAccount: text("seller_bank_account"),
+  sellerEmail: text("seller_email"),
+  sellerPhone: text("seller_phone"),
+  quoteExpirationDate: date("quote_expiration_date"),
+  createdBy: varchar("created_by").notNull().references(() => users.id, { onDelete: "restrict" }),
+  createdDate: timestamp("created_date").defaultNow().notNull(),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -272,6 +289,16 @@ export const insertTranslationSchema = createInsertSchema(translations).omit({
   languageCode: z.string().min(1, "Language code is required"),
 });
 
+export const insertQuoteSchema = createInsertSchema(quotes).omit({
+  id: true,
+  createdDate: true,
+}).extend({
+  quoteName: z.string().min(1, "Quote name is required"),
+  customerId: z.string().min(1, "Customer is required"),
+  customerName: z.string().min(1, "Customer name is required"),
+  createdBy: z.string().min(1, "Created by is required"),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -294,6 +321,8 @@ export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Language = typeof languages.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Translation = typeof translations.$inferSelect;
+export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type Quote = typeof quotes.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,6 +59,13 @@ const setupMenuItems = [
     description: "Manage translation labels and content",
     globalAdminOnly: true,
   },
+  {
+    id: "dev-patterns",
+    label: "Dev Patterns",
+    icon: FileCode,
+    description: "Manage development patterns",
+    globalAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -68,6 +75,7 @@ import ReleaseManagement from "@/components/setup/release-management";
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import LanguagesManagement from "@/components/setup/languages";
 import TranslationsManagement from "@/components/setup/translations";
+import DevPatternsManagement from "@/components/setup/dev-patterns";
 
 // Companies management component
 function CompaniesSetup() {
@@ -102,6 +110,11 @@ function LanguagesSetup() {
 // Translations management component
 function TranslationsSetup() {
   return <TranslationsManagement />;
+}
+
+// Dev Patterns management component
+function DevPatternsSetup() {
+  return <DevPatternsManagement />;
 }
 
 export default function Setup() {
@@ -158,6 +171,8 @@ export default function Setup() {
         return <LanguagesSetup />;
       case "translations":
         return <TranslationsSetup />;
+      case "dev-patterns":
+        return <DevPatternsSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

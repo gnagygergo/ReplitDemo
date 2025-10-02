@@ -33,6 +33,8 @@ import {
   type InsertTranslation,
   type Quote,
   type InsertQuote,
+  type DevPattern,
+  type InsertDevPattern,
   companies,
   accounts,
   opportunities,
@@ -46,6 +48,7 @@ import {
   languages,
   translations,
   quotes,
+  devPatterns,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { eq, and, sql } from "drizzle-orm";
@@ -205,6 +208,16 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Quote | undefined>;
   deleteQuote(id: string, companyContext?: string): Promise<boolean>;
+
+  // Dev Pattern methods (Global - no company context)
+  getDevPatterns(): Promise<DevPattern[]>;
+  getDevPattern(id: string): Promise<DevPattern | undefined>;
+  createDevPattern(devPattern: InsertDevPattern): Promise<DevPattern>;
+  updateDevPattern(
+    id: string,
+    devPattern: Partial<InsertDevPattern>,
+  ): Promise<DevPattern | undefined>;
+  deleteDevPattern(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1462,6 +1475,49 @@ export class DatabaseStorage implements IStorage {
           eq(quotes.companyId, companyContext)
         )
       );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Dev Pattern methods (Global - no company context filtering)
+  async getDevPatterns(): Promise<DevPattern[]> {
+    return await db
+      .select()
+      .from(devPatterns)
+      .orderBy(devPatterns.name);
+  }
+
+  async getDevPattern(id: string): Promise<DevPattern | undefined> {
+    const [devPattern] = await db
+      .select()
+      .from(devPatterns)
+      .where(eq(devPatterns.id, id));
+    return devPattern || undefined;
+  }
+
+  async createDevPattern(insertDevPattern: InsertDevPattern): Promise<DevPattern> {
+    const [devPattern] = await db
+      .insert(devPatterns)
+      .values(insertDevPattern)
+      .returning();
+    return devPattern;
+  }
+
+  async updateDevPattern(
+    id: string,
+    updates: Partial<InsertDevPattern>,
+  ): Promise<DevPattern | undefined> {
+    const [devPattern] = await db
+      .update(devPatterns)
+      .set(updates)
+      .where(eq(devPatterns.id, id))
+      .returning();
+    return devPattern || undefined;
+  }
+
+  async deleteDevPattern(id: string): Promise<boolean> {
+    const result = await db
+      .delete(devPatterns)
+      .where(eq(devPatterns.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

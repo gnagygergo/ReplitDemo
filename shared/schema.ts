@@ -142,6 +142,12 @@ export const quotes = pgTable("quotes", {
   createdDate: timestamp("created_date").defaultNow().notNull(),
 });
 
+export const devPatterns = pgTable("dev_patterns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -299,6 +305,13 @@ export const insertQuoteSchema = createInsertSchema(quotes).omit({
   createdBy: z.string().min(1, "Created by is required"),
 });
 
+export const insertDevPatternSchema = createInsertSchema(devPatterns).omit({
+  id: true,
+}).extend({
+  name: z.string().min(1, "Name is required"),
+  description: z.string().optional(),
+});
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -323,6 +336,8 @@ export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Translation = typeof translations.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
 export type Quote = typeof quotes.$inferSelect;
+export type InsertDevPattern = z.infer<typeof insertDevPatternSchema>;
+export type DevPattern = typeof devPatterns.$inferSelect;
 
 
 export type AccountWithOwner = Account & {

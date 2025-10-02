@@ -14,6 +14,7 @@ import {
   insertLanguageSchema,
   insertTranslationSchema,
   insertQuoteSchema,
+  insertDevPatternSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1439,6 +1440,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting translation:", error);
       res.status(500).json({ message: "Failed to delete translation" });
+    }
+  });
+
+  // Dev Pattern routes (Global - no company context, all operations require global admin)
+  app.get("/api/dev-patterns", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can view dev patterns" });
+      }
+
+      const devPatterns = await storage.getDevPatterns();
+      res.json(devPatterns);
+    } catch (error) {
+      console.error("Error fetching dev patterns:", error);
+      res.status(500).json({ message: "Failed to fetch dev patterns" });
+    }
+  });
+
+  app.get("/api/dev-patterns/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can view dev patterns" });
+      }
+
+      const devPattern = await storage.getDevPattern(req.params.id);
+      if (!devPattern) {
+        return res.status(404).json({ message: "Dev pattern not found" });
+      }
+      res.json(devPattern);
+    } catch (error) {
+      console.error("Error fetching dev pattern:", error);
+      res.status(500).json({ message: "Failed to fetch dev pattern" });
+    }
+  });
+
+  app.post("/api/dev-patterns", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create dev patterns" });
+      }
+
+      const validatedData = insertDevPatternSchema.parse(req.body);
+      const devPattern = await storage.createDevPattern(validatedData);
+      res.status(201).json(devPattern);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating dev pattern:", error);
+      res.status(500).json({ message: "Failed to create dev pattern" });
+    }
+  });
+
+  app.patch("/api/dev-patterns/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update dev patterns" });
+      }
+
+      const validatedData = insertDevPatternSchema.partial().parse(req.body);
+      const devPattern = await storage.updateDevPattern(req.params.id, validatedData);
+      if (!devPattern) {
+        return res.status(404).json({ message: "Dev pattern not found" });
+      }
+      res.json(devPattern);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating dev pattern:", error);
+      res.status(500).json({ message: "Failed to update dev pattern" });
+    }
+  });
+
+  app.delete("/api/dev-patterns/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete dev patterns" });
+      }
+
+      const deleted = await storage.deleteDevPattern(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Dev pattern not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting dev pattern:", error);
+      res.status(500).json({ message: "Failed to delete dev pattern" });
     }
   });
 

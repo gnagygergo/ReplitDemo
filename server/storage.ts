@@ -53,6 +53,7 @@ import {
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
+import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -236,10 +237,15 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   private quoteStorage: QuoteStorage;
   private accountStorage: AccountStorage;
+  private opportunityStorage: OpportunityStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage();
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
+    this.opportunityStorage = new OpportunityStorage(
+      this.getAccount.bind(this),
+      this.getUser.bind(this)
+    );
   }
 
   // Method called by all GETTERs of business objects
@@ -525,144 +531,37 @@ export class DatabaseStorage implements IStorage {
   async getOpportunities(
     companyContext?: string,
   ): Promise<OpportunityWithAccountAndOwner[]> {
-    // If no company context provided, return empty results for security
-    if (!companyContext) {
-      return [];
-    }
-
-    return await db
-      .select()
-      .from(opportunities)
-      .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
-      .innerJoin(users, eq(opportunities.ownerId, users.id))
-      .where(eq(opportunities.companyId, companyContext))
-      .then((rows) =>
-        rows.map((row) => ({
-          ...row.opportunities,
-          account: row.accounts,
-          owner: row.users,
-        })),
-      );
+    return this.opportunityStorage.getOpportunities(companyContext);
   }
 
   async getOpportunitiesByAccount(
     accountId: string,
     companyContext?: string,
   ): Promise<OpportunityWithAccountAndOwner[]> {
-    // If no company context provided, return empty results for security
-    if (!companyContext) {
-      return [];
-    }
-
-    return await db
-      .select()
-      .from(opportunities)
-      .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
-      .innerJoin(users, eq(opportunities.ownerId, users.id))
-      .where(
-        and(
-          eq(opportunities.accountId, accountId),
-          eq(opportunities.companyId, companyContext),
-        ),
-      )
-      .then((rows) =>
-        rows.map((row) => ({
-          ...row.opportunities,
-          account: row.accounts,
-          owner: row.users,
-        })),
-      );
+    return this.opportunityStorage.getOpportunitiesByAccount(accountId, companyContext);
   }
 
   async getOpportunity(
     id: string,
   ): Promise<OpportunityWithAccountAndOwner | undefined> {
-    const [result] = await db
-      .select()
-      .from(opportunities)
-      .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
-      .innerJoin(users, eq(opportunities.ownerId, users.id))
-      .where(eq(opportunities.id, id));
-
-    if (!result) return undefined;
-
-    return {
-      ...result.opportunities,
-      account: result.accounts,
-      owner: result.users,
-    };
+    return this.opportunityStorage.getOpportunity(id);
   }
 
   async createOpportunity(
     insertOpportunity: InsertOpportunity,
   ): Promise<Opportunity> {
-    // Verify account exists
-    const account = await this.getAccount(insertOpportunity.accountId);
-    if (!account) {
-      throw new Error("Account not found");
-    }
-
-    // Verify owner exists
-    const owner = await this.getUser(insertOpportunity.ownerId);
-    if (!owner) {
-      throw new Error("Owner not found");
-    }
-
-    // Automatically populate CompanyId from owner's CompanyId
-    const opportunityData = {
-      ...insertOpportunity,
-      totalRevenue: insertOpportunity.totalRevenue.toString(),
-      companyId: owner.companyId || null,
-    };
-
-    const [opportunity] = await db
-      .insert(opportunities)
-      .values(opportunityData)
-      .returning();
-    return opportunity;
+    return this.opportunityStorage.createOpportunity(insertOpportunity);
   }
 
   async updateOpportunity(
     id: string,
     updates: Partial<InsertOpportunity>,
   ): Promise<Opportunity | undefined> {
-    // If updating accountId, verify the new account exists
-    if (updates.accountId) {
-      const account = await this.getAccount(updates.accountId);
-      if (!account) {
-        throw new Error("Account not found");
-      }
-    }
-
-    // If updating ownerId, verify the new owner exists
-    if (updates.ownerId) {
-      const owner = await this.getUser(updates.ownerId);
-      if (!owner) {
-        throw new Error("Owner not found");
-      }
-    }
-
-    // Remove companyId from updates - it cannot be changed once set
-    const { companyId, ...filteredUpdates } = updates as any;
-
-    const updateData: any = { ...filteredUpdates };
-    if (filteredUpdates.totalRevenue !== undefined) {
-      updateData.totalRevenue = filteredUpdates.totalRevenue.toString();
-    }
-
-    const [opportunity] = await db
-      .update(opportunities)
-      .set(updateData)
-      .where(eq(opportunities.id, id))
-      .returning();
-    return opportunity || undefined;
+    return this.opportunityStorage.updateOpportunity(id, updates);
   }
 
   async deleteOpportunity(id: string): Promise<boolean> {
-    const result = await db
-      .delete(opportunities)
-      .where(eq(opportunities.id, id));
-    return (result.rowCount ?? 0) > 0;
+    return this.opportunityStorage.deleteOpportunity(id);
   }
 
   async getCases(): Promise<CaseWithAccountAndOwner[]> {

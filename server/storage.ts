@@ -54,6 +54,7 @@ import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
+import { CaseStorage } from "./business-objects-routes/case-storage";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -238,11 +239,16 @@ export class DatabaseStorage implements IStorage {
   private quoteStorage: QuoteStorage;
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
+  private caseStorage: CaseStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage();
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
     this.opportunityStorage = new OpportunityStorage(
+      this.getAccount.bind(this),
+      this.getUser.bind(this)
+    );
+    this.caseStorage = new CaseStorage(
       this.getAccount.bind(this),
       this.getUser.bind(this)
     );
@@ -565,94 +571,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCases(): Promise<CaseWithAccountAndOwner[]> {
-    return await db
-      .select()
-      .from(cases)
-      .innerJoin(accounts, eq(cases.accountId, accounts.id))
-      .innerJoin(users, eq(cases.ownerId, users.id))
-      .then((rows) =>
-        rows.map((row) => ({
-          ...row.cases,
-          account: row.accounts,
-          owner: row.users,
-        })),
-      );
+    return this.caseStorage.getCases();
   }
 
   async getCase(id: string): Promise<CaseWithAccountAndOwner | undefined> {
-    const [result] = await db
-      .select()
-      .from(cases)
-      .innerJoin(accounts, eq(cases.accountId, accounts.id))
-      .innerJoin(users, eq(cases.ownerId, users.id))
-      .where(eq(cases.id, id));
-
-    if (!result) return undefined;
-
-    return {
-      ...result.cases,
-      account: result.accounts,
-      owner: result.users,
-    };
+    return this.caseStorage.getCase(id);
   }
 
   async createCase(insertCase: InsertCase): Promise<Case> {
-    // Verify account exists
-    const account = await this.getAccount(insertCase.accountId);
-    if (!account) {
-      throw new Error("Account not found");
-    }
-
-    // Verify owner exists
-    const owner = await this.getUser(insertCase.ownerId);
-    if (!owner) {
-      throw new Error("Owner not found");
-    }
-
-    // Automatically populate CompanyId from owner's CompanyId
-    const caseData = {
-      ...insertCase,
-      companyId: owner.companyId || null,
-    };
-
-    const [caseRecord] = await db.insert(cases).values(caseData).returning();
-    return caseRecord;
+    return this.caseStorage.createCase(insertCase);
   }
 
   async updateCase(
     id: string,
     updates: Partial<InsertCase>,
   ): Promise<Case | undefined> {
-    // If updating accountId, verify the new account exists
-    if (updates.accountId) {
-      const account = await this.getAccount(updates.accountId);
-      if (!account) {
-        throw new Error("Account not found");
-      }
-    }
-
-    // If updating ownerId, verify the new owner exists
-    if (updates.ownerId) {
-      const owner = await this.getUser(updates.ownerId);
-      if (!owner) {
-        throw new Error("Owner not found");
-      }
-    }
-
-    // Remove companyId from updates - it cannot be changed once set
-    const { companyId, ...allowedUpdates } = updates as any;
-
-    const [caseRecord] = await db
-      .update(cases)
-      .set(allowedUpdates)
-      .where(eq(cases.id, id))
-      .returning();
-    return caseRecord || undefined;
+    return this.caseStorage.updateCase(id, updates);
   }
 
   async deleteCase(id: string): Promise<boolean> {
-    const result = await db.delete(cases).where(eq(cases.id, id));
-    return (result.rowCount ?? 0) > 0;
+    return this.caseStorage.deleteCase(id);
   }
 
   // Company Role methods

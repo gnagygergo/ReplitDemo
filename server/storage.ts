@@ -55,6 +55,7 @@ import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
+import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -240,6 +241,7 @@ export class DatabaseStorage implements IStorage {
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
   private caseStorage: CaseStorage;
+  private productStorage: ProductStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage();
@@ -252,6 +254,7 @@ export class DatabaseStorage implements IStorage {
       this.getAccount.bind(this),
       this.getUser.bind(this)
     );
+    this.productStorage = new ProductStorage();
   }
 
   // Method called by all GETTERs of business objects
@@ -994,59 +997,15 @@ export class DatabaseStorage implements IStorage {
 
   // Product methods
   async getProducts(companyContext?: string): Promise<ProductWithUom[]> {
-    if (!companyContext) {
-      return [];
-    }
-
-    const result = await db
-      .select({
-        id: products.id,
-        salesCategory: products.salesCategory,
-        productName: products.productName,
-        salesUomId: products.salesUomId,
-        salesUnitPrice: products.salesUnitPrice,
-        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
-        vatPercent: products.vatPercent,
-        companyId: products.companyId,
-        salesUomName: unitOfMeasures.uomName,
-      })
-      .from(products)
-      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
-      .where(eq(products.companyId, companyContext))
-      .orderBy(products.productName);
-
-    return result as ProductWithUom[];
+    return this.productStorage.getProducts(companyContext);
   }
 
   async getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    const [product] = await db
-      .select({
-        id: products.id,
-        salesCategory: products.salesCategory,
-        productName: products.productName,
-        salesUomId: products.salesUomId,
-        salesUnitPrice: products.salesUnitPrice,
-        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
-        vatPercent: products.vatPercent,
-        companyId: products.companyId,
-        salesUomName: unitOfMeasures.uomName,
-      })
-      .from(products)
-      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
-      .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
-    return product as ProductWithUom | undefined;
+    return this.productStorage.getProduct(id, companyContext);
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    const [product] = await db
-      .insert(products)
-      .values(insertProduct as any)
-      .returning();
-    return product;
+    return this.productStorage.createProduct(insertProduct);
   }
 
   async updateProduct(
@@ -1054,30 +1013,11 @@ export class DatabaseStorage implements IStorage {
     updates: Partial<InsertProduct>,
     companyContext?: string,
   ): Promise<Product | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    // Remove companyId from updates - it cannot be changed once set
-    const { companyId, ...allowedUpdates } = updates as any;
-
-    const [product] = await db
-      .update(products)
-      .set(allowedUpdates)
-      .where(and(eq(products.id, id), eq(products.companyId, companyContext)))
-      .returning();
-    return product || undefined;
+    return this.productStorage.updateProduct(id, updates, companyContext);
   }
 
   async deleteProduct(id: string, companyContext?: string): Promise<boolean> {
-    if (!companyContext) {
-      return false;
-    }
-
-    const result = await db
-      .delete(products)
-      .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
-    return (result.rowCount ?? 0) > 0;
+    return this.productStorage.deleteProduct(id, companyContext);
   }
 
   // Language methods (Global - no company context filtering)

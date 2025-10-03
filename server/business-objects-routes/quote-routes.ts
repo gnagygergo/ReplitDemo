@@ -44,15 +44,10 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
         companyId: companyContext, // Override any companyId from request body
       };
       
-      console.log("DEBUG: Creating quote - req.body.customerId:", req.body.customerId);
-      console.log("DEBUG: Creating quote - quoteData.customerId before conversion:", quoteData.customerId);
-      
       // Convert empty strings to null for optional foreign key fields
       if (!quoteData.customerId || quoteData.customerId.trim() === '') {
         quoteData.customerId = null;
       }
-      
-      console.log("DEBUG: Creating quote - quoteData.customerId after conversion:", quoteData.customerId);
       if (!quoteData.quoteExpirationDate || quoteData.quoteExpirationDate === '') {
         quoteData.quoteExpirationDate = null;
       }

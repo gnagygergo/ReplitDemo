@@ -117,6 +117,8 @@ export default function QuoteDetail() {
   });
 
   const onSubmit = (data: InsertQuote) => {
+    console.log("DEBUG: Submitting quote data:", data);
+    console.log("DEBUG: customerId in submitted data:", data.customerId);
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {
@@ -170,10 +172,18 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (isNewQuote) {
       setIsEditing(true);
+      // Ensure customerId is set from URL params for new quotes
+      if (urlCustomerId) {
+        console.log("DEBUG: Setting customerId from URL:", urlCustomerId);
+        form.setValue('customerId', urlCustomerId);
+        console.log("DEBUG: Form customerId value after setValue:", form.getValues('customerId'));
+      } else {
+        console.log("DEBUG: No urlCustomerId available");
+      }
     } else {
       setIsEditing(false);
     }
-  }, [isNewQuote]);
+  }, [isNewQuote, urlCustomerId, form]);
 
   if (isLoadingQuote && !isNewQuote) {
     return (

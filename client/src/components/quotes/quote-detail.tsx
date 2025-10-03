@@ -38,9 +38,13 @@ export default function QuoteDetail() {
   const isNewQuote = params?.id === "new";
   
   // Extract URL search params for prepopulation
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const searchParams = new URLSearchParams(window.location.search);
   const urlCustomerId = searchParams.get('customerId');
   const urlAccountName = searchParams.get('accountName');
+  
+  console.log("DEBUG - window.location.search:", window.location.search);
+  console.log("DEBUG - urlCustomerId extracted:", urlCustomerId);
+  console.log("DEBUG - urlAccountName extracted:", urlAccountName);
 
   const { data: quote, isLoading: isLoadingQuote } = useQuery<Quote>({
     queryKey: ["/api/quotes", params?.id],

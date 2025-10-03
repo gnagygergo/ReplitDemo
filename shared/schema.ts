@@ -197,7 +197,7 @@ export const quotes = pgTable("quotes", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  quoteName: text("quote_name").notNull(),
+  quoteName: text("quote_name"),
   customerId: varchar("customer_id").references(() => accounts.id, {
     onDelete: "restrict",
   }),
@@ -406,7 +406,6 @@ export const insertQuoteSchema = createInsertSchema(quotes)
     createdDate: true,
   })
   .extend({
-    quoteName: z.string().min(1, "Quote name is required"),
     customerName: z.string().min(0),
     createdBy: z.string().min(1, "Created by is required"),
   });

@@ -41,7 +41,7 @@ export default function Quotes() {
 
   const filteredQuotes = quotes.filter((quote) => {
     const matchesSearch = 
-      quote.quoteName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quote.quoteName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (quote.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (quote.sellerName || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;

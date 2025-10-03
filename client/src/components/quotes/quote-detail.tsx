@@ -55,7 +55,7 @@ export default function QuoteDetail() {
       sellerBankAccount: "",
       sellerEmail: "",
       sellerPhone: "",
-      quoteExpirationDate: "",
+      quoteExpirationDate: undefined,
       createdBy: user?.id || "",
     },
   });
@@ -119,8 +119,8 @@ export default function QuoteDetail() {
       setIsEditing(false);
       if (quote) {
         form.reset({
-          quoteName: quote.quoteName,
-          customerId: quote.customerId,
+          quoteName: quote.quoteName || "",
+          customerId: quote.customerId || "",
           customerName: quote.customerName || "",
           customerAddress: quote.customerAddress || "",
           companyId: quote.companyId || "",
@@ -129,8 +129,8 @@ export default function QuoteDetail() {
           sellerBankAccount: quote.sellerBankAccount || "",
           sellerEmail: quote.sellerEmail || "",
           sellerPhone: quote.sellerPhone || "",
-          quoteExpirationDate: quote.quoteExpirationDate || "",
-          createdBy: quote.createdBy,
+          quoteExpirationDate: quote.quoteExpirationDate || undefined,
+          createdBy: quote.createdBy || "",
         });
       }
     }
@@ -139,8 +139,8 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (quote) {
       form.reset({
-        quoteName: quote.quoteName,
-        customerId: quote.customerId,
+        quoteName: quote.quoteName || "",
+        customerId: quote.customerId || "",
         customerName: quote.customerName || "",
         customerAddress: quote.customerAddress || "",
         companyId: quote.companyId || "",
@@ -149,8 +149,8 @@ export default function QuoteDetail() {
         sellerBankAccount: quote.sellerBankAccount || "",
         sellerEmail: quote.sellerEmail || "",
         sellerPhone: quote.sellerPhone || "",
-        quoteExpirationDate: quote.quoteExpirationDate || "",
-        createdBy: quote.createdBy,
+        quoteExpirationDate: quote.quoteExpirationDate || undefined,
+        createdBy: quote.createdBy || "",
       });
     }
   }, [quote, form]);
@@ -266,11 +266,12 @@ export default function QuoteDetail() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Quote Name <span className="text-destructive">*</span>
+                          Quote Name
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter quote name"
                             data-testid="input-edit-quote-name"
                           />
@@ -286,11 +287,12 @@ export default function QuoteDetail() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Customer ID <span className="text-destructive">*</span>
+                          Customer ID
                         </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
+                            value={field.value || ""}
                             placeholder="Enter customer ID"
                             data-testid="input-edit-customer-id"
                           />

@@ -8,7 +8,6 @@ export class QuoteStorage {
     if (!companyContext) {
       return [];
     }
-
     return await db
       .select()
       .from(quotes)

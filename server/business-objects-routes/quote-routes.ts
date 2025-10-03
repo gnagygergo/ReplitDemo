@@ -52,9 +52,7 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
         quoteData.quoteExpirationDate = null;
       }
 
-      console.log("Quote data before validation:", JSON.stringify(quoteData, null, 2));
       const validatedData = insertQuoteSchema.parse(quoteData);
-      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
       const quote = await storage.createQuote(validatedData);
       res.status(201).json(quote);
     } catch (error) {

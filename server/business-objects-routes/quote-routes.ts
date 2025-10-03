@@ -42,6 +42,9 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
       const quoteData = {
         ...req.body,
         companyId: companyContext, // Override any companyId from request body
+        // Convert empty strings to null for optional foreign key fields
+        customerId: req.body.customerId?.trim() || null,
+        quoteExpirationDate: req.body.quoteExpirationDate || null,
       };
 
       const validatedData = insertQuoteSchema.parse(quoteData);
@@ -65,7 +68,18 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
       // Security: Prevent companyId changes on updates
       const { companyId, ...allowedUpdates } = req.body;
       
-      const validatedData = insertQuoteSchema.partial().parse(allowedUpdates);
+      // Convert empty strings to null for optional foreign key fields
+      const updateData = {
+        ...allowedUpdates,
+        ...(allowedUpdates.customerId !== undefined && {
+          customerId: allowedUpdates.customerId?.trim() || null,
+        }),
+        ...(allowedUpdates.quoteExpirationDate !== undefined && {
+          quoteExpirationDate: allowedUpdates.quoteExpirationDate || null,
+        }),
+      };
+      
+      const validatedData = insertQuoteSchema.partial().parse(updateData);
       const quote = await storage.updateQuote(
         req.params.id,
         validatedData,

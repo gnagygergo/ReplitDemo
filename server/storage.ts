@@ -206,6 +206,7 @@ export interface IStorage {
   // Quote methods
   getQuotes(companyContext?: string): Promise<Quote[]>;
   getQuote(id: string, companyContext?: string): Promise<Quote | undefined>;
+  getQuotesByCustomer(customerId: string, companyContext?: string): Promise<Quote[]>;
   createQuote(quote: InsertQuote): Promise<Quote>;
   updateQuote(
     id: string,
@@ -1113,6 +1114,10 @@ export class DatabaseStorage implements IStorage {
 
   async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {
     return this.quoteStorage.getQuote(id, companyContext);
+  }
+
+  async getQuotesByCustomer(customerId: string, companyContext?: string): Promise<Quote[]> {
+    return this.quoteStorage.getQuotesByCustomer(customerId, companyContext);
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {

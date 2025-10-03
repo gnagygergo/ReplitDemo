@@ -67,7 +67,8 @@ export default function QuoteDetail() {
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertQuote) => {
-      return apiRequest("POST", "/api/quotes", data);
+      const response = await apiRequest("POST", "/api/quotes", data);
+      return response.json();
     },
     onSuccess: (newQuote: Quote) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
@@ -93,7 +94,8 @@ export default function QuoteDetail() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertQuote) => {
-      return apiRequest("PATCH", `/api/quotes/${params?.id}`, data);
+      const response = await apiRequest("PATCH", `/api/quotes/${params?.id}`, data);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });

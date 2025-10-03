@@ -14,7 +14,6 @@ import {
   insertProductSchema,
   insertLanguageSchema,
   insertTranslationSchema,
-  insertQuoteSchema,
   insertDevPatternSchema,
 } from "@shared/schema";
 import { z } from "zod";

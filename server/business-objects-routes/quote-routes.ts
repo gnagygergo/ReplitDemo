@@ -33,7 +33,18 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
 
   app.post("/api/quotes", isAuthenticated, async (req, res) => {
     try {
-      const validatedData = insertQuoteSchema.parse(req.body);
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({ message: "Company context required" });
+      }
+
+      // Security: Ensure companyId is set from authenticated user's company context
+      const quoteData = {
+        ...req.body,
+        companyId: companyContext, // Override any companyId from request body
+      };
+
+      const validatedData = insertQuoteSchema.parse(quoteData);
       const quote = await storage.createQuote(validatedData);
       res.status(201).json(quote);
     } catch (error) {

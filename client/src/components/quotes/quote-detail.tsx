@@ -29,13 +29,18 @@ import { format } from "date-fns";
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
 
   const isNewQuote = params?.id === "new";
+  
+  // Extract URL search params for prepopulation
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlCustomerId = searchParams.get('customerId');
+  const urlAccountName = searchParams.get('accountName');
 
   const { data: quote, isLoading: isLoadingQuote } = useQuery<Quote>({
     queryKey: ["/api/quotes", params?.id],
@@ -46,7 +51,7 @@ export default function QuoteDetail() {
     resolver: zodResolver(insertQuoteSchema),
     defaultValues: {
       quoteName: "",
-      customerId: "",
+      customerId: urlCustomerId || "",
       customerName: "",
       customerAddress: "",
       companyId: "",
@@ -66,11 +71,16 @@ export default function QuoteDetail() {
     },
     onSuccess: (newQuote: Quote) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      if (urlCustomerId) {
+        queryClient.invalidateQueries({ queryKey: ["/api/accounts", urlCustomerId, "quotes"] });
+      }
+      queryClient.setQueryData(["/api/quotes", newQuote.id], newQuote);
       toast({
         title: "Quote created successfully",
       });
-      navigate(`/quotes/${newQuote.id}`);
       setIsEditing(false);
+      // Navigate to the quote detail page with the new ID, replacing the current history entry
+      navigate(`/quotes/${newQuote.id}`, { replace: true });
     },
     onError: (error: any) => {
       toast({
@@ -158,6 +168,8 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (isNewQuote) {
       setIsEditing(true);
+    } else {
+      setIsEditing(false);
     }
   }, [isNewQuote]);
 
@@ -193,6 +205,14 @@ export default function QuoteDetail() {
           Quotes
         </Link>
         <span>/</span>
+        {urlAccountName && urlCustomerId && (
+          <>
+            <Link href={`/accounts/${urlCustomerId}`} className="hover:text-foreground">
+              {urlAccountName}
+            </Link>
+            <span>/</span>
+          </>
+        )}
         <span className="text-foreground font-medium">
           {isNewQuote ? "New Quote" : quote?.quoteName}
         </span>

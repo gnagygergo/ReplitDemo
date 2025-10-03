@@ -77,4 +77,24 @@ export class QuoteStorage {
       );
     return (result.rowCount ?? 0) > 0;
   }
+
+  async getQuotesByCustomer(
+    customerId: string,
+    companyContext?: string,
+  ): Promise<Quote[]> {
+    if (!companyContext) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(quotes)
+      .where(
+        and(
+          eq(quotes.customerId, customerId),
+          eq(quotes.companyId, companyContext),
+        ),
+      )
+      .orderBy(quotes.createdDate);
+  }
 }

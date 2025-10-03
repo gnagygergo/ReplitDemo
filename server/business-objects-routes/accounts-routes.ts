@@ -94,4 +94,19 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         .json({ message: "Failed to fetch opportunities for account" });
     }
   });
+
+  app.get("/api/accounts/:accountId/quotes", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const quotes = await storage.getQuotesByCustomer(
+        req.params.accountId,
+        companyContext || undefined,
+      );
+      res.json(quotes);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed to fetch quotes for account" });
+    }
+  });
 }

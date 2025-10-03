@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +31,8 @@ import {
 import { Edit, Save, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { TiptapEditor } from "@/components/ui/tiptap-editor";
+import DOMPurify from 'dompurify';
 
 const releaseFormSchema = insertReleaseSchema.extend({
   order: z.number().min(1, "Order must be a positive number"),
@@ -114,6 +116,10 @@ export default function ReleaseDetail({ release }: ReleaseDetailProps) {
     }
   }, [release, form]);
 
+  const sanitizedDescription = useMemo(() => {
+    return DOMPurify.sanitize(release.releaseDescription || "<p>No description provided</p>");
+  }, [release.releaseDescription]);
+
   return (
     <Card>
       <CardHeader>
@@ -181,15 +187,12 @@ export default function ReleaseDetail({ release }: ReleaseDetailProps) {
                 name="releaseDescription"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Release Description</FormLabel>
+                    <FormLabel>Release Description (Rich Text)</FormLabel>
                     <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value ?? ""}
-                        rows={3}
-                        placeholder="Enter release description"
-                        className="resize-none"
-                        data-testid="input-edit-release-description"
+                      <TiptapEditor
+                        content={field.value || ""}
+                        onChange={field.onChange}
+                        placeholder="Enter release description with formatting..."
                       />
                     </FormControl>
                     <FormMessage />
@@ -290,11 +293,10 @@ export default function ReleaseDetail({ release }: ReleaseDetailProps) {
                 Release Description
               </label>
               <div
-                className="mt-1 text-foreground whitespace-pre-wrap"
+                className="mt-1 prose prose-sm max-w-none"
                 data-testid="text-release-description-value"
-              >
-                {release.releaseDescription || "No description provided"}
-              </div>
+                dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+              />
             </div>
 
             <div>

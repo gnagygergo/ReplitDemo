@@ -38,15 +38,22 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
         return res.status(400).json({ message: "Company context required" });
       }
 
+      console.log("DEBUG POST /api/quotes - Full request body:", JSON.stringify(req.body, null, 2));
+      
       // Security: Ensure companyId is set from authenticated user's company context
       const quoteData = {
         ...req.body,
         companyId: companyContext, // Override any companyId from request body
       };
       
+      console.log("DEBUG - customerId from body:", req.body.customerId, "type:", typeof req.body.customerId);
+      
       // Convert empty strings to null for optional foreign key fields
       if (!quoteData.customerId || quoteData.customerId.trim() === '') {
+        console.log("DEBUG - Converting empty customerId to null");
         quoteData.customerId = null;
+      } else {
+        console.log("DEBUG - Keeping customerId:", quoteData.customerId);
       }
       if (!quoteData.quoteExpirationDate || quoteData.quoteExpirationDate === '') {
         quoteData.quoteExpirationDate = null;

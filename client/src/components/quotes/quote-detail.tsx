@@ -117,6 +117,9 @@ export default function QuoteDetail() {
   });
 
   const onSubmit = (data: InsertQuote) => {
+    console.log("DEBUG onSubmit - Full form data:", data);
+    console.log("DEBUG onSubmit - customerId value:", data.customerId, "type:", typeof data.customerId);
+    console.log("DEBUG onSubmit - urlCustomerId:", urlCustomerId);
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {

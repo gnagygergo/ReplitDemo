@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Search, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -189,6 +189,17 @@ export default function DevPatternsManagement() {
   const handleDeleteDevPattern = (devPatternId: string) => {
     deleteDevPatternMutation.mutate(devPatternId);
   };
+
+  useEffect(() => {
+    if (selectedDevPattern && devPatterns.length > 0) {
+      const updatedPattern = devPatterns.find(
+        (pattern) => pattern.id === selectedDevPattern.id
+      );
+      if (updatedPattern) {
+        setSelectedDevPattern(updatedPattern);
+      }
+    }
+  }, [devPatterns, selectedDevPattern?.id]);
 
   if (isLoading) {
     return (

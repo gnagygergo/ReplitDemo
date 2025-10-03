@@ -42,12 +42,19 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
       const quoteData = {
         ...req.body,
         companyId: companyContext, // Override any companyId from request body
-        // Convert empty strings to null for optional foreign key fields
-        customerId: req.body.customerId?.trim() || null,
-        quoteExpirationDate: req.body.quoteExpirationDate || null,
       };
+      
+      // Convert empty strings to null for optional foreign key fields
+      if (!quoteData.customerId || quoteData.customerId.trim() === '') {
+        quoteData.customerId = null;
+      }
+      if (!quoteData.quoteExpirationDate || quoteData.quoteExpirationDate === '') {
+        quoteData.quoteExpirationDate = null;
+      }
 
+      console.log("Quote data before validation:", JSON.stringify(quoteData, null, 2));
       const validatedData = insertQuoteSchema.parse(quoteData);
+      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
       const quote = await storage.createQuote(validatedData);
       res.status(201).json(quote);
     } catch (error) {

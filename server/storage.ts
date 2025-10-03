@@ -51,6 +51,7 @@ import {
   devPatterns,
 } from "@shared/schema";
 import { db, pool } from "./db";
+import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -232,6 +233,12 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private quoteStorage: QuoteStorage;
+
+  constructor() {
+    this.quoteStorage = new QuoteStorage();
+  }
+
   // Method called by all GETTERs of business objects
   async GetCompanyContext(req: any): Promise<string | null> {
     try {
@@ -1402,42 +1409,17 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  // Quote methods (Company-scoped)
+  // Quote methods (Company-scoped) - Delegated to QuoteStorage
   async getQuotes(companyContext?: string): Promise<Quote[]> {
-    if (!companyContext) {
-      return [];
-    }
-
-    return await db
-      .select()
-      .from(quotes)
-      .where(eq(quotes.companyId, companyContext))
-      .orderBy(quotes.createdDate);
+    return this.quoteStorage.getQuotes(companyContext);
   }
 
   async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    const [quote] = await db
-      .select()
-      .from(quotes)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      );
-    return quote || undefined;
+    return this.quoteStorage.getQuote(id, companyContext);
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
-    const [newQuote] = await db
-      .insert(quotes)
-      .values(quote)
-      .returning();
-    return newQuote;
+    return this.quoteStorage.createQuote(quote);
   }
 
   async updateQuote(
@@ -1445,37 +1427,11 @@ export class DatabaseStorage implements IStorage {
     updates: Partial<InsertQuote>,
     companyContext?: string,
   ): Promise<Quote | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    const [quote] = await db
-      .update(quotes)
-      .set(updates)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      )
-      .returning();
-    return quote || undefined;
+    return this.quoteStorage.updateQuote(id, updates, companyContext);
   }
 
   async deleteQuote(id: string, companyContext?: string): Promise<boolean> {
-    if (!companyContext) {
-      return false;
-    }
-
-    const result = await db
-      .delete(quotes)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      );
-    return (result.rowCount ?? 0) > 0;
+    return this.quoteStorage.deleteQuote(id, companyContext);
   }
 
   // Dev Pattern methods (Global - no company context filtering)

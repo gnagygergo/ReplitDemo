@@ -52,6 +52,7 @@ import {
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
+import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { eq, and, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -234,9 +235,11 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   private quoteStorage: QuoteStorage;
+  private accountStorage: AccountStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage();
+    this.accountStorage = new AccountStorage(this.getUser.bind(this));
   }
 
   // Method called by all GETTERs of business objects
@@ -497,109 +500,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAccounts(companyContext?: string): Promise<AccountWithOwner[]> {
-    // If no company context provided, return empty results for security
-    if (!companyContext) {
-      return [];
-    }
-
-    return await db
-      .select()
-      .from(accounts)
-      .innerJoin(users, eq(accounts.ownerId, users.id))
-      .where(eq(accounts.companyId, companyContext))
-      .then((rows) =>
-        rows.map((row) => ({
-          ...row.accounts,
-          owner: row.users,
-        })),
-      );
+    return this.accountStorage.getAccounts(companyContext);
   }
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {
-    const [result] = await db
-      .select()
-      .from(accounts)
-      .innerJoin(users, eq(accounts.ownerId, users.id))
-      .where(eq(accounts.id, id));
-
-    if (!result) return undefined;
-
-    return {
-      ...result.accounts,
-      owner: result.users,
-    };
+    return this.accountStorage.getAccount(id);
   }
 
   async createAccount(insertAccount: InsertAccount): Promise<Account> {
-    // Verify owner exists
-    const owner = await this.getUser(insertAccount.ownerId);
-    if (!owner) {
-      throw new Error("Owner not found");
-    }
-
-    // Debug: Log owner details
-    console.log("DEBUG createAccount - Owner:", {
-      id: owner.id,
-      email: owner.email,
-      companyId: owner.companyId,
-      fullOwner: owner,
-    });
-
-    // Automatically populate CompanyId from owner's CompanyId
-    const accountData = {
-      ...insertAccount,
-      companyId: owner.companyId || null,
-    };
-
-    console.log("DEBUG createAccount - Account data to insert:", accountData);
-
-    const [account] = await db.insert(accounts).values(accountData).returning();
-
-    console.log("DEBUG createAccount - Created account:", account);
-
-    return account;
+    return this.accountStorage.createAccount(insertAccount);
   }
 
   async updateAccount(
     id: string,
     updates: Partial<InsertAccount>,
   ): Promise<Account | undefined> {
-    // If updating ownerId, verify the new owner exists
-    if (updates.ownerId) {
-      const owner = await this.getUser(updates.ownerId);
-      if (!owner) {
-        throw new Error("Owner not found");
-      }
-    }
-
-    // Remove companyId from updates - it cannot be changed once set
-    const { companyId, ...allowedUpdates } = updates as any;
-
-    const [account] = await db
-      .update(accounts)
-      .set(allowedUpdates)
-      .where(eq(accounts.id, id))
-      .returning();
-    return account || undefined;
+    return this.accountStorage.updateAccount(id, updates);
   }
 
   async deleteAccount(id: string): Promise<boolean> {
-    // Check if account has opportunities or cases
-    const existingOpportunities = await db
-      .select()
-      .from(opportunities)
-      .where(eq(opportunities.accountId, id));
-    const existingCases = await db
-      .select()
-      .from(cases)
-      .where(eq(cases.accountId, id));
-
-    if (existingOpportunities.length > 0 || existingCases.length > 0) {
-      return false; // Cannot delete account with opportunities or cases
-    }
-
-    const result = await db.delete(accounts).where(eq(accounts.id, id));
-    return (result.rowCount ?? 0) > 0;
+    return this.accountStorage.deleteAccount(id);
   }
 
   async getOpportunities(

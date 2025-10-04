@@ -14,7 +14,7 @@ export class QuoteStorage {
       .where(eq(quotes.companyId, companyContext))
       .orderBy(quotes.createdDate);
   }
-
+  
   async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {
     if (!companyContext) {
       return undefined;

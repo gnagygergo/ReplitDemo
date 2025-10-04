@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"; // Added ArrowUpDown, ArrowUp, ArrowDown for sorting capability on Tables
 import { Link } from "wouter";
 import { type Account, type AccountWithOwner } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -19,17 +19,17 @@ export default function Accounts() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
-  const [sortBy, setSortBy] = useState<string>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<string>('name'); // Added for sorting capability on Tables
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Added for sorting capability on Tables
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
-    queryKey: ["/api/accounts", sortBy, sortOrder],
-    queryFn: async () => {
-      const params = new URLSearchParams({ sortBy, sortOrder });
-      const res = await fetch(`/api/accounts?${params}`, {
+    queryKey: ["/api/accounts", sortBy, sortOrder], // Added sortBy, sortOrder for sorting capability on Tables
+    queryFn: async () => { // Added custom queryFn for sorting capability on Tables
+      const params = new URLSearchParams({ sortBy, sortOrder }); // Added for sorting capability on Tables
+      const res = await fetch(`/api/accounts?${params}`, { // Added for sorting capability on Tables
         credentials: "include",
       });
       if (!res.ok) throw new Error('Failed to fetch accounts');
@@ -95,7 +95,7 @@ export default function Accounts() {
     setShowForm(false);
   };
 
-  const handleSort = (column: string) => {
+  const handleSort = (column: string) => { // Added for sorting capability on Tables
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -191,7 +191,7 @@ export default function Accounts() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>
+                  <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('name')}
@@ -204,7 +204,7 @@ export default function Accounts() {
                       {sortBy !== 'name' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
-                  <TableHead>
+                  <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('industry')}
@@ -217,7 +217,7 @@ export default function Accounts() {
                       {sortBy !== 'industry' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
-                  <TableHead>
+                  <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('address')}

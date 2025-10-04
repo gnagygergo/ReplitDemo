@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Search, Filter, Plus, Edit, Trash2, Mail } from "lucide-react";
+import { FileText, Search, Filter, Plus, Edit, Trash2, Mail, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type CaseWithAccountAndOwner, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,12 +21,22 @@ export default function Cases() {
   const [accountFilter, setAccountFilter] = useState("");
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailingCase, setEmailingCase] = useState<CaseWithAccountAndOwner | undefined>();
+  const [sortBy, setSortBy] = useState<string>('subject');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: cases = [], isLoading } = useQuery<CaseWithAccountAndOwner[]>({
-    queryKey: ["/api/cases"],
+    queryKey: ["/api/cases", sortBy, sortOrder],
+    queryFn: async () => {
+      const params = new URLSearchParams({ sortBy, sortOrder });
+      const res = await fetch(`/api/cases?${params}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error('Failed to fetch cases');
+      return res.json();
+    },
   });
 
   const { data: accounts = [] } = useQuery<Account[]>({
@@ -97,6 +107,15 @@ export default function Cases() {
       return email[0].toUpperCase();
     }
     return 'U';
+  };
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   const handleCloseForm = () => {
@@ -178,13 +197,33 @@ export default function Cases() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('subject')}
+                      data-testid="header-sort-subject"
+                    >
                       <span>Subject</span>
+                      {sortBy === 'subject' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'subject' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
                   <TableHead>Account</TableHead>
-                  <TableHead>From Email</TableHead>
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('fromEmail')}
+                      data-testid="header-sort-fromEmail"
+                    >
+                      <span>From Email</span>
+                      {sortBy === 'fromEmail' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'fromEmail' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                    </div>
+                  </TableHead>
                   <TableHead>Description</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>

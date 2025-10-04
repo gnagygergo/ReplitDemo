@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
+import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Link } from "wouter";
 import { type Account, type AccountWithOwner } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,22 @@ export default function Accounts() {
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
-    queryKey: ["/api/accounts"],
+    queryKey: ["/api/accounts", sortBy, sortOrder],
+    queryFn: async () => {
+      const params = new URLSearchParams({ sortBy, sortOrder });
+      const res = await fetch(`/api/accounts?${params}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error('Failed to fetch accounts');
+      return res.json();
+    },
   });
 
   const deleteMutation = useMutation({
@@ -83,6 +93,15 @@ export default function Accounts() {
 
   const handleCloseForm = () => {
     setShowForm(false);
+  };
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   const getIndustryBadge = (industry: string) => {
@@ -172,17 +191,45 @@ export default function Accounts() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('name')}
+                      data-testid="header-sort-name"
+                    >
                       <span>Account Name</span>
+                      {sortBy === 'name' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'name' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('industry')}
+                      data-testid="header-sort-industry"
+                    >
                       <span>Industry</span>
+                      {sortBy === 'industry' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'industry' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
-                  <TableHead>Address</TableHead>
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('address')}
+                      data-testid="header-sort-address"
+                    >
+                      <span>Address</span>
+                      {sortBy === 'address' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'address' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                    </div>
+                  </TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>

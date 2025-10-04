@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Target, Search, Filter, Plus, Edit, Trash2 } from "lucide-react";
+import { Target, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { type OpportunityWithAccountAndOwner, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,12 +19,22 @@ export default function Opportunities() {
   const [editingOpportunity, setEditingOpportunity] = useState<OpportunityWithAccountAndOwner | undefined>();
   const [searchTerm, setSearchTerm] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
+  const [sortBy, setSortBy] = useState<string>('closeDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithAccountAndOwner[]>({
-    queryKey: ["/api/opportunities"],
+    queryKey: ["/api/opportunities", sortBy, sortOrder],
+    queryFn: async () => {
+      const params = new URLSearchParams({ sortBy, sortOrder });
+      const res = await fetch(`/api/opportunities?${params}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error('Failed to fetch opportunities');
+      return res.json();
+    },
   });
 
   const { data: accounts = [] } = useQuery<Account[]>({
@@ -88,6 +98,15 @@ export default function Opportunities() {
       return email[0].toUpperCase();
     }
     return 'U';
+  };
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   const handleCloseForm = () => {
@@ -182,20 +201,44 @@ export default function Opportunities() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('name')}
+                      data-testid="header-sort-name"
+                    >
                       <span>Opportunity Name</span>
+                      {sortBy === 'name' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'name' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
                   <TableHead>Account</TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('closeDate')}
+                      data-testid="header-sort-closeDate"
+                    >
                       <span>Close Date</span>
+                      {sortBy === 'closeDate' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'closeDate' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
-                  <TableHead className="cursor-pointer hover:bg-muted/80">
-                    <div className="flex items-center space-x-1">
+                  <TableHead>
+                    <div 
+                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                      onClick={() => handleSort('totalRevenue')}
+                      data-testid="header-sort-totalRevenue"
+                    >
                       <span>Total Revenue</span>
+                      {sortBy === 'totalRevenue' && (
+                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                      )}
+                      {sortBy !== 'totalRevenue' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                     </div>
                   </TableHead>
                   <TableHead>Owner</TableHead>

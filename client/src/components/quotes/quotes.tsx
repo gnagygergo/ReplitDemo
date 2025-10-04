@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, Search, Plus, Edit, Trash2 } from "lucide-react";
+import { FileSpreadsheet, Search, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Link } from "wouter";
 import { type Quote } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,22 @@ import { format } from "date-fns";
 
 export default function Quotes() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<string>('createdDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: quotes = [], isLoading } = useQuery<Quote[]>({
-    queryKey: ["/api/quotes"],
+    queryKey: ["/api/quotes", sortBy, sortOrder],
+    queryFn: async () => {
+      const params = new URLSearchParams({ sortBy, sortOrder });
+      const res = await fetch(`/api/quotes?${params}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error('Failed to fetch quotes');
+      return res.json();
+    },
   });
 
   const deleteMutation = useMutation({
@@ -46,6 +56,15 @@ export default function Quotes() {
       (quote.sellerName || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
 
   const handleDelete = (quote: Quote) => {
     if (confirm(`Are you sure you want to delete quote "${quote.quoteName}"?`)) {
@@ -98,11 +117,47 @@ export default function Quotes() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Quote Name</TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('quoteName')}
+                    data-testid="header-sort-quoteName"
+                  >
+                    <span>Quote Name</span>
+                    {sortBy === 'quoteName' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                    {sortBy !== 'quoteName' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                  </div>
+                </TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Seller</TableHead>
-                <TableHead>Expiration Date</TableHead>
-                <TableHead>Created Date</TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('quoteExpirationDate')}
+                    data-testid="header-sort-quoteExpirationDate"
+                  >
+                    <span>Expiration Date</span>
+                    {sortBy === 'quoteExpirationDate' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                    {sortBy !== 'quoteExpirationDate' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                  </div>
+                </TableHead>
+                <TableHead>
+                  <div 
+                    className="flex items-center gap-1 cursor-pointer hover:text-foreground"
+                    onClick={() => handleSort('createdDate')}
+                    data-testid="header-sort-createdDate"
+                  >
+                    <span>Created Date</span>
+                    {sortBy === 'createdDate' && (
+                      sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                    )}
+                    {sortBy !== 'createdDate' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                  </div>
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

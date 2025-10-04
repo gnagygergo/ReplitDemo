@@ -16,8 +16,8 @@ export class CaseStorage {
     this.getUser = getUserFn;
   }
 
-  async getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]> {
-    // Determine sort column - default to 'subject'
+  async getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]> { // Added sortBy, sortOrder for sorting capability on Tables
+    // Added for sorting capability on Tables - Determine sort column - default to 'subject'
     let sortColumn;
     if (sortBy === 'fromEmail') {
       sortColumn = cases.fromEmail;
@@ -25,7 +25,7 @@ export class CaseStorage {
       sortColumn = cases.subject;
     }
 
-    // Determine sort direction - default to 'asc'
+    // Added for sorting capability on Tables - Determine sort direction - default to 'asc'
     const orderDirection = sortOrder === 'desc' ? desc : asc;
 
     return await db
@@ -33,7 +33,7 @@ export class CaseStorage {
       .from(cases)
       .innerJoin(accounts, eq(cases.accountId, accounts.id))
       .innerJoin(users, eq(cases.ownerId, users.id))
-      .orderBy(orderDirection(sortColumn))
+      .orderBy(orderDirection(sortColumn)) // Added for sorting capability on Tables
       .then((rows) =>
         rows.map((row) => ({
           ...row.cases,

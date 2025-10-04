@@ -11,13 +11,13 @@ export class AccountStorage {
     this.getUser = getUserFn;
   }
 
-  async getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]> {
+  async getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]> { // Added sortBy, sortOrder for sorting capability on Tables
     // If no company context provided, return empty results for security
     if (!companyContext) {
       return [];
     }
 
-    // Determine sort column - default to 'name'
+    // Added for sorting capability on Tables - Determine sort column - default to 'name'
     let sortColumn;
     if (sortBy === 'industry') {
       sortColumn = accounts.industry;
@@ -27,7 +27,7 @@ export class AccountStorage {
       sortColumn = accounts.name;
     }
 
-    // Determine sort direction - default to 'asc'
+    // Added for sorting capability on Tables - Determine sort direction - default to 'asc'
     const orderDirection = sortOrder === 'desc' ? desc : asc;
 
     return await db
@@ -35,7 +35,7 @@ export class AccountStorage {
       .from(accounts)
       .innerJoin(users, eq(accounts.ownerId, users.id))
       .where(eq(accounts.companyId, companyContext))
-      .orderBy(orderDirection(sortColumn))
+      .orderBy(orderDirection(sortColumn)) // Added for sorting capability on Tables
       .then((rows) =>
         rows.map((row) => ({
           ...row.accounts,

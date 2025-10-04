@@ -24,12 +24,12 @@ export class QuoteStorage {
     this.getUser = getUserFn;
   }
 
-  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> {
+  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> { // Added sortBy, sortOrder for sorting capability on Tables
     if (!companyContext) {
       return [];
     }
 
-    // Determine sort column - default to 'createdDate'
+    // Added for sorting capability on Tables - Determine sort column - default to 'createdDate'
     let sortColumn;
     if (sortBy === 'quoteName') {
       sortColumn = quotes.quoteName;
@@ -39,14 +39,14 @@ export class QuoteStorage {
       sortColumn = quotes.createdDate;
     }
 
-    // Determine sort direction - default to 'desc' for createdDate
+    // Added for sorting capability on Tables - Determine sort direction - default to 'desc' for createdDate
     const orderDirection = sortOrder === 'asc' ? asc : desc;
 
     return await db
       .select()
       .from(quotes)
       .where(eq(quotes.companyId, companyContext))
-      .orderBy(orderDirection(sortColumn));
+      .orderBy(orderDirection(sortColumn)); // Added for sorting capability on Tables
   }
 
   async getQuote(

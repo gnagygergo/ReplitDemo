@@ -18,15 +18,15 @@ export class OpportunityStorage {
 
   async getOpportunities(
     companyContext?: string,
-    sortBy?: string,
-    sortOrder?: string,
+    sortBy?: string, // Added for sorting capability on Tables
+    sortOrder?: string, // Added for sorting capability on Tables
   ): Promise<OpportunityWithAccountAndOwner[]> {
     // If no company context provided, return empty results for security
     if (!companyContext) {
       return [];
     }
 
-    // Determine sort column - default to 'closeDate'
+    // Added for sorting capability on Tables - Determine sort column - default to 'closeDate'
     let sortColumn;
     if (sortBy === 'name') {
       sortColumn = opportunities.name;
@@ -36,7 +36,7 @@ export class OpportunityStorage {
       sortColumn = opportunities.closeDate;
     }
 
-    // Determine sort direction - default to 'desc' for closeDate
+    // Added for sorting capability on Tables - Determine sort direction - default to 'desc' for closeDate
     const orderDirection = sortOrder === 'asc' ? asc : desc;
 
     return await db
@@ -45,7 +45,7 @@ export class OpportunityStorage {
       .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
       .innerJoin(users, eq(opportunities.ownerId, users.id))
       .where(eq(opportunities.companyId, companyContext))
-      .orderBy(orderDirection(sortColumn))
+      .orderBy(orderDirection(sortColumn)) // Added for sorting capability on Tables
       .then((rows) =>
         rows.map((row) => ({
           ...row.opportunities,

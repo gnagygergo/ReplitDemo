@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
+import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
 import { registerOpportunityRoutes } from "./business-objects-routes/opportunity-routes";
 import { registerCaseRoutes } from "./business-objects-routes/case-routes";
@@ -1183,6 +1184,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Quote routes (Company-scoped) - Delegated to business-objects-routes
   registerQuoteRoutes(app, storage);
+
+  // Quote Line routes - Delegated to business-objects-routes
+  registerQuoteLineRoutes(app, storage);
 
   const httpServer = createServer(app);
   return httpServer;

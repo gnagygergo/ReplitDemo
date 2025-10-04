@@ -5,19 +5,23 @@ import type {
   InsertQuote,
   AccountWithOwner,
   Company,
+  User,
 } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export class QuoteStorage {
   private getAccount: (id: string) => Promise<AccountWithOwner | undefined>;
   private getCompany: (id: string) => Promise<Company | undefined>;
+  private getUser: (id: string) => Promise<User | undefined>;
 
   constructor(
     getAccountFn: (id: string) => Promise<AccountWithOwner | undefined>,
     getCompanyFn: (id: string) => Promise<Company | undefined>,
+    getUserFn: (id: string) => Promise<User | undefined>,
   ) {
     this.getAccount = getAccountFn;
     this.getCompany = getCompanyFn;
+    this.getUser = getUserFn;
   }
 
   async getQuotes(companyContext?: string): Promise<Quote[]> {
@@ -63,6 +67,15 @@ export class QuoteStorage {
         quote.sellerName = company.companyOfficialName;
         quote.sellerBankAccount = company.bankAccountNumber;
         quote.sellerAddress = company.address;
+      }
+    }
+
+    // If createdBy is provided, auto-populate seller phone and email from User
+    if (quote.createdBy && quote.createdBy.trim() !== "") {
+      const user = await this.getUser(quote.createdBy);
+      if (user) {
+        quote.sellerPhone = user.phone;
+        quote.sellerEmail = user.email;
       }
     }
 

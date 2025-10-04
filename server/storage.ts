@@ -247,7 +247,8 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     this.quoteStorage = new QuoteStorage(
       this.getAccount.bind(this),
-      this.getCompany.bind(this)
+      this.getCompany.bind(this),
+      this.getUser.bind(this)
     );
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
     this.opportunityStorage = new OpportunityStorage(

@@ -23,6 +23,8 @@ export const companies = pgTable("companies", {
   companyOfficialName: text("company_official_name").notNull(),
   companyAlias: text("company_alias"),
   companyRegistrationId: text("company_registration_id"),
+  bankAccountNumber: text("bank_account_number"),
+  address: text("address"),
 });
 
 export const accounts = pgTable("accounts", {

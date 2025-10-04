@@ -222,7 +222,6 @@ export interface IStorage {
   deleteQuote(id: string, companyContext?: string): Promise<boolean>;
 
   // Quote Line methods
-  getQuoteLines(companyContext?: string): Promise<QuoteLine[]>;
   getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined>;
   getQuoteLinesByQuote(quoteId: string, companyContext?: string): Promise<QuoteLine[]>;
   createQuoteLine(quoteLine: InsertQuoteLine, companyContext?: string): Promise<QuoteLine | null>;
@@ -1169,10 +1168,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Quote Line methods - Delegated to QuoteLineStorage
-  async getQuoteLines(companyContext?: string): Promise<QuoteLine[]> {
-    return this.quoteLineStorage.getQuoteLines(companyContext);
-  }
-
   async getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined> {
     return this.quoteLineStorage.getQuoteLine(id, companyContext);
   }

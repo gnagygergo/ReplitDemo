@@ -6,17 +6,6 @@ import type { IStorage } from "../storage";
 
 export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
   // Quote Line routes
-  app.get("/api/quote-lines", isAuthenticated, async (req, res) => {
-    try {
-      const companyContext = await storage.GetCompanyContext(req);
-      const quoteLines = await storage.getQuoteLines(companyContext || undefined);
-      res.json(quoteLines);
-    } catch (error) {
-      console.error("Error fetching quote lines:", error);
-      res.status(500).json({ message: "Failed to fetch quote lines" });
-    }
-  });
-
   app.get("/api/quote-lines/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);

@@ -4,41 +4,6 @@ import type { QuoteLine, InsertQuoteLine } from "@shared/schema";
 import { eq, and, inArray } from "drizzle-orm";
 
 export class QuoteLineStorage {
-  async getQuoteLines(companyContext?: string): Promise<QuoteLine[]> {
-    if (!companyContext) {
-      return [];
-    }
-
-    // Get quote lines that belong to quotes in this company
-    return await db
-      .select({
-        id: quoteLines.id,
-        quoteId: quoteLines.quoteId,
-        quoteName: quoteLines.quoteName,
-        productId: quoteLines.productId,
-        productName: quoteLines.productName,
-        unitPrice: quoteLines.unitPrice,
-        unitPriceCurrency: quoteLines.unitPriceCurrency,
-        unitPriceOverride: quoteLines.unitPriceOverride,
-        unitPriceDiscountPercent: quoteLines.unitPriceDiscountPercent,
-        unitPriceDiscountAmount: quoteLines.unitPriceDiscountAmount,
-        unitPriceDiscountedAmount: quoteLines.unitPriceDiscountedAmount,
-        salesUom: quoteLines.salesUom,
-        quotedQuantity: quoteLines.quotedQuantity,
-        subtotalBeforeRowDiscounts: quoteLines.subtotalBeforeRowDiscounts,
-        discountPercentOnSubtotal: quoteLines.discountPercentOnSubtotal,
-        discountAmountOnSubtotal: quoteLines.discountAmountOnSubtotal,
-        discountedSubtotal: quoteLines.discountedSubtotal,
-        vatPercent: quoteLines.vatPercent,
-        vatUnitAmount: quoteLines.vatUnitAmount,
-        vatOnSubtotal: quoteLines.vatOnSubtotal,
-        grossSubtotal: quoteLines.grossSubtotal,
-      })
-      .from(quoteLines)
-      .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
-      .where(eq(quotes.companyId, companyContext));
-  }
-
   async getQuoteLine(
     id: string,
     companyContext?: string,

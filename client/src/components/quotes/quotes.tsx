@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileSpreadsheet, Search, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileSpreadsheet, Search, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"; // Added ArrowUpDown, ArrowUp, ArrowDown for sorting capability on Tables
 import { Link } from "wouter";
 import { type Quote } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -14,17 +14,17 @@ import { format } from "date-fns";
 
 export default function Quotes() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<string>('createdDate');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<string>('createdDate'); // Added for sorting capability on Tables
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc'); // Added for sorting capability on Tables
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: quotes = [], isLoading } = useQuery<Quote[]>({
-    queryKey: ["/api/quotes", sortBy, sortOrder],
-    queryFn: async () => {
-      const params = new URLSearchParams({ sortBy, sortOrder });
-      const res = await fetch(`/api/quotes?${params}`, {
+    queryKey: ["/api/quotes", sortBy, sortOrder], // Added sortBy, sortOrder for sorting capability on Tables
+    queryFn: async () => { // Added custom queryFn for sorting capability on Tables
+      const params = new URLSearchParams({ sortBy, sortOrder }); // Added for sorting capability on Tables
+      const res = await fetch(`/api/quotes?${params}`, { // Added for sorting capability on Tables
         credentials: "include",
       });
       if (!res.ok) throw new Error('Failed to fetch quotes');
@@ -57,7 +57,7 @@ export default function Quotes() {
     return matchesSearch;
   });
 
-  const handleSort = (column: string) => {
+  const handleSort = (column: string) => { // Added for sorting capability on Tables
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -117,7 +117,7 @@ export default function Quotes() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>
+                <TableHead> {/* Added for sorting capability on Tables */}
                   <div 
                     className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                     onClick={() => handleSort('quoteName')}
@@ -132,7 +132,7 @@ export default function Quotes() {
                 </TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Seller</TableHead>
-                <TableHead>
+                <TableHead> {/* Added for sorting capability on Tables */}
                   <div 
                     className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                     onClick={() => handleSort('quoteExpirationDate')}
@@ -145,7 +145,7 @@ export default function Quotes() {
                     {sortBy !== 'quoteExpirationDate' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                   </div>
                 </TableHead>
-                <TableHead>
+                <TableHead> {/* Added for sorting capability on Tables */}
                   <div 
                     className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                     onClick={() => handleSort('createdDate')}

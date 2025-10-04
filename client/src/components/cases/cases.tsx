@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FileText, Search, Filter, Plus, Edit, Trash2, Mail, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, Search, Filter, Plus, Edit, Trash2, Mail, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"; // Added ArrowUpDown, ArrowUp, ArrowDown for sorting capability on Tables
 import { type CaseWithAccountAndOwner, type Account } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -21,17 +21,17 @@ export default function Cases() {
   const [accountFilter, setAccountFilter] = useState("");
   const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [emailingCase, setEmailingCase] = useState<CaseWithAccountAndOwner | undefined>();
-  const [sortBy, setSortBy] = useState<string>('subject');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<string>('subject'); // Added for sorting capability on Tables
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Added for sorting capability on Tables
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: cases = [], isLoading } = useQuery<CaseWithAccountAndOwner[]>({
-    queryKey: ["/api/cases", sortBy, sortOrder],
-    queryFn: async () => {
-      const params = new URLSearchParams({ sortBy, sortOrder });
-      const res = await fetch(`/api/cases?${params}`, {
+    queryKey: ["/api/cases", sortBy, sortOrder], // Added sortBy, sortOrder for sorting capability on Tables
+    queryFn: async () => { // Added custom queryFn for sorting capability on Tables
+      const params = new URLSearchParams({ sortBy, sortOrder }); // Added for sorting capability on Tables
+      const res = await fetch(`/api/cases?${params}`, { // Added for sorting capability on Tables
         credentials: "include",
       });
       if (!res.ok) throw new Error('Failed to fetch cases');
@@ -109,7 +109,7 @@ export default function Cases() {
     return 'U';
   };
 
-  const handleSort = (column: string) => {
+  const handleSort = (column: string) => { // Added for sorting capability on Tables
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -197,7 +197,7 @@ export default function Cases() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>
+                  <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('subject')}
@@ -211,7 +211,7 @@ export default function Cases() {
                     </div>
                   </TableHead>
                   <TableHead>Account</TableHead>
-                  <TableHead>
+                  <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('fromEmail')}

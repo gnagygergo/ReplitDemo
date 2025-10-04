@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import { type Account } from "@shared/schema";
+import { Search, Building } from "lucide-react";
+import { type AccountWithOwner } from "@shared/schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 interface AccountLookupDialogProps {
   open: boolean;
   onClose: () => void;
-  onSelect: (account: Account) => void;
+  onSelect: (account: AccountWithOwner) => void;
   selectedAccountId?: string;
 }
 
@@ -26,7 +27,7 @@ export default function AccountLookupDialog({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedId, setSelectedId] = useState<string>(selectedAccountId || "");
 
-  const { data: accounts = [], isLoading } = useQuery<Account[]>({
+  const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
     queryKey: ["/api/accounts"],
     enabled: open,
   });
@@ -45,8 +46,7 @@ export default function AccountLookupDialog({
 
   const filteredAccounts = accounts.filter((account) =>
     account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.industry.toLowerCase().includes(searchTerm.toLowerCase())
+    (account.address || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSelect = () => {
@@ -66,13 +66,33 @@ export default function AccountLookupDialog({
     setSelectedId(accountId);
   };
 
+  const getIndustryBadge = (industry: string) => {
+    const variants = {
+      tech: "bg-blue-100 text-blue-800",
+      construction: "bg-orange-100 text-orange-800",
+      services: "bg-green-100 text-green-800",
+    };
+    
+    const labels = {
+      tech: "Technology",
+      construction: "Construction", 
+      services: "Services",
+    };
+
+    return (
+      <Badge className={variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"}>
+        {labels[industry as keyof typeof labels] || industry}
+      </Badge>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Account Lookup</DialogTitle>
           <DialogDescription>
-            Search and select an account to associate with this opportunity.
+            Search and select an account to assign as the customer.
           </DialogDescription>
         </DialogHeader>
 
@@ -81,7 +101,7 @@ export default function AccountLookupDialog({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search accounts by name, address, or industry..."
+              placeholder="Search accounts by name or address..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -98,9 +118,10 @@ export default function AccountLookupDialog({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12"></TableHead>
+                  <TableHead className="w-12"></TableHead>
                   <TableHead>Account Name</TableHead>
-                  <TableHead>Address</TableHead>
                   <TableHead>Industry</TableHead>
+                  <TableHead>Address</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -112,19 +133,23 @@ export default function AccountLookupDialog({
                         <Skeleton className="h-4 w-4 rounded-full" />
                       </TableCell>
                       <TableCell>
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                      </TableCell>
+                      <TableCell>
                         <Skeleton className="h-4 w-32" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-6 w-20" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-48" />
                       </TableCell>
                     </TableRow>
                   ))
                 ) : filteredAccounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                      <Building className="mx-auto h-12 w-12 mb-4 opacity-50" />
                       {searchTerm ? `No accounts found matching "${searchTerm}"` : "No accounts available"}
                     </TableCell>
                   </TableRow>
@@ -144,6 +169,11 @@ export default function AccountLookupDialog({
                         />
                       </TableCell>
                       <TableCell>
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <Building className="w-4 h-4 text-primary" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Label 
                           htmlFor={account.id} 
                           className="font-medium cursor-pointer"
@@ -155,19 +185,17 @@ export default function AccountLookupDialog({
                       <TableCell>
                         <Label 
                           htmlFor={account.id} 
-                          className="cursor-pointer text-muted-foreground"
-                          data-testid={`text-account-address-${account.id}`}
+                          className="cursor-pointer"
                         >
-                          {account.address || 'No address'}
+                          {getIndustryBadge(account.industry)}
                         </Label>
                       </TableCell>
                       <TableCell>
                         <Label 
                           htmlFor={account.id} 
-                          className="cursor-pointer"
-                          data-testid={`text-account-industry-${account.id}`}
+                          className="cursor-pointer text-muted-foreground"
                         >
-                          {account.industry}
+                          {account.address || 'No address'}
                         </Label>
                       </TableCell>
                     </TableRow>

@@ -7,6 +7,7 @@ import {
   type Quote,
   type InsertQuote,
   insertQuoteSchema,
+  type AccountWithOwner,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,12 +21,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FileSpreadsheet, Edit, Save, X } from "lucide-react";
+import { FileSpreadsheet, Edit, Save, X, Building } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
+import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
@@ -34,6 +36,8 @@ export default function QuoteDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const [showAccountLookup, setShowAccountLookup] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<AccountWithOwner | null>(null);
 
   const isNewQuote = params?.id === "new";
   
@@ -45,6 +49,11 @@ export default function QuoteDetail() {
   const { data: quote, isLoading: isLoadingQuote } = useQuery<Quote>({
     queryKey: ["/api/quotes", params?.id],
     enabled: !!params?.id && !isNewQuote,
+  });
+
+  const { data: customerAccount } = useQuery<AccountWithOwner>({
+    queryKey: ["/api/accounts", quote?.customerId],
+    enabled: !!quote?.customerId && !isNewQuote && !isEditing,
   });
 
   const form = useForm<InsertQuote>({
@@ -148,6 +157,22 @@ export default function QuoteDetail() {
     }
   };
 
+  const handleOpenAccountLookup = () => {
+    setShowAccountLookup(true);
+  };
+
+  const handleAccountSelect = (account: AccountWithOwner) => {
+    setSelectedCustomer(account);
+    form.setValue("customerId", account.id);
+    form.setValue("customerName", account.name);
+    form.setValue("customerAddress", account.address || "");
+    setShowAccountLookup(false);
+  };
+
+  const handleCloseAccountLookup = () => {
+    setShowAccountLookup(false);
+  };
+
   useEffect(() => {
     if (quote) {
       form.reset({
@@ -166,6 +191,13 @@ export default function QuoteDetail() {
       });
     }
   }, [quote, form]);
+
+  // Set selected customer when quote loads
+  useEffect(() => {
+    if (customerAccount) {
+      setSelectedCustomer(customerAccount);
+    }
+  }, [customerAccount]);
 
   useEffect(() => {
     if (isNewQuote) {
@@ -323,16 +355,36 @@ export default function QuoteDetail() {
                     name="customerId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Customer ID
-                        </FormLabel>
+                        <FormLabel>Customer</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value ?? ""}
-                            placeholder="Enter customer ID"
-                            data-testid="input-edit-customer-id"
-                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-start h-auto p-3"
+                            onClick={handleOpenAccountLookup}
+                            data-testid="button-customer-lookup"
+                          >
+                            {selectedCustomer ? (
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                  <Building className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex flex-col items-start">
+                                  <span className="font-medium" data-testid={`text-customer-${selectedCustomer.id}`}>
+                                    {selectedCustomer.name}
+                                  </span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {selectedCustomer.industry}
+                                  </span>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center space-x-2 text-muted-foreground">
+                                <Building className="h-4 w-4" />
+                                <span>Select customer</span>
+                              </div>
+                            )}
+                          </Button>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -506,10 +558,18 @@ export default function QuoteDetail() {
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Customer ID
+                  Customer
                 </label>
-                <div className="mt-1 text-foreground" data-testid="text-customer-id-value">
-                  {quote?.customerId}
+                <div className="mt-1 text-foreground" data-testid="text-customer-value">
+                  {customerAccount ? (
+                    <Link href={`/accounts/${customerAccount.id}`} className="text-primary hover:underline">
+                      {customerAccount.name}
+                    </Link>
+                  ) : quote?.customerId ? (
+                    <span className="text-muted-foreground">Loading...</span>
+                  ) : (
+                    <span className="text-muted-foreground">N/A</span>
+                  )}
                 </div>
               </div>
 
@@ -601,6 +661,13 @@ export default function QuoteDetail() {
           )}
         </CardContent>
       </Card>
+
+      <AccountLookupDialog
+        open={showAccountLookup}
+        onClose={handleCloseAccountLookup}
+        onSelect={handleAccountSelect}
+        selectedAccountId={selectedCustomer?.id}
+      />
     </div>
   );
 }

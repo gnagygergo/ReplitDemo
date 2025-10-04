@@ -217,6 +217,57 @@ export const quotes = pgTable("quotes", {
   createdDate: timestamp("created_date").defaultNow(),
 });
 
+export const quoteLines = pgTable("quote_lines", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  quoteId: varchar("quote_id")
+    .notNull()
+    .references(() => quotes.id, { onDelete: "cascade" }),
+  quoteName: text("quote_name"),
+  productId: varchar("product_id").references(() => products.id, {
+    onDelete: "restrict",
+  }),
+  productName: text("product_name"),
+  unitPrice: decimal("unit_price", { precision: 12, scale: 3 }),
+  unitPriceCurrency: text("unit_price_currency"),
+  unitPriceOverride: decimal("unit_price_override", { precision: 12, scale: 3 }),
+  unitPriceDiscountPercent: decimal("unit_price_discount_percent", {
+    precision: 12,
+    scale: 3,
+  }),
+  unitPriceDiscountAmount: decimal("unit_price_discount_amount", {
+    precision: 12,
+    scale: 3,
+  }),
+  unitPriceDiscountedAmount: decimal("unit_price_discounted_amount", {
+    precision: 12,
+    scale: 3,
+  }),
+  salesUom: text("sales_uom"),
+  quotedQuantity: decimal("quoted_quantity", { precision: 12, scale: 3 }),
+  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {
+    precision: 12,
+    scale: 3,
+  }),
+  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {
+    precision: 12,
+    scale: 3,
+  }),
+  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {
+    precision: 12,
+    scale: 3,
+  }),
+  discountedSubtotal: decimal("discounted_subtotal", {
+    precision: 12,
+    scale: 3,
+  }),
+  vatPercent: decimal("vat_percent", { precision: 12, scale: 3 }),
+  vatUnitAmount: decimal("vat_unit_amount", { precision: 12, scale: 3 }),
+  vatOnSubtotal: decimal("vat_on_subtotal", { precision: 12, scale: 3 }),
+  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 }),
+});
+
 export const devPatterns = pgTable("dev_patterns", {
   id: varchar("id")
     .primaryKey()
@@ -292,6 +343,25 @@ export const productsRelations = relations(products, ({ one }) => ({
   salesUom: one(unitOfMeasures, {
     fields: [products.salesUomId],
     references: [unitOfMeasures.id],
+  }),
+}));
+
+export const quotesRelations = relations(quotes, ({ many, one }) => ({
+  quoteLines: many(quoteLines),
+  customer: one(accounts, {
+    fields: [quotes.customerId],
+    references: [accounts.id],
+  }),
+}));
+
+export const quoteLinesRelations = relations(quoteLines, ({ one }) => ({
+  quote: one(quotes, {
+    fields: [quoteLines.quoteId],
+    references: [quotes.id],
+  }),
+  product: one(products, {
+    fields: [quoteLines.productId],
+    references: [products.id],
   }),
 }));
 
@@ -413,6 +483,14 @@ export const insertQuoteSchema = createInsertSchema(quotes)
     createdBy: z.string().min(1, "Created by is required"),
   });
 
+export const insertQuoteLineSchema = createInsertSchema(quoteLines)
+  .omit({
+    id: true,
+  })
+  .extend({
+    quoteId: z.string().min(1, "Quote ID is required"),
+  });
+
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
   .omit({
     id: true,
@@ -449,6 +527,8 @@ export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Translation = typeof translations.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;
 export type Quote = typeof quotes.$inferSelect;
+export type InsertQuoteLine = z.infer<typeof insertQuoteLineSchema>;
+export type QuoteLine = typeof quoteLines.$inferSelect;
 export type InsertDevPattern = z.infer<typeof insertDevPatternSchema>;
 export type DevPattern = typeof devPatterns.$inferSelect;
 

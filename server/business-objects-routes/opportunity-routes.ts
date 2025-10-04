@@ -8,8 +8,12 @@ export function registerOpportunityRoutes(app: Express, storage: IStorage) {
   app.get("/api/opportunities", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortOrder = req.query.sortOrder as string | undefined;
       const opportunities = await storage.getOpportunities(
         companyContext || undefined,
+        sortBy,
+        sortOrder,
       );
       res.json(opportunities);
     } catch (error) {

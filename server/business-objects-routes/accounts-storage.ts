@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { accounts, users, opportunities, cases } from "@shared/schema";
 import type { Account, InsertAccount, AccountWithOwner } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 
 export class AccountStorage {
   // Reference to getUser from main storage - will be injected
@@ -11,17 +11,31 @@ export class AccountStorage {
     this.getUser = getUserFn;
   }
 
-  async getAccounts(companyContext?: string): Promise<AccountWithOwner[]> {
+  async getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]> {
     // If no company context provided, return empty results for security
     if (!companyContext) {
       return [];
     }
+
+    // Determine sort column - default to 'name'
+    let sortColumn;
+    if (sortBy === 'industry') {
+      sortColumn = accounts.industry;
+    } else if (sortBy === 'address') {
+      sortColumn = accounts.address;
+    } else {
+      sortColumn = accounts.name;
+    }
+
+    // Determine sort direction - default to 'asc'
+    const orderDirection = sortOrder === 'desc' ? desc : asc;
 
     return await db
       .select()
       .from(accounts)
       .innerJoin(users, eq(accounts.ownerId, users.id))
       .where(eq(accounts.companyId, companyContext))
+      .orderBy(orderDirection(sortColumn))
       .then((rows) =>
         rows.map((row) => ({
           ...row.accounts,

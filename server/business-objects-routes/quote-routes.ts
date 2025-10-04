@@ -9,7 +9,9 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
   app.get("/api/quotes", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const quotes = await storage.getQuotes(companyContext || undefined);
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortOrder = req.query.sortOrder as string | undefined;
+      const quotes = await storage.getQuotes(companyContext || undefined, sortBy, sortOrder);
       res.json(quotes);
     } catch (error) {
       console.error("Error fetching quotes:", error);

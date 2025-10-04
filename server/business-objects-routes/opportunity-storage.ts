@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { opportunities, accounts, users } from "@shared/schema";
 import type { Opportunity, InsertOpportunity, OpportunityWithAccountAndOwner } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 
 export class OpportunityStorage {
   // Reference to getAccount and getUser from main storage - will be injected
@@ -18,11 +18,26 @@ export class OpportunityStorage {
 
   async getOpportunities(
     companyContext?: string,
+    sortBy?: string,
+    sortOrder?: string,
   ): Promise<OpportunityWithAccountAndOwner[]> {
     // If no company context provided, return empty results for security
     if (!companyContext) {
       return [];
     }
+
+    // Determine sort column - default to 'closeDate'
+    let sortColumn;
+    if (sortBy === 'name') {
+      sortColumn = opportunities.name;
+    } else if (sortBy === 'totalRevenue') {
+      sortColumn = opportunities.totalRevenue;
+    } else {
+      sortColumn = opportunities.closeDate;
+    }
+
+    // Determine sort direction - default to 'desc' for closeDate
+    const orderDirection = sortOrder === 'asc' ? asc : desc;
 
     return await db
       .select()
@@ -30,6 +45,7 @@ export class OpportunityStorage {
       .innerJoin(accounts, eq(opportunities.accountId, accounts.id))
       .innerJoin(users, eq(opportunities.ownerId, users.id))
       .where(eq(opportunities.companyId, companyContext))
+      .orderBy(orderDirection(sortColumn))
       .then((rows) =>
         rows.map((row) => ({
           ...row.opportunities,

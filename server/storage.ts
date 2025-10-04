@@ -85,7 +85,7 @@ export interface IStorage {
   deleteCompany(id: string): Promise<boolean>;
 
   // Account methods
-  getAccounts(companyContext?: string): Promise<AccountWithOwner[]>;
+  getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]>;
   getAccount(id: string): Promise<AccountWithOwner | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(
@@ -97,6 +97,8 @@ export interface IStorage {
   // Opportunity methods
   getOpportunities(
     companyContext?: string,
+    sortBy?: string,
+    sortOrder?: string,
   ): Promise<OpportunityWithAccountAndOwner[]>;
   getOpportunitiesByAccount(
     accountId: string,
@@ -113,7 +115,7 @@ export interface IStorage {
   deleteOpportunity(id: string): Promise<boolean>;
 
   // Case methods
-  getCases(): Promise<CaseWithAccountAndOwner[]>;
+  getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]>;
   getCase(id: string): Promise<CaseWithAccountAndOwner | undefined>;
   createCase(caseData: InsertCase): Promise<Case>;
   updateCase(
@@ -204,7 +206,7 @@ export interface IStorage {
   deleteTranslation(id: string): Promise<boolean>;
 
   // Quote methods
-  getQuotes(companyContext?: string): Promise<Quote[]>;
+  getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]>;
   getQuote(id: string, companyContext?: string): Promise<Quote | undefined>;
   getQuotesByCustomer(customerId: string, companyContext?: string): Promise<Quote[]>;
   createQuote(quote: InsertQuote): Promise<Quote>;
@@ -519,8 +521,8 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async getAccounts(companyContext?: string): Promise<AccountWithOwner[]> {
-    return this.accountStorage.getAccounts(companyContext);
+  async getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]> {
+    return this.accountStorage.getAccounts(companyContext, sortBy, sortOrder);
   }
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {
@@ -544,8 +546,10 @@ export class DatabaseStorage implements IStorage {
 
   async getOpportunities(
     companyContext?: string,
+    sortBy?: string,
+    sortOrder?: string,
   ): Promise<OpportunityWithAccountAndOwner[]> {
-    return this.opportunityStorage.getOpportunities(companyContext);
+    return this.opportunityStorage.getOpportunities(companyContext, sortBy, sortOrder);
   }
 
   async getOpportunitiesByAccount(
@@ -578,8 +582,8 @@ export class DatabaseStorage implements IStorage {
     return this.opportunityStorage.deleteOpportunity(id);
   }
 
-  async getCases(): Promise<CaseWithAccountAndOwner[]> {
-    return this.caseStorage.getCases();
+  async getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]> {
+    return this.caseStorage.getCases(sortBy, sortOrder);
   }
 
   async getCase(id: string): Promise<CaseWithAccountAndOwner | undefined> {
@@ -1112,8 +1116,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Quote methods (Company-scoped) - Delegated to QuoteStorage
-  async getQuotes(companyContext?: string): Promise<Quote[]> {
-    return this.quoteStorage.getQuotes(companyContext);
+  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> {
+    return this.quoteStorage.getQuotes(companyContext, sortBy, sortOrder);
   }
 
   async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {

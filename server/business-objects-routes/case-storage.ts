@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { cases, accounts, users } from "@shared/schema";
 import type { Case, InsertCase, CaseWithAccountAndOwner } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc, desc } from "drizzle-orm";
 
 export class CaseStorage {
   // Reference to getAccount and getUser from main storage - will be injected
@@ -16,12 +16,24 @@ export class CaseStorage {
     this.getUser = getUserFn;
   }
 
-  async getCases(): Promise<CaseWithAccountAndOwner[]> {
+  async getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]> {
+    // Determine sort column - default to 'subject'
+    let sortColumn;
+    if (sortBy === 'fromEmail') {
+      sortColumn = cases.fromEmail;
+    } else {
+      sortColumn = cases.subject;
+    }
+
+    // Determine sort direction - default to 'asc'
+    const orderDirection = sortOrder === 'desc' ? desc : asc;
+
     return await db
       .select()
       .from(cases)
       .innerJoin(accounts, eq(cases.accountId, accounts.id))
       .innerJoin(users, eq(cases.ownerId, users.id))
+      .orderBy(orderDirection(sortColumn))
       .then((rows) =>
         rows.map((row) => ({
           ...row.cases,

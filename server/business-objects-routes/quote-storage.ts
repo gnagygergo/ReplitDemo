@@ -7,7 +7,7 @@ import type {
   Company,
   User,
 } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, asc, desc } from "drizzle-orm";
 
 export class QuoteStorage {
   private getAccount: (id: string) => Promise<AccountWithOwner | undefined>;
@@ -24,15 +24,29 @@ export class QuoteStorage {
     this.getUser = getUserFn;
   }
 
-  async getQuotes(companyContext?: string): Promise<Quote[]> {
+  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> {
     if (!companyContext) {
       return [];
     }
+
+    // Determine sort column - default to 'createdDate'
+    let sortColumn;
+    if (sortBy === 'quoteName') {
+      sortColumn = quotes.quoteName;
+    } else if (sortBy === 'quoteExpirationDate') {
+      sortColumn = quotes.quoteExpirationDate;
+    } else {
+      sortColumn = quotes.createdDate;
+    }
+
+    // Determine sort direction - default to 'desc' for createdDate
+    const orderDirection = sortOrder === 'asc' ? asc : desc;
+
     return await db
       .select()
       .from(quotes)
       .where(eq(quotes.companyId, companyContext))
-      .orderBy(quotes.createdDate);
+      .orderBy(orderDirection(sortColumn));
   }
 
   async getQuote(

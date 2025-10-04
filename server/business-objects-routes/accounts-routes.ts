@@ -7,8 +7,10 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
   // Account routes getter - user's company context queried and handed over to method
   app.get("/api/accounts", async (req, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req); 
-      const accounts = await storage.getAccounts(companyContext || undefined);
+      const companyContext = await storage.GetCompanyContext(req);
+      const sortBy = req.query.sortBy as string | undefined;
+      const sortOrder = req.query.sortOrder as string | undefined;
+      const accounts = await storage.getAccounts(companyContext || undefined, sortBy, sortOrder);
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch accounts" });

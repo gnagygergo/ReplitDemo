@@ -224,18 +224,20 @@ export interface IStorage {
   // Quote Line methods
   getQuoteLines(companyContext?: string): Promise<QuoteLine[]>;
   getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined>;
-  getQuoteLinesByQuote(quoteId: string): Promise<QuoteLine[]>;
-  createQuoteLine(quoteLine: InsertQuoteLine): Promise<QuoteLine>;
+  getQuoteLinesByQuote(quoteId: string, companyContext?: string): Promise<QuoteLine[]>;
+  createQuoteLine(quoteLine: InsertQuoteLine, companyContext?: string): Promise<QuoteLine | null>;
   updateQuoteLine(
     id: string,
     updates: Partial<InsertQuoteLine>,
+    companyContext?: string,
   ): Promise<QuoteLine | undefined>;
-  deleteQuoteLine(id: string): Promise<boolean>;
+  deleteQuoteLine(id: string, companyContext?: string): Promise<boolean>;
   batchCreateOrUpdateQuoteLines(
     quoteId: string,
     lines: Array<Partial<InsertQuoteLine> & { id?: string }>,
+    companyContext?: string,
   ): Promise<QuoteLine[]>;
-  batchDeleteQuoteLines(ids: string[]): Promise<number>;
+  batchDeleteQuoteLines(ids: string[], companyContext?: string): Promise<number>;
 
   // Dev Pattern methods (Global - no company context)
   getDevPatterns(): Promise<DevPattern[]>;
@@ -1175,34 +1177,36 @@ export class DatabaseStorage implements IStorage {
     return this.quoteLineStorage.getQuoteLine(id, companyContext);
   }
 
-  async getQuoteLinesByQuote(quoteId: string): Promise<QuoteLine[]> {
-    return this.quoteLineStorage.getQuoteLinesByQuote(quoteId);
+  async getQuoteLinesByQuote(quoteId: string, companyContext?: string): Promise<QuoteLine[]> {
+    return this.quoteLineStorage.getQuoteLinesByQuote(quoteId, companyContext);
   }
 
-  async createQuoteLine(quoteLine: InsertQuoteLine): Promise<QuoteLine> {
-    return this.quoteLineStorage.createQuoteLine(quoteLine);
+  async createQuoteLine(quoteLine: InsertQuoteLine, companyContext?: string): Promise<QuoteLine | null> {
+    return this.quoteLineStorage.createQuoteLine(quoteLine, companyContext);
   }
 
   async updateQuoteLine(
     id: string,
     updates: Partial<InsertQuoteLine>,
+    companyContext?: string,
   ): Promise<QuoteLine | undefined> {
-    return this.quoteLineStorage.updateQuoteLine(id, updates);
+    return this.quoteLineStorage.updateQuoteLine(id, updates, companyContext);
   }
 
-  async deleteQuoteLine(id: string): Promise<boolean> {
-    return this.quoteLineStorage.deleteQuoteLine(id);
+  async deleteQuoteLine(id: string, companyContext?: string): Promise<boolean> {
+    return this.quoteLineStorage.deleteQuoteLine(id, companyContext);
   }
 
   async batchCreateOrUpdateQuoteLines(
     quoteId: string,
     lines: Array<Partial<InsertQuoteLine> & { id?: string }>,
+    companyContext?: string,
   ): Promise<QuoteLine[]> {
-    return this.quoteLineStorage.batchCreateOrUpdateQuoteLines(quoteId, lines);
+    return this.quoteLineStorage.batchCreateOrUpdateQuoteLines(quoteId, lines, companyContext);
   }
 
-  async batchDeleteQuoteLines(ids: string[]): Promise<number> {
-    return this.quoteLineStorage.batchDeleteQuoteLines(ids);
+  async batchDeleteQuoteLines(ids: string[], companyContext?: string): Promise<number> {
+    return this.quoteLineStorage.batchDeleteQuoteLines(ids, companyContext);
   }
 
   // Dev Pattern methods (Global - no company context filtering)

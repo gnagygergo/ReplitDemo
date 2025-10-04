@@ -37,14 +37,9 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
     async (req, res) => {
       try {
         const companyContext = await storage.GetCompanyContext(req);
-        // Verify quote belongs to company before getting its lines
-        const quote = await storage.getQuote(req.params.quoteId, companyContext || undefined);
-        if (!quote) {
-          return res.status(404).json({ message: "Quote not found" });
-        }
-        
         const quoteLines = await storage.getQuoteLinesByQuote(
           req.params.quoteId,
+          companyContext || undefined,
         );
         res.json(quoteLines);
       } catch (error) {
@@ -58,12 +53,6 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
     try {
       const companyContext = await storage.GetCompanyContext(req);
       
-      // Verify quote belongs to company
-      const quote = await storage.getQuote(req.body.quoteId, companyContext || undefined);
-      if (!quote) {
-        return res.status(404).json({ message: "Quote not found" });
-      }
-      
       // Convert empty strings to null for optional foreign key fields
       const quoteLineData = {
         ...req.body,
@@ -71,7 +60,15 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
       };
 
       const validatedData = insertQuoteLineSchema.parse(quoteLineData);
-      const quoteLine = await storage.createQuoteLine(validatedData);
+      const quoteLine = await storage.createQuoteLine(
+        validatedData,
+        companyContext || undefined,
+      );
+      
+      if (!quoteLine) {
+        return res.status(404).json({ message: "Quote not found or does not belong to your company" });
+      }
+      
       res.status(201).json(quoteLine);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -88,12 +85,6 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
     try {
       const companyContext = await storage.GetCompanyContext(req);
       
-      // Get existing quote line to verify ownership
-      const existingLine = await storage.getQuoteLine(req.params.id, companyContext || undefined);
-      if (!existingLine) {
-        return res.status(404).json({ message: "Quote line not found" });
-      }
-      
       // Convert empty strings to null for optional foreign key fields
       const updateData = {
         ...req.body,
@@ -109,10 +100,11 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
       const quoteLine = await storage.updateQuoteLine(
         req.params.id,
         validatedData,
+        companyContext || undefined,
       );
 
       if (!quoteLine) {
-        return res.status(404).json({ message: "Quote line not found" });
+        return res.status(404).json({ message: "Quote line not found or does not belong to your company" });
       }
 
       res.json(quoteLine);
@@ -130,17 +122,15 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
   app.delete("/api/quote-lines/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
+      const deleted = await storage.deleteQuoteLine(
+        req.params.id,
+        companyContext || undefined,
+      );
       
-      // Verify ownership before delete
-      const existingLine = await storage.getQuoteLine(req.params.id, companyContext || undefined);
-      if (!existingLine) {
-        return res.status(404).json({ message: "Quote line not found" });
-      }
-      
-      const deleted = await storage.deleteQuoteLine(req.params.id);
       if (!deleted) {
-        return res.status(404).json({ message: "Quote line not found" });
+        return res.status(404).json({ message: "Quote line not found or does not belong to your company" });
       }
+      
       res.status(204).send();
     } catch (error) {
       console.error("Error deleting quote line:", error);
@@ -158,12 +148,6 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
         const quoteId = req.params.quoteId;
         const lines = req.body.lines;
 
-        // Verify quote belongs to company
-        const quote = await storage.getQuote(quoteId, companyContext || undefined);
-        if (!quote) {
-          return res.status(404).json({ message: "Quote not found" });
-        }
-
         if (!Array.isArray(lines)) {
           return res
             .status(400)
@@ -173,24 +157,6 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
         // Process and validate each line
         const processedLines = [];
         for (const line of lines) {
-          // If updating an existing line, verify it belongs to this company and quote
-          if (line.id) {
-            const existingLine = await storage.getQuoteLine(
-              line.id,
-              companyContext || undefined,
-            );
-            if (!existingLine) {
-              return res.status(404).json({
-                message: `Quote line ${line.id} not found or does not belong to your company`,
-              });
-            }
-            if (existingLine.quoteId !== quoteId) {
-              return res.status(400).json({
-                message: `Quote line ${line.id} does not belong to quote ${quoteId}`,
-              });
-            }
-          }
-
           const lineData = {
             ...line,
             quoteId, // Force quoteId from URL path
@@ -222,7 +188,13 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
         const quoteLines = await storage.batchCreateOrUpdateQuoteLines(
           quoteId,
           processedLines,
+          companyContext || undefined,
         );
+        
+        if (quoteLines.length === 0 && processedLines.length > 0) {
+          return res.status(404).json({ message: "Quote not found or does not belong to your company" });
+        }
+        
         res.status(200).json(quoteLines);
       } catch (error) {
         console.error("Error batch creating/updating quote lines:", error);
@@ -239,14 +211,7 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
     async (req, res) => {
       try {
         const companyContext = await storage.GetCompanyContext(req);
-        const quoteId = req.params.quoteId;
         const ids = req.body.ids;
-
-        // Verify quote belongs to company
-        const quote = await storage.getQuote(quoteId, companyContext || undefined);
-        if (!quote) {
-          return res.status(404).json({ message: "Quote not found" });
-        }
 
         if (!Array.isArray(ids)) {
           return res
@@ -254,17 +219,17 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
             .json({ message: "Request body must contain 'ids' array" });
         }
 
-        // Verify all quote lines belong to this quote
-        for (const id of ids) {
-          const line = await storage.getQuoteLine(id, companyContext || undefined);
-          if (!line || line.quoteId !== quoteId) {
-            return res.status(404).json({
-              message: `Quote line ${id} not found or does not belong to this quote`,
-            });
-          }
+        const deletedCount = await storage.batchDeleteQuoteLines(
+          ids,
+          companyContext || undefined,
+        );
+        
+        if (deletedCount === 0 && ids.length > 0) {
+          return res.status(404).json({
+            message: "Quote lines not found or do not belong to your company",
+          });
         }
-
-        const deletedCount = await storage.batchDeleteQuoteLines(ids);
+        
         res.status(200).json({ deletedCount });
       } catch (error) {
         console.error("Error batch deleting quote lines:", error);

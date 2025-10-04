@@ -1,6 +1,11 @@
 import { db } from "../db";
 import { quotes } from "@shared/schema";
-import type { Quote, InsertQuote, AccountWithOwner, Company } from "@shared/schema";
+import type {
+  Quote,
+  InsertQuote,
+  AccountWithOwner,
+  Company,
+} from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export class QuoteStorage {
@@ -9,7 +14,7 @@ export class QuoteStorage {
 
   constructor(
     getAccountFn: (id: string) => Promise<AccountWithOwner | undefined>,
-    getCompanyFn: (id: string) => Promise<Company | undefined>
+    getCompanyFn: (id: string) => Promise<Company | undefined>,
   ) {
     this.getAccount = getAccountFn;
     this.getCompany = getCompanyFn;
@@ -25,8 +30,11 @@ export class QuoteStorage {
       .where(eq(quotes.companyId, companyContext))
       .orderBy(quotes.createdDate);
   }
-  
-  async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {
+
+  async getQuote(
+    id: string,
+    companyContext?: string,
+  ): Promise<Quote | undefined> {
     if (!companyContext) {
       return undefined;
     }
@@ -34,18 +42,13 @@ export class QuoteStorage {
     const [quote] = await db
       .select()
       .from(quotes)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      );
+      .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)));
     return quote || undefined;
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
     // If customerId is provided, auto-populate customer fields from Account
-    if (quote.customerId && quote.customerId.trim() !== '') {
+    if (quote.customerId && quote.customerId.trim() !== "") {
       const account = await this.getAccount(quote.customerId);
       if (account) {
         quote.customerName = account.name;
@@ -54,18 +57,16 @@ export class QuoteStorage {
     }
 
     // If companyId is provided, auto-populate seller fields from Company
-    if (quote.companyId && quote.companyId.trim() !== '') {
+    if (quote.companyId && quote.companyId.trim() !== "") {
       const company = await this.getCompany(quote.companyId);
       if (company) {
+        quote.sellerName = company.companyOfficialName;
         quote.sellerBankAccount = company.bankAccountNumber;
         quote.sellerAddress = company.address;
       }
     }
 
-    const [newQuote] = await db
-      .insert(quotes)
-      .values(quote)
-      .returning();
+    const [newQuote] = await db.insert(quotes).values(quote).returning();
     return newQuote;
   }
 
@@ -81,12 +82,7 @@ export class QuoteStorage {
     const [quote] = await db
       .update(quotes)
       .set(updates)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      )
+      .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)))
       .returning();
     return quote || undefined;
   }
@@ -98,12 +94,7 @@ export class QuoteStorage {
 
     const result = await db
       .delete(quotes)
-      .where(
-        and(
-          eq(quotes.id, id),
-          eq(quotes.companyId, companyContext)
-        )
-      );
+      .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)));
     return (result.rowCount ?? 0) > 0;
   }
 

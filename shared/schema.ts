@@ -121,6 +121,7 @@ export const users = pgTable("users", {
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
+  phone: varchar("phone"),
   preferredLanguage: text("preferred_language").references(
     () => languages.languageCode,
     { onDelete: "set null" },

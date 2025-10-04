@@ -1,9 +1,15 @@
 import { db } from "../db";
 import { quotes } from "@shared/schema";
-import type { Quote, InsertQuote } from "@shared/schema";
+import type { Quote, InsertQuote, AccountWithOwner } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export class QuoteStorage {
+  private getAccount: (id: string) => Promise<AccountWithOwner | undefined>;
+
+  constructor(getAccountFn: (id: string) => Promise<AccountWithOwner | undefined>) {
+    this.getAccount = getAccountFn;
+  }
+
   async getQuotes(companyContext?: string): Promise<Quote[]> {
     if (!companyContext) {
       return [];
@@ -33,6 +39,15 @@ export class QuoteStorage {
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
+    // If customerId is provided, auto-populate customer fields from Account
+    if (quote.customerId && quote.customerId.trim() !== '') {
+      const account = await this.getAccount(quote.customerId);
+      if (account) {
+        quote.customerName = account.name;
+        quote.customerAddress = account.address;
+      }
+    }
+
     const [newQuote] = await db
       .insert(quotes)
       .values(quote)

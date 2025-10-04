@@ -41,10 +41,6 @@ export default function QuoteDetail() {
   const searchParams = new URLSearchParams(window.location.search);
   const urlCustomerId = searchParams.get('customerId');
   const urlAccountName = searchParams.get('accountName');
-  
-  console.log("DEBUG - window.location.search:", window.location.search);
-  console.log("DEBUG - urlCustomerId extracted:", urlCustomerId);
-  console.log("DEBUG - urlAccountName extracted:", urlAccountName);
 
   const { data: quote, isLoading: isLoadingQuote } = useQuery<Quote>({
     queryKey: ["/api/quotes", params?.id],
@@ -121,9 +117,6 @@ export default function QuoteDetail() {
   });
 
   const onSubmit = (data: InsertQuote) => {
-    console.log("DEBUG onSubmit - Full form data:", data);
-    console.log("DEBUG onSubmit - customerId value:", data.customerId, "type:", typeof data.customerId);
-    console.log("DEBUG onSubmit - urlCustomerId:", urlCustomerId);
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {

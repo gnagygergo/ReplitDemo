@@ -33,6 +33,8 @@ import {
   type InsertTranslation,
   type Quote,
   type InsertQuote,
+  type QuoteLine,
+  type InsertQuoteLine,
   type DevPattern,
   type InsertDevPattern,
   companies,
@@ -48,10 +50,12 @@ import {
   languages,
   translations,
   quotes,
+  quoteLines,
   devPatterns,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
+import { QuoteLineStorage } from "./business-objects-routes/quote-line-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
@@ -217,6 +221,22 @@ export interface IStorage {
   ): Promise<Quote | undefined>;
   deleteQuote(id: string, companyContext?: string): Promise<boolean>;
 
+  // Quote Line methods
+  getQuoteLines(companyContext?: string): Promise<QuoteLine[]>;
+  getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined>;
+  getQuoteLinesByQuote(quoteId: string): Promise<QuoteLine[]>;
+  createQuoteLine(quoteLine: InsertQuoteLine): Promise<QuoteLine>;
+  updateQuoteLine(
+    id: string,
+    updates: Partial<InsertQuoteLine>,
+  ): Promise<QuoteLine | undefined>;
+  deleteQuoteLine(id: string): Promise<boolean>;
+  batchCreateOrUpdateQuoteLines(
+    quoteId: string,
+    lines: Array<Partial<InsertQuoteLine> & { id?: string }>,
+  ): Promise<QuoteLine[]>;
+  batchDeleteQuoteLines(ids: string[]): Promise<number>;
+
   // Dev Pattern methods (Global - no company context)
   getDevPatterns(): Promise<DevPattern[]>;
   getDevPattern(id: string): Promise<DevPattern | undefined>;
@@ -241,6 +261,7 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   private quoteStorage: QuoteStorage;
+  private quoteLineStorage: QuoteLineStorage;
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
   private caseStorage: CaseStorage;
@@ -252,6 +273,7 @@ export class DatabaseStorage implements IStorage {
       this.getCompany.bind(this),
       this.getUser.bind(this)
     );
+    this.quoteLineStorage = new QuoteLineStorage();
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
     this.opportunityStorage = new OpportunityStorage(
       this.getAccount.bind(this),
@@ -1142,6 +1164,45 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuote(id: string, companyContext?: string): Promise<boolean> {
     return this.quoteStorage.deleteQuote(id, companyContext);
+  }
+
+  // Quote Line methods - Delegated to QuoteLineStorage
+  async getQuoteLines(companyContext?: string): Promise<QuoteLine[]> {
+    return this.quoteLineStorage.getQuoteLines(companyContext);
+  }
+
+  async getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined> {
+    return this.quoteLineStorage.getQuoteLine(id, companyContext);
+  }
+
+  async getQuoteLinesByQuote(quoteId: string): Promise<QuoteLine[]> {
+    return this.quoteLineStorage.getQuoteLinesByQuote(quoteId);
+  }
+
+  async createQuoteLine(quoteLine: InsertQuoteLine): Promise<QuoteLine> {
+    return this.quoteLineStorage.createQuoteLine(quoteLine);
+  }
+
+  async updateQuoteLine(
+    id: string,
+    updates: Partial<InsertQuoteLine>,
+  ): Promise<QuoteLine | undefined> {
+    return this.quoteLineStorage.updateQuoteLine(id, updates);
+  }
+
+  async deleteQuoteLine(id: string): Promise<boolean> {
+    return this.quoteLineStorage.deleteQuoteLine(id);
+  }
+
+  async batchCreateOrUpdateQuoteLines(
+    quoteId: string,
+    lines: Array<Partial<InsertQuoteLine> & { id?: string }>,
+  ): Promise<QuoteLine[]> {
+    return this.quoteLineStorage.batchCreateOrUpdateQuoteLines(quoteId, lines);
+  }
+
+  async batchDeleteQuoteLines(ids: string[]): Promise<number> {
+    return this.quoteLineStorage.batchDeleteQuoteLines(ids);
   }
 
   // Dev Pattern methods (Global - no company context filtering)

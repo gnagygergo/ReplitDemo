@@ -7,9 +7,9 @@ export function registerCaseRoutes(app: Express, storage: IStorage) {
   // Case routes
   app.get("/api/cases", async (req, res) => {
     try {
-      const sortBy = req.query.sortBy as string | undefined;
-      const sortOrder = req.query.sortOrder as string | undefined;
-      const cases = await storage.getCases(sortBy, sortOrder);
+      const sortBy = req.query.sortBy as string | undefined; // Added for sorting capability on Tables
+      const sortOrder = req.query.sortOrder as string | undefined; // Added for sorting capability on Tables
+      const cases = await storage.getCases(sortBy, sortOrder); // Added sortBy, sortOrder for sorting capability on Tables
       res.json(cases);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch cases" });

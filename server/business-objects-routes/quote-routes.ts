@@ -9,9 +9,9 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
   app.get("/api/quotes", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const sortBy = req.query.sortBy as string | undefined;
-      const sortOrder = req.query.sortOrder as string | undefined;
-      const quotes = await storage.getQuotes(companyContext || undefined, sortBy, sortOrder);
+      const sortBy = req.query.sortBy as string | undefined; // Added for sorting capability on Tables
+      const sortOrder = req.query.sortOrder as string | undefined; // Added for sorting capability on Tables
+      const quotes = await storage.getQuotes(companyContext || undefined, sortBy, sortOrder); // Added sortBy, sortOrder for sorting capability on Tables
       res.json(quotes);
     } catch (error) {
       console.error("Error fetching quotes:", error);

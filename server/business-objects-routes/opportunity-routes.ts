@@ -8,12 +8,12 @@ export function registerOpportunityRoutes(app: Express, storage: IStorage) {
   app.get("/api/opportunities", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const sortBy = req.query.sortBy as string | undefined;
-      const sortOrder = req.query.sortOrder as string | undefined;
+      const sortBy = req.query.sortBy as string | undefined; // Added for sorting capability on Tables
+      const sortOrder = req.query.sortOrder as string | undefined; // Added for sorting capability on Tables
       const opportunities = await storage.getOpportunities(
         companyContext || undefined,
-        sortBy,
-        sortOrder,
+        sortBy, // Added for sorting capability on Tables
+        sortOrder, // Added for sorting capability on Tables
       );
       res.json(opportunities);
     } catch (error) {

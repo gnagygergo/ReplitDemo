@@ -8,9 +8,9 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
   app.get("/api/accounts", async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const sortBy = req.query.sortBy as string | undefined;
-      const sortOrder = req.query.sortOrder as string | undefined;
-      const accounts = await storage.getAccounts(companyContext || undefined, sortBy, sortOrder);
+      const sortBy = req.query.sortBy as string | undefined; // Added for sorting capability on Tables
+      const sortOrder = req.query.sortOrder as string | undefined; // Added for sorting capability on Tables
+      const accounts = await storage.getAccounts(companyContext || undefined, sortBy, sortOrder); // Added sortBy, sortOrder for sorting capability on Tables
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch accounts" });

@@ -39,7 +39,12 @@ export class QuoteLineStorage {
       })
       .from(quoteLines)
       .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
-      .where(and(eq(quoteLines.id, id), eq(quotes.companyId, companyContext)));
+      .where(
+        and(
+          eq(quoteLines.quoteId, quotes.id),
+          eq(quotes.companyId, companyContext),
+        ),
+      );
     return quoteLine || undefined;
   }
 
@@ -78,7 +83,12 @@ export class QuoteLineStorage {
       })
       .from(quoteLines)
       .innerJoin(quotes, eq(quoteLines.quoteId, quotes.id))
-      .where(and(eq(quoteLines.quoteId, quoteId), eq(quotes.companyId, companyContext)));
+      .where(
+        and(
+          eq(quoteLines.quoteId, quoteId),
+          eq(quotes.companyId, companyContext),
+        ),
+      );
   }
 
   async createQuoteLine(
@@ -93,7 +103,12 @@ export class QuoteLineStorage {
     const [quote] = await db
       .select()
       .from(quotes)
-      .where(and(eq(quotes.id, quoteLine.quoteId), eq(quotes.companyId, companyContext)));
+      .where(
+        and(
+          eq(quotes.id, quoteLine.quoteId),
+          eq(quotes.companyId, companyContext),
+        ),
+      );
 
     if (!quote) {
       return null;
@@ -140,9 +155,7 @@ export class QuoteLineStorage {
       return false;
     }
 
-    const result = await db
-      .delete(quoteLines)
-      .where(eq(quoteLines.id, id));
+    const result = await db.delete(quoteLines).where(eq(quoteLines.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

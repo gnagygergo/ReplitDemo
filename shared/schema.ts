@@ -232,6 +232,7 @@ export const quoteLines = pgTable("quote_lines", {
   productUnitPrice: decimal("product_unit_price", { precision: 12, scale: 3 }),
   unitPriceCurrency: text("unit_price_currency"),
   productUnitPriceOverride: decimal("product_unit_price_override", { precision: 12, scale: 3 }),
+  quoteUnitPrice: decimal("quote_unit_price", { precision: 12, scale: 3 }),
   unitPriceDiscountPercent: decimal("unit_price_discount_percent", {
     precision: 12,
     scale: 3,

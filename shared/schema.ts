@@ -229,9 +229,9 @@ export const quoteLines = pgTable("quote_lines", {
     onDelete: "restrict",
   }),
   productName: text("product_name"),
-  unitPrice: decimal("unit_price", { precision: 12, scale: 3 }),
+  productUnitPrice: decimal("product_unit_price", { precision: 12, scale: 3 }),
   unitPriceCurrency: text("unit_price_currency"),
-  unitPriceOverride: decimal("unit_price_override", { precision: 12, scale: 3 }),
+  productUnitPriceOverride: decimal("product_unit_price_override", { precision: 12, scale: 3 }),
   unitPriceDiscountPercent: decimal("unit_price_discount_percent", {
     precision: 12,
     scale: 3,
@@ -240,7 +240,7 @@ export const quoteLines = pgTable("quote_lines", {
     precision: 12,
     scale: 3,
   }),
-  unitPriceDiscountedAmount: decimal("unit_price_discounted_amount", {
+  finalUnitPrice: decimal("final_unit_price", {
     precision: 12,
     scale: 3,
   }),
@@ -258,7 +258,7 @@ export const quoteLines = pgTable("quote_lines", {
     precision: 12,
     scale: 3,
   }),
-  discountedSubtotal: decimal("discounted_subtotal", {
+  finalSubtotal: decimal("final_subtotal", {
     precision: 12,
     scale: 3,
   }),

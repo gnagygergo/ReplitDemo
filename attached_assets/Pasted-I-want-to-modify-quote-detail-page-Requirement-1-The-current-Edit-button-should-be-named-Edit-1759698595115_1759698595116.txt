@@ -1,0 +1,45 @@
+I want to modify quote-detail page.
+
+Requirement 1: 
+The current Edit button should be named Edit Quote header and should be moved into the "Quote Details" card.
+
+Requirement 2: 
+Under the Card "Quote Details", I need a new Card named "Products".
+Requirement 2.1: 
+The new "Products" Card suppose to appear first on the Form, once the Quote record is Saved and gets its quote_id.
+Requirement 2.2: 
+When the new "Products" Card appear first on the Form, it should be in View Mode and an Edit Lines button should appear in the Products Card, being enabled.
+Requirement 2.3: 
+Quote Details card and Products card should never be in Edit mode at the same time.
+When the user hits Edit button on Quote Detail page to edit Quote record AND the Products Card is in Edit mode at that moment --> 
+	Quote Lines must be saved.
+	The Product Card must turn in View mode.
+	Quote Detail must turn into Edit mode.
+
+When the Quote is in View mode -->
+	An "Edit Lines" button should be enabled in the Products Card, otherwise disabled.
+
+Requirement 2.4:
+The new "Products" Card suppose to list Quote Line records that belong to the Quote record.
+
+Requirement 2.5:
+The outlook should not be a simple Grid but rather a series of Line Sections repeating as many times below each other as many Quote Lines are. 
+All Line Sections should appear in Edit Mode or View Mode as a whole --> this means that it is the whole Products Card that can be in Edit or View mode, rather than single Line Sections.
+Icons should appear to remove an existing or add a new Quote Line.
+
+Requirement 2.6:
+Put all Quote Line fields onto the Layout, we'll adjust their order and behavior later.
+One Line Section can take up to 3 rows of fields - due to the many fields.
+
+Requirement 2.7:
+When user hits Save Changes button on the Products Card, all records must go for Creation and / or Update.
+
+Requirement 2.8:
+Take these into consideration when you come up with a solution approach:
+I'll specify calculation rules to some of the Quote Line fields, that will be dependent on other Quote Line field values. 
+I want those calculations to happen real-time on client side.
+Later, I'll specify requirements that some fields must become dynamically enabled or disabled based on conditions of other Quote Line field values or whether a user changed and other field. 
+
+
+
+Commit message should be: Implement Products (QLI editor) section on Quote Detail Page

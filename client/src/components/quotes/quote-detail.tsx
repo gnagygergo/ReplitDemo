@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type Quote,
   type InsertQuote,
   insertQuoteSchema,
   type AccountWithOwner,
+  type QuoteLine,
+  type InsertQuoteLine,
+  insertQuoteLineSchema,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,18 +24,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FileSpreadsheet, Edit, Save, X, Building } from "lucide-react";
+import { FileSpreadsheet, Edit, Save, X, Building, Plus, Trash2, Package } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
+import { z } from "zod";
+
+const quoteLinesFormSchema = z.object({
+  lines: z.array(insertQuoteLineSchema.partial().extend({
+    id: z.string().optional(),
+  })),
+});
+
+type QuoteLinesFormData = z.infer<typeof quoteLinesFormSchema>;
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
   const [location, navigate] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [isEditingLines, setIsEditingLines] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -56,6 +69,11 @@ export default function QuoteDetail() {
     enabled: !!quote?.customerId && !isNewQuote && !isEditing,
   });
 
+  const { data: quoteLines = [], isLoading: isLoadingLines } = useQuery<QuoteLine[]>({
+    queryKey: ["/api/quotes", params?.id, "quote-lines"],
+    enabled: !!params?.id && !isNewQuote,
+  });
+
   const form = useForm<InsertQuote>({
     resolver: zodResolver(insertQuoteSchema),
     defaultValues: {
@@ -74,6 +92,18 @@ export default function QuoteDetail() {
     },
   });
 
+  const linesForm = useForm<QuoteLinesFormData>({
+    resolver: zodResolver(quoteLinesFormSchema),
+    defaultValues: {
+      lines: [],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: linesForm.control,
+    name: "lines",
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: InsertQuote) => {
       const response = await apiRequest("POST", "/api/quotes", data);
@@ -89,7 +119,6 @@ export default function QuoteDetail() {
         title: "Quote created successfully",
       });
       setIsEditing(false);
-      // Navigate to the quote detail page with the new ID, replacing the current history entry
       navigate(`/quotes/${newQuote.id}`, { replace: true });
     },
     onError: (error: any) => {
@@ -125,12 +154,43 @@ export default function QuoteDetail() {
     },
   });
 
+  const batchSaveLinesMutation = useMutation({
+    mutationFn: async (data: QuoteLinesFormData) => {
+      const response = await apiRequest(
+        "POST",
+        `/api/quotes/${params?.id}/quote-lines/batch`,
+        { lines: data.lines }
+      );
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/quotes", params?.id, "quote-lines"],
+      });
+      toast({
+        title: "Quote lines saved successfully",
+      });
+      setIsEditingLines(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to save quote lines",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: InsertQuote) => {
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {
       updateMutation.mutate(data);
     }
+  };
+
+  const onSubmitLines = (data: QuoteLinesFormData) => {
+    batchSaveLinesMutation.mutate(data);
   };
 
   const handleCancel = () => {
@@ -155,6 +215,74 @@ export default function QuoteDetail() {
         });
       }
     }
+  };
+
+  const handleCancelLines = () => {
+    setIsEditingLines(false);
+    linesForm.reset({
+      lines: quoteLines.map(line => ({
+        ...line,
+        quoteId: params?.id || "",
+      })),
+    });
+  };
+
+  const handleEditQuoteHeader = () => {
+    if (isEditingLines) {
+      // Save lines first
+      linesForm.handleSubmit((data) => {
+        batchSaveLinesMutation.mutate(data, {
+          onSuccess: () => {
+            setIsEditingLines(false);
+            setIsEditing(true);
+          },
+        });
+      })();
+    } else {
+      setIsEditing(true);
+    }
+  };
+
+  const handleEditLines = () => {
+    if (isEditing) {
+      // Save quote first
+      form.handleSubmit((data) => {
+        updateMutation.mutate(data, {
+          onSuccess: () => {
+            setIsEditing(false);
+            setIsEditingLines(true);
+          },
+        });
+      })();
+    } else {
+      setIsEditingLines(true);
+    }
+  };
+
+  const handleAddLine = () => {
+    append({
+      quoteId: params?.id || "",
+      productId: null,
+      productName: null,
+      productUnitPrice: null,
+      unitPriceCurrency: null,
+      productUnitPriceOverride: null,
+      quoteUnitPrice: null,
+      unitPriceDiscountPercent: null,
+      unitPriceDiscountAmount: null,
+      finalUnitPrice: null,
+      salesUom: null,
+      quotedQuantity: null,
+      subtotalBeforeRowDiscounts: null,
+      discountPercentOnSubtotal: null,
+      discountAmountOnSubtotal: null,
+      finalSubtotal: null,
+      vatPercent: null,
+      vatUnitAmount: null,
+      vatOnSubtotal: null,
+      grossSubtotal: null,
+      quoteName: null,
+    });
   };
 
   const handleOpenAccountLookup = () => {
@@ -192,7 +320,17 @@ export default function QuoteDetail() {
     }
   }, [quote, form]);
 
-  // Set selected customer when quote loads
+  useEffect(() => {
+    if (quoteLines.length > 0) {
+      linesForm.reset({
+        lines: quoteLines.map(line => ({
+          ...line,
+          quoteId: params?.id || "",
+        })),
+      });
+    }
+  }, [quoteLines, linesForm, params?.id]);
+
   useEffect(() => {
     if (customerAccount) {
       setSelectedCustomer(customerAccount);
@@ -202,7 +340,6 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (isNewQuote) {
       setIsEditing(true);
-      // Reset form with URL params for new quotes
       form.reset({
         quoteName: "",
         customerId: urlCustomerId || "",
@@ -282,385 +419,933 @@ export default function QuoteDetail() {
             <p className="text-muted-foreground">Quote Details</p>
           </div>
         </div>
-
-        <div className="flex space-x-3">
-          {isEditing ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-cancel-edit"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-              <Button
-                onClick={form.handleSubmit(onSubmit)}
-                disabled={createMutation.isPending || updateMutation.isPending}
-                data-testid="button-save-edit"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {createMutation.isPending || updateMutation.isPending
-                  ? "Saving..."
-                  : isNewQuote
-                  ? "Create Quote"
-                  : "Save Changes"}
-              </Button>
-            </>
-          ) : (
-            <Button
-              onClick={() => setIsEditing(true)}
-              data-testid="button-edit-quote"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-          )}
-        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Quote Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isEditing ? (
-            <Form {...form}>
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="quoteName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Quote Name
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter quote name"
-                            data-testid="input-edit-quote-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+      <div className="space-y-6">
+        {/* Quote Details Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+            <CardTitle>Quote Details</CardTitle>
+            {!isNewQuote && (
+              <div className="flex space-x-3">
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancel}
+                      disabled={createMutation.isPending || updateMutation.isPending}
+                      data-testid="button-cancel-quote-edit"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={form.handleSubmit(onSubmit)}
+                      disabled={createMutation.isPending || updateMutation.isPending}
+                      data-testid="button-save-quote"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleEditQuoteHeader}
+                    data-testid="button-edit-quote-header"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Quote Header
+                  </Button>
+                )}
+              </div>
+            )}
+          </CardHeader>
+          <CardContent>
+            {isEditing || isNewQuote ? (
+              <Form {...form}>
+                <form className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="quoteName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quote Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter quote name"
+                              data-testid="input-edit-quote-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer</FormLabel>
-                        <FormControl>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-start h-auto p-3"
-                            onClick={handleOpenAccountLookup}
-                            data-testid="button-customer-lookup"
-                          >
-                            {selectedCustomer ? (
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                  <Building className="w-4 h-4 text-primary" />
+                    <FormField
+                      control={form.control}
+                      name="customerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer</FormLabel>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start h-auto p-3"
+                              onClick={handleOpenAccountLookup}
+                              data-testid="button-customer-lookup"
+                            >
+                              {selectedCustomer ? (
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Building className="w-4 h-4 text-primary" />
+                                  </div>
+                                  <div className="flex flex-col items-start">
+                                    <span className="font-medium" data-testid={`text-customer-${selectedCustomer.id}`}>
+                                      {selectedCustomer.name}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {selectedCustomer.industry}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex flex-col items-start">
-                                  <span className="font-medium" data-testid={`text-customer-${selectedCustomer.id}`}>
-                                    {selectedCustomer.name}
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {selectedCustomer.industry}
-                                  </span>
+                              ) : (
+                                <div className="flex items-center space-x-2 text-muted-foreground">
+                                  <Building className="h-4 w-4" />
+                                  <span>Select customer</span>
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-2 text-muted-foreground">
-                                <Building className="h-4 w-4" />
-                                <span>Select customer</span>
-                              </div>
-                            )}
-                          </Button>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                              )}
+                            </Button>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter customer name"
-                            data-testid="input-edit-customer-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="customerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter customer name"
+                              data-testid="input-edit-customer-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer Address</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter customer address"
-                            data-testid="input-edit-customer-address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="customerAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter customer address"
+                              data-testid="input-edit-customer-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller name"
-                            data-testid="input-edit-seller-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller name"
+                              data-testid="input-edit-seller-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Address</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller address"
-                            data-testid="input-edit-seller-address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller address"
+                              data-testid="input-edit-seller-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerBankAccount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Bank Account</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter bank account"
-                            data-testid="input-edit-seller-bank-account"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerBankAccount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Bank Account</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter bank account"
+                              data-testid="input-edit-seller-bank-account"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="email"
-                            placeholder="Enter seller email"
-                            data-testid="input-edit-seller-email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              type="email"
+                              placeholder="Enter seller email"
+                              data-testid="input-edit-seller-email"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Phone</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller phone"
-                            data-testid="input-edit-seller-phone"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Phone</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller phone"
+                              data-testid="input-edit-seller-phone"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="quoteExpirationDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Expiration Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="date"
-                            data-testid="input-edit-expiration-date"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="quoteExpirationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Expiration Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              type="date"
+                              data-testid="input-edit-expiration-date"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  {isNewQuote && (
+                    <div className="flex justify-end space-x-3">
+                      <Button
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={createMutation.isPending}
+                        data-testid="button-cancel-new-quote"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={createMutation.isPending}
+                        data-testid="button-create-quote"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        {createMutation.isPending ? "Creating..." : "Create Quote"}
+                      </Button>
+                    </div>
+                  )}
+                </form>
+              </Form>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Quote Name
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-quote-name-value">
+                    {quote?.quoteName}
+                  </div>
                 </div>
-              </form>
-            </Form>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Quote Name
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-quote-name-value">
-                  {quote?.quoteName}
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Customer
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-customer-value">
+                    {customerAccount ? (
+                      <Link href={`/accounts/${customerAccount.id}`} className="text-primary hover:underline">
+                        {customerAccount.name}
+                      </Link>
+                    ) : quote?.customerId ? (
+                      <span className="text-muted-foreground">Loading...</span>
+                    ) : (
+                      <span className="text-muted-foreground">N/A</span>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Customer Name
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-customer-name-value">
+                    {quote?.customerName || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Customer Address
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-customer-address-value">
+                    {quote?.customerAddress || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Seller Name
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-seller-name-value">
+                    {quote?.sellerName || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Seller Address
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-seller-address-value">
+                    {quote?.sellerAddress || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Seller Bank Account
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-seller-bank-account-value">
+                    {quote?.sellerBankAccount || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Seller Email
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-seller-email-value">
+                    {quote?.sellerEmail || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Seller Phone
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-seller-phone-value">
+                    {quote?.sellerPhone || "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Expiration Date
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-expiration-date-value">
+                    {quote?.quoteExpirationDate
+                      ? format(new Date(quote.quoteExpirationDate), "MMM dd, yyyy")
+                      : "N/A"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Created Date
+                  </label>
+                  <div className="mt-1 text-foreground" data-testid="text-created-date-value">
+                    {quote?.createdDate
+                      ? format(new Date(quote.createdDate), "MMM dd, yyyy")
+                      : "N/A"}
+                  </div>
                 </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Customer
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-customer-value">
-                  {customerAccount ? (
-                    <Link href={`/accounts/${customerAccount.id}`} className="text-primary hover:underline">
-                      {customerAccount.name}
-                    </Link>
-                  ) : quote?.customerId ? (
-                    <span className="text-muted-foreground">Loading...</span>
+        {/* Products Card - Only show when quote is saved */}
+        {!isNewQuote && quote && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <CardTitle className="flex items-center space-x-2">
+                <Package className="w-5 h-5" />
+                <span>Products</span>
+              </CardTitle>
+              <div className="flex space-x-3">
+                {isEditingLines ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelLines}
+                      disabled={batchSaveLinesMutation.isPending}
+                      data-testid="button-cancel-lines-edit"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={linesForm.handleSubmit(onSubmitLines)}
+                      disabled={batchSaveLinesMutation.isPending}
+                      data-testid="button-save-lines"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {batchSaveLinesMutation.isPending ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={handleEditLines}
+                    disabled={isEditing}
+                    data-testid="button-edit-lines"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Lines
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {isEditingLines ? (
+                <Form {...linesForm}>
+                  <form className="space-y-6">
+                    {fields.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Package className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                        <p>No products added yet. Click "Add Line" to get started.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {fields.map((field, index) => (
+                          <div
+                            key={field.id}
+                            className="border rounded-lg p-4 space-y-4 relative"
+                            data-testid={`line-section-${index}`}
+                          >
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-sm font-medium">Line {index + 1}</h4>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => remove(index)}
+                                data-testid={`button-remove-line-${index}`}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            </div>
+
+                            {/* Row 1: Product and Pricing */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.productName`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Product Name</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        placeholder="Product name"
+                                        data-testid={`input-line-${index}-product-name`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.productUnitPrice`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Product Unit Price</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-product-unit-price`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.unitPriceCurrency`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Currency</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        placeholder="USD"
+                                        data-testid={`input-line-${index}-currency`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.productUnitPriceOverride`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Product Unit Price Override</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-product-unit-price-override`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            {/* Row 2: Quote Price and Quantity */}
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.quoteUnitPrice`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Quote Unit Price</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-quote-unit-price`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.unitPriceDiscountPercent`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Discount %</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-discount-percent`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.unitPriceDiscountAmount`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Discount Amount</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-discount-amount`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.finalUnitPrice`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Final Unit Price</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-final-unit-price`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.quotedQuantity`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Quantity</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="1"
+                                        data-testid={`input-line-${index}-quantity`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            {/* Row 3: Subtotals and VAT */}
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.salesUom`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>UOM</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        placeholder="Unit"
+                                        data-testid={`input-line-${index}-uom`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.subtotalBeforeRowDiscounts`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Subtotal Before Discounts</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-subtotal-before-discounts`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.discountPercentOnSubtotal`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Row Discount %</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-row-discount-percent`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.discountAmountOnSubtotal`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Row Discount Amount</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-row-discount-amount`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.finalSubtotal`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Final Subtotal</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-final-subtotal`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.vatPercent`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>VAT %</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-vat-percent`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            {/* Row 4: VAT Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.vatUnitAmount`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>VAT Unit Amount</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-vat-unit-amount`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.vatOnSubtotal`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>VAT on Subtotal</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-vat-on-subtotal`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={linesForm.control}
+                                name={`lines.${index}.grossSubtotal`}
+                                render={({ field: f }) => (
+                                  <FormItem>
+                                    <FormLabel>Gross Subtotal</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...f}
+                                        value={f.value || ""}
+                                        type="number"
+                                        step="0.001"
+                                        placeholder="0.00"
+                                        data-testid={`input-line-${index}-gross-subtotal`}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleAddLine}
+                      data-testid="button-add-line"
+                      className="w-full"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Line
+                    </Button>
+                  </form>
+                </Form>
+              ) : (
+                <div>
+                  {isLoadingLines ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Loading quote lines...
+                    </div>
+                  ) : quoteLines.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Package className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                      <p>No products added yet</p>
+                    </div>
                   ) : (
-                    <span className="text-muted-foreground">N/A</span>
+                    <div className="space-y-4">
+                      {quoteLines.map((line, index) => (
+                        <div
+                          key={line.id}
+                          className="border rounded-lg p-4"
+                          data-testid={`line-view-${index}`}
+                        >
+                          <h4 className="text-sm font-medium mb-3">Line {index + 1}</h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <label className="text-muted-foreground">Product</label>
+                              <div className="font-medium">{line.productName || "N/A"}</div>
+                            </div>
+                            <div>
+                              <label className="text-muted-foreground">Quantity</label>
+                              <div className="font-medium">{line.quotedQuantity || "N/A"}</div>
+                            </div>
+                            <div>
+                              <label className="text-muted-foreground">Final Unit Price</label>
+                              <div className="font-medium">
+                                {line.finalUnitPrice ? `${line.finalUnitPrice} ${line.unitPriceCurrency || ""}` : "N/A"}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-muted-foreground">Final Subtotal</label>
+                              <div className="font-medium">
+                                {line.finalSubtotal ? `${line.finalSubtotal} ${line.unitPriceCurrency || ""}` : "N/A"}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Customer Name
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-customer-name-value">
-                  {quote?.customerName || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Customer Address
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-customer-address-value">
-                  {quote?.customerAddress || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Name
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-seller-name-value">
-                  {quote?.sellerName || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Address
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-seller-address-value">
-                  {quote?.sellerAddress || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Bank Account
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-seller-bank-account-value">
-                  {quote?.sellerBankAccount || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Email
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-seller-email-value">
-                  {quote?.sellerEmail || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Phone
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-seller-phone-value">
-                  {quote?.sellerPhone || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Expiration Date
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-expiration-date-value">
-                  {quote?.quoteExpirationDate
-                    ? format(new Date(quote.quoteExpirationDate), "MMM dd, yyyy")
-                    : "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Created Date
-                </label>
-                <div className="mt-1 text-foreground" data-testid="text-created-date-value">
-                  {quote?.createdDate
-                    ? format(new Date(quote.createdDate), "MMM dd, yyyy")
-                    : "N/A"}
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       <AccountLookupDialog
         open={showAccountLookup}

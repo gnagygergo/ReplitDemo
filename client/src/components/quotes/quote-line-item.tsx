@@ -346,7 +346,19 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
       data-testid={`line-section-${index}`}
     >
       <div className="flex justify-between items-center mb-4">
-        <h4 className="text-sm font-medium">Line {index + 1}</h4>
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-medium">Line {index + 1}</h4>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setShowProductLookup(true)}
+            data-testid={`button-product-lookup-${index}`}
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+        </div>
         <Button
           type="button"
           variant="ghost"
@@ -358,44 +370,26 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         </Button>
       </div>
 
-      {/* Row 1: Product and Pricing */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <FormField
-          control={control}
-          name={`lines.${index}.productId`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Product ID</FormLabel>
-              <FormControl>
-                <div className="flex gap-2">
-                  <Input
-                    {...f}
-                    value={f.value || ""}
-                    placeholder="Select product"
-                    disabled
-                    data-testid={`input-line-${index}-product-id`}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowProductLookup(true)}
-                    data-testid={`button-line-${index}-product-lookup`}
-                  >
-                    <Search className="w-4 h-4" />
-                  </Button>
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      {/* Hidden Product ID field */}
+      <FormField
+        control={control}
+        name={`lines.${index}.productId`}
+        render={({ field: f }) => (
+          <FormItem className="hidden">
+            <FormControl>
+              <Input {...f} value={f.value || ""} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
+      {/* Row 1: Product Name, Unit Price, Currency, Price Override */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.productName`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-3">
               <FormLabel>Product Name</FormLabel>
               <FormControl>
                 <Input
@@ -403,6 +397,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   value={f.value || ""}
                   placeholder="Product name"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-product-name`}
                 />
               </FormControl>
@@ -425,6 +421,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-product-unit-price`}
                 />
               </FormControl>
@@ -445,6 +443,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   value={f.value || ""}
                   placeholder="USD"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-currency`}
                 />
               </FormControl>
@@ -457,7 +457,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.productUnitPriceOverride`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Product Unit Price Override</FormLabel>
               <FormControl>
                 <Input
@@ -466,6 +466,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-product-unit-price-override`}
                 />
               </FormControl>
@@ -475,30 +476,21 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         />
       </div>
 
-      {/* Row 2: Quote Price and Quantity */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <FormField
-          control={control}
-          name={`lines.${index}.quoteUnitPrice`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Quote Unit Price</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  data-testid={`input-line-${index}-quote-unit-price`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      {/* Hidden Quote Unit Price field */}
+      <FormField
+        control={control}
+        name={`lines.${index}.quoteUnitPrice`}
+        render={({ field: f }) => (
+          <FormItem className="hidden">
+            <FormControl>
+              <Input {...f} value={f.value || ""} />
+            </FormControl>
+          </FormItem>
+        )}
+      />
 
+      {/* Row 2: Discount fields, Final Unit Price, Quantity, UoM */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.unitPriceDiscountPercent`}
@@ -516,6 +508,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                     lastEditedDiscountField.current = 'percent';
                     f.onChange(e);
                   }}
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-discount-percent`}
                 />
               </FormControl>
@@ -541,6 +534,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                     lastEditedDiscountField.current = 'amount';
                     f.onChange(e);
                   }}
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-discount-amount`}
                 />
               </FormControl>
@@ -563,6 +557,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-final-unit-price`}
                 />
               </FormControl>
@@ -584,6 +580,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="1"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-quantity`}
                 />
               </FormControl>
@@ -591,16 +588,13 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
             </FormItem>
           )}
         />
-      </div>
 
-      {/* Row 3: Subtotals and VAT */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.salesUom`}
           render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>UOM</FormLabel>
+            <FormItem className="md:col-span-3">
+              <FormLabel>UoM</FormLabel>
               <Select
                 value={f.value || ""}
                 onValueChange={f.onChange}
@@ -608,7 +602,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
               >
                 <FormControl>
                   <SelectTrigger data-testid={`select-line-${index}-uom`}>
-                    <SelectValue placeholder="Select UOM" />
+                    <SelectValue placeholder="Select UoM" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -623,12 +617,15 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
             </FormItem>
           )}
         />
+      </div>
 
+      {/* Row 3: Subtotal before discount, row discount, row discount amount, final subtotal */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.subtotalBeforeRowDiscounts`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Subtotal Before Discounts</FormLabel>
               <FormControl>
                 <Input
@@ -638,6 +635,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-subtotal-before-discounts`}
                 />
               </FormControl>
@@ -663,6 +662,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                     lastEditedSubtotalDiscountField.current = 'percent';
                     f.onChange(e);
                   }}
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-row-discount-percent`}
                 />
               </FormControl>
@@ -675,7 +675,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.discountAmountOnSubtotal`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Row Discount Amount</FormLabel>
               <FormControl>
                 <Input
@@ -688,6 +688,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                     lastEditedSubtotalDiscountField.current = 'amount';
                     f.onChange(e);
                   }}
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-row-discount-amount`}
                 />
               </FormControl>
@@ -700,7 +701,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.finalSubtotal`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Final Subtotal</FormLabel>
               <FormControl>
                 <Input
@@ -710,6 +711,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-final-subtotal`}
                 />
               </FormControl>
@@ -717,7 +720,10 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
             </FormItem>
           )}
         />
+      </div>
 
+      {/* Row 4: VAT%, VAT Unit Amount, VAT on subtotal, Gross Subtotal */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.vatPercent`}
@@ -732,6 +738,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-vat-percent`}
                 />
               </FormControl>
@@ -739,15 +747,12 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
             </FormItem>
           )}
         />
-      </div>
 
-      {/* Row 4: VAT Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FormField
           control={control}
           name={`lines.${index}.vatUnitAmount`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>VAT Unit Amount</FormLabel>
               <FormControl>
                 <Input
@@ -757,6 +762,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-vat-unit-amount`}
                 />
               </FormControl>
@@ -769,7 +776,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.vatOnSubtotal`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>VAT on Subtotal</FormLabel>
               <FormControl>
                 <Input
@@ -779,6 +786,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-vat-on-subtotal`}
                 />
               </FormControl>
@@ -791,7 +800,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.grossSubtotal`}
           render={({ field: f }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Gross Subtotal</FormLabel>
               <FormControl>
                 <Input
@@ -801,6 +810,8 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   step="0.001"
                   placeholder="0.00"
                   disabled
+                  className="disabled:opacity-100"
+                  onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-gross-subtotal`}
                 />
               </FormControl>

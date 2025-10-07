@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Control, useWatch, UseFormSetValue } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +10,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Trash2 } from "lucide-react";
+import { Trash2, Search } from "lucide-react";
+import { type Product, type UnitOfMeasure } from "@shared/schema";
+import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface QuoteLineItemProps {
   control: Control<any>;
@@ -19,9 +29,13 @@ interface QuoteLineItemProps {
 }
 
 export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineItemProps) {
+  const [showProductLookup, setShowProductLookup] = useState(false);
   const lastEditedDiscountField = useRef<'percent' | 'amount' | null>(null);
+  const lastEditedSubtotalDiscountField = useRef<'percent' | 'amount' | null>(null);
   const isInitialLoad = useRef(true);
+  const isInitialSubtotalLoad = useRef(true);
   const isInitializing = useRef(false);
+  const isInitializingSubtotal = useRef(false);
 
   const productUnitPrice = useWatch({
     control,
@@ -53,12 +67,96 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
     name: `lines.${index}.finalUnitPrice`,
   });
 
+  const quotedQuantity = useWatch({
+    control,
+    name: `lines.${index}.quotedQuantity`,
+  });
+
+  const subtotalBeforeRowDiscounts = useWatch({
+    control,
+    name: `lines.${index}.subtotalBeforeRowDiscounts`,
+  });
+
+  const discountPercentOnSubtotal = useWatch({
+    control,
+    name: `lines.${index}.discountPercentOnSubtotal`,
+  });
+
+  const discountAmountOnSubtotal = useWatch({
+    control,
+    name: `lines.${index}.discountAmountOnSubtotal`,
+  });
+
+  const finalSubtotal = useWatch({
+    control,
+    name: `lines.${index}.finalSubtotal`,
+  });
+
+  const vatPercent = useWatch({
+    control,
+    name: `lines.${index}.vatPercent`,
+  });
+
+  const vatUnitAmount = useWatch({
+    control,
+    name: `lines.${index}.vatUnitAmount`,
+  });
+
+  const vatOnSubtotal = useWatch({
+    control,
+    name: `lines.${index}.vatOnSubtotal`,
+  });
+
+  const grossSubtotal = useWatch({
+    control,
+    name: `lines.${index}.grossSubtotal`,
+  });
+
+  const productId = useWatch({
+    control,
+    name: `lines.${index}.productId`,
+  });
+
+  const salesUom = useWatch({
+    control,
+    name: `lines.${index}.salesUom`,
+  });
+
+  // Fetch unit of measures
+  const { data: unitOfMeasures = [] } = useQuery<UnitOfMeasure[]>({
+    queryKey: ["/api/unit-of-measures"],
+  });
+
+  // Fetch selected product to get its sales UoM type
+  const { data: selectedProduct } = useQuery<Product>({
+    queryKey: ["/api/products", productId],
+    enabled: !!productId,
+  });
+
+  // Get the type of the selected product's sales UoM
+  const productUomType = selectedProduct?.salesUomId
+    ? unitOfMeasures.find((uom) => uom.id === selectedProduct.salesUomId)?.type
+    : null;
+
+  // Filter UoMs by product's sales UoM type
+  const filteredUnitOfMeasures = productUomType
+    ? unitOfMeasures.filter((uom) => uom.type === productUomType)
+    : unitOfMeasures;
+
   const safeParseFloat = (value: any): number => {
     if (value === null || value === undefined || value === '') {
       return 0;
     }
     const parsed = parseFloat(value);
     return isNaN(parsed) ? 0 : parsed;
+  };
+
+  const handleProductSelect = (product: Product) => {
+    setValue(`lines.${index}.productId`, product.id, { shouldDirty: true });
+    setValue(`lines.${index}.productName`, product.productName, { shouldDirty: true });
+    setValue(`lines.${index}.productUnitPrice`, product.salesUnitPrice, { shouldDirty: true });
+    setValue(`lines.${index}.unitPriceCurrency`, product.salesUnitPriceCurrency, { shouldDirty: true });
+    setValue(`lines.${index}.vatPercent`, product.vatPercent, { shouldDirty: true });
   };
 
   useEffect(() => {
@@ -134,6 +232,114 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
     }
   }, [unitPriceDiscountPercent, unitPriceDiscountAmount, productUnitPrice, productUnitPriceOverride, index, setValue]);
 
+  // Subtotal before row discounts = Quoted Quantity × Final Unit Price
+  useEffect(() => {
+    const quantity = safeParseFloat(quotedQuantity);
+    const finalPrice = safeParseFloat(finalUnitPrice);
+    const calculatedSubtotal = quantity * finalPrice;
+    const currentSubtotal = safeParseFloat(subtotalBeforeRowDiscounts);
+
+    if (Math.abs(calculatedSubtotal - currentSubtotal) > 0.001) {
+      setValue(`lines.${index}.subtotalBeforeRowDiscounts`, calculatedSubtotal.toFixed(3), { shouldDirty: false });
+    }
+  }, [quotedQuantity, finalUnitPrice, subtotalBeforeRowDiscounts, index, setValue]);
+
+  // Discount percent on subtotal → amount
+  useEffect(() => {
+    if (isInitializingSubtotal.current) return;
+    
+    if (lastEditedSubtotalDiscountField.current === 'percent') {
+      const subtotal = safeParseFloat(subtotalBeforeRowDiscounts);
+      const percent = safeParseFloat(discountPercentOnSubtotal);
+      const amount = (subtotal * percent) / 100;
+      setValue(`lines.${index}.discountAmountOnSubtotal`, amount.toFixed(3), { shouldDirty: false });
+      lastEditedSubtotalDiscountField.current = null;
+    }
+  }, [discountPercentOnSubtotal, subtotalBeforeRowDiscounts, index, setValue]);
+
+  // Discount amount on subtotal → percent
+  useEffect(() => {
+    if (isInitializingSubtotal.current) return;
+    
+    if (lastEditedSubtotalDiscountField.current === 'amount') {
+      const subtotal = safeParseFloat(subtotalBeforeRowDiscounts);
+      const amount = safeParseFloat(discountAmountOnSubtotal);
+      const percent = subtotal > 0 ? (amount / subtotal) * 100 : 0;
+      setValue(`lines.${index}.discountPercentOnSubtotal`, percent.toFixed(3), { shouldDirty: false });
+      lastEditedSubtotalDiscountField.current = null;
+    }
+  }, [discountAmountOnSubtotal, subtotalBeforeRowDiscounts, index, setValue]);
+
+  // Initial load: calculate missing subtotal discount field
+  useEffect(() => {
+    if (isInitialSubtotalLoad.current) {
+      isInitializingSubtotal.current = true;
+      
+      const percent = safeParseFloat(discountPercentOnSubtotal);
+      const amount = safeParseFloat(discountAmountOnSubtotal);
+      const subtotal = safeParseFloat(subtotalBeforeRowDiscounts);
+
+      if (percent === 0 && amount > 0 && subtotal > 0) {
+        const calculatedPercent = (amount / subtotal) * 100;
+        setValue(`lines.${index}.discountPercentOnSubtotal`, calculatedPercent.toFixed(3), { shouldDirty: false });
+      } else if (amount === 0 && percent > 0 && subtotal > 0) {
+        const calculatedAmount = (subtotal * percent) / 100;
+        setValue(`lines.${index}.discountAmountOnSubtotal`, calculatedAmount.toFixed(3), { shouldDirty: false });
+      }
+
+      isInitialSubtotalLoad.current = false;
+      isInitializingSubtotal.current = false;
+    }
+  }, [discountPercentOnSubtotal, discountAmountOnSubtotal, subtotalBeforeRowDiscounts, index, setValue]);
+
+  // Final subtotal = Subtotal before row discounts - Discount amount on subtotal
+  useEffect(() => {
+    const subtotal = safeParseFloat(subtotalBeforeRowDiscounts);
+    const discount = safeParseFloat(discountAmountOnSubtotal);
+    const calculatedFinalSubtotal = subtotal - discount;
+    const currentFinalSubtotal = safeParseFloat(finalSubtotal);
+
+    if (Math.abs(calculatedFinalSubtotal - currentFinalSubtotal) > 0.001) {
+      setValue(`lines.${index}.finalSubtotal`, calculatedFinalSubtotal.toFixed(3), { shouldDirty: false });
+    }
+  }, [subtotalBeforeRowDiscounts, discountAmountOnSubtotal, finalSubtotal, index, setValue]);
+
+  // VAT unit amount = Final Unit Price × (VAT percent/100)
+  useEffect(() => {
+    const finalPrice = safeParseFloat(finalUnitPrice);
+    const vat = safeParseFloat(vatPercent);
+    const calculatedVatUnit = (finalPrice * vat) / 100;
+    const currentVatUnit = safeParseFloat(vatUnitAmount);
+
+    if (Math.abs(calculatedVatUnit - currentVatUnit) > 0.001) {
+      setValue(`lines.${index}.vatUnitAmount`, calculatedVatUnit.toFixed(3), { shouldDirty: false });
+    }
+  }, [finalUnitPrice, vatPercent, vatUnitAmount, index, setValue]);
+
+  // VAT on subtotal = VAT unit amount × Quoted Quantity
+  useEffect(() => {
+    const vatUnit = safeParseFloat(vatUnitAmount);
+    const quantity = safeParseFloat(quotedQuantity);
+    const calculatedVatSubtotal = vatUnit * quantity;
+    const currentVatSubtotal = safeParseFloat(vatOnSubtotal);
+
+    if (Math.abs(calculatedVatSubtotal - currentVatSubtotal) > 0.001) {
+      setValue(`lines.${index}.vatOnSubtotal`, calculatedVatSubtotal.toFixed(3), { shouldDirty: false });
+    }
+  }, [vatUnitAmount, quotedQuantity, vatOnSubtotal, index, setValue]);
+
+  // Gross Subtotal = Final subtotal + VAT on subtotal
+  useEffect(() => {
+    const finalSub = safeParseFloat(finalSubtotal);
+    const vatSub = safeParseFloat(vatOnSubtotal);
+    const calculatedGross = finalSub + vatSub;
+    const currentGross = safeParseFloat(grossSubtotal);
+
+    if (Math.abs(calculatedGross - currentGross) > 0.001) {
+      setValue(`lines.${index}.grossSubtotal`, calculatedGross.toFixed(3), { shouldDirty: false });
+    }
+  }, [finalSubtotal, vatOnSubtotal, grossSubtotal, index, setValue]);
+
   return (
     <div
       className="border rounded-lg p-4 space-y-4 relative"
@@ -156,6 +362,37 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <FormField
           control={control}
+          name={`lines.${index}.productId`}
+          render={({ field: f }) => (
+            <FormItem>
+              <FormLabel>Product ID</FormLabel>
+              <FormControl>
+                <div className="flex gap-2">
+                  <Input
+                    {...f}
+                    value={f.value || ""}
+                    placeholder="Select product"
+                    disabled
+                    data-testid={`input-line-${index}-product-id`}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowProductLookup(true)}
+                    data-testid={`button-line-${index}-product-lookup`}
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={control}
           name={`lines.${index}.productName`}
           render={({ field: f }) => (
             <FormItem>
@@ -165,6 +402,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   {...f}
                   value={f.value || ""}
                   placeholder="Product name"
+                  disabled
                   data-testid={`input-line-${index}-product-name`}
                 />
               </FormControl>
@@ -363,14 +601,24 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           render={({ field: f }) => (
             <FormItem>
               <FormLabel>UOM</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  placeholder="Unit"
-                  data-testid={`input-line-${index}-uom`}
-                />
-              </FormControl>
+              <Select
+                value={f.value || ""}
+                onValueChange={f.onChange}
+                disabled={!productId}
+              >
+                <FormControl>
+                  <SelectTrigger data-testid={`select-line-${index}-uom`}>
+                    <SelectValue placeholder="Select UOM" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {filteredUnitOfMeasures.map((uom) => (
+                    <SelectItem key={uom.id} value={uom.uomName}>
+                      {uom.uomName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -389,6 +637,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-subtotal-before-discounts`}
                 />
               </FormControl>
@@ -406,10 +655,14 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
               <FormControl>
                 <Input
                   {...f}
-                  value={f.value || ""}
+                  value={f.value ?? 0}
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  onChange={(e) => {
+                    lastEditedSubtotalDiscountField.current = 'percent';
+                    f.onChange(e);
+                  }}
                   data-testid={`input-line-${index}-row-discount-percent`}
                 />
               </FormControl>
@@ -427,10 +680,14 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
               <FormControl>
                 <Input
                   {...f}
-                  value={f.value || ""}
+                  value={f.value ?? 0}
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  onChange={(e) => {
+                    lastEditedSubtotalDiscountField.current = 'amount';
+                    f.onChange(e);
+                  }}
                   data-testid={`input-line-${index}-row-discount-amount`}
                 />
               </FormControl>
@@ -452,6 +709,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-final-subtotal`}
                 />
               </FormControl>
@@ -473,6 +731,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-vat-percent`}
                 />
               </FormControl>
@@ -497,6 +756,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-vat-unit-amount`}
                 />
               </FormControl>
@@ -518,6 +778,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-vat-on-subtotal`}
                 />
               </FormControl>
@@ -539,6 +800,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="0.001"
                   placeholder="0.00"
+                  disabled
                   data-testid={`input-line-${index}-gross-subtotal`}
                 />
               </FormControl>
@@ -547,6 +809,14 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           )}
         />
       </div>
+
+      {/* Product Lookup Dialog */}
+      <ProductLookupDialog
+        open={showProductLookup}
+        onClose={() => setShowProductLookup(false)}
+        onSelect={handleProductSelect}
+        selectedProductId={productId || undefined}
+      />
     </div>
   );
 }

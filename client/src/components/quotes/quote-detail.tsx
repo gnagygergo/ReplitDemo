@@ -275,8 +275,8 @@ export default function QuoteDetail() {
       salesUom: null,
       quotedQuantity: null,
       subtotalBeforeRowDiscounts: null,
-      discountPercentOnSubtotal: null,
-      discountAmountOnSubtotal: null,
+      discountPercentOnSubtotal: "0",
+      discountAmountOnSubtotal: "0",
       finalSubtotal: null,
       vatPercent: null,
       vatUnitAmount: null,
@@ -329,6 +329,8 @@ export default function QuoteDetail() {
           quoteId: params?.id || "",
           unitPriceDiscountPercent: line.unitPriceDiscountPercent ?? "0",
           unitPriceDiscountAmount: line.unitPriceDiscountAmount ?? "0",
+          discountPercentOnSubtotal: line.discountPercentOnSubtotal ?? "0",
+          discountAmountOnSubtotal: line.discountAmountOnSubtotal ?? "0",
         })),
       });
     }

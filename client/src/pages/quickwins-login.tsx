@@ -171,7 +171,7 @@ export default function QuickWinsLogin() {
 
         {/* Footer */}
         <div className="text-center mt-6 text-sm text-slate-600 dark:text-slate-400">
-          <p>Don't have an account? Contact your administrator.</p>
+          <p>Don't have an account? <a href="/register" className="text-primary hover:underline" data-testid="link-register">Register here</a></p>
         </div>
       </div>
     </div>

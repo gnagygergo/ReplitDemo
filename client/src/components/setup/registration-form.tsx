@@ -68,9 +68,9 @@ export default function RegistrationForm() {
         title: "Success",
         description: "Registration successful! Redirecting to login...",
       });
-      // Redirect to login or reload after a short delay
+      // Redirect to login after a short delay
       setTimeout(() => {
-        window.location.href = "/quickwins-login";
+        window.location.href = "/";
       }, 1500);
     },
     onError: (error: any) => {
@@ -329,7 +329,7 @@ export default function RegistrationForm() {
 
         {/* Footer */}
         <div className="text-center mt-6 text-sm text-slate-600 dark:text-slate-400">
-          <p>Already have an account? <a href="/quickwins-login" className="text-primary hover:underline">Sign in here</a></p>
+          <p>Already have an account? <a href="/" className="text-primary hover:underline" data-testid="link-login">Sign in here</a></p>
         </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
+import Registration from "@/pages/registration";
 import Accounts from "@/components/accounts/accounts";
 import Quotes from "@/components/quotes/quotes";
 import Opportunities from "@/components/opportunities/opportunities";
@@ -46,12 +47,21 @@ function AuthenticatedRouter() {
   );
 }
 
+function UnauthenticatedRouter() {
+  return (
+    <Switch>
+      <Route path="/register" component={Registration} />
+      <Route component={QuickWinsLogin} />
+    </Switch>
+  );
+}
+
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show QuickWins login page while loading or if not authenticated
+  // Show unauthenticated routes while loading or if not authenticated
   if (isLoading || !isAuthenticated) {
-    return <QuickWinsLogin />;
+    return <UnauthenticatedRouter />;
   }
 
   // Show authenticated CRM interface

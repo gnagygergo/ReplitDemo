@@ -26,6 +26,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
   await setupAuth(app);
 
+  // Registration endpoint - Public (no authentication required)
+  app.post("/api/auth/register", async (req: any, res) => {
+    try {
+      const registrationSchema = z.object({
+        firstName: z.string().min(1, "First name is required"),
+        lastName: z.string().min(1, "Last name is required"),
+        email: z.string().email("Please enter a valid email address"),
+        password: z.string().min(8, "Password must be at least 8 characters"),
+        companyOfficialName: z.string().min(1, "Company full name is required"),
+        companyAlias: z.string().optional(),
+        companyRegistrationId: z.string().min(1, "Company registration number is required"),
+      });
+
+      const validatedData = registrationSchema.parse(req.body);
+
+      // Check if company with this registration ID already exists
+      const existingCompany = await storage.getCompanyByRegistrationId(validatedData.companyRegistrationId);
+      if (existingCompany) {
+        return res.status(400).json({ 
+          message: "A company with this registration number already exists" 
+        });
+      }
+
+      // Check if user with this email already exists
+      const existingUser = await storage.getUserByEmail(validatedData.email);
+      if (existingUser) {
+        return res.status(400).json({ 
+          message: "A user with this email already exists" 
+        });
+      }
+
+      // Create company first
+      const company = await storage.createCompany({
+        companyOfficialName: validatedData.companyOfficialName,
+        companyAlias: validatedData.companyAlias || null,
+        companyRegistrationId: validatedData.companyRegistrationId,
+      });
+
+      // Create user with isAdmin = true and link to company
+      const user = await storage.createUser({
+        email: validatedData.email,
+        firstName: validatedData.firstName,
+        lastName: validatedData.lastName,
+        password: validatedData.password,
+        isAdmin: true, // First user of new company is admin
+        companyId: company.id,
+      });
+
+      res.status(201).json({
+        message: "Registration successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          isAdmin: user.isAdmin,
+          companyId: user.companyId,
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed. Please try again." });
+    }
+  });
+
   // Email/Password login endpoint
   app.post("/api/auth/login", async (req: any, res) => {
     try {

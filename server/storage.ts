@@ -81,6 +81,7 @@ export interface IStorage {
   // Company methods
   getCompanies(): Promise<Company[]>;
   getCompany(id: string): Promise<Company | undefined>;
+  getCompanyByRegistrationId(registrationId: string): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(
     id: string,
@@ -515,6 +516,15 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(companies)
       .where(eq(companies.id, id));
+
+    return company || undefined;
+  }
+
+  async getCompanyByRegistrationId(registrationId: string): Promise<Company | undefined> {
+    const [company] = await db
+      .select()
+      .from(companies)
+      .where(eq(companies.companyRegistrationId, registrationId));
 
     return company || undefined;
   }

@@ -346,19 +346,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
       data-testid={`line-section-${index}`}
     >
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-medium">Line {index + 1}</h4>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => setShowProductLookup(true)}
-            data-testid={`button-product-lookup-${index}`}
-          >
-            <Search className="w-4 h-4" />
-          </Button>
-        </div>
+        <h4 className="text-sm font-medium">Line {index + 1}</h4>
         <Button
           type="button"
           variant="ghost"
@@ -383,8 +371,22 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         )}
       />
 
-      {/* Row 1: Product Name, Unit Price, Currency, Price Override */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+      {/* Row 1: Magnifier, Product Name, Unit Price, Currency, Price Override */}
+      <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
+        <FormItem className="flex items-end">
+          <FormLabel className="sr-only">Product Lookup</FormLabel>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-10 w-10"
+            onClick={() => setShowProductLookup(true)}
+            data-testid={`button-product-lookup-${index}`}
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+        </FormItem>
+
         <FormField
           control={control}
           name={`lines.${index}.productName`}
@@ -396,8 +398,6 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   {...f}
                   value={f.value || ""}
                   placeholder="Product name"
-                  disabled
-                  className="disabled:opacity-100"
                   onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-product-name`}
                 />
@@ -494,99 +494,135 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         <FormField
           control={control}
           name={`lines.${index}.unitPriceDiscountPercent`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Discount %</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedDiscountField.current = 'percent';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-discount-percent`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `unitPriceDiscountPercent-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value ?? 0) 
+              : formatNumberWithSeparator(f.value ?? 0);
+            
+            return (
+              <FormItem>
+                <FormLabel>Discount %</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    onChange={(e) => {
+                      lastEditedDiscountField.current = 'percent';
+                      f.onChange(e);
+                    }}
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-discount-percent`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.unitPriceDiscountAmount`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Discount Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedDiscountField.current = 'amount';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-discount-amount`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `unitPriceDiscountAmount-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value ?? 0) 
+              : formatNumberWithSeparator(f.value ?? 0);
+            
+            return (
+              <FormItem>
+                <FormLabel>Discount Amount</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    onChange={(e) => {
+                      lastEditedDiscountField.current = 'amount';
+                      f.onChange(e);
+                    }}
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-discount-amount`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.finalUnitPrice`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Final Unit Price</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-final-unit-price`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `finalUnitPrice-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem>
+                <FormLabel>Final Unit Price</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-final-unit-price`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.quotedQuantity`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Quantity</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="1"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-quantity`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `quotedQuantity-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem>
+                <FormLabel>Quantity</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="1"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-quantity`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
@@ -624,101 +660,137 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         <FormField
           control={control}
           name={`lines.${index}.subtotalBeforeRowDiscounts`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Subtotal Before Discounts</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-subtotal-before-discounts`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `subtotalBeforeRowDiscounts-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Subtotal Before Discounts</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-subtotal-before-discounts`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.discountPercentOnSubtotal`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>Row Discount %</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedSubtotalDiscountField.current = 'percent';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-row-discount-percent`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `discountPercentOnSubtotal-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value ?? 0) 
+              : formatNumberWithSeparator(f.value ?? 0);
+            
+            return (
+              <FormItem>
+                <FormLabel>Row Discount %</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    onChange={(e) => {
+                      lastEditedSubtotalDiscountField.current = 'percent';
+                      f.onChange(e);
+                    }}
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-row-discount-percent`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.discountAmountOnSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Row Discount Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedSubtotalDiscountField.current = 'amount';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-row-discount-amount`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `discountAmountOnSubtotal-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value ?? 0) 
+              : formatNumberWithSeparator(f.value ?? 0);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Row Discount Amount</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    onChange={(e) => {
+                      lastEditedSubtotalDiscountField.current = 'amount';
+                      f.onChange(e);
+                    }}
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-row-discount-amount`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.finalSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Final Subtotal</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-final-subtotal`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `finalSubtotal-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Final Subtotal</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-final-subtotal`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       </div>
 
@@ -727,97 +799,133 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         <FormField
           control={control}
           name={`lines.${index}.vatPercent`}
-          render={({ field: f }) => (
-            <FormItem>
-              <FormLabel>VAT %</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-vat-percent`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `vatPercent-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem>
+                <FormLabel>VAT %</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-vat-percent`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.vatUnitAmount`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>VAT Unit Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-vat-unit-amount`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `vatUnitAmount-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>VAT Unit Amount</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-vat-unit-amount`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.vatOnSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>VAT on Subtotal</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-vat-on-subtotal`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `vatOnSubtotal-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>VAT on Subtotal</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-vat-on-subtotal`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
           control={control}
           name={`lines.${index}.grossSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Gross Subtotal</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="0.001"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-gross-subtotal`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field: f }) => {
+            const fieldName = `grossSubtotal-${index}`;
+            const displayValue = focusedField === fieldName 
+              ? (f.value || "") 
+              : formatNumberWithSeparator(f.value);
+            
+            return (
+              <FormItem className="md:col-span-2">
+                <FormLabel>Gross Subtotal</FormLabel>
+                <FormControl>
+                  <Input
+                    {...f}
+                    value={displayValue}
+                    type={focusedField === fieldName ? "number" : "text"}
+                    step="0.001"
+                    placeholder="0.00"
+                    disabled
+                    className="disabled:opacity-100"
+                    onFocus={() => setFocusedField(fieldName)}
+                    onBlur={() => setFocusedField(null)}
+                    onClick={(e) => e.currentTarget.select()}
+                    data-testid={`input-line-${index}-gross-subtotal`}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       </div>
 

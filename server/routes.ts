@@ -16,6 +16,9 @@ import {
   insertLanguageSchema,
   insertTranslationSchema,
   insertDevPatternSchema,
+  insertLicenceSchema,
+  insertLicenceAgreementTemplateSchema,
+  insertLicenceAgreementSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1238,6 +1241,292 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting dev pattern:", error);
       res.status(500).json({ message: "Failed to delete dev pattern" });
+    }
+  });
+
+  // Licence routes (Global - broader read access for registration, admin-only CUD)
+  app.get("/api/licences", async (req, res) => {
+    try {
+      const licences = await storage.getLicences();
+      res.json(licences);
+    } catch (error) {
+      console.error("Error fetching licences:", error);
+      res.status(500).json({ message: "Failed to fetch licences" });
+    }
+  });
+
+  app.get("/api/licences/:id", async (req, res) => {
+    try {
+      const licence = await storage.getLicence(req.params.id);
+      if (!licence) {
+        return res.status(404).json({ message: "Licence not found" });
+      }
+      res.json(licence);
+    } catch (error) {
+      console.error("Error fetching licence:", error);
+      res.status(500).json({ message: "Failed to fetch licence" });
+    }
+  });
+
+  app.post("/api/licences", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create licences" });
+      }
+
+      const validatedData = insertLicenceSchema.parse(req.body);
+      const licence = await storage.createLicence(validatedData);
+      res.status(201).json(licence);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating licence:", error);
+      res.status(500).json({ message: "Failed to create licence" });
+    }
+  });
+
+  app.patch("/api/licences/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update licences" });
+      }
+
+      const validatedData = insertLicenceSchema.partial().parse(req.body);
+      const licence = await storage.updateLicence(req.params.id, validatedData);
+      if (!licence) {
+        return res.status(404).json({ message: "Licence not found" });
+      }
+      res.json(licence);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating licence:", error);
+      res.status(500).json({ message: "Failed to update licence" });
+    }
+  });
+
+  app.delete("/api/licences/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete licences" });
+      }
+
+      const deleted = await storage.deleteLicence(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Licence not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting licence:", error);
+      res.status(500).json({ message: "Failed to delete licence" });
+    }
+  });
+
+  // Licence Agreement Template routes (Global - broader read access for registration, admin-only CUD)
+  app.get("/api/licence-agreement-templates", async (req, res) => {
+    try {
+      const templates = await storage.getLicenceAgreementTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching licence agreement templates:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreement templates" });
+    }
+  });
+
+  app.get("/api/licence-agreement-templates/:id", async (req, res) => {
+    try {
+      const template = await storage.getLicenceAgreementTemplate(req.params.id);
+      if (!template) {
+        return res.status(404).json({ message: "Licence agreement template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      console.error("Error fetching licence agreement template:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreement template" });
+    }
+  });
+
+  app.post("/api/licence-agreement-templates", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create licence agreement templates" });
+      }
+
+      const validatedData = insertLicenceAgreementTemplateSchema.parse(req.body);
+      const template = await storage.createLicenceAgreementTemplate(validatedData);
+      res.status(201).json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating licence agreement template:", error);
+      res.status(500).json({ message: "Failed to create licence agreement template" });
+    }
+  });
+
+  app.patch("/api/licence-agreement-templates/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update licence agreement templates" });
+      }
+
+      const validatedData = insertLicenceAgreementTemplateSchema.partial().parse(req.body);
+      const template = await storage.updateLicenceAgreementTemplate(req.params.id, validatedData);
+      if (!template) {
+        return res.status(404).json({ message: "Licence agreement template not found" });
+      }
+      res.json(template);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating licence agreement template:", error);
+      res.status(500).json({ message: "Failed to update licence agreement template" });
+    }
+  });
+
+  app.delete("/api/licence-agreement-templates/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete licence agreement templates" });
+      }
+
+      const deleted = await storage.deleteLicenceAgreementTemplate(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Licence agreement template not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting licence agreement template:", error);
+      res.status(500).json({ message: "Failed to delete licence agreement template" });
+    }
+  });
+
+  // Licence Agreement routes (Global admin for CUD, company-specific GET endpoint)
+  app.get("/api/licence-agreements", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can view all licence agreements" });
+      }
+
+      const agreements = await storage.getLicenceAgreements();
+      res.json(agreements);
+    } catch (error) {
+      console.error("Error fetching licence agreements:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreements" });
+    }
+  });
+
+  app.get("/api/licence-agreements/company/:companyId", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can view licence agreements by company" });
+      }
+
+      const agreements = await storage.getLicenceAgreementsByCompany(req.params.companyId);
+      res.json(agreements);
+    } catch (error) {
+      console.error("Error fetching licence agreements by company:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreements by company" });
+    }
+  });
+
+  app.get("/api/licence-agreements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can view licence agreements" });
+      }
+
+      const agreement = await storage.getLicenceAgreement(req.params.id);
+      if (!agreement) {
+        return res.status(404).json({ message: "Licence agreement not found" });
+      }
+      res.json(agreement);
+    } catch (error) {
+      console.error("Error fetching licence agreement:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreement" });
+    }
+  });
+
+  app.post("/api/licence-agreements", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create licence agreements" });
+      }
+
+      const validatedData = insertLicenceAgreementSchema.parse(req.body);
+      const agreement = await storage.createLicenceAgreement(validatedData);
+      res.status(201).json(agreement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating licence agreement:", error);
+      res.status(500).json({ message: "Failed to create licence agreement" });
+    }
+  });
+
+  app.patch("/api/licence-agreements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update licence agreements" });
+      }
+
+      const validatedData = insertLicenceAgreementSchema.partial().parse(req.body);
+      const agreement = await storage.updateLicenceAgreement(req.params.id, validatedData);
+      if (!agreement) {
+        return res.status(404).json({ message: "Licence agreement not found" });
+      }
+      res.json(agreement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating licence agreement:", error);
+      res.status(500).json({ message: "Failed to update licence agreement" });
+    }
+  });
+
+  app.delete("/api/licence-agreements/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete licence agreements" });
+      }
+
+      const deleted = await storage.deleteLicenceAgreement(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Licence agreement not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting licence agreement:", error);
+      res.status(500).json({ message: "Failed to delete licence agreement" });
     }
   });
 

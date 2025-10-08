@@ -283,37 +283,36 @@ export const licences = pgTable("licences", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  type: text("type").notNull(),
+  description: text("description"),
 });
 
 export const licenceAgreementTemplates = pgTable("licence_agreement_templates", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  validFrom: date("valid_from").notNull(),
-  validTo: date("valid_to").notNull(),
-  price: decimal("price", { precision: 12, scale: 3 }).notNull(),
-  currency: text("currency").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
   licenceId: varchar("licence_id")
     .notNull()
     .references(() => licences.id, { onDelete: "restrict" }),
+  agreementPeriodMonths: integer("agreement_period_months").notNull(),
+  paymentTermsDays: integer("payment_terms_days").notNull(),
+  gracePeriodDays: integer("grace_period_days").notNull().default(0),
 });
 
 export const licenceAgreements = pgTable("licence_agreements", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  validFrom: date("valid_from"),
-  validTo: date("valid_to"),
-  price: decimal("price", { precision: 12, scale: 3 }),
-  currency: text("currency"),
-  licenceCount: integer("licence_count"),
   licenceAgreementTemplateId: varchar("licence_agreement_template_id")
     .notNull()
     .references(() => licenceAgreementTemplates.id, { onDelete: "restrict" }),
   companyId: varchar("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
+  agreementPeriodMonths: integer("agreement_period_months").notNull(),
+  paymentTermsDays: integer("payment_terms_days").notNull(),
+  gracePeriodDays: integer("grace_period_days").notNull().default(0),
 });
 
 // Define relations
@@ -575,7 +574,7 @@ export const insertLicenceSchema = createInsertSchema(licences)
   })
   .extend({
     name: z.string().min(1, "Name is required"),
-    type: z.string().min(1, "Type is required"),
+    description: z.string().optional(),
   });
 
 export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAgreementTemplates)
@@ -583,10 +582,12 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAg
     id: true,
   })
   .extend({
-    validFrom: z.string().min(1, "Valid from date is required"),
-    validTo: z.string().min(1, "Valid to date is required"),
-    currency: z.string().min(1, "Currency is required"),
+    name: z.string().min(1, "Name is required"),
+    description: z.string().optional(),
     licenceId: z.string().min(1, "Licence is required"),
+    agreementPeriodMonths: z.number().int().min(1, "Agreement period must be at least 1 month"),
+    paymentTermsDays: z.number().int().min(1, "Payment terms must be at least 1 day"),
+    gracePeriodDays: z.number().int().min(0, "Grace period cannot be negative"),
   });
 
 export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements)
@@ -596,6 +597,9 @@ export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements
   .extend({
     licenceAgreementTemplateId: z.string().min(1, "Licence agreement template is required"),
     companyId: z.string().min(1, "Company is required"),
+    agreementPeriodMonths: z.number().int().min(1, "Agreement period must be at least 1 month"),
+    paymentTermsDays: z.number().int().min(1, "Payment terms must be at least 1 day"),
+    gracePeriodDays: z.number().int().min(0, "Grace period cannot be negative"),
   });
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;

@@ -1348,7 +1348,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(licenceAgreementTemplates)
       .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
-      .orderBy(licenceAgreementTemplates.validFrom);
+      .orderBy(licenceAgreementTemplates.name);
     
     return results.map(row => ({
       ...row.licence_agreement_templates,
@@ -1407,7 +1407,7 @@ export class DatabaseStorage implements IStorage {
       .from(licenceAgreements)
       .leftJoin(licenceAgreementTemplates, eq(licenceAgreements.licenceAgreementTemplateId, licenceAgreementTemplates.id))
       .leftJoin(companies, eq(licenceAgreements.companyId, companies.id))
-      .orderBy(licenceAgreements.validFrom);
+      .orderBy(licenceAgreements.id);
     
     return results.map(row => ({
       ...row.licence_agreements,
@@ -1440,7 +1440,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(licenceAgreementTemplates, eq(licenceAgreements.licenceAgreementTemplateId, licenceAgreementTemplates.id))
       .leftJoin(companies, eq(licenceAgreements.companyId, companies.id))
       .where(eq(licenceAgreements.companyId, companyId))
-      .orderBy(licenceAgreements.validFrom);
+      .orderBy(licenceAgreements.id);
     
     return results.map(row => ({
       ...row.licence_agreements,

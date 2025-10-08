@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode, Award, FileCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +66,27 @@ const setupMenuItems = [
     description: "Manage development patterns",
     globalAdminOnly: true,
   },
+  {
+    id: "licences",
+    label: "Licences",
+    icon: Award,
+    description: "Manage licence types",
+    globalAdminOnly: true,
+  },
+  {
+    id: "licence-agreement-templates",
+    label: "Licence Agreement Templates",
+    icon: FileText,
+    description: "Manage agreement templates",
+    globalAdminOnly: true,
+  },
+  {
+    id: "licence-agreements",
+    label: "Licence Agreements",
+    icon: FileCheck,
+    description: "Manage company licence agreements",
+    globalAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -76,6 +97,9 @@ import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import LanguagesManagement from "@/components/setup/languages";
 import TranslationsManagement from "@/components/setup/translations";
 import DevPatternsManagement from "@/components/setup/dev-patterns";
+import LicencesManagement from "@/components/setup/licences";
+import LicenceAgreementTemplatesManagement from "@/components/setup/licence-agreement-templates";
+import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
 
 // Companies management component
 function CompaniesSetup() {
@@ -173,6 +197,12 @@ export default function Setup() {
         return <TranslationsSetup />;
       case "dev-patterns":
         return <DevPatternsSetup />;
+      case "licences":
+        return <LicencesManagement />;
+      case "licence-agreement-templates":
+        return <LicenceAgreementTemplatesManagement />;
+      case "licence-agreements":
+        return <LicenceAgreementsManagement />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

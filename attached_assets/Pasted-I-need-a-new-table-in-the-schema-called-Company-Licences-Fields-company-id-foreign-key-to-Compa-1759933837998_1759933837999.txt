@@ -1,0 +1,69 @@
+I need a new table in the schema called Company Licences.
+Fields:
+company_id (foreign key to Company, can not be null)
+Licence code (text, nullable)
+Licence name (text, nullable)
+Licence count (number, integer)
+
+No presentation layer is needed for this. 
+
+------------
+
+I need a registration form. It should be placed to src/components/setup, named registration-form.tsx
+Look and feel should be similar to QuickWins Login page.
+Fields on this form should be :
+- First Name (mandatory)
+- Last Name (mandatory)
+- Email (mandatory)
+- Password and Password verification fields, with Password match functionality on client side. (mandatory)
+- Company Full Name (mandatory)
+- Company short name 
+- Company Registration Nr (mandatory)
+
+Submitting this form:
+- system should check if company exist with the provided registration number and block in case it exists.
+- system should check if user exists with the provided email and block in case it exists.
+- in case of successful submission, system should 1) create a company record, 2) create a user record and link it with the company record.
+
+
+I need a new table named: Licence
+Fields: 
+- ID (text)
+- Name (text)
+- Type (text)
+No Need for Company ID field !!!!
+Create, update, delete can be done by verifyGlobalAdmin TRUE users only.
+For read, we will need broader access because the registration form will have to read from this in the future. 
+This should be a new Menu Item under setup, which is visible to verifyGlobalAdmin TRUE users.
+I need Create, Edit and Delete icons. The layout should be similar to dev-patterns with Left Pane and Right Pane. 
+
+I need a new table named: Licence Agreement Templates
+Fields: 
+- ID (text)
+- Valid From (Date)
+- Valid To (Date)
+- Price (number, 3 decimal)
+- Currency (text)
+- LicenceId (reference to licence record, this should give a popup lookup window to select one license record)
+No Need for Company ID field !!!!
+Create, update, delete can be done by verifyGlobalAdmin TRUE users only.
+For read, we will need broader access because the registration form will have to read from this in the future. 
+This should be a new Menu Item under setup, which is visible to verifyGlobalAdmin TRUE users.
+I need Create, Edit and Delete icons. The layout should be similar to dev-patterns with Left Pane and Right Pane. 
+
+I need a new table named: Licence Agreements
+Fields: 
+- ID (text)
+- Valid From (Date, nullable)
+- Valid To (Date, nullable)
+- Price (number, 3 decimal, nullable)
+- Currency (text, nullable)
+- Licence Count (number, integer, nullable)
+- Licence Agreement Template ID (reference to licence agreement template record, this should give a popup lookup window to select one license agreement template record)
+- Company ID (reference key to a company record)
+Create, update, delete can be done by verifyGlobalAdmin TRUE users only.
+It is possible for verifyCompanyAdmin TRUE users to read database records where the CompanyId of the record is same as the user's company context. But so far no layout modification is needed for that purpose.
+We need separate api to get all licence agreement records for a given company but this is available for verifyGlobalAdmin TRUE users. 
+This should be a new Menu Item under setup, which is visible to verifyGlobalAdmin TRUE users.
+I need Create, Edit and Delete icons. The layout should be similar to dev-patterns with Left Pane and Right Pane. 
+On the Licence Agreement record the following fields should be populated based on the Licence Agreement Template record values: the Valid From, Valid To, Price, Currency. 

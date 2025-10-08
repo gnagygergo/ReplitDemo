@@ -24,7 +24,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FileSpreadsheet, Edit, Save, X, Building, Plus, Trash2, Package } from "lucide-react";
+import {
+  FileSpreadsheet,
+  Edit,
+  Save,
+  X,
+  Building,
+  Plus,
+  Trash2,
+  Package,
+} from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -35,9 +44,11 @@ import { QuoteLineItem } from "@/components/quotes/quote-line-item";
 import { z } from "zod";
 
 const quoteLinesFormSchema = z.object({
-  lines: z.array(insertQuoteLineSchema.partial().extend({
-    id: z.string().optional(),
-  })),
+  lines: z.array(
+    insertQuoteLineSchema.partial().extend({
+      id: z.string().optional(),
+    }),
+  ),
 });
 
 type QuoteLinesFormData = z.infer<typeof quoteLinesFormSchema>;
@@ -51,14 +62,15 @@ export default function QuoteDetail() {
   const { toast } = useToast();
   const { user } = useAuth();
   const [showAccountLookup, setShowAccountLookup] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<AccountWithOwner | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<AccountWithOwner | null>(null);
 
   const isNewQuote = params?.id === "new";
-  
+
   // Extract URL search params for prepopulation
   const searchParams = new URLSearchParams(window.location.search);
-  const urlCustomerId = searchParams.get('customerId');
-  const urlAccountName = searchParams.get('accountName');
+  const urlCustomerId = searchParams.get("customerId");
+  const urlAccountName = searchParams.get("accountName");
 
   const { data: quote, isLoading: isLoadingQuote } = useQuery<Quote>({
     queryKey: ["/api/quotes", params?.id],
@@ -70,7 +82,9 @@ export default function QuoteDetail() {
     enabled: !!quote?.customerId && !isNewQuote && !isEditing,
   });
 
-  const { data: quoteLines = [], isLoading: isLoadingLines } = useQuery<QuoteLine[]>({
+  const { data: quoteLines = [], isLoading: isLoadingLines } = useQuery<
+    QuoteLine[]
+  >({
     queryKey: ["/api/quotes", params?.id, "quote-lines"],
     enabled: !!params?.id && !isNewQuote,
   });
@@ -113,7 +127,9 @@ export default function QuoteDetail() {
     onSuccess: (newQuote: Quote) => {
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       if (urlCustomerId) {
-        queryClient.invalidateQueries({ queryKey: ["/api/accounts", urlCustomerId, "quotes"] });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/accounts", urlCustomerId, "quotes"],
+        });
       }
       queryClient.setQueryData(["/api/quotes", newQuote.id], newQuote);
       toast({
@@ -133,7 +149,11 @@ export default function QuoteDetail() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertQuote) => {
-      const response = await apiRequest("PATCH", `/api/quotes/${params?.id}`, data);
+      const response = await apiRequest(
+        "PATCH",
+        `/api/quotes/${params?.id}`,
+        data,
+      );
       return response.json();
     },
     onSuccess: () => {
@@ -160,7 +180,7 @@ export default function QuoteDetail() {
       const response = await apiRequest(
         "POST",
         `/api/quotes/${params?.id}/quote-lines/batch`,
-        { lines: data.lines }
+        { lines: data.lines },
       );
       return response.json();
     },
@@ -221,7 +241,7 @@ export default function QuoteDetail() {
   const handleCancelLines = () => {
     setIsEditingLines(false);
     linesForm.reset({
-      lines: quoteLines.map(line => ({
+      lines: quoteLines.map((line) => ({
         ...line,
         quoteId: params?.id || "",
       })),
@@ -324,7 +344,7 @@ export default function QuoteDetail() {
   useEffect(() => {
     if (quoteLines.length > 0) {
       linesForm.reset({
-        lines: quoteLines.map(line => ({
+        lines: quoteLines.map((line) => ({
           ...line,
           quoteId: params?.id || "",
           unitPriceDiscountPercent: line.unitPriceDiscountPercent ?? "0",
@@ -398,7 +418,10 @@ export default function QuoteDetail() {
         <span>/</span>
         {urlAccountName && urlCustomerId && (
           <>
-            <Link href={`/accounts/${urlCustomerId}`} className="hover:text-foreground">
+            <Link
+              href={`/accounts/${urlCustomerId}`}
+              className="hover:text-foreground"
+            >
               {urlAccountName}
             </Link>
             <span>/</span>
@@ -408,7 +431,7 @@ export default function QuoteDetail() {
           {isNewQuote ? "New Quote" : quote?.quoteName}
         </span>
       </div>
-
+      {/* Quote Header Section */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -439,7 +462,9 @@ export default function QuoteDetail() {
                       variant="outline"
                       size="sm"
                       onClick={handleCancel}
-                      disabled={createMutation.isPending || updateMutation.isPending}
+                      disabled={
+                        createMutation.isPending || updateMutation.isPending
+                      }
                       data-testid="button-cancel-quote-edit"
                     >
                       <X className="w-4 h-4 mr-2" />
@@ -448,7 +473,9 @@ export default function QuoteDetail() {
                     <Button
                       size="sm"
                       onClick={form.handleSubmit(onSubmit)}
-                      disabled={createMutation.isPending || updateMutation.isPending}
+                      disabled={
+                        createMutation.isPending || updateMutation.isPending
+                      }
                       data-testid="button-save-quote"
                     >
                       <Save className="w-4 h-4 mr-2" />
@@ -512,7 +539,10 @@ export default function QuoteDetail() {
                                     <Building className="w-4 h-4 text-primary" />
                                   </div>
                                   <div className="flex flex-col items-start">
-                                    <span className="font-medium" data-testid={`text-customer-${selectedCustomer.id}`}>
+                                    <span
+                                      className="font-medium"
+                                      data-testid={`text-customer-${selectedCustomer.id}`}
+                                    >
                                       {selectedCustomer.name}
                                     </span>
                                     <span className="text-sm text-muted-foreground">
@@ -702,7 +732,9 @@ export default function QuoteDetail() {
                         data-testid="button-create-quote"
                       >
                         <Save className="w-4 h-4 mr-2" />
-                        {createMutation.isPending ? "Creating..." : "Create Quote"}
+                        {createMutation.isPending
+                          ? "Creating..."
+                          : "Create Quote"}
                       </Button>
                     </div>
                   )}
@@ -714,7 +746,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Quote Name
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-quote-name-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-quote-name-value"
+                  >
                     {quote?.quoteName}
                   </div>
                 </div>
@@ -723,9 +758,15 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Customer
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-customer-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-customer-value"
+                  >
                     {customerAccount ? (
-                      <Link href={`/accounts/${customerAccount.id}`} className="text-primary hover:underline">
+                      <Link
+                        href={`/accounts/${customerAccount.id}`}
+                        className="text-primary hover:underline"
+                      >
                         {customerAccount.name}
                       </Link>
                     ) : quote?.customerId ? (
@@ -740,7 +781,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Customer Name
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-customer-name-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-customer-name-value"
+                  >
                     {quote?.customerName || "N/A"}
                   </div>
                 </div>
@@ -749,7 +793,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Customer Address
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-customer-address-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-customer-address-value"
+                  >
                     {quote?.customerAddress || "N/A"}
                   </div>
                 </div>
@@ -758,7 +805,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Seller Name
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-seller-name-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-seller-name-value"
+                  >
                     {quote?.sellerName || "N/A"}
                   </div>
                 </div>
@@ -767,7 +817,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Seller Address
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-seller-address-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-seller-address-value"
+                  >
                     {quote?.sellerAddress || "N/A"}
                   </div>
                 </div>
@@ -776,7 +829,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Seller Bank Account
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-seller-bank-account-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-seller-bank-account-value"
+                  >
                     {quote?.sellerBankAccount || "N/A"}
                   </div>
                 </div>
@@ -785,7 +841,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Seller Email
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-seller-email-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-seller-email-value"
+                  >
                     {quote?.sellerEmail || "N/A"}
                   </div>
                 </div>
@@ -794,7 +853,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Seller Phone
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-seller-phone-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-seller-phone-value"
+                  >
                     {quote?.sellerPhone || "N/A"}
                   </div>
                 </div>
@@ -803,9 +865,15 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Expiration Date
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-expiration-date-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-expiration-date-value"
+                  >
                     {quote?.quoteExpirationDate
-                      ? format(new Date(quote.quoteExpirationDate), "MMM dd, yyyy")
+                      ? format(
+                          new Date(quote.quoteExpirationDate),
+                          "MMM dd, yyyy",
+                        )
                       : "N/A"}
                   </div>
                 </div>
@@ -814,7 +882,10 @@ export default function QuoteDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Created Date
                   </label>
-                  <div className="mt-1 text-foreground" data-testid="text-created-date-value">
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-created-date-value"
+                  >
                     {quote?.createdDate
                       ? format(new Date(quote.createdDate), "MMM dd, yyyy")
                       : "N/A"}
@@ -853,7 +924,9 @@ export default function QuoteDetail() {
                       data-testid="button-save-lines"
                     >
                       <Save className="w-4 h-4 mr-2" />
-                      {batchSaveLinesMutation.isPending ? "Saving..." : "Save Changes"}
+                      {batchSaveLinesMutation.isPending
+                        ? "Saving..."
+                        : "Save Changes"}
                     </Button>
                   </>
                 ) : (
@@ -876,7 +949,10 @@ export default function QuoteDetail() {
                     {fields.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Package className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p>No products added yet. Click "Add Line" to get started.</p>
+                        <p>
+                          No products added yet. Click "Add Line" to get
+                          started.
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-6">
@@ -923,26 +999,44 @@ export default function QuoteDetail() {
                           className="border rounded-lg p-4"
                           data-testid={`line-view-${index}`}
                         >
-                          <h4 className="text-sm font-medium mb-3">Line {index + 1}</h4>
+                          <h4 className="text-sm font-medium mb-3">
+                            Line {index + 1}
+                          </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                              <label className="text-muted-foreground">Product</label>
-                              <div className="font-medium">{line.productName || "N/A"}</div>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground">Quantity</label>
-                              <div className="font-medium">{line.quotedQuantity || "N/A"}</div>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground">Final Unit Price</label>
+                              <label className="text-muted-foreground">
+                                Product
+                              </label>
                               <div className="font-medium">
-                                {line.finalUnitPrice ? `${line.finalUnitPrice} ${line.unitPriceCurrency || ""}` : "N/A"}
+                                {line.productName || "N/A"}
                               </div>
                             </div>
                             <div>
-                              <label className="text-muted-foreground">Final Subtotal</label>
+                              <label className="text-muted-foreground">
+                                Quantity
+                              </label>
                               <div className="font-medium">
-                                {line.finalSubtotal ? `${line.finalSubtotal} ${line.unitPriceCurrency || ""}` : "N/A"}
+                                {line.quotedQuantity || "N/A"}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-muted-foreground">
+                                Final Unit Price
+                              </label>
+                              <div className="font-medium">
+                                {line.finalUnitPrice
+                                  ? `${line.finalUnitPrice} ${line.unitPriceCurrency || ""}`
+                                  : "N/A"}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-muted-foreground">
+                                Final Subtotal
+                              </label>
+                              <div className="font-medium">
+                                {line.finalSubtotal
+                                  ? `${line.finalSubtotal} ${line.unitPriceCurrency || ""}`
+                                  : "N/A"}
                               </div>
                             </div>
                           </div>

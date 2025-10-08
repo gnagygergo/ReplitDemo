@@ -318,6 +318,26 @@ export const licenceAgreements = pgTable("licence_agreements", {
   licenceCount: integer("licence_count"),
 });
 
+export const emails = pgTable("emails", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  fromEmail: text("from_email").notNull(),
+  toEmail: text("to_email").notNull(),
+  ccEmail: text("cc_email"),
+  bccEmail: text("bcc_email"),
+  sentAt: timestamp("sent_at"),
+  attachments: jsonb("attachments"),
+  parentType: text("parent_type").notNull(),
+  parentId: varchar("parent_id").notNull(),
+  createdBy: varchar("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id"),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -608,6 +628,29 @@ export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements
     licenceCount: z.number().int().optional(),
   });
 
+export const insertEmailSchema = createInsertSchema(emails)
+  .omit({
+    id: true,
+    sentAt: true,
+  })
+  .extend({
+    subject: z.string().min(1, "Subject is required"),
+    body: z.string().min(1, "Body is required"),
+    fromEmail: z.string().email("From email must be valid"),
+    toEmail: z.string().min(1, "To email is required"),
+    ccEmail: z.string().optional(),
+    bccEmail: z.string().optional(),
+    attachments: z.array(z.object({
+      fileName: z.string(),
+      fileSize: z.number(),
+      fileType: z.string(),
+      fileUrl: z.string(),
+    })).optional(),
+    parentType: z.enum(["Quote", "Opportunity", "Account", "Case"]),
+    parentId: z.string().min(1, "Parent ID is required"),
+    createdBy: z.string().min(1, "Created by is required"),
+  });
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -644,6 +687,8 @@ export type InsertLicenceAgreementTemplate = z.infer<typeof insertLicenceAgreeme
 export type LicenceAgreementTemplate = typeof licenceAgreementTemplates.$inferSelect;
 export type InsertLicenceAgreement = z.infer<typeof insertLicenceAgreementSchema>;
 export type LicenceAgreement = typeof licenceAgreements.$inferSelect;
+export type InsertEmail = z.infer<typeof insertEmailSchema>;
+export type Email = typeof emails.$inferSelect;
 
 export type AccountWithOwner = Account & {
   owner: User;

@@ -45,6 +45,8 @@ import {
   type LicenceAgreement,
   type InsertLicenceAgreement,
   type LicenceAgreementWithDetails,
+  type Email,
+  type InsertEmail,
   companies,
   accounts,
   opportunities,
@@ -63,6 +65,7 @@ import {
   licences,
   licenceAgreementTemplates,
   licenceAgreements,
+  emails,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
@@ -290,6 +293,12 @@ export interface IStorage {
     agreement: Partial<InsertLicenceAgreement>,
   ): Promise<LicenceAgreement | undefined>;
   deleteLicenceAgreement(id: string): Promise<boolean>;
+
+  // Email methods
+  getEmailsByParent(parentType: string, parentId: string, companyContext?: string): Promise<Email[]>;
+  getEmail(id: string): Promise<Email | undefined>;
+  createEmail(email: InsertEmail): Promise<Email>;
+  deleteEmail(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1475,6 +1484,52 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(licenceAgreements)
       .where(eq(licenceAgreements.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Email methods
+  async getEmailsByParent(parentType: string, parentId: string, companyContext?: string): Promise<Email[]> {
+    const conditions = [
+      eq(emails.parentType, parentType),
+      eq(emails.parentId, parentId),
+    ];
+
+    if (companyContext) {
+      conditions.push(eq(emails.companyId, companyContext));
+    }
+
+    const results = await db
+      .select()
+      .from(emails)
+      .where(and(...conditions))
+      .orderBy(sql`${emails.sentAt} DESC NULLS LAST`);
+
+    return results;
+  }
+
+  async getEmail(id: string): Promise<Email | undefined> {
+    const [email] = await db
+      .select()
+      .from(emails)
+      .where(eq(emails.id, id));
+    return email || undefined;
+  }
+
+  async createEmail(email: InsertEmail): Promise<Email> {
+    const [newEmail] = await db
+      .insert(emails)
+      .values({
+        ...email,
+        sentAt: sql`NOW()`,
+      })
+      .returning();
+    return newEmail;
+  }
+
+  async deleteEmail(id: string): Promise<boolean> {
+    const result = await db
+      .delete(emails)
+      .where(eq(emails.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

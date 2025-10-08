@@ -19,6 +19,7 @@ import {
   insertLicenceSchema,
   insertLicenceAgreementTemplateSchema,
   insertLicenceAgreementSchema,
+  insertEmailSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1527,6 +1528,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting licence agreement:", error);
       res.status(500).json({ message: "Failed to delete licence agreement" });
+    }
+  });
+
+  // Email routes (Company-scoped)
+  app.get("/api/emails/:parentType/:parentId", isAuthenticated, async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      const { parentType, parentId } = req.params;
+      const emails = await storage.getEmailsByParent(parentType, parentId, companyContext);
+      res.json(emails);
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+      res.status(500).json({ message: "Failed to fetch emails" });
+    }
+  });
+
+  app.post("/api/emails", isAuthenticated, async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      const validatedData = insertEmailSchema.parse({
+        ...req.body,
+        companyId: companyContext,
+      });
+
+      const email = await storage.createEmail(validatedData);
+
+      // Send the email via SendGrid
+      try {
+        await sendEmail({
+          to: validatedData.toEmail,
+          from: validatedData.fromEmail,
+          subject: validatedData.subject,
+          text: validatedData.body,
+          cc: validatedData.ccEmail ? validatedData.ccEmail.split(',').map(e => e.trim()) : undefined,
+          bcc: validatedData.bccEmail ? validatedData.bccEmail.split(',').map(e => e.trim()) : undefined,
+        });
+      } catch (emailError) {
+        console.error("Error sending email:", emailError);
+        // Email record is created but sending failed
+        return res.status(500).json({ 
+          message: "Email record created but failed to send", 
+          email 
+        });
+      }
+
+      res.status(201).json(email);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating email:", error);
+      res.status(500).json({ message: "Failed to create email" });
+    }
+  });
+
+  app.delete("/api/emails/:id", isAuthenticated, async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      // First check if email exists and belongs to this company
+      const email = await storage.getEmail(req.params.id);
+      if (!email) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+      if (email.companyId !== companyContext) {
+        return res.status(403).json({ message: "Not authorized to delete this email" });
+      }
+
+      const deleted = await storage.deleteEmail(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Email not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting email:", error);
+      res.status(500).json({ message: "Failed to delete email" });
     }
   });
 

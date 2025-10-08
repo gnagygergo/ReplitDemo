@@ -42,6 +42,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import { QuoteLineItem } from "@/components/quotes/quote-line-item";
+import EmailPanel from "@/components/emails/email-panel";
 import { z } from "zod";
 
 const quoteLinesFormSchema = z.object({
@@ -1059,15 +1060,20 @@ export default function QuoteDetail() {
         </TabsContent>
 
         <TabsContent value="communication" className="space-y-6">
-          {/* Emails Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Emails</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Email communication functionality coming soon.</p>
-            </CardContent>
-          </Card>
+          {/* Emails */}
+          {!isNewQuote && quote && (
+            <EmailPanel parentType="Quote" parentId={quote.id} />
+          )}
+          {isNewQuote && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Emails</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground">Save the quote first to access email functionality.</p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 

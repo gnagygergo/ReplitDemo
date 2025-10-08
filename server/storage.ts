@@ -37,6 +37,14 @@ import {
   type InsertQuoteLine,
   type DevPattern,
   type InsertDevPattern,
+  type Licence,
+  type InsertLicence,
+  type LicenceAgreementTemplate,
+  type InsertLicenceAgreementTemplate,
+  type LicenceAgreementTemplateWithLicence,
+  type LicenceAgreement,
+  type InsertLicenceAgreement,
+  type LicenceAgreementWithDetails,
   companies,
   accounts,
   opportunities,
@@ -52,6 +60,9 @@ import {
   quotes,
   quoteLines,
   devPatterns,
+  licences,
+  licenceAgreementTemplates,
+  licenceAgreements,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
@@ -248,6 +259,37 @@ export interface IStorage {
     devPattern: Partial<InsertDevPattern>,
   ): Promise<DevPattern | undefined>;
   deleteDevPattern(id: string): Promise<boolean>;
+
+  // Licence methods (Global - no company context)
+  getLicences(): Promise<Licence[]>;
+  getLicence(id: string): Promise<Licence | undefined>;
+  createLicence(licence: InsertLicence): Promise<Licence>;
+  updateLicence(
+    id: string,
+    licence: Partial<InsertLicence>,
+  ): Promise<Licence | undefined>;
+  deleteLicence(id: string): Promise<boolean>;
+
+  // Licence Agreement Template methods (Global - no company context)
+  getLicenceAgreementTemplates(): Promise<LicenceAgreementTemplateWithLicence[]>;
+  getLicenceAgreementTemplate(id: string): Promise<LicenceAgreementTemplateWithLicence | undefined>;
+  createLicenceAgreementTemplate(template: InsertLicenceAgreementTemplate): Promise<LicenceAgreementTemplate>;
+  updateLicenceAgreementTemplate(
+    id: string,
+    template: Partial<InsertLicenceAgreementTemplate>,
+  ): Promise<LicenceAgreementTemplate | undefined>;
+  deleteLicenceAgreementTemplate(id: string): Promise<boolean>;
+
+  // Licence Agreement methods
+  getLicenceAgreements(): Promise<LicenceAgreementWithDetails[]>;
+  getLicenceAgreement(id: string): Promise<LicenceAgreementWithDetails | undefined>;
+  getLicenceAgreementsByCompany(companyId: string): Promise<LicenceAgreementWithDetails[]>;
+  createLicenceAgreement(agreement: InsertLicenceAgreement): Promise<LicenceAgreement>;
+  updateLicenceAgreement(
+    id: string,
+    agreement: Partial<InsertLicenceAgreement>,
+  ): Promise<LicenceAgreement | undefined>;
+  deleteLicenceAgreement(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1254,6 +1296,185 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(devPatterns)
       .where(eq(devPatterns.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Licence methods (Global - no company context filtering)
+  async getLicences(): Promise<Licence[]> {
+    return await db
+      .select()
+      .from(licences)
+      .orderBy(licences.name);
+  }
+
+  async getLicence(id: string): Promise<Licence | undefined> {
+    const [licence] = await db
+      .select()
+      .from(licences)
+      .where(eq(licences.id, id));
+    return licence || undefined;
+  }
+
+  async createLicence(insertLicence: InsertLicence): Promise<Licence> {
+    const [licence] = await db
+      .insert(licences)
+      .values(insertLicence)
+      .returning();
+    return licence;
+  }
+
+  async updateLicence(
+    id: string,
+    updates: Partial<InsertLicence>,
+  ): Promise<Licence | undefined> {
+    const [licence] = await db
+      .update(licences)
+      .set(updates)
+      .where(eq(licences.id, id))
+      .returning();
+    return licence || undefined;
+  }
+
+  async deleteLicence(id: string): Promise<boolean> {
+    const result = await db
+      .delete(licences)
+      .where(eq(licences.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Licence Agreement Template methods (Global - no company context filtering)
+  async getLicenceAgreementTemplates(): Promise<LicenceAgreementTemplateWithLicence[]> {
+    const results = await db
+      .select()
+      .from(licenceAgreementTemplates)
+      .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
+      .orderBy(licenceAgreementTemplates.validFrom);
+    
+    return results.map(row => ({
+      ...row.licence_agreement_templates,
+      licence: row.licences!,
+    }));
+  }
+
+  async getLicenceAgreementTemplate(id: string): Promise<LicenceAgreementTemplateWithLicence | undefined> {
+    const [result] = await db
+      .select()
+      .from(licenceAgreementTemplates)
+      .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
+      .where(eq(licenceAgreementTemplates.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.licence_agreement_templates,
+      licence: result.licences!,
+    };
+  }
+
+  async createLicenceAgreementTemplate(
+    insertTemplate: InsertLicenceAgreementTemplate
+  ): Promise<LicenceAgreementTemplate> {
+    const [template] = await db
+      .insert(licenceAgreementTemplates)
+      .values(insertTemplate)
+      .returning();
+    return template;
+  }
+
+  async updateLicenceAgreementTemplate(
+    id: string,
+    updates: Partial<InsertLicenceAgreementTemplate>,
+  ): Promise<LicenceAgreementTemplate | undefined> {
+    const [template] = await db
+      .update(licenceAgreementTemplates)
+      .set(updates)
+      .where(eq(licenceAgreementTemplates.id, id))
+      .returning();
+    return template || undefined;
+  }
+
+  async deleteLicenceAgreementTemplate(id: string): Promise<boolean> {
+    const result = await db
+      .delete(licenceAgreementTemplates)
+      .where(eq(licenceAgreementTemplates.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Licence Agreement methods
+  async getLicenceAgreements(): Promise<LicenceAgreementWithDetails[]> {
+    const results = await db
+      .select()
+      .from(licenceAgreements)
+      .leftJoin(licenceAgreementTemplates, eq(licenceAgreements.licenceAgreementTemplateId, licenceAgreementTemplates.id))
+      .leftJoin(companies, eq(licenceAgreements.companyId, companies.id))
+      .orderBy(licenceAgreements.validFrom);
+    
+    return results.map(row => ({
+      ...row.licence_agreements,
+      licenceAgreementTemplate: row.licence_agreement_templates!,
+      company: row.companies!,
+    }));
+  }
+
+  async getLicenceAgreement(id: string): Promise<LicenceAgreementWithDetails | undefined> {
+    const [result] = await db
+      .select()
+      .from(licenceAgreements)
+      .leftJoin(licenceAgreementTemplates, eq(licenceAgreements.licenceAgreementTemplateId, licenceAgreementTemplates.id))
+      .leftJoin(companies, eq(licenceAgreements.companyId, companies.id))
+      .where(eq(licenceAgreements.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.licence_agreements,
+      licenceAgreementTemplate: result.licence_agreement_templates!,
+      company: result.companies!,
+    };
+  }
+
+  async getLicenceAgreementsByCompany(companyId: string): Promise<LicenceAgreementWithDetails[]> {
+    const results = await db
+      .select()
+      .from(licenceAgreements)
+      .leftJoin(licenceAgreementTemplates, eq(licenceAgreements.licenceAgreementTemplateId, licenceAgreementTemplates.id))
+      .leftJoin(companies, eq(licenceAgreements.companyId, companies.id))
+      .where(eq(licenceAgreements.companyId, companyId))
+      .orderBy(licenceAgreements.validFrom);
+    
+    return results.map(row => ({
+      ...row.licence_agreements,
+      licenceAgreementTemplate: row.licence_agreement_templates!,
+      company: row.companies!,
+    }));
+  }
+
+  async createLicenceAgreement(
+    insertAgreement: InsertLicenceAgreement
+  ): Promise<LicenceAgreement> {
+    const [agreement] = await db
+      .insert(licenceAgreements)
+      .values(insertAgreement)
+      .returning();
+    return agreement;
+  }
+
+  async updateLicenceAgreement(
+    id: string,
+    updates: Partial<InsertLicenceAgreement>,
+  ): Promise<LicenceAgreement | undefined> {
+    const [agreement] = await db
+      .update(licenceAgreements)
+      .set(updates)
+      .where(eq(licenceAgreements.id, id))
+      .returning();
+    return agreement || undefined;
+  }
+
+  async deleteLicenceAgreement(id: string): Promise<boolean> {
+    const result = await db
+      .delete(licenceAgreements)
+      .where(eq(licenceAgreements.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

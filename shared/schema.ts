@@ -585,7 +585,6 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAg
   .extend({
     validFrom: z.string().min(1, "Valid from date is required"),
     validTo: z.string().min(1, "Valid to date is required"),
-    price: z.number().min(0, "Price must be 0 or greater"),
     currency: z.string().min(1, "Currency is required"),
     licenceId: z.string().min(1, "Licence is required"),
   });

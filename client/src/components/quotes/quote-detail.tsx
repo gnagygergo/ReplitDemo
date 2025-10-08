@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Form,
   FormControl,
@@ -449,9 +450,15 @@ export default function QuoteDetail() {
         </div>
       </div>
 
-      <div className="space-y-6">
-        {/* Quote Details Card */}
-        <Card>
+      <Tabs defaultValue="quote" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="quote" data-testid="tab-quote">Quote</TabsTrigger>
+          <TabsTrigger value="communication" data-testid="tab-communication">Communication</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="quote" className="space-y-6">
+          {/* Quote Details Card */}
+          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
             <CardTitle>Quote Details</CardTitle>
             {!isNewQuote && (
@@ -1049,7 +1056,20 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
         )}
-      </div>
+        </TabsContent>
+
+        <TabsContent value="communication" className="space-y-6">
+          {/* Emails Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Emails</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">Email communication functionality coming soon.</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <AccountLookupDialog
         open={showAccountLookup}

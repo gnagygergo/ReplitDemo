@@ -295,9 +295,10 @@ export const licenceAgreementTemplates = pgTable("licence_agreement_templates", 
   licenceId: varchar("licence_id")
     .notNull()
     .references(() => licences.id, { onDelete: "restrict" }),
-  agreementPeriodMonths: integer("agreement_period_months").notNull(),
-  paymentTermsDays: integer("payment_terms_days").notNull(),
-  gracePeriodDays: integer("grace_period_days").notNull().default(0),
+  validFrom: date("valid_from"),
+  validTo: date("valid_to"),
+  price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+  currency: text("currency").notNull(),
 });
 
 export const licenceAgreements = pgTable("licence_agreements", {
@@ -310,9 +311,11 @@ export const licenceAgreements = pgTable("licence_agreements", {
   companyId: varchar("company_id")
     .notNull()
     .references(() => companies.id, { onDelete: "restrict" }),
-  agreementPeriodMonths: integer("agreement_period_months").notNull(),
-  paymentTermsDays: integer("payment_terms_days").notNull(),
-  gracePeriodDays: integer("grace_period_days").notNull().default(0),
+  validFrom: date("valid_from"),
+  validTo: date("valid_to"),
+  price: decimal("price", { precision: 12, scale: 2 }),
+  currency: text("currency"),
+  licenceCount: integer("licence_count"),
 });
 
 // Define relations
@@ -585,9 +588,10 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAg
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
     licenceId: z.string().min(1, "Licence is required"),
-    agreementPeriodMonths: z.number().int().min(1, "Agreement period must be at least 1 month"),
-    paymentTermsDays: z.number().int().min(1, "Payment terms must be at least 1 day"),
-    gracePeriodDays: z.number().int().min(0, "Grace period cannot be negative"),
+    validFrom: z.string().optional(),
+    validTo: z.string().optional(),
+    price: z.number().min(0, "Price must be positive"),
+    currency: z.string().min(1, "Currency is required"),
   });
 
 export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements)
@@ -597,9 +601,11 @@ export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements
   .extend({
     licenceAgreementTemplateId: z.string().min(1, "Licence agreement template is required"),
     companyId: z.string().min(1, "Company is required"),
-    agreementPeriodMonths: z.number().int().min(1, "Agreement period must be at least 1 month"),
-    paymentTermsDays: z.number().int().min(1, "Payment terms must be at least 1 day"),
-    gracePeriodDays: z.number().int().min(0, "Grace period cannot be negative"),
+    validFrom: z.string().optional(),
+    validTo: z.string().optional(),
+    price: z.number().optional(),
+    currency: z.string().optional(),
+    licenceCount: z.number().int().optional(),
   });
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;

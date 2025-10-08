@@ -103,7 +103,7 @@ function TemplateLookupDialog({
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
-                  {template.agreementPeriodMonths} months | {template.paymentTermsDays} days payment
+                  {template.price} {template.currency} | {template.validFrom || 'No start'} - {template.validTo || 'No end'}
                 </div>
               </button>
             ))
@@ -203,9 +203,11 @@ function AgreementDialog({
     defaultValues: {
       licenceAgreementTemplateId: agreement?.licenceAgreementTemplateId || "",
       companyId: agreement?.companyId || "",
-      agreementPeriodMonths: agreement?.agreementPeriodMonths || 12,
-      paymentTermsDays: agreement?.paymentTermsDays || 30,
-      gracePeriodDays: agreement?.gracePeriodDays || 0,
+      validFrom: agreement?.validFrom || "",
+      validTo: agreement?.validTo || "",
+      price: agreement?.price ? parseFloat(agreement.price) : undefined,
+      currency: agreement?.currency || "",
+      licenceCount: agreement?.licenceCount || undefined,
     },
   });
 
@@ -216,9 +218,10 @@ function AgreementDialog({
 
   const handleTemplateSelect = (template: LicenceAgreementTemplate) => {
     form.setValue("licenceAgreementTemplateId", template.id);
-    form.setValue("agreementPeriodMonths", template.agreementPeriodMonths);
-    form.setValue("paymentTermsDays", template.paymentTermsDays);
-    form.setValue("gracePeriodDays", template.gracePeriodDays);
+    form.setValue("validFrom", template.validFrom || "");
+    form.setValue("validTo", template.validTo || "");
+    form.setValue("price", template.price ? parseFloat(template.price) : undefined);
+    form.setValue("currency", template.currency || "");
   };
 
   const mutation = useMutation({
@@ -313,19 +316,59 @@ function AgreementDialog({
                 </FormItem>
               )}
             />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="validFrom"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valid From</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-agreement-valid-from"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="validTo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Valid To</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-agreement-valid-to"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="agreementPeriodMonths"
+                name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Period (Months)</FormLabel>
+                    <FormLabel>Price</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        step="0.01"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-agreement-period"
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        data-testid="input-agreement-price"
                       />
                     </FormControl>
                     <FormMessage />
@@ -334,16 +377,16 @@ function AgreementDialog({
               />
               <FormField
                 control={form.control}
-                name="paymentTermsDays"
+                name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment (Days)</FormLabel>
+                    <FormLabel>Currency</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-agreement-payment-terms"
+                        value={field.value || ""}
+                        placeholder="e.g., USD, EUR, GBP"
+                        data-testid="input-agreement-currency"
                       />
                     </FormControl>
                     <FormMessage />
@@ -352,16 +395,17 @@ function AgreementDialog({
               />
               <FormField
                 control={form.control}
-                name="gracePeriodDays"
+                name="licenceCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Grace (Days)</FormLabel>
+                    <FormLabel>Licence Count</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-agreement-grace-period"
+                        value={field.value || ""}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        data-testid="input-agreement-licence-count"
                       />
                     </FormControl>
                     <FormMessage />
@@ -648,18 +692,28 @@ export default function LicenceAgreementsManagement() {
                       {templates.find(t => t.id === selectedAgreement.licenceAgreementTemplateId)?.name || "N/A"}
                     </p>
                   </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Valid From</h4>
+                      <p className="text-sm text-muted-foreground">{selectedAgreement.validFrom || "N/A"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Valid To</h4>
+                      <p className="text-sm text-muted-foreground">{selectedAgreement.validTo || "N/A"}</p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Agreement Period</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.agreementPeriodMonths} months</p>
+                      <h4 className="text-sm font-medium mb-1">Price</h4>
+                      <p className="text-sm text-muted-foreground">{selectedAgreement.price || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Payment Terms</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.paymentTermsDays} days</p>
+                      <h4 className="text-sm font-medium mb-1">Currency</h4>
+                      <p className="text-sm text-muted-foreground">{selectedAgreement.currency || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Grace Period</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.gracePeriodDays} days</p>
+                      <h4 className="text-sm font-medium mb-1">Licence Count</h4>
+                      <p className="text-sm text-muted-foreground">{selectedAgreement.licenceCount || "N/A"}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

@@ -133,9 +133,10 @@ function TemplateDialog({
       name: template?.name || "",
       description: template?.description || "",
       licenceId: template?.licenceId || "",
-      agreementPeriodMonths: template?.agreementPeriodMonths || 12,
-      paymentTermsDays: template?.paymentTermsDays || 30,
-      gracePeriodDays: template?.gracePeriodDays || 0,
+      validFrom: template?.validFrom || "",
+      validTo: template?.validTo || "",
+      price: template?.price ? parseFloat(template.price) : 0,
+      currency: template?.currency || "USD",
     },
   });
 
@@ -241,19 +242,19 @@ function TemplateDialog({
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="agreementPeriodMonths"
+                name="validFrom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Period (Months)</FormLabel>
+                    <FormLabel>Valid From</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
+                        type="date"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-template-period"
+                        value={field.value || ""}
+                        data-testid="input-template-valid-from"
                       />
                     </FormControl>
                     <FormMessage />
@@ -262,16 +263,37 @@ function TemplateDialog({
               />
               <FormField
                 control={form.control}
-                name="paymentTermsDays"
+                name="validTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment (Days)</FormLabel>
+                    <FormLabel>Valid To</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-template-valid-to"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
+                        step="0.01"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-template-payment-terms"
+                        data-testid="input-template-price"
                       />
                     </FormControl>
                     <FormMessage />
@@ -280,16 +302,15 @@ function TemplateDialog({
               />
               <FormField
                 control={form.control}
-                name="gracePeriodDays"
+                name="currency"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Grace (Days)</FormLabel>
+                    <FormLabel>Currency</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                        data-testid="input-template-grace-period"
+                        placeholder="e.g., USD, EUR, GBP"
+                        data-testid="input-template-currency"
                       />
                     </FormControl>
                     <FormMessage />
@@ -572,18 +593,24 @@ export default function LicenceAgreementTemplatesManagement() {
                       {licences.find(l => l.id === selectedTemplate.licenceId)?.name || "N/A"}
                     </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Agreement Period</h4>
-                      <p className="text-sm text-muted-foreground">{selectedTemplate.agreementPeriodMonths} months</p>
+                      <h4 className="text-sm font-medium mb-1">Valid From</h4>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.validFrom || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Payment Terms</h4>
-                      <p className="text-sm text-muted-foreground">{selectedTemplate.paymentTermsDays} days</p>
+                      <h4 className="text-sm font-medium mb-1">Valid To</h4>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.validTo || "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Price</h4>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.price}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Grace Period</h4>
-                      <p className="text-sm text-muted-foreground">{selectedTemplate.gracePeriodDays} days</p>
+                      <h4 className="text-sm font-medium mb-1">Currency</h4>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.currency}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

@@ -278,6 +278,44 @@ export const devPatterns = pgTable("dev_patterns", {
   pattern: text("pattern"),
 });
 
+export const licences = pgTable("licences", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+});
+
+export const licenceAgreementTemplates = pgTable("licence_agreement_templates", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  validFrom: date("valid_from").notNull(),
+  validTo: date("valid_to").notNull(),
+  price: decimal("price", { precision: 12, scale: 3 }).notNull(),
+  currency: text("currency").notNull(),
+  licenceId: varchar("licence_id")
+    .notNull()
+    .references(() => licences.id, { onDelete: "restrict" }),
+});
+
+export const licenceAgreements = pgTable("licence_agreements", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  validFrom: date("valid_from"),
+  validTo: date("valid_to"),
+  price: decimal("price", { precision: 12, scale: 3 }),
+  currency: text("currency"),
+  licenceCount: integer("licence_count"),
+  licenceAgreementTemplateId: varchar("licence_agreement_template_id")
+    .notNull()
+    .references(() => licenceAgreementTemplates.id, { onDelete: "restrict" }),
+  companyId: varchar("company_id")
+    .notNull()
+    .references(() => companies.id, { onDelete: "restrict" }),
+});
+
 // Define relations
 
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -365,6 +403,35 @@ export const quoteLinesRelations = relations(quoteLines, ({ one }) => ({
     references: [products.id],
   }),
 }));
+
+export const licencesRelations = relations(licences, ({ many }) => ({
+  licenceAgreementTemplates: many(licenceAgreementTemplates),
+}));
+
+export const licenceAgreementTemplatesRelations = relations(
+  licenceAgreementTemplates,
+  ({ one, many }) => ({
+    licence: one(licences, {
+      fields: [licenceAgreementTemplates.licenceId],
+      references: [licences.id],
+    }),
+    licenceAgreements: many(licenceAgreements),
+  }),
+);
+
+export const licenceAgreementsRelations = relations(
+  licenceAgreements,
+  ({ one }) => ({
+    licenceAgreementTemplate: one(licenceAgreementTemplates, {
+      fields: [licenceAgreements.licenceAgreementTemplateId],
+      references: [licenceAgreementTemplates.id],
+    }),
+    company: one(companies, {
+      fields: [licenceAgreements.companyId],
+      references: [companies.id],
+    }),
+  }),
+);
 
 export const insertCompanySchema = createInsertSchema(companies)
   .omit({
@@ -502,6 +569,36 @@ export const insertDevPatternSchema = createInsertSchema(devPatterns)
     pattern: z.string().optional(),
   });
 
+export const insertLicenceSchema = createInsertSchema(licences)
+  .omit({
+    id: true,
+  })
+  .extend({
+    name: z.string().min(1, "Name is required"),
+    type: z.string().min(1, "Type is required"),
+  });
+
+export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAgreementTemplates)
+  .omit({
+    id: true,
+  })
+  .extend({
+    validFrom: z.string().min(1, "Valid from date is required"),
+    validTo: z.string().min(1, "Valid to date is required"),
+    price: z.number().min(0, "Price must be 0 or greater"),
+    currency: z.string().min(1, "Currency is required"),
+    licenceId: z.string().min(1, "Licence is required"),
+  });
+
+export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements)
+  .omit({
+    id: true,
+  })
+  .extend({
+    licenceAgreementTemplateId: z.string().min(1, "Licence agreement template is required"),
+    companyId: z.string().min(1, "Company is required"),
+  });
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -532,6 +629,12 @@ export type InsertQuoteLine = z.infer<typeof insertQuoteLineSchema>;
 export type QuoteLine = typeof quoteLines.$inferSelect;
 export type InsertDevPattern = z.infer<typeof insertDevPatternSchema>;
 export type DevPattern = typeof devPatterns.$inferSelect;
+export type InsertLicence = z.infer<typeof insertLicenceSchema>;
+export type Licence = typeof licences.$inferSelect;
+export type InsertLicenceAgreementTemplate = z.infer<typeof insertLicenceAgreementTemplateSchema>;
+export type LicenceAgreementTemplate = typeof licenceAgreementTemplates.$inferSelect;
+export type InsertLicenceAgreement = z.infer<typeof insertLicenceAgreementSchema>;
+export type LicenceAgreement = typeof licenceAgreements.$inferSelect;
 
 export type AccountWithOwner = Account & {
   owner: User;
@@ -566,6 +669,15 @@ export type UserRoleAssignmentWithUserAndRole = UserRoleAssignment & {
 
 export type ProductWithUom = Product & {
   salesUomName: string;
+};
+
+export type LicenceAgreementTemplateWithLicence = LicenceAgreementTemplate & {
+  licence: Licence;
+};
+
+export type LicenceAgreementWithDetails = LicenceAgreement & {
+  licenceAgreementTemplate: LicenceAgreementTemplate;
+  company: Company;
 };
 
 // User types - Required for Replit Auth

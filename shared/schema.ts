@@ -25,6 +25,9 @@ export const companies = pgTable("companies", {
   companyRegistrationId: text("company_registration_id"),
   bankAccountNumber: text("bank_account_number"),
   address: text("address"),
+  taxResidencyCountry: text("tax_residency_country").references(
+    () => countries.countryCode,
+  ),
 });
 
 export const accounts = pgTable("accounts", {
@@ -70,6 +73,13 @@ export const cases = pgTable("cases", {
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
   companyId: varchar("company_id"),
+});
+
+export const countries = pgTable("countries", {
+  countryCode: varchar("country_code").primaryKey(),
+  countryName: text("country_name"),
+  countryNameLocaleName: text("country_name_locale_name"),
+  countryPhonePrefix: text("country_phone_prefix"),
 });
 
 export const companyRoles = pgTable("company_roles", {
@@ -231,7 +241,10 @@ export const quoteLines = pgTable("quote_lines", {
   productName: text("product_name"),
   productUnitPrice: decimal("product_unit_price", { precision: 12, scale: 3 }),
   unitPriceCurrency: text("unit_price_currency"),
-  productUnitPriceOverride: decimal("product_unit_price_override", { precision: 12, scale: 3 }),
+  productUnitPriceOverride: decimal("product_unit_price_override", {
+    precision: 12,
+    scale: 3,
+  }),
   quoteUnitPrice: decimal("quote_unit_price", { precision: 12, scale: 3 }),
   unitPriceDiscountPercent: decimal("unit_price_discount_percent", {
     precision: 12,
@@ -286,20 +299,23 @@ export const licences = pgTable("licences", {
   description: text("description"),
 });
 
-export const licenceAgreementTemplates = pgTable("licence_agreement_templates", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  description: text("description"),
-  licenceId: varchar("licence_id")
-    .notNull()
-    .references(() => licences.id, { onDelete: "restrict" }),
-  validFrom: date("valid_from"),
-  validTo: date("valid_to"),
-  price: decimal("price", { precision: 12, scale: 2 }).notNull(),
-  currency: text("currency").notNull(),
-});
+export const licenceAgreementTemplates = pgTable(
+  "licence_agreement_templates",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    name: text("name").notNull(),
+    description: text("description"),
+    licenceId: varchar("licence_id")
+      .notNull()
+      .references(() => licences.id, { onDelete: "restrict" }),
+    validFrom: date("valid_from"),
+    validTo: date("valid_to"),
+    price: decimal("price", { precision: 12, scale: 2 }).notNull(),
+    currency: text("currency").notNull(),
+  },
+);
 
 export const licenceAgreements = pgTable("licence_agreements", {
   id: varchar("id")
@@ -315,7 +331,7 @@ export const licenceAgreements = pgTable("licence_agreements", {
   validTo: date("valid_to"),
   price: decimal("price", { precision: 12, scale: 2 }),
   currency: text("currency"),
-  licenceCount: integer("licence_count"),
+  licenceSeats: integer("licence_seat"),
 });
 
 export const emails = pgTable("emails", {
@@ -600,7 +616,9 @@ export const insertLicenceSchema = createInsertSchema(licences)
     description: z.string().optional(),
   });
 
-export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAgreementTemplates)
+export const insertLicenceAgreementTemplateSchema = createInsertSchema(
+  licenceAgreementTemplates,
+)
   .omit({
     id: true,
   })
@@ -614,12 +632,16 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(licenceAg
     currency: z.string().min(1, "Currency is required"),
   });
 
-export const insertLicenceAgreementSchema = createInsertSchema(licenceAgreements)
+export const insertLicenceAgreementSchema = createInsertSchema(
+  licenceAgreements,
+)
   .omit({
     id: true,
   })
   .extend({
-    licenceAgreementTemplateId: z.string().min(1, "Licence agreement template is required"),
+    licenceAgreementTemplateId: z
+      .string()
+      .min(1, "Licence agreement template is required"),
     companyId: z.string().min(1, "Company is required"),
     validFrom: z.string().optional(),
     validTo: z.string().optional(),
@@ -640,12 +662,16 @@ export const insertEmailSchema = createInsertSchema(emails)
     toEmail: z.string().min(1, "To email is required"),
     ccEmail: z.string().optional(),
     bccEmail: z.string().optional(),
-    attachments: z.array(z.object({
-      fileName: z.string(),
-      fileSize: z.number(),
-      fileType: z.string(),
-      fileUrl: z.string(),
-    })).optional(),
+    attachments: z
+      .array(
+        z.object({
+          fileName: z.string(),
+          fileSize: z.number(),
+          fileType: z.string(),
+          fileUrl: z.string(),
+        }),
+      )
+      .optional(),
     parentType: z.enum(["Quote", "Opportunity", "Account", "Case"]),
     parentId: z.string().min(1, "Parent ID is required"),
     createdBy: z.string().min(1, "Created by is required"),
@@ -683,9 +709,14 @@ export type InsertDevPattern = z.infer<typeof insertDevPatternSchema>;
 export type DevPattern = typeof devPatterns.$inferSelect;
 export type InsertLicence = z.infer<typeof insertLicenceSchema>;
 export type Licence = typeof licences.$inferSelect;
-export type InsertLicenceAgreementTemplate = z.infer<typeof insertLicenceAgreementTemplateSchema>;
-export type LicenceAgreementTemplate = typeof licenceAgreementTemplates.$inferSelect;
-export type InsertLicenceAgreement = z.infer<typeof insertLicenceAgreementSchema>;
+export type InsertLicenceAgreementTemplate = z.infer<
+  typeof insertLicenceAgreementTemplateSchema
+>;
+export type LicenceAgreementTemplate =
+  typeof licenceAgreementTemplates.$inferSelect;
+export type InsertLicenceAgreement = z.infer<
+  typeof insertLicenceAgreementSchema
+>;
 export type LicenceAgreement = typeof licenceAgreements.$inferSelect;
 export type InsertEmail = z.infer<typeof insertEmailSchema>;
 export type Email = typeof emails.$inferSelect;

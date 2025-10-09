@@ -51,7 +51,7 @@ export default function Header() {
               <img 
                 src={companyData.logoUrl} 
                 alt="Company logo"
-                className="max-h-[90%] h-auto w-auto object-contain"
+                className="max-h-[57.6px] h-auto w-auto object-contain"
                 data-testid="img-header-logo"
               />
             ) : (

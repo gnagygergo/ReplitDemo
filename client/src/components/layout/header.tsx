@@ -1,5 +1,16 @@
 import { Link, useLocation } from "wouter";
-import { Building, Target, FileText, ChartLine, Bell, LogOut, User, Settings, Package, FileSpreadsheet } from "lucide-react";
+import {
+  Building,
+  Target,
+  FileText,
+  ChartLine,
+  Bell,
+  LogOut,
+  User,
+  Settings,
+  Package,
+  FileSpreadsheet,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -24,17 +35,16 @@ export default function Header() {
   });
 
   // Fetch admin status for current user
-  const { data: adminStatus } = useQuery<{ 
-    isGlobalAdmin: boolean; 
-    isCompanyAdmin: boolean; 
-    hasAdminAccess: boolean; 
+  const { data: adminStatus } = useQuery<{
+    isGlobalAdmin: boolean;
+    isCompanyAdmin: boolean;
+    hasAdminAccess: boolean;
   }>({
     queryKey: ["/api/auth/verify-admin-status"],
     enabled: !!user, // Only fetch if user is authenticated
   });
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: ChartLine },
     { path: "/accounts", label: "Accounts", icon: Building },
     { path: "/quotes", label: "Quotes", icon: FileSpreadsheet },
     { path: "/opportunities", label: "Opportunities", icon: Target },
@@ -48,15 +58,20 @@ export default function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
             {companyData?.logoUrl ? (
-              <img 
-                src={companyData.logoUrl} 
+              <img
+                src={companyData.logoUrl}
                 alt="Company logo"
                 className="max-h-[57.6px] h-auto w-auto object-contain"
                 data-testid="img-header-logo"
               />
             ) : (
-              <h1 className="text-xl font-bold text-primary" data-testid="text-header-company-name">
-                {companyData?.companyAlias || companyData?.companyOfficialName || 'Low Hanging Fruits'}
+              <h1
+                className="text-xl font-bold text-primary"
+                data-testid="text-header-company-name"
+              >
+                {companyData?.companyAlias ||
+                  companyData?.companyOfficialName ||
+                  "Low Hanging Fruits"}
               </h1>
             )}
             <nav className="hidden md:flex space-x-6">
@@ -78,12 +93,7 @@ export default function Header() {
             </nav>
           </div>
           <div className="flex items-center space-x-4">
-            <button 
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-              data-testid="button-notifications"
-            >
-              <Bell className="w-5 h-5" />
-            </button>
+            
 
             {/* Setup/Settings Link - Only show for Company Admin or Global Admin */}
             {adminStatus?.hasAdminAccess && (
@@ -98,19 +108,25 @@ export default function Header() {
                 </Button>
               </Link>
             )}
-            
+
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full" data-testid="button-user-menu">
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full"
+                  data-testid="button-user-menu"
+                >
                   <Avatar className="h-8 w-8">
-                    <AvatarImage 
-                      src={user?.profileImageUrl || ""} 
-                      alt={user?.firstName || "User"} 
+                    <AvatarImage
+                      src={user?.profileImageUrl || ""}
+                      alt={user?.firstName || "User"}
                       className="object-cover"
                     />
                     <AvatarFallback>
-                      {user?.firstName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+                      {user?.firstName?.[0]?.toUpperCase() ||
+                        user?.email?.[0]?.toUpperCase() ||
+                        "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -118,32 +134,46 @@ export default function Header() {
               <DropdownMenuContent className="w-56" align="end">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none" data-testid="text-user-name">
-                      {user?.firstName && user?.lastName 
-                        ? `${user.firstName} ${user.lastName}` 
-                        : user?.email?.split('@')[0] || 'User'}
+                    <p
+                      className="text-sm font-medium leading-none"
+                      data-testid="text-user-name"
+                    >
+                      {user?.firstName && user?.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : user?.email?.split("@")[0] || "User"}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground" data-testid="text-user-email">
+                    <p
+                      className="text-xs leading-none text-muted-foreground"
+                      data-testid="text-user-email"
+                    >
                       {user?.email}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground" data-testid="text-company-name">
-                      {companyData?.companyAlias || companyData?.companyOfficialName || 'No company'}
+                    <p
+                      className="text-xs leading-none text-muted-foreground"
+                      data-testid="text-company-name"
+                    >
+                      {companyData?.companyAlias ||
+                        companyData?.companyOfficialName ||
+                        "No company"}
                     </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Button variant="ghost" className="w-full justify-start cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                  >
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Button>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="w-full justify-start cursor-pointer text-red-600 hover:text-red-700"
-                    onClick={() => window.location.href = "/api/logout"}
+                    onClick={() => (window.location.href = "/api/logout")}
                     data-testid="button-logout"
                   >
                     <LogOut className="mr-2 h-4 w-4" />

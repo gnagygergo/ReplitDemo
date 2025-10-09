@@ -1,5 +1,19 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode, Award, FileCheck, Building } from "lucide-react";
+import {
+  Search,
+  Users,
+  ChevronRight,
+  Shield,
+  Building2,
+  Rocket,
+  Ruler,
+  Languages,
+  FileText,
+  FileCode,
+  Award,
+  FileCheck,
+  Building,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +32,13 @@ type CompanyAdminCheckResponse = {
 
 // Setup menu items
 const setupMenuItems = [
+  {
+    id: "my-company",
+    label: "My Company",
+    icon: Building,
+    description: "Your company information",
+    companyAdminOnly: true,
+  },
   {
     id: "companies",
     label: "Companies",
@@ -172,7 +193,11 @@ export default function Setup() {
       return false;
     }
     // Hide items marked companyAdminOnly if user is not company admin or global admin
-    if ((item as any).companyAdminOnly && !companyAdminCheck?.isCompanyAdmin && !adminCheck?.isGlobalAdmin) {
+    if (
+      (item as any).companyAdminOnly &&
+      !companyAdminCheck?.isCompanyAdmin &&
+      !adminCheck?.isGlobalAdmin
+    ) {
       return false;
     }
     return true;

@@ -235,6 +235,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get my company details based on logged-in user's company context
+  app.get("/api/auth/my-company", isAuthenticated, async (req: any, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({ message: "Only company admins can view company details" });
+      }
+
+      const company = await storage.getCompany(companyContext);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json(company);
+    } catch (error) {
+      console.error("Error fetching my company:", error);
+      res.status(500).json({ message: "Failed to fetch company" });
+    }
+  });
+
+  // Update my company details (only alias, bank account, address allowed)
+  app.patch("/api/auth/my-company", isAuthenticated, async (req: any, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({ message: "Only company admins can update company details" });
+      }
+
+      // Only allow updating specific fields
+      const allowedUpdates = {
+        companyAlias: req.body.companyAlias,
+        bankAccountNumber: req.body.bankAccountNumber,
+        address: req.body.address,
+      };
+
+      const company = await storage.updateCompany(companyContext, allowedUpdates);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      res.json(company);
+    } catch (error) {
+      console.error("Error updating my company:", error);
+      res.status(500).json({ message: "Failed to update company" });
+    }
+  });
+
+  // Get licence agreements for my company
+  app.get("/api/auth/my-company-licence-agreements", isAuthenticated, async (req: any, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({ message: "Only company admins can view licence agreements" });
+      }
+
+      const agreements = await storage.getLicenceAgreementsByCompany(companyContext);
+      
+      // Format the response to include template name and licence seats
+      const formattedAgreements = agreements.map(agreement => ({
+        id: agreement.id,
+        templateName: agreement.licenceAgreementTemplate?.name || "N/A",
+        validFrom: agreement.validFrom,
+        validTo: agreement.validTo,
+        licenceCount: agreement.licenceSeats || 0,
+      }));
+
+      res.json(formattedAgreements);
+    } catch (error) {
+      console.error("Error fetching my company licence agreements:", error);
+      res.status(500).json({ message: "Failed to fetch licence agreements" });
+    }
+  });
+
   // Global admin verification endpoint
   app.get(
     "/api/auth/verify-global-admin",
@@ -245,6 +336,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ isGlobalAdmin });
       } catch (error) {
         console.error("Error verifying global admin status:", error);
+        res.status(500).json({ message: "Failed to verify admin status" });
+      }
+    },
+  );
+
+  // Company admin verification endpoint
+  app.get(
+    "/api/auth/verify-company-admin",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
+        res.json({ isCompanyAdmin });
+      } catch (error) {
+        console.error("Error verifying company admin status:", error);
         res.status(500).json({ message: "Failed to verify admin status" });
       }
     },

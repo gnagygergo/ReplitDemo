@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode, Award, FileCheck } from "lucide-react";
+import { Search, Users, ChevronRight, Shield, Building2, Rocket, Ruler, Languages, FileText, FileCode, Award, FileCheck, Building } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 
-// Type for global admin check response
-type AdminCheckResponse = {
+// Type for admin check responses
+type GlobalAdminCheckResponse = {
   isGlobalAdmin: boolean;
+};
+
+type CompanyAdminCheckResponse = {
+  isCompanyAdmin: boolean;
 };
 
 // Setup menu items
@@ -87,6 +91,13 @@ const setupMenuItems = [
     description: "Manage company licence agreements",
     globalAdminOnly: true,
   },
+  {
+    id: "my-company",
+    label: "My Company",
+    icon: Building,
+    description: "View and manage your company information",
+    companyAdminOnly: true,
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -100,6 +111,7 @@ import DevPatternsManagement from "@/components/setup/dev-patterns";
 import LicencesManagement from "@/components/setup/licences";
 import LicenceAgreementTemplatesManagement from "@/components/setup/licence-agreement-templates";
 import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
+import CompanyDetail from "@/components/setup/company-detail";
 
 // Companies management component
 function CompaniesSetup() {
@@ -147,9 +159,14 @@ export default function Setup() {
 
   // Query to check if user is global admin
   const { data: adminCheck, isLoading: isCheckingAdmin } =
-    useQuery<AdminCheckResponse>({
+    useQuery<GlobalAdminCheckResponse>({
       queryKey: ["/api/auth/verify-global-admin"],
     });
+
+  // Query to check if user is company admin
+  const { data: companyAdminCheck } = useQuery<CompanyAdminCheckResponse>({
+    queryKey: ["/api/auth/verify-company-admin"],
+  });
 
   // Filter menu items based on admin status and search query
   const availableMenuItems = setupMenuItems.filter((item) => {
@@ -157,8 +174,12 @@ export default function Setup() {
     if (item.id === "companies" && !adminCheck?.isGlobalAdmin) {
       return false;
     }
-    // Hide unit-of-measures menu item if user is not global admin
+    // Hide items marked globalAdminOnly if user is not global admin
     if ((item as any).globalAdminOnly && !adminCheck?.isGlobalAdmin) {
+      return false;
+    }
+    // Hide items marked companyAdminOnly if user is not company admin or global admin
+    if ((item as any).companyAdminOnly && !companyAdminCheck?.isCompanyAdmin && !adminCheck?.isGlobalAdmin) {
       return false;
     }
     return true;
@@ -203,6 +224,8 @@ export default function Setup() {
         return <LicenceAgreementTemplatesManagement />;
       case "licence-agreements":
         return <LicenceAgreementsManagement />;
+      case "my-company":
+        return <CompanyDetail />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

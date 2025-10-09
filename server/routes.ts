@@ -25,6 +25,7 @@ import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { pool } from "./db";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
@@ -1856,6 +1857,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting email:", error);
       res.status(500).json({ message: "Failed to delete email" });
+    }
+  });
+
+  // Object Storage Routes - For company logo uploads
+  // This endpoint serves private objects (company logos in this case) that can be accessed publicly
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const objectFile = await objectStorageService.getObjectEntityFile(
+        req.path,
+      );
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error("Error accessing object:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
+  // Get upload URL for object entity (logo)
+  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+    const objectStorageService = new ObjectStorageService();
+    const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+    res.json({ uploadURL });
+  });
+
+  // Update company logo after upload
+  app.put("/api/companies/:id/logo", isAuthenticated, async (req, res) => {
+    if (!req.body.logoUrl) {
+      return res.status(400).json({ error: "logoUrl is required" });
+    }
+
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      // Check if the company exists and user has access
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      if (company.id !== companyContext) {
+        return res.status(403).json({ message: "Not authorized to update this company's logo" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(
+        req.body.logoUrl,
+      );
+
+      // Update company with the logo path
+      const updatedCompany = await storage.updateCompany(req.params.id, {
+        logoUrl: objectPath,
+      });
+
+      res.status(200).json({
+        logoUrl: objectPath,
+        company: updatedCompany,
+      });
+    } catch (error) {
+      console.error("Error setting company logo:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Delete company logo
+  app.delete("/api/companies/:id/logo", isAuthenticated, async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      // Check if the company exists and user has access
+      const company = await storage.getCompany(req.params.id);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      if (company.id !== companyContext) {
+        return res.status(403).json({ message: "Not authorized to update this company's logo" });
+      }
+
+      // Update company to remove logo
+      const updatedCompany = await storage.updateCompany(req.params.id, {
+        logoUrl: null,
+      });
+
+      res.status(200).json({
+        message: "Logo deleted successfully",
+        company: updatedCompany,
+      });
+    } catch (error) {
+      console.error("Error deleting company logo:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 

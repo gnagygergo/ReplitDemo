@@ -23,6 +23,7 @@ import { Building, Edit, Save, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { LogoUpload } from "./logo-upload";
 
 export default function CompanyDetail() {
   const [isEditing, setIsEditing] = useState(false);
@@ -405,6 +406,16 @@ export default function CompanyDetail() {
             >
               Payment functionality coming soon
             </p>
+          </CardContent>
+        </Card>
+
+        {/* Branding Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Branding</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LogoUpload companyId={company.id} currentLogoUrl={company.logoUrl} />
           </CardContent>
         </Card>
       </div>

@@ -28,6 +28,7 @@ export const companies = pgTable("companies", {
   taxResidencyCountry: text("tax_residency_country").references(
     () => countries.countryCode,
   ),
+  logoUrl: text("logo_url"),
 });
 
 export const accounts = pgTable("accounts", {

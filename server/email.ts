@@ -13,6 +13,8 @@ interface EmailParams {
   subject: string;
   text?: string;
   html?: string;
+  cc?: string[];
+  bcc?: string[];
 }
 
 export async function sendEmail(params: EmailParams): Promise<{ success: boolean; error?: string }> {
@@ -23,6 +25,8 @@ export async function sendEmail(params: EmailParams): Promise<{ success: boolean
       subject: params.subject,
       text: params.text || params.subject,
       html: params.html,
+      cc: params.cc,
+      bcc: params.bcc,
     });
     console.log(`Email sent successfully from ${params.from} to ${params.to}`);
     return { success: true };

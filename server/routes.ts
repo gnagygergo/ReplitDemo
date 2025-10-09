@@ -1833,24 +1833,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const email = await storage.createEmail(validatedData);
 
       // Send the email via SendGrid
-      try {
-        await sendEmail({
-          to: validatedData.toEmail,
-          from: validatedData.fromEmail,
-          subject: validatedData.subject,
-          text: validatedData.body,
-          cc: validatedData.ccEmail
-            ? validatedData.ccEmail.split(",").map((e) => e.trim())
-            : undefined,
-          bcc: validatedData.bccEmail
-            ? validatedData.bccEmail.split(",").map((e) => e.trim())
-            : undefined,
-        });
-      } catch (emailError) {
-        console.error("Error sending email:", emailError);
+      const emailResult = await sendEmail({
+        to: validatedData.toEmail,
+        from: validatedData.fromEmail,
+        subject: validatedData.subject,
+        text: validatedData.body,
+        cc: validatedData.ccEmail
+          ? validatedData.ccEmail.split(",").map((e) => e.trim())
+          : undefined,
+        bcc: validatedData.bccEmail
+          ? validatedData.bccEmail.split(",").map((e) => e.trim())
+          : undefined,
+      });
+
+      if (!emailResult.success) {
+        console.error("Error sending email:", emailResult.error);
         // Email record is created but sending failed
         return res.status(500).json({
-          message: "Email record created but failed to send",
+          message: emailResult.error || "Email record created but failed to send",
           email,
         });
       }

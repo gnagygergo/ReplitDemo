@@ -2,7 +2,11 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type Company, type InsertCompany, insertCompanySchema } from "@shared/schema";
+import {
+  type Company,
+  type InsertCompany,
+  insertCompanySchema,
+} from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,7 +46,7 @@ export default function CompanyDetail() {
         companyAlias: true,
         bankAccountNumber: true,
         address: true,
-      })
+      }),
     ),
     defaultValues: {
       companyAlias: "",
@@ -118,7 +122,10 @@ export default function CompanyDetail() {
             <Building className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-foreground" data-testid="text-company-name">
+            <h1
+              className="text-3xl font-bold text-foreground"
+              data-testid="text-company-name"
+            >
               {companyName?.companyName || company.companyOfficialName}
             </h1>
             <p className="text-muted-foreground">Company Information</p>
@@ -155,7 +162,11 @@ export default function CompanyDetail() {
                   </Button>
                 </>
               ) : (
-                <Button size="sm" onClick={handleEdit} data-testid="button-edit-company">
+                <Button
+                  size="sm"
+                  onClick={handleEdit}
+                  data-testid="button-edit-company"
+                >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit
                 </Button>
@@ -185,7 +196,11 @@ export default function CompanyDetail() {
                         <FormItem>
                           <FormLabel>Company Alias</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} data-testid="input-company-alias" />
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              data-testid="input-company-alias"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -209,7 +224,11 @@ export default function CompanyDetail() {
                         <FormItem>
                           <FormLabel>Bank Account Number</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value || ""} data-testid="input-bank-account" />
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              data-testid="input-bank-account"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -222,7 +241,12 @@ export default function CompanyDetail() {
                         <FormItem className="md:col-span-2">
                           <FormLabel>Address</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value || ""} rows={3} data-testid="input-address" />
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
+                              rows={3}
+                              data-testid="input-address"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -237,7 +261,10 @@ export default function CompanyDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Official Name
                   </label>
-                  <div className="mt-2 text-foreground" data-testid="text-company-official-name">
+                  <div
+                    className="mt-2 text-foreground"
+                    data-testid="text-company-official-name"
+                  >
                     {company.companyOfficialName}
                   </div>
                 </div>
@@ -245,7 +272,10 @@ export default function CompanyDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Company Alias
                   </label>
-                  <div className="mt-2 text-foreground" data-testid="text-company-alias">
+                  <div
+                    className="mt-2 text-foreground"
+                    data-testid="text-company-alias"
+                  >
                     {company.companyAlias || "N/A"}
                   </div>
                 </div>
@@ -253,7 +283,10 @@ export default function CompanyDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Registration ID
                   </label>
-                  <div className="mt-2 text-foreground" data-testid="text-company-registration-id">
+                  <div
+                    className="mt-2 text-foreground"
+                    data-testid="text-company-registration-id"
+                  >
                     {company.companyRegistrationId || "N/A"}
                   </div>
                 </div>
@@ -261,7 +294,10 @@ export default function CompanyDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Bank Account Number
                   </label>
-                  <div className="mt-2 text-foreground" data-testid="text-bank-account">
+                  <div
+                    className="mt-2 text-foreground"
+                    data-testid="text-bank-account"
+                  >
                     {company.bankAccountNumber || "N/A"}
                   </div>
                 </div>
@@ -269,7 +305,10 @@ export default function CompanyDetail() {
                   <label className="text-sm font-medium text-muted-foreground">
                     Address
                   </label>
-                  <div className="mt-2 text-foreground whitespace-pre-wrap" data-testid="text-address">
+                  <div
+                    className="mt-2 text-foreground whitespace-pre-wrap"
+                    data-testid="text-address"
+                  >
                     {company.address || "N/A"}
                   </div>
                 </div>
@@ -285,7 +324,10 @@ export default function CompanyDetail() {
           </CardHeader>
           <CardContent>
             {licenceAgreements.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8" data-testid="text-no-agreements">
+              <p
+                className="text-muted-foreground text-center py-8"
+                data-testid="text-no-agreements"
+              >
                 No licence agreements found
               </p>
             ) : (
@@ -309,18 +351,38 @@ export default function CompanyDetail() {
                   </thead>
                   <tbody>
                     {licenceAgreements.map((agreement: any) => (
-                      <tr key={agreement.id} className="border-b" data-testid={`row-agreement-${agreement.id}`}>
-                        <td className="py-3 px-4" data-testid={`text-name-${agreement.id}`}>
+                      <tr
+                        key={agreement.id}
+                        className="border-b"
+                        data-testid={`row-agreement-${agreement.id}`}
+                      >
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-name-${agreement.id}`}
+                        >
                           {agreement.templateName || "N/A"}
                         </td>
-                        <td className="py-3 px-4" data-testid={`text-valid-from-${agreement.id}`}>
-                          {agreement.validFrom ? format(new Date(agreement.validFrom), "PPP") : "N/A"}
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-valid-from-${agreement.id}`}
+                        >
+                          {agreement.validFrom
+                            ? format(new Date(agreement.validFrom), "PPP")
+                            : "N/A"}
                         </td>
-                        <td className="py-3 px-4" data-testid={`text-valid-to-${agreement.id}`}>
-                          {agreement.validTo ? format(new Date(agreement.validTo), "PPP") : "N/A"}
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-valid-to-${agreement.id}`}
+                        >
+                          {agreement.validTo
+                            ? format(new Date(agreement.validTo), "PPP")
+                            : "N/A"}
                         </td>
-                        <td className="py-3 px-4" data-testid={`text-seats-${agreement.id}`}>
-                          {agreement.licenceCount || "N/A"}
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-seats-${agreement.id}`}
+                        >
+                          {agreement.licenceSeat || "N/A"}
                         </td>
                       </tr>
                     ))}
@@ -337,7 +399,10 @@ export default function CompanyDetail() {
             <CardTitle>Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-center py-8" data-testid="text-no-payments">
+            <p
+              className="text-muted-foreground text-center py-8"
+              data-testid="text-no-payments"
+            >
               Payment functionality coming soon
             </p>
           </CardContent>

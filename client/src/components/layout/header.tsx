@@ -11,14 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { type Company } from "@shared/schema";
 
 export default function Header() {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  // Fetch company name for current user
-  const { data: companyData } = useQuery<{ companyName: string }>({
-    queryKey: ["/api/auth/company-name"],
+  // Fetch company data for current user (includes logo and alias)
+  const { data: companyData } = useQuery<Company>({
+    queryKey: ["/api/auth/my-company"],
     enabled: !!user, // Only fetch if user is authenticated
   });
 
@@ -46,7 +47,18 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <h1 className="text-xl font-bold text-primary">Low Hanging Fruits</h1>
+            {companyData?.logoUrl ? (
+              <img 
+                src={companyData.logoUrl} 
+                alt="Company logo"
+                className="max-h-[90%] h-auto w-auto object-contain"
+                data-testid="img-header-logo"
+              />
+            ) : (
+              <h1 className="text-xl font-bold text-primary" data-testid="text-header-company-name">
+                {companyData?.companyAlias || companyData?.companyOfficialName || 'Low Hanging Fruits'}
+              </h1>
+            )}
             <nav className="hidden md:flex space-x-6">
               {navItems.map(({ path, label, icon: Icon }) => (
                 <Link
@@ -115,7 +127,7 @@ export default function Header() {
                       {user?.email}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground" data-testid="text-company-name">
-                      {companyData?.companyName || 'No company'}
+                      {companyData?.companyAlias || companyData?.companyOfficialName || 'No company'}
                     </p>
                   </div>
                 </div>

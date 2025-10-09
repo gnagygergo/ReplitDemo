@@ -10,7 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import CaseForm from "@/components/cases/case-form";
-import EmailDialog from "@/components/cases/email-dialog";
+import EmailPanel from "@/components/emails/email-panel";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -391,11 +392,19 @@ export default function Cases() {
         case={editingCase}
       />
 
-      <EmailDialog
-        open={showEmailDialog}
-        onClose={handleCloseEmailDialog}
-        case={emailingCase}
-      />
+      <Dialog open={showEmailDialog} onOpenChange={handleCloseEmailDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Email Communication - {emailingCase?.subject || "Case"}</DialogTitle>
+          </DialogHeader>
+          {emailingCase && (
+            <EmailPanel 
+              parentType="Case"
+              parentId={emailingCase.id}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -407,7 +407,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       "/api/accounts",
       "/api/opportunities",
       "/api/cases",
-      "/api/send-email",
       "/api/users",
       "/api/company-roles",
       "/api/user-role-assignments",
@@ -496,42 +495,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users for company" });
-    }
-  });
-
-  // Email sending route
-  const emailSchema = z.object({
-    to: z.string().email("Invalid recipient email"),
-    from: z.string().email("Invalid sender email"),
-    subject: z.string().min(1, "Subject is required"),
-    body: z.string().min(1, "Email body is required"),
-  });
-
-  app.post("/api/send-email", async (req, res) => {
-    try {
-      const validatedData = emailSchema.parse(req.body);
-      const result = await sendEmail({
-        to: validatedData.to,
-        from: validatedData.from,
-        subject: validatedData.subject,
-        text: validatedData.body,
-        html: validatedData.body.replace(/\n/g, "<br>"),
-      });
-
-      if (result.success) {
-        res.json({ message: "Email sent successfully" });
-      } else {
-        res
-          .status(400)
-          .json({ message: result.error || "Failed to send email" });
-      }
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res
-          .status(400)
-          .json({ message: "Invalid data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to send email" });
     }
   });
 

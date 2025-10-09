@@ -91,13 +91,6 @@ const setupMenuItems = [
     description: "Manage company licence agreements",
     globalAdminOnly: true,
   },
-  {
-    id: "my-company",
-    label: "My Company",
-    icon: Building,
-    description: "View and manage your company information",
-    companyAdminOnly: true,
-  },
 ];
 
 import UserManagement from "@/components/setup/user-management";

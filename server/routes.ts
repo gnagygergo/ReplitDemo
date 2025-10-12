@@ -48,6 +48,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validatedData = registrationSchema.parse(req.body);
 
+      // Find active online registration license agreement template first
+      const activeTemplate = await storage.getActiveOnlineRegistrationTemplate();
+      if (!activeTemplate) {
+        return res.status(400).json({
+          message: "The system did not find a valid Licence Agreement Template to which this registration could be linked.",
+        });
+      }
+
       // Check if company with this registration ID already exists
       const existingCompany = await storage.getCompanyByRegistrationId(
         validatedData.companyRegistrationId,
@@ -82,6 +90,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isAdmin: true, // First user of new company is admin
         companyId: company.id,
       });
+
+      // Create automated license agreement for the new company
+      await storage.createLicenceAgreementAutomated(
+        activeTemplate.id,
+        company.id
+      );
 
       res.status(201).json({
         message: "Registration successful",

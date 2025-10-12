@@ -307,6 +307,7 @@ export const licenceAgreementTemplates = pgTable(
     id: varchar("id")
       .primaryKey()
       .default(sql`gen_random_uuid()`),
+    templateCode: text("template-code").notNull().unique(),
     name: text("name").notNull(),
     description: text("description"),
     licenceId: varchar("licence_id")

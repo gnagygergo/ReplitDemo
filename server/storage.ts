@@ -1487,6 +1487,44 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  async createLicenceAgreementAutomated(
+    licenceAgreementTemplateId: string,
+    companyId: string
+  ): Promise<LicenceAgreement> {
+    // Fetch the template
+    const template = await this.getLicenceAgreementTemplate(licenceAgreementTemplateId);
+    if (!template) {
+      throw new Error("Licence agreement template not found");
+    }
+
+    // Calculate dates
+    const validFrom = new Date(); // Current date
+    const templateValidFrom = template.ValidFrom ? new Date(template.ValidFrom) : new Date();
+    const validTo = new Date(templateValidFrom);
+    validTo.setMonth(validTo.getMonth() + (template.agreementBaseDurationMonths || 0));
+
+    // Format dates to YYYY-MM-DD
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+    // Create the agreement
+    const [agreement] = await db
+      .insert(licenceAgreements)
+      .values({
+        licenceAgreementTemplateId,
+        companyId,
+        validFrom: formatDate(validFrom),
+        validTo: formatDate(validTo),
+        price: template.price,
+        currency: template.currency,
+        licenceSeats: 1,
+        licenceSeatsRemaining: null,
+        licenceSeatsUsed: null,
+      })
+      .returning();
+
+    return agreement;
+  }
+
   // Email methods
   async getEmailsByParent(parentType: string, parentId: string, companyContext?: string): Promise<Email[]> {
     const conditions = [

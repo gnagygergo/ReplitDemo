@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validTo: agreement.validTo,
           licenceSeats: agreement.licenceSeats || "N/A",
           licenceSeatsRemaining: agreement.licenceSeatsRemaining || "N/A",
-          licenceSeatsUsed: agreement.licenceSeatsUser || "N/A"
+          licenceSeatsUsed: agreement.licenceSeatsUsed || "N/A"
         }));
 
         res.json(formattedAgreements);
@@ -1692,6 +1692,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public endpoint for automated licence agreement creation
+  app.post("/api/licence-agreements-automated", async (req, res) => {
+    try {
+      const schema = z.object({
+        licenceAgreementTemplateId: z.string().min(1, "Template ID is required"),
+        companyId: z.string().min(1, "Company ID is required"),
+      });
+      const validatedData = schema.parse(req.body);
+      const agreement = await storage.createLicenceAgreementAutomated(
+        validatedData.licenceAgreementTemplateId,
+        validatedData.companyId
+      );
+      res.status(201).json(agreement);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating automated licence agreement:", error);
+      res.status(500).json({ 
+        message: error instanceof Error ? error.message : "Failed to create licence agreement" 
+      });
+    }
+  });
+
   app.patch(
     "/api/licence-agreements/:id",
     isAuthenticated,
@@ -1758,7 +1784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
-
+  
   // Email routes (Company-scoped)
   app.get(
     "/api/emails/:parentType/:parentId",

@@ -346,7 +346,13 @@ export default function CompanyDetail() {
                         Valid To
                       </th>
                       <th className="text-left py-3 px-4 font-medium text-muted-foreground">
-                        Seats
+                        All Seats
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                        Seats Used
+                      </th>
+                      <th className="text-left py-3 px-4 font-medium text-muted-foreground">
+                        Seats Remaining
                       </th>
                     </tr>
                   </thead>
@@ -383,7 +389,19 @@ export default function CompanyDetail() {
                           className="py-3 px-4"
                           data-testid={`text-seats-${agreement.id}`}
                         >
-                          {agreement.licenceSeat || "N/A"}
+                          {agreement.licenceSeats || "N/A"}
+                        </td>
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-seats-${agreement.id}`}
+                        >
+                          {agreement.licenceSeatsRemaining || "N/A"}
+                        </td>
+                        <td
+                          className="py-3 px-4"
+                          data-testid={`text-seats-${agreement.id}`}
+                        >
+                          {agreement.licenceSeatsUsed || "N/A"}
                         </td>
                       </tr>
                     ))}
@@ -415,7 +433,10 @@ export default function CompanyDetail() {
             <CardTitle>Branding</CardTitle>
           </CardHeader>
           <CardContent>
-            <LogoUpload companyId={company.id} currentLogoUrl={company.logoUrl} />
+            <LogoUpload
+              companyId={company.id}
+              currentLogoUrl={company.logoUrl}
+            />
           </CardContent>
         </Card>
       </div>

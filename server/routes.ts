@@ -338,7 +338,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           templateName: agreement.licenceAgreementTemplate?.name || "N/A",
           validFrom: agreement.validFrom,
           validTo: agreement.validTo,
-          licenceSeat: agreement.licenceSeats || 0,
+          licenceSeats: agreement.licenceSeats || "N/A",
+          licenceSeatsRemaining: agreement.licenceSeatsRemaining || "N/A",
+          licenceSeatsUsed: agreement.licenceSeatsUser || "N/A"
         }));
 
         res.json(formattedAgreements);

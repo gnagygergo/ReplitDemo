@@ -311,8 +311,9 @@ export const licenceAgreementTemplates = pgTable(
     licenceId: varchar("licence_id")
       .notNull()
       .references(() => licences.id, { onDelete: "restrict" }),
-    validFrom: date("valid_from"),
-    validTo: date("valid_to"),
+    ValidFrom: date("valid_from"),
+    ValidTo: date("valid_to"),
+    agreementBaseDurationMonths: integer("agreement_base_duration_months"),
     price: decimal("price", { precision: 12, scale: 2 }).notNull(),
     currency: text("currency").notNull(),
   },
@@ -333,6 +334,8 @@ export const licenceAgreements = pgTable("licence_agreements", {
   price: decimal("price", { precision: 12, scale: 2 }),
   currency: text("currency"),
   licenceSeats: integer("licence_seat"),
+  licenceSeatsRemaining: integer("licence_seats_remaining"),
+  licenceSeatsUsed: integer("licence_seats_used")
 });
 
 export const emails = pgTable("emails", {

@@ -74,7 +74,7 @@ import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, lte, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
 
@@ -276,6 +276,7 @@ export interface IStorage {
   // Licence Agreement Template methods (Global - no company context)
   getLicenceAgreementTemplates(): Promise<LicenceAgreementTemplateWithLicence[]>;
   getLicenceAgreementTemplate(id: string): Promise<LicenceAgreementTemplateWithLicence | undefined>;
+  getActiveOnlineRegistrationTemplate(): Promise<LicenceAgreementTemplateWithLicence | undefined>;
   createLicenceAgreementTemplate(template: InsertLicenceAgreementTemplate): Promise<LicenceAgreementTemplate>;
   updateLicenceAgreementTemplate(
     id: string,
@@ -1371,6 +1372,29 @@ export class DatabaseStorage implements IStorage {
       .from(licenceAgreementTemplates)
       .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
       .where(eq(licenceAgreementTemplates.id, id));
+    
+    if (!result) return undefined;
+    
+    return {
+      ...result.licence_agreement_templates,
+      licence: result.licences!,
+    };
+  }
+
+  async getActiveOnlineRegistrationTemplate(): Promise<LicenceAgreementTemplateWithLicence | undefined> {
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    const [result] = await db
+      .select()
+      .from(licenceAgreementTemplates)
+      .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
+      .where(
+        and(
+          eq(licences.code, "Online_Registration_Free"),
+          lte(licenceAgreementTemplates.ValidFrom, currentDate),
+          gte(licenceAgreementTemplates.ValidTo, currentDate)
+        )
+      );
     
     if (!result) return undefined;
     

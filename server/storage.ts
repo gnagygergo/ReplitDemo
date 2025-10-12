@@ -294,6 +294,7 @@ export interface IStorage {
     agreement: Partial<InsertLicenceAgreement>,
   ): Promise<LicenceAgreement | undefined>;
   deleteLicenceAgreement(id: string): Promise<boolean>;
+  actualizeLicenceAgreementSeatsUsed(licenceAgreementId: string): Promise<LicenceAgreement | undefined>;
 
   // Email methods
   getEmailsByParent(parentType: string, parentId: string, companyContext?: string): Promise<Email[]>;
@@ -1489,7 +1490,11 @@ export class DatabaseStorage implements IStorage {
       .insert(licenceAgreements)
       .values(insertAgreement)
       .returning();
-    return agreement;
+    
+    // Update seat counts based on actual user count
+    const actualizedAgreement = await this.actualizeLicenceAgreementSeatsUsed(agreement.id);
+    
+    return actualizedAgreement || agreement;
   }
 
   async updateLicenceAgreement(
@@ -1501,7 +1506,14 @@ export class DatabaseStorage implements IStorage {
       .set(updates)
       .where(eq(licenceAgreements.id, id))
       .returning();
-    return agreement || undefined;
+    
+    // Update seat counts based on actual user count
+    if (agreement) {
+      const actualizedAgreement = await this.actualizeLicenceAgreementSeatsUsed(agreement.id);
+      return actualizedAgreement || agreement;
+    }
+    
+    return undefined;
   }
 
   async deleteLicenceAgreement(id: string): Promise<boolean> {
@@ -1509,6 +1521,36 @@ export class DatabaseStorage implements IStorage {
       .delete(licenceAgreements)
       .where(eq(licenceAgreements.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async actualizeLicenceAgreementSeatsUsed(licenceAgreementId: string): Promise<LicenceAgreement | undefined> {
+    // Get the licence agreement to find the associated company
+    const agreement = await this.getLicenceAgreement(licenceAgreementId);
+    if (!agreement) {
+      return undefined;
+    }
+
+    // Count the users associated with the company
+    const userCount = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(users)
+      .where(eq(users.companyId, agreement.companyId));
+    
+    const seatsUsed = userCount[0]?.count || 0;
+    const licenceSeats = agreement.licenceSeats || 0;
+    const seatsRemaining = licenceSeats - seatsUsed;
+
+    // Update the licence agreement with the calculated values
+    const [updatedAgreement] = await db
+      .update(licenceAgreements)
+      .set({
+        licenceSeatsUsed: seatsUsed,
+        licenceSeatsRemaining: seatsRemaining,
+      })
+      .where(eq(licenceAgreements.id, licenceAgreementId))
+      .returning();
+
+    return updatedAgreement || undefined;
   }
 
   async createLicenceAgreementAutomated(
@@ -1546,7 +1588,10 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
 
-    return agreement;
+    // Update seat counts based on actual user count
+    const actualizedAgreement = await this.actualizeLicenceAgreementSeatsUsed(agreement.id);
+
+    return actualizedAgreement || agreement;
   }
 
   // Email methods

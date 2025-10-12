@@ -296,6 +296,7 @@ export const licences = pgTable("licences", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  code: text("code").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
 });

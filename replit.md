@@ -91,3 +91,28 @@ Preferred communication style: Simple, everyday language.
 - PostgreSQL session store with graceful fallback to MemoryStore for development
 - Session regeneration on login/logout prevents session fixation vulnerabilities
 - Explicit session cookie clearing on logout ensures complete session cleanup
+
+## Registration Flow & License Management
+
+### Automated License Agreement Creation
+The registration process includes automatic license agreement provisioning:
+
+1. **Template Validation**: Before creating any records, the system verifies an active License Agreement Template exists
+   - Queries for templates where current date falls between `ValidFrom` and `ValidTo` dates
+   - Filters by licence code: `"Online_Registration_Free"` (unique identifier for registration templates)
+   - If no valid template exists, registration fails with error: "The system did not find a valid Licence Agreement Template to which this registration could be linked."
+
+2. **Company & User Creation**: Only proceeds after template validation
+   - Creates company record with official name, alias, and registration ID
+   - Creates first admin user linked to the company
+   - Ensures transactional integrity - no orphaned records if template is missing
+
+3. **Automated Agreement Provisioning**: 
+   - Uses `/api/licence-agreements-automated` endpoint
+   - Creates license agreement with company ID and template ID
+   - Calculates agreement validity period based on template's `agreementBaseDurationMonths`
+   - Sets initial license seat allocation
+
+### Storage Methods
+- `getActiveOnlineRegistrationTemplate()`: Finds valid template for current date with "Online_Registration_Free" licence code
+- `createLicenceAgreementAutomated()`: Creates agreement with automated date calculation and pricing from template

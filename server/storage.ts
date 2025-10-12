@@ -1390,7 +1390,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(licences, eq(licenceAgreementTemplates.licenceId, licences.id))
       .where(
         and(
-          eq(licences.code, "Online_Registration_Free"),
+          eq(licenceAgreementTemplates.templateCode, "Online_Registration_Free"),
           lte(licenceAgreementTemplates.ValidFrom, currentDate),
           gte(licenceAgreementTemplates.ValidTo, currentDate)
         )

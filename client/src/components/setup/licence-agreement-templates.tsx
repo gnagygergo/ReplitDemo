@@ -130,11 +130,12 @@ function TemplateDialog({
   const form = useForm<TemplateForm>({
     resolver: zodResolver(insertLicenceAgreementTemplateSchema),
     defaultValues: {
+      templateCode: template?.templateCode || "",
       name: template?.name || "",
       description: template?.description || "",
       licenceId: template?.licenceId || "",
-      validFrom: template?.validFrom || "",
-      validTo: template?.validTo || "",
+      validFrom: template?.ValidFrom || "",
+      validTo: template?.ValidTo || "",
       price: template?.price ? parseFloat(template.price) : 0,
       currency: template?.currency || "USD",
     },
@@ -179,6 +180,24 @@ function TemplateDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="templateCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Template Code</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter template code"
+                      {...field}
+                      value={field.value || ""}
+                      data-testid="input-template-code"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="name"
@@ -596,11 +615,11 @@ export default function LicenceAgreementTemplatesManagement() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h4 className="text-sm font-medium mb-1">Valid From</h4>
-                      <p className="text-sm text-muted-foreground">{selectedTemplate.validFrom || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.ValidFrom || "N/A"}</p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium mb-1">Valid To</h4>
-                      <p className="text-sm text-muted-foreground">{selectedTemplate.validTo || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.ValidTo || "N/A"}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">

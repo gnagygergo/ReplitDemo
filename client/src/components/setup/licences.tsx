@@ -62,6 +62,7 @@ function LicenceDialog({
   const form = useForm<LicenceForm>({
     resolver: zodResolver(insertLicenceSchema),
     defaultValues: {
+      code: licence?.code || "",
       name: licence?.name || "",
       description: licence?.description || "",
     },
@@ -102,6 +103,24 @@ function LicenceDialog({
       </DialogHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Code</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter licence code"
+                    {...field}
+                    value={field.value || ""}
+                    data-testid="input-licence-code"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="name"

@@ -207,7 +207,7 @@ function AgreementDialog({
       validTo: agreement?.validTo || "",
       price: agreement?.price ? parseFloat(agreement.price) : undefined,
       currency: agreement?.currency || "",
-      licenceCount: agreement?.licenceCount || undefined,
+      licenceCount: agreement?.licenceSeats || undefined,
     },
   });
 
@@ -398,20 +398,46 @@ function AgreementDialog({
                 name="licenceCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Licence Count</FormLabel>
+                    <FormLabel>All Seats</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         {...field}
                         value={field.value || ""}
                         onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                        data-testid="input-agreement-licence-count"
+                        data-testid="input-agreement-all-seats"
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormItem>
+                <FormLabel>Seats Used</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={agreement?.licenceSeatsUsed ?? ""}
+                    disabled
+                    className="bg-muted"
+                    data-testid="input-agreement-seats-used"
+                  />
+                </FormControl>
+              </FormItem>
+              <FormItem>
+                <FormLabel>Seats Remaining</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    value={agreement?.licenceSeatsRemaining ?? ""}
+                    disabled
+                    className="bg-muted"
+                    data-testid="input-agreement-seats-remaining"
+                  />
+                </FormControl>
+              </FormItem>
             </div>
             <div className="flex justify-end space-x-2">
               <Button type="button" variant="outline" onClick={onClose}>
@@ -712,8 +738,18 @@ export default function LicenceAgreementsManagement() {
                       <p className="text-sm text-muted-foreground">{selectedAgreement.currency || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Licence Count</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.licenceCount || "N/A"}</p>
+                      <h4 className="text-sm font-medium mb-1">All Seats</h4>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-all-seats-${selectedAgreement.id}`}>{selectedAgreement.licenceSeats ?? "N/A"}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Seats Used</h4>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-seats-used-${selectedAgreement.id}`}>{selectedAgreement.licenceSeatsUsed ?? "N/A"}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Seats Remaining</h4>
+                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-seats-remaining-${selectedAgreement.id}`}>{selectedAgreement.licenceSeatsRemaining ?? "N/A"}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

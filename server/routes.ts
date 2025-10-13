@@ -49,10 +49,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = registrationSchema.parse(req.body);
 
       // Find active online registration license agreement template first
-      const activeTemplate = await storage.getActiveOnlineRegistrationTemplate();
+      const activeTemplate =
+        await storage.getActiveOnlineRegistrationTemplate();
       if (!activeTemplate) {
         return res.status(400).json({
-          message: "The system did not find a valid Licence Agreement Template to which this registration could be linked.",
+          message:
+            "The system did not find a valid Licence Agreement Template to which this registration could be linked.",
         });
       }
 
@@ -94,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create automated license agreement for the new company
       await storage.createLicenceAgreementAutomated(
         activeTemplate.id,
-        company.id
+        company.id,
       );
 
       res.status(201).json({
@@ -336,11 +338,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isCompanyAdmin && !isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message: "Only company admins can view licence agreements",
-            });
+          return res.status(403).json({
+            message: "Only company admins can view licence agreements",
+          });
         }
 
         const agreements =
@@ -354,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validTo: agreement.validTo,
           licenceSeats: agreement.licenceSeats || "N/A",
           licenceSeatsRemaining: agreement.licenceSeatsRemaining || "N/A",
-          licenceSeatsUsed: agreement.licenceSeatsUsed || "N/A"
+          licenceSeatsUsed: agreement.licenceSeatsUsed || "N/A",
         }));
 
         res.json(formattedAgreements);
@@ -582,7 +582,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update licence agreement seat counts if licenceAgreementId is provided
       if (validatedData.licenceAgreementId) {
-        await storage.actualizeLicenceAgreementSeatsUsed(validatedData.licenceAgreementId);
+        await storage.actualizeLicenceAgreementSeatsUsed(
+          validatedData.licenceAgreementId,
+        );
       }
 
       res.status(201).json(user);
@@ -593,7 +595,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating user:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to create user";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create user";
       res.status(500).json({ message: errorMessage });
     }
   });
@@ -612,11 +615,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const validatedData = userUpdateSchema.parse(req.body);
-      
+
       // Get the user's old licence agreement ID before updating
       const oldUser = await storage.getUser(req.params.id);
       const oldLicenceAgreementId = oldUser?.licenceAgreementId;
-      
+
       const user = await storage.updateUser(req.params.id, validatedData);
 
       if (!user) {
@@ -624,12 +627,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update licence agreement seat counts if licenceAgreementId changed
-      if (validatedData.licenceAgreementId && validatedData.licenceAgreementId !== oldLicenceAgreementId) {
+      if (
+        validatedData.licenceAgreementId &&
+        validatedData.licenceAgreementId !== oldLicenceAgreementId
+      ) {
         // Update new licence agreement
-        await storage.actualizeLicenceAgreementSeatsUsed(validatedData.licenceAgreementId);
+        await storage.actualizeLicenceAgreementSeatsUsed(
+          validatedData.licenceAgreementId,
+        );
         // Update old licence agreement if it exists
         if (oldLicenceAgreementId) {
-          await storage.actualizeLicenceAgreementSeatsUsed(oldLicenceAgreementId);
+          await storage.actualizeLicenceAgreementSeatsUsed(
+            oldLicenceAgreementId,
+          );
         }
       }
 
@@ -643,7 +653,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error updating user:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to update user";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update user";
       res.status(500).json({ message: errorMessage });
     }
   });
@@ -1534,12 +1545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only global admins can create licence agreement templates",
-            });
+          return res.status(403).json({
+            message:
+              "Only global admins can create licence agreement templates",
+          });
         }
 
         const validatedData = insertLicenceAgreementTemplateSchema.parse(
@@ -1569,12 +1578,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only global admins can update licence agreement templates",
-            });
+          return res.status(403).json({
+            message:
+              "Only global admins can update licence agreement templates",
+          });
         }
 
         const validatedData = insertLicenceAgreementTemplateSchema
@@ -1611,12 +1618,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only global admins can delete licence agreement templates",
-            });
+          return res.status(403).json({
+            message:
+              "Only global admins can delete licence agreement templates",
+          });
         }
 
         const deleted = await storage.deleteLicenceAgreementTemplate(
@@ -1642,11 +1647,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
       if (!isGlobalAdmin) {
-        return res
-          .status(403)
-          .json({
-            message: "Only global admins can view all licence agreements",
-          });
+        return res.status(403).json({
+          message: "Only global admins can view all licence agreements",
+        });
       }
 
       const agreements = await storage.getLicenceAgreements();
@@ -1664,12 +1667,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message:
-                "Only global admins can view licence agreements by company",
-            });
+          return res.status(403).json({
+            message:
+              "Only global admins can view licence agreements by company",
+          });
         }
 
         const agreements = await storage.getLicenceAgreementsByCompany(
@@ -1684,15 +1685,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
-
+  // this is used to get agreements where seats are available
   app.get(
     "/api/licence-agreements/available",
     isAuthenticated,
     async (req, res) => {
       try {
-        const agreements = await storage.getLicenceAgreements();
+        const companyContext = await storage.GetCompanyContext(req);
+        const agreements =
+          await storage.getLicenceAgreementsByCompany(companyContext);
         const availableAgreements = agreements.filter(
-          (agreement) => (agreement.licenceSeatsRemaining ?? 0) > 0
+          (agreement) => (agreement.licenceSeatsRemaining ?? 0) > 0,
         );
         res.json(availableAgreements);
       } catch (error) {
@@ -1728,11 +1731,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
       if (!isGlobalAdmin) {
-        return res
-          .status(403)
-          .json({
-            message: "Only global admins can create licence agreements",
-          });
+        return res.status(403).json({
+          message: "Only global admins can create licence agreements",
+        });
       }
 
       const validatedData = insertLicenceAgreementSchema.parse(req.body);
@@ -1753,13 +1754,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/licence-agreements-automated", async (req, res) => {
     try {
       const schema = z.object({
-        licenceAgreementTemplateId: z.string().min(1, "Template ID is required"),
+        licenceAgreementTemplateId: z
+          .string()
+          .min(1, "Template ID is required"),
         companyId: z.string().min(1, "Company ID is required"),
       });
       const validatedData = schema.parse(req.body);
       const agreement = await storage.createLicenceAgreementAutomated(
         validatedData.licenceAgreementTemplateId,
-        validatedData.companyId
+        validatedData.companyId,
       );
       res.status(201).json(agreement);
     } catch (error) {
@@ -1769,8 +1772,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating automated licence agreement:", error);
-      res.status(500).json({ 
-        message: error instanceof Error ? error.message : "Failed to create licence agreement" 
+      res.status(500).json({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to create licence agreement",
       });
     }
   });
@@ -1782,11 +1788,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message: "Only global admins can update licence agreements",
-            });
+          return res.status(403).json({
+            message: "Only global admins can update licence agreements",
+          });
         }
 
         const validatedData = insertLicenceAgreementSchema
@@ -1821,11 +1825,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
         if (!isGlobalAdmin) {
-          return res
-            .status(403)
-            .json({
-              message: "Only global admins can delete licence agreements",
-            });
+          return res.status(403).json({
+            message: "Only global admins can delete licence agreements",
+          });
         }
 
         const deleted = await storage.deleteLicenceAgreement(req.params.id);
@@ -1841,7 +1843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
-  
+
   // Email routes (Company-scoped)
   app.get(
     "/api/emails/:parentType/:parentId",
@@ -1899,7 +1901,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error sending email:", emailResult.error);
         // Email record is created but sending failed
         return res.status(500).json({
-          message: emailResult.error || "Email record created but failed to send",
+          message:
+            emailResult.error || "Email record created but failed to send",
           email,
         });
       }
@@ -1988,7 +1991,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Company not found" });
       }
       if (company.id !== companyContext) {
-        return res.status(403).json({ message: "Not authorized to update this company's logo" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this company's logo" });
       }
 
       const objectStorageService = new ObjectStorageService();
@@ -2025,7 +2030,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Company not found" });
       }
       if (company.id !== companyContext) {
-        return res.status(403).json({ message: "Not authorized to update this company's logo" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this company's logo" });
       }
 
       // Update company to remove logo

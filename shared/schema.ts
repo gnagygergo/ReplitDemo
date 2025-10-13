@@ -337,7 +337,7 @@ export const licenceAgreements = pgTable("licence_agreements", {
   currency: text("currency"),
   licenceSeats: integer("licence_seat"),
   licenceSeatsRemaining: integer("licence_seats_remaining"),
-  licenceSeatsUsed: integer("licence_seats_used")
+  licenceSeatsUsed: integer("licence_seats_used"),
 });
 
 export const emails = pgTable("emails", {
@@ -653,7 +653,7 @@ export const insertLicenceAgreementSchema = createInsertSchema(
     validTo: z.string().optional(),
     price: z.number().optional(),
     currency: z.string().optional(),
-    licenceCount: z.number().int().optional(),
+    licenceSeats: z.number().int().optional(),
   });
 
 export const insertEmailSchema = createInsertSchema(emails)

@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Search, FileCheck, Pencil, ExternalLink } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Search,
+  FileCheck,
+  Pencil,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,7 +50,11 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { LicenceAgreement, LicenceAgreementTemplate, Company } from "@shared/schema";
+import type {
+  LicenceAgreement,
+  LicenceAgreementTemplate,
+  Company,
+} from "@shared/schema";
 import { insertLicenceAgreementSchema } from "@shared/schema";
 
 type AgreementForm = z.infer<typeof insertLicenceAgreementSchema>;
@@ -61,7 +72,7 @@ function TemplateLookupDialog({
   });
 
   const filteredTemplates = templates.filter((template) =>
-    template.name.toLowerCase().includes(searchQuery.toLowerCase())
+    template.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -103,7 +114,9 @@ function TemplateLookupDialog({
                   </div>
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
-                  {template.price} {template.currency} | {template.validFrom || 'No start'} - {template.validTo || 'No end'}
+                  {template.price} {template.currency} |{" "}
+                  {template.validFrom || "No start"} -{" "}
+                  {template.validTo || "No end"}
                 </div>
               </button>
             ))
@@ -127,7 +140,9 @@ function CompanyLookupDialog({
   });
 
   const filteredCompanies = companies.filter((company) =>
-    company.companyOfficialName.toLowerCase().includes(searchQuery.toLowerCase())
+    company.companyOfficialName
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -177,12 +192,12 @@ function CompanyLookupDialog({
   );
 }
 
-function AgreementDialog({ 
-  agreement, 
-  onClose 
-}: { 
-  agreement?: LicenceAgreement; 
-  onClose: () => void 
+function AgreementDialog({
+  agreement,
+  onClose,
+}: {
+  agreement?: LicenceAgreement;
+  onClose: () => void;
 }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -207,27 +222,34 @@ function AgreementDialog({
       validTo: agreement?.validTo || "",
       price: agreement?.price ? parseFloat(agreement.price) : undefined,
       currency: agreement?.currency || "",
-      licenceCount: agreement?.licenceSeats || undefined,
+      licenceSeats: agreement?.licenceSeats || undefined,
     },
   });
 
   const selectedTemplateId = form.watch("licenceAgreementTemplateId");
   const selectedCompanyId = form.watch("companyId");
-  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
-  const selectedCompany = companies.find(c => c.id === selectedCompanyId);
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+  const selectedCompany = companies.find((c) => c.id === selectedCompanyId);
 
   const handleTemplateSelect = (template: LicenceAgreementTemplate) => {
     form.setValue("licenceAgreementTemplateId", template.id);
     form.setValue("validFrom", template.validFrom || "");
     form.setValue("validTo", template.validTo || "");
-    form.setValue("price", template.price ? parseFloat(template.price) : undefined);
+    form.setValue(
+      "price",
+      template.price ? parseFloat(template.price) : undefined,
+    );
     form.setValue("currency", template.currency || "");
   };
 
   const mutation = useMutation({
     mutationFn: async (data: AgreementForm) => {
       if (isEditing) {
-        return await apiRequest("PATCH", `/api/licence-agreements/${agreement.id}`, data);
+        return await apiRequest(
+          "PATCH",
+          `/api/licence-agreements/${agreement.id}`,
+          data,
+        );
       }
       return await apiRequest("POST", "/api/licence-agreements", data);
     },
@@ -243,7 +265,9 @@ function AgreementDialog({
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || `Failed to ${isEditing ? "update" : "create"} agreement`,
+        description:
+          error.message ||
+          `Failed to ${isEditing ? "update" : "create"} agreement`,
       });
     },
   });
@@ -256,7 +280,9 @@ function AgreementDialog({
     <>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit" : "Create"} Licence Agreement</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Edit" : "Create"} Licence Agreement
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -367,7 +393,11 @@ function AgreementDialog({
                         step="0.01"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : undefined,
+                          )
+                        }
                         data-testid="input-agreement-price"
                       />
                     </FormControl>
@@ -395,7 +425,7 @@ function AgreementDialog({
               />
               <FormField
                 control={form.control}
-                name="licenceCount"
+                name="licenceSeats"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>All Seats</FormLabel>
@@ -404,7 +434,11 @@ function AgreementDialog({
                         type="number"
                         {...field}
                         value={field.value || ""}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : undefined,
+                          )
+                        }
                         data-testid="input-agreement-all-seats"
                       />
                     </FormControl>
@@ -448,7 +482,11 @@ function AgreementDialog({
                 disabled={mutation.isPending}
                 data-testid="button-save-agreement"
               >
-                {mutation.isPending ? "Saving..." : isEditing ? "Update" : "Create"}
+                {mutation.isPending
+                  ? "Saving..."
+                  : isEditing
+                    ? "Update"
+                    : "Create"}
               </Button>
             </div>
           </form>
@@ -478,8 +516,12 @@ function AgreementDialog({
 
 export default function LicenceAgreementsManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedAgreement, setSelectedAgreement] = useState<LicenceAgreement | null>(null);
-  const [dialogState, setDialogState] = useState<{ open: boolean; agreement?: LicenceAgreement }>({
+  const [selectedAgreement, setSelectedAgreement] =
+    useState<LicenceAgreement | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    open: boolean;
+    agreement?: LicenceAgreement;
+  }>({
     open: false,
   });
   const { toast } = useToast();
@@ -498,7 +540,8 @@ export default function LicenceAgreementsManagement() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (agreementId: string) => apiRequest("DELETE", `/api/licence-agreements/${agreementId}`),
+    mutationFn: (agreementId: string) =>
+      apiRequest("DELETE", `/api/licence-agreements/${agreementId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/licence-agreements"] });
       toast({
@@ -518,15 +561,19 @@ export default function LicenceAgreementsManagement() {
     },
   });
 
-  const filteredAgreements = agreements.filter((agreement: LicenceAgreement) => {
-    const query = searchQuery.toLowerCase();
-    const template = templates.find(t => t.id === agreement.licenceAgreementTemplateId);
-    const company = companies.find(c => c.id === agreement.companyId);
-    return (
-      template?.name?.toLowerCase().includes(query) ||
-      company?.companyOfficialName?.toLowerCase().includes(query)
-    );
-  });
+  const filteredAgreements = agreements.filter(
+    (agreement: LicenceAgreement) => {
+      const query = searchQuery.toLowerCase();
+      const template = templates.find(
+        (t) => t.id === agreement.licenceAgreementTemplateId,
+      );
+      const company = companies.find((c) => c.id === agreement.companyId);
+      return (
+        template?.name?.toLowerCase().includes(query) ||
+        company?.companyOfficialName?.toLowerCase().includes(query)
+      );
+    },
+  );
 
   const handleDelete = (agreementId: string) => {
     deleteMutation.mutate(agreementId);
@@ -568,7 +615,7 @@ export default function LicenceAgreementsManagement() {
           data-testid="button-new-agreement"
         >
           <Plus className="mr-2 h-4 w-4" />
-          New
+          New Agreement
         </Button>
       </div>
 
@@ -617,13 +664,21 @@ export default function LicenceAgreementsManagement() {
                     </TableHeader>
                     <TableBody>
                       {filteredAgreements.map((agreement: LicenceAgreement) => {
-                        const template = templates.find(t => t.id === agreement.licenceAgreementTemplateId);
-                        const company = companies.find(c => c.id === agreement.companyId);
+                        const template = templates.find(
+                          (t) => t.id === agreement.licenceAgreementTemplateId,
+                        );
+                        const company = companies.find(
+                          (c) => c.id === agreement.companyId,
+                        );
                         return (
                           <TableRow
                             key={agreement.id}
                             data-testid={`row-agreement-${agreement.id}`}
-                            className={selectedAgreement?.id === agreement.id ? "bg-muted/50" : ""}
+                            className={
+                              selectedAgreement?.id === agreement.id
+                                ? "bg-muted/50"
+                                : ""
+                            }
                           >
                             <TableCell className="font-medium">
                               <button
@@ -635,7 +690,9 @@ export default function LicenceAgreementsManagement() {
                                   <FileCheck className="h-4 w-4 text-primary" />
                                 </div>
                                 <div>
-                                  <div data-testid={`text-agreement-company-${agreement.id}`}>
+                                  <div
+                                    data-testid={`text-agreement-company-${agreement.id}`}
+                                  >
                                     {company?.companyOfficialName || "Unknown"}
                                   </div>
                                   {template && (
@@ -651,7 +708,9 @@ export default function LicenceAgreementsManagement() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setDialogState({ open: true, agreement })}
+                                  onClick={() =>
+                                    setDialogState({ open: true, agreement })
+                                  }
                                   data-testid={`button-edit-agreement-${agreement.id}`}
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -668,15 +727,22 @@ export default function LicenceAgreementsManagement() {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Delete Agreement</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Delete Agreement
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Are you sure you want to delete this agreement? This action cannot be undone.
+                                        Are you sure you want to delete this
+                                        agreement? This action cannot be undone.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
                                       <AlertDialogAction
-                                        onClick={() => handleDelete(agreement.id)}
+                                        onClick={() =>
+                                          handleDelete(agreement.id)
+                                        }
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                         data-testid={`button-confirm-delete-agreement-${agreement.id}`}
                                       >
@@ -708,54 +774,88 @@ export default function LicenceAgreementsManagement() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileCheck className="h-5 w-5 text-primary" />
-                    {companies.find(c => c.id === selectedAgreement.companyId)?.companyOfficialName || "Unknown"}
+                    {companies.find((c) => c.id === selectedAgreement.companyId)
+                      ?.companyOfficialName || "Unknown"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
                     <h4 className="text-sm font-medium mb-2">Template</h4>
                     <p className="text-sm text-muted-foreground">
-                      {templates.find(t => t.id === selectedAgreement.licenceAgreementTemplateId)?.name || "N/A"}
+                      {templates.find(
+                        (t) =>
+                          t.id === selectedAgreement.licenceAgreementTemplateId,
+                      )?.name || "N/A"}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h4 className="text-sm font-medium mb-1">Valid From</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.validFrom || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAgreement.validFrom || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium mb-1">Valid To</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.validTo || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAgreement.validTo || "N/A"}
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <h4 className="text-sm font-medium mb-1">Price</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.price || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAgreement.price || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium mb-1">Currency</h4>
-                      <p className="text-sm text-muted-foreground">{selectedAgreement.currency || "N/A"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedAgreement.currency || "N/A"}
+                      </p>
                     </div>
                     <div>
                       <h4 className="text-sm font-medium mb-1">All Seats</h4>
-                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-all-seats-${selectedAgreement.id}`}>{selectedAgreement.licenceSeats ?? "N/A"}</p>
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-testid={`text-agreement-all-seats-${selectedAgreement.id}`}
+                      >
+                        {selectedAgreement.licenceSeats ?? "N/A"}
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h4 className="text-sm font-medium mb-1">Seats Used</h4>
-                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-seats-used-${selectedAgreement.id}`}>{selectedAgreement.licenceSeatsUsed ?? "N/A"}</p>
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-testid={`text-agreement-seats-used-${selectedAgreement.id}`}
+                      >
+                        {selectedAgreement.licenceSeatsUsed ?? "N/A"}
+                      </p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Seats Remaining</h4>
-                      <p className="text-sm text-muted-foreground" data-testid={`text-agreement-seats-remaining-${selectedAgreement.id}`}>{selectedAgreement.licenceSeatsRemaining ?? "N/A"}</p>
+                      <h4 className="text-sm font-medium mb-1">
+                        Seats Remaining
+                      </h4>
+                      <p
+                        className="text-sm text-muted-foreground"
+                        data-testid={`text-agreement-seats-remaining-${selectedAgreement.id}`}
+                      >
+                        {selectedAgreement.licenceSeatsRemaining ?? "N/A"}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => setDialogState({ open: true, agreement: selectedAgreement })}
+                      onClick={() =>
+                        setDialogState({
+                          open: true,
+                          agreement: selectedAgreement,
+                        })
+                      }
                       data-testid="button-edit-selected-agreement"
                     >
                       <Pencil className="mr-2 h-4 w-4" />
@@ -780,10 +880,13 @@ export default function LicenceAgreementsManagement() {
 
       {/* Create/Edit Dialog */}
       {dialogState.open && (
-        <Dialog open={dialogState.open} onOpenChange={(open) => setDialogState({ open })}>
-          <AgreementDialog 
-            agreement={dialogState.agreement} 
-            onClose={() => setDialogState({ open: false })} 
+        <Dialog
+          open={dialogState.open}
+          onOpenChange={(open) => setDialogState({ open })}
+        >
+          <AgreementDialog
+            agreement={dialogState.agreement}
+            onClose={() => setDialogState({ open: false })}
           />
         </Dialog>
       )}

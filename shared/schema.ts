@@ -143,6 +143,10 @@ export const users = pgTable("users", {
   companyId: varchar("company_id"),
   companyContext: varchar("company_context"), // RLS context field - set during login, cleared during logout
   isGlobalAdmin: boolean("is_global_admin").default(false).notNull(),
+  licenceAgreementId: varchar("licence_agreement_id").references(
+    () => licenceAgreements.id,
+    { onDelete: "set null" },
+  ),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

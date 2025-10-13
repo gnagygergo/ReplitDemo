@@ -502,6 +502,134 @@ export default function AccountDetail() {
                       </div>
                     </div>
 
+                    {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
+                    {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter first name"
+                                data-testid="input-edit-first-name"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  const lastName = form.getValues("lastName");
+                                  const newName = `${e.target.value} ${lastName || ""}`.trim();
+                                  if (newName) {
+                                    form.setValue("name", newName);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Last Name - Hidden when isShippingAddress or isLegalEntity */}
+                    {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter last name"
+                                data-testid="input-edit-last-name"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  const firstName = form.getValues("firstName");
+                                  const newName = `${firstName || ""} ${e.target.value}`.trim();
+                                  if (newName) {
+                                    form.setValue("name", newName);
+                                  }
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Email - Hidden when isShippingAddress or isLegalEntity */}
+                    {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="email"
+                                placeholder="Enter email address"
+                                data-testid="input-edit-email"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Mobile Phone - Hidden when isShippingAddress or isLegalEntity */}
+                    {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                      <FormField
+                        control={form.control}
+                        name="mobilePhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mobile Phone</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="tel"
+                                placeholder="Enter mobile phone"
+                                data-testid="input-edit-mobile-phone"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Company Registration ID - Visible when isSelfEmployed or isLegalEntity */}
+                    {(form.watch("isSelfEmployed") || form.watch("isLegalEntity")) && (
+                      <FormField
+                        control={form.control}
+                        name="companyRegistrationId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Company Registration ID</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter registration ID"
+                                data-testid="input-edit-company-registration-id"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
                     <FormField
                       control={form.control}
                       name="name"

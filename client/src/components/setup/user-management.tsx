@@ -53,9 +53,10 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User as UserType, Language } from "@shared/schema";
+import type { User as UserType, Language, LicenceAgreementWithDetails } from "@shared/schema";
 
 const userUpdateSchema = z.object({
+  licenceAgreementId: z.string().optional(),
   email: z.string().email("Please enter a valid email address").optional(),
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
@@ -65,6 +66,7 @@ const userUpdateSchema = z.object({
 });
 
 const userCreateSchema = z.object({
+  licenceAgreementId: z.string().optional(),
   email: z.string().email("Please enter a valid email address"),
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
@@ -84,9 +86,14 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
     queryKey: ["/api/languages"],
   });
 
+  const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
+    queryKey: ["/api/licence-agreements/available"],
+  });
+
   const form = useForm<UserUpdate>({
     resolver: zodResolver(userUpdateSchema),
     defaultValues: {
+      licenceAgreementId: user.licenceAgreementId || "",
       email: user.email || "",
       firstName: user.firstName || "",
       lastName: user.lastName || "",
@@ -139,6 +146,35 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="licenceAgreementId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Licence Agreement</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-user-licence-agreement">
+                      <SelectValue placeholder="Select a licence agreement" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {availableLicenceAgreements.map((agreement) => (
+                      <SelectItem
+                        key={agreement.id}
+                        value={agreement.id}
+                        data-testid={`option-licence-agreement-${agreement.id}`}
+                      >
+                        {agreement.licenceAgreementTemplate?.name || agreement.id} - {agreement.licenceSeatsRemaining} seats remaining
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="email"

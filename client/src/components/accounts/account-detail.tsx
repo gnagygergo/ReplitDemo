@@ -759,6 +759,81 @@ export default function AccountDetail() {
                 </Form>
               ) : (
                 <div className="space-y-6">
+                  {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
+                  {!account.isShippingAddress && !account.isLegalEntity && account.firstName && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        First Name
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-first-name-value"
+                      >
+                        {account.firstName}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Last Name - Hidden when isShippingAddress or isLegalEntity */}
+                  {!account.isShippingAddress && !account.isLegalEntity && account.lastName && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Last Name
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-last-name-value"
+                      >
+                        {account.lastName}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Email - Hidden when isShippingAddress or isLegalEntity */}
+                  {!account.isShippingAddress && !account.isLegalEntity && account.email && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Email
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-email-value"
+                      >
+                        {account.email}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mobile Phone - Hidden when isShippingAddress or isLegalEntity */}
+                  {!account.isShippingAddress && !account.isLegalEntity && account.mobilePhone && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Mobile Phone
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-mobile-phone-value"
+                      >
+                        {account.mobilePhone}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Company Registration ID - Visible when isSelfEmployed or isLegalEntity */}
+                  {(account.isSelfEmployed || account.isLegalEntity) && account.companyRegistrationId && (
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Company Registration ID
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-company-registration-id-value"
+                      >
+                        {account.companyRegistrationId}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Account Name */}
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">

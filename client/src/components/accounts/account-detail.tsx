@@ -350,18 +350,9 @@ export default function AccountDetail() {
                       <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                         Account Nature
                       </h3>
-                      {/* Show warning if conflicting values exist */}
-                      {((form.watch("isPersonAccount") || form.watch("isSelfEmployed") || form.watch("isCompanyContact")) &&
-                        (form.watch("isLegalEntity") || form.watch("isShippingAddress"))) && (
-                        <div className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-2 rounded">
-                          ⚠️ Conflicting values detected. Please select either person or entity type.
-                        </div>
-                      )}
                       <div className="grid grid-cols-1 gap-3">
-                        {/* Person-related checkboxes - show if no entity flags OR if there's a conflict */}
-                        {(!form.watch("isLegalEntity") && !form.watch("isShippingAddress")) || 
-                         ((form.watch("isPersonAccount") || form.watch("isSelfEmployed") || form.watch("isCompanyContact")) &&
-                          (form.watch("isLegalEntity") || form.watch("isShippingAddress"))) ? (
+                        {/* Person-related checkboxes */}
+                        {!form.watch("isLegalEntity") && !form.watch("isShippingAddress") && (
                           <>
                             <FormField
                               control={form.control}

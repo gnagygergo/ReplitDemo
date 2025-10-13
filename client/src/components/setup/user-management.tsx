@@ -297,9 +297,14 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
+    queryKey: ["/api/licence-agreements/available"],
+  });
+
   const form = useForm<UserCreate>({
     resolver: zodResolver(userCreateSchema),
     defaultValues: {
+      licenceAgreementId: "",
       email: "",
       firstName: "",
       lastName: "",
@@ -352,6 +357,35 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="licenceAgreementId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Licence Agreement</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-create-user-licence-agreement">
+                      <SelectValue placeholder="Select a licence agreement" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {availableLicenceAgreements.map((agreement) => (
+                      <SelectItem
+                        key={agreement.id}
+                        value={agreement.id}
+                        data-testid={`option-create-licence-agreement-${agreement.id}`}
+                      >
+                        {agreement.licenceAgreementTemplate?.name || agreement.id} - {agreement.licenceSeatsRemaining} seats remaining
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="email"

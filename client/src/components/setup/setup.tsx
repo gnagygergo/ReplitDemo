@@ -274,8 +274,9 @@ export default function Setup() {
 
   const filteredMenuItems = availableMenuItems.filter(
     (item) =>
-      item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()),
+      (item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (item as any).category === selectedTab,
   );
 
   // If selected item is companies but user is not admin, default to first available item
@@ -334,11 +335,25 @@ export default function Setup() {
       {/* Header Pane */}
       <div className="border-b border-border bg-card">
         <div className="flex items-center justify-between p-4">
-          <div>
-            <h1 className="text-2xl font-bold">Setup</h1>
-            <p className="text-sm text-muted-foreground">
-              Configure your application settings
-            </p>
+          <div className="flex items-center gap-6">
+            <div>
+              <h1 className="text-2xl font-bold">Setup</h1>
+              <p className="text-sm text-muted-foreground">
+                Configure your application settings
+              </p>
+            </div>
+            
+            {/* Category Tabs */}
+            <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>
+              <TabsList>
+                <TabsTrigger value="my-company" data-testid="tab-my-company">
+                  My Company
+                </TabsTrigger>
+                <TabsTrigger value="business-objects" data-testid="tab-business-objects">
+                  Business objects manager
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
           
           {/* Company Context Switcher - Only for Global Admins */}

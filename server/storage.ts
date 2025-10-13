@@ -452,6 +452,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(userData: UpsertUser): Promise<User> {
+    // Validate licenceAgreementId is provided
+    if (!userData.licenceAgreementId || userData.licenceAgreementId.trim() === '') {
+      throw new Error('Licence Agreement is required. Please select a Licence Agreement.');
+    }
+
     const saltRounds = 10;
     const hashedUserData = { ...userData };
 
@@ -471,6 +476,13 @@ export class DatabaseStorage implements IStorage {
     id: string,
     updates: Partial<UpsertUser>,
   ): Promise<User | undefined> {
+    // Validate licenceAgreementId if being updated
+    if ('licenceAgreementId' in updates) {
+      if (!updates.licenceAgreementId || updates.licenceAgreementId.trim() === '') {
+        throw new Error('Licence Agreement is required. Please select a Licence Agreement.');
+      }
+    }
+
     const updateData = {
       ...updates,
       updatedAt: new Date(),

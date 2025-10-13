@@ -93,7 +93,7 @@ const setupMenuItems = [
     icon: Languages,
     description: "Manage system languages",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "translations",
@@ -101,7 +101,7 @@ const setupMenuItems = [
     icon: FileText,
     description: "Manage translation labels and content",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "dev-patterns",
@@ -109,7 +109,7 @@ const setupMenuItems = [
     icon: FileCode,
     description: "Manage development patterns",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "licences",
@@ -117,7 +117,7 @@ const setupMenuItems = [
     icon: Award,
     description: "Manage licence types",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "licence-agreement-templates",
@@ -125,7 +125,7 @@ const setupMenuItems = [
     icon: FileText,
     description: "Manage agreement templates",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "licence-agreements",
@@ -133,7 +133,7 @@ const setupMenuItems = [
     icon: FileCheck,
     description: "Manage company licence agreements",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
 ];
 

@@ -520,9 +520,7 @@ export default function AccountDetail() {
                                   field.onChange(e);
                                   const lastName = form.getValues("lastName");
                                   const newName = `${e.target.value} ${lastName || ""}`.trim();
-                                  if (newName) {
-                                    form.setValue("name", newName);
-                                  }
+                                  form.setValue("name", newName);
                                 }}
                               />
                             </FormControl>
@@ -550,9 +548,7 @@ export default function AccountDetail() {
                                   field.onChange(e);
                                   const firstName = form.getValues("firstName");
                                   const newName = `${firstName || ""} ${e.target.value}`.trim();
-                                  if (newName) {
-                                    form.setValue("name", newName);
-                                  }
+                                  form.setValue("name", newName);
                                 }}
                               />
                             </FormControl>

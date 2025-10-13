@@ -531,6 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Security: Remove isAdmin from client schema - only admins can set this
       const userCreateSchema = z.object({
+        licenceAgreementId: z.string().optional(),
         email: z.string().email("Please enter a valid email address"),
         firstName: z.string().min(1, "First name is required").optional(),
         lastName: z.string().min(1, "Last name is required").optional(),
@@ -579,6 +580,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.createUser(userDataWithCompany);
 
+      // Update licence agreement seat counts if licenceAgreementId is provided
+      if (validatedData.licenceAgreementId) {
+        await storage.actualizeLicenceAgreementSeatsUsed(validatedData.licenceAgreementId);
+      }
+
       res.status(201).json(user);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -595,6 +601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Security: Remove isAdmin from update schema - privilege escalation protection
       const userUpdateSchema = z.object({
+        licenceAgreementId: z.string().optional(),
         email: z.string().email().optional(),
         firstName: z.string().optional(),
         lastName: z.string().optional(),
@@ -604,10 +611,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const validatedData = userUpdateSchema.parse(req.body);
+      
+      // Get the user's old licence agreement ID before updating
+      const oldUser = await storage.getUser(req.params.id);
+      const oldLicenceAgreementId = oldUser?.licenceAgreementId;
+      
       const user = await storage.updateUser(req.params.id, validatedData);
 
       if (!user) {
         return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update licence agreement seat counts if licenceAgreementId changed
+      if (validatedData.licenceAgreementId && validatedData.licenceAgreementId !== oldLicenceAgreementId) {
+        // Update new licence agreement
+        await storage.actualizeLicenceAgreementSeatsUsed(validatedData.licenceAgreementId);
+        // Update old licence agreement if it exists
+        if (oldLicenceAgreementId) {
+          await storage.actualizeLicenceAgreementSeatsUsed(oldLicenceAgreementId);
+        }
       }
 
       // Security: Remove sensitive fields from response

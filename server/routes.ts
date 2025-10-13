@@ -1661,6 +1661,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  app.get(
+    "/api/licence-agreements/available",
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const agreements = await storage.getLicenceAgreements();
+        const availableAgreements = agreements.filter(
+          (agreement) => (agreement.licenceSeatsRemaining ?? 0) > 0
+        );
+        res.json(availableAgreements);
+      } catch (error) {
+        console.error("Error fetching available licence agreements:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to fetch available licence agreements" });
+      }
+    },
+  );
+
   app.get("/api/licence-agreements/:id", isAuthenticated, async (req, res) => {
     try {
       const isGlobalAdmin = await storage.verifyGlobalAdmin(req);

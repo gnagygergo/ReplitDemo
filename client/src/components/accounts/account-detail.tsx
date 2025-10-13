@@ -81,6 +81,11 @@ export default function AccountDetail() {
     resolver: zodResolver(insertAccountSchema),
     defaultValues: {
       name: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      mobilePhone: "",
+      companyRegistrationId: "",
       address: "",
       industry: "tech",
       ownerId: "",
@@ -126,6 +131,11 @@ export default function AccountDetail() {
     if (account) {
       form.reset({
         name: account.name,
+        firstName: account.firstName || "",
+        lastName: account.lastName || "",
+        email: account.email || "",
+        mobilePhone: account.mobilePhone || "",
+        companyRegistrationId: account.companyRegistrationId || "",
         address: account.address || "",
         industry: account.industry as "tech" | "construction" | "services",
         ownerId: account.ownerId,
@@ -229,6 +239,11 @@ export default function AccountDetail() {
     if (account) {
       form.reset({
         name: account.name,
+        firstName: account.firstName || "",
+        lastName: account.lastName || "",
+        email: account.email || "",
+        mobilePhone: account.mobilePhone || "",
+        companyRegistrationId: account.companyRegistrationId || "",
         address: account.address || "",
         industry: account.industry as "tech" | "construction" | "services",
         ownerId: account.ownerId,

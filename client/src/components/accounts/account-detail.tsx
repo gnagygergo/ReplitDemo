@@ -756,7 +756,7 @@ export default function AccountDetail() {
               ) : (
                 <div className="space-y-6">
                   {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
-                  {!account.isShippingAddress && !account.isLegalEntity && account.firstName && (
+                  {!account.isShippingAddress && !account.isLegalEntity && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
                         First Name
@@ -765,13 +765,13 @@ export default function AccountDetail() {
                         className="mt-1 text-foreground"
                         data-testid="text-first-name-value"
                       >
-                        {account.firstName}
+                        {account.firstName || "Not provided"}
                       </div>
                     </div>
                   )}
 
                   {/* Last Name - Hidden when isShippingAddress or isLegalEntity */}
-                  {!account.isShippingAddress && !account.isLegalEntity && account.lastName && (
+                  {!account.isShippingAddress && !account.isLegalEntity && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
                         Last Name
@@ -780,13 +780,13 @@ export default function AccountDetail() {
                         className="mt-1 text-foreground"
                         data-testid="text-last-name-value"
                       >
-                        {account.lastName}
+                        {account.lastName || "Not provided"}
                       </div>
                     </div>
                   )}
 
                   {/* Email - Hidden when isShippingAddress or isLegalEntity */}
-                  {!account.isShippingAddress && !account.isLegalEntity && account.email && (
+                  {!account.isShippingAddress && !account.isLegalEntity && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
                         Email
@@ -795,13 +795,13 @@ export default function AccountDetail() {
                         className="mt-1 text-foreground"
                         data-testid="text-email-value"
                       >
-                        {account.email}
+                        {account.email || "Not provided"}
                       </div>
                     </div>
                   )}
 
                   {/* Mobile Phone - Hidden when isShippingAddress or isLegalEntity */}
-                  {!account.isShippingAddress && !account.isLegalEntity && account.mobilePhone && (
+                  {!account.isShippingAddress && !account.isLegalEntity && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
                         Mobile Phone
@@ -810,13 +810,13 @@ export default function AccountDetail() {
                         className="mt-1 text-foreground"
                         data-testid="text-mobile-phone-value"
                       >
-                        {account.mobilePhone}
+                        {account.mobilePhone || "Not provided"}
                       </div>
                     </div>
                   )}
 
                   {/* Company Registration ID - Visible when isSelfEmployed or isLegalEntity */}
-                  {(account.isSelfEmployed || account.isLegalEntity) && account.companyRegistrationId && (
+                  {(account.isSelfEmployed || account.isLegalEntity) && (
                     <div>
                       <label className="text-sm font-medium text-muted-foreground">
                         Company Registration ID
@@ -825,7 +825,7 @@ export default function AccountDetail() {
                         className="mt-1 text-foreground"
                         data-testid="text-company-registration-id-value"
                       >
-                        {account.companyRegistrationId}
+                        {account.companyRegistrationId || "Not provided"}
                       </div>
                     </div>
                   )}

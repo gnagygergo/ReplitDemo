@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -40,7 +41,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Building, Edit, Save, X, Users, TrendingUp, FileSpreadsheet, Plus } from "lucide-react";
+import { Building, Edit, Save, X, Users, TrendingUp, FileSpreadsheet, Plus, User as UserIcon } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -83,6 +84,11 @@ export default function AccountDetail() {
       address: "",
       industry: "tech",
       ownerId: "",
+      isPersonAccount: false,
+      isSelfEmployed: false,
+      isCompanyContact: false,
+      isLegalEntity: false,
+      isShippingAddress: false,
     },
   });
 
@@ -123,6 +129,11 @@ export default function AccountDetail() {
         address: account.address || "",
         industry: account.industry as "tech" | "construction" | "services",
         ownerId: account.ownerId,
+        isPersonAccount: account.isPersonAccount || false,
+        isSelfEmployed: account.isSelfEmployed || false,
+        isCompanyContact: account.isCompanyContact || false,
+        isLegalEntity: account.isLegalEntity || false,
+        isShippingAddress: account.isShippingAddress || false,
       });
       setSelectedOwner(account.owner);
     }
@@ -186,6 +197,33 @@ export default function AccountDetail() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Helper function to determine which icon to display based on account type
+  const getAccountIcon = (account: AccountWithOwner) => {
+    const isPerson = account.isPersonAccount || account.isCompanyContact || account.isSelfEmployed;
+    const isEntity = account.isLegalEntity || account.isShippingAddress;
+    
+    if (isPerson) {
+      return UserIcon;
+    }
+    if (isEntity) {
+      return Building;
+    }
+    return Building; // Default to Building
+  };
+
+  // Helper function to generate dynamic title text from boolean fields
+  const getAccountTypeLabel = (account: AccountWithOwner) => {
+    const labels: string[] = [];
+    
+    if (account.isPersonAccount) labels.push("Person Account");
+    if (account.isCompanyContact) labels.push("Employee Contact");
+    if (account.isSelfEmployed) labels.push("Self Employed");
+    if (account.isLegalEntity) labels.push("Legal Entity");
+    if (account.isShippingAddress) labels.push("Shipping Address");
+    
+    return labels.length > 0 ? labels.join(" | ") : "Account Details";
+  };
+
   // Initialize form when account data is loaded
   useEffect(() => {
     if (account) {
@@ -194,6 +232,11 @@ export default function AccountDetail() {
         address: account.address || "",
         industry: account.industry as "tech" | "construction" | "services",
         ownerId: account.ownerId,
+        isPersonAccount: account.isPersonAccount || false,
+        isSelfEmployed: account.isSelfEmployed || false,
+        isCompanyContact: account.isCompanyContact || false,
+        isLegalEntity: account.isLegalEntity || false,
+        isShippingAddress: account.isShippingAddress || false,
       });
       setSelectedOwner(account.owner);
     }
@@ -239,7 +282,10 @@ export default function AccountDetail() {
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <Building className="w-6 h-6 text-primary" />
+            {(() => {
+              const IconComponent = getAccountIcon(account);
+              return <IconComponent className="w-6 h-6 text-primary" />;
+            })()}
           </div>
           <div>
             <h1
@@ -248,7 +294,9 @@ export default function AccountDetail() {
             >
               {account.name}
             </h1>
-            <p className="text-muted-foreground">Account Details</p>
+            <p className="text-muted-foreground" data-testid="text-account-type-label">
+              {getAccountTypeLabel(account)}
+            </p>
           </div>
         </div>
 
@@ -297,6 +345,157 @@ export default function AccountDetail() {
               {isEditing ? (
                 <Form {...form}>
                   <form className="space-y-6">
+                    {/* Account Nature Section - Only visible in edit mode */}
+                    <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
+                      <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
+                        Account Nature
+                      </h3>
+                      {/* Show warning if conflicting values exist */}
+                      {((form.watch("isPersonAccount") || form.watch("isSelfEmployed") || form.watch("isCompanyContact")) &&
+                        (form.watch("isLegalEntity") || form.watch("isShippingAddress"))) && (
+                        <div className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-2 rounded">
+                          ⚠️ Conflicting values detected. Please select either person or entity type.
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 gap-3">
+                        {/* Person-related checkboxes - show if no entity flags OR if there's a conflict */}
+                        {(!form.watch("isLegalEntity") && !form.watch("isShippingAddress")) || 
+                         ((form.watch("isPersonAccount") || form.watch("isSelfEmployed") || form.watch("isCompanyContact")) &&
+                          (form.watch("isLegalEntity") || form.watch("isShippingAddress"))) ? (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name="isPersonAccount"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={!!field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        if (checked) {
+                                          form.setValue("isLegalEntity", false);
+                                          form.setValue("isShippingAddress", false);
+                                        }
+                                      }}
+                                      data-testid="checkbox-is-person-account"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="!mt-0 cursor-pointer">
+                                    Person Account
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="isSelfEmployed"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={!!field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        if (checked) {
+                                          form.setValue("isLegalEntity", false);
+                                          form.setValue("isShippingAddress", false);
+                                        }
+                                      }}
+                                      data-testid="checkbox-is-self-employed"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="!mt-0 cursor-pointer">
+                                    Self Employed
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="isCompanyContact"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={!!field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        if (checked) {
+                                          form.setValue("isLegalEntity", false);
+                                          form.setValue("isShippingAddress", false);
+                                        }
+                                      }}
+                                      data-testid="checkbox-is-company-contact"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="!mt-0 cursor-pointer">
+                                    Employee Contact
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </>
+                        )}
+                        
+                        {/* Entity-related checkboxes */}
+                        {!form.watch("isPersonAccount") && !form.watch("isSelfEmployed") && !form.watch("isCompanyContact") && (
+                          <>
+                            <FormField
+                              control={form.control}
+                              name="isLegalEntity"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={!!field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        if (checked) {
+                                          form.setValue("isPersonAccount", false);
+                                          form.setValue("isSelfEmployed", false);
+                                          form.setValue("isCompanyContact", false);
+                                        }
+                                      }}
+                                      data-testid="checkbox-is-legal-entity"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="!mt-0 cursor-pointer">
+                                    Legal Entity
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="isShippingAddress"
+                              render={({ field }) => (
+                                <FormItem className="flex items-center space-x-2 space-y-0">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={!!field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        if (checked) {
+                                          form.setValue("isPersonAccount", false);
+                                          form.setValue("isSelfEmployed", false);
+                                          form.setValue("isCompanyContact", false);
+                                        }
+                                      }}
+                                      data-testid="checkbox-is-shipping-address"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="!mt-0 cursor-pointer">
+                                    Shipping Address
+                                  </FormLabel>
+                                </FormItem>
+                              )}
+                            />
+                          </>
+                        )}
+                      </div>
+                    </div>
+
                     <FormField
                       control={form.control}
                       name="name"

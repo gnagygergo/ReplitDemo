@@ -14,6 +14,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
+import { IdCard } from "lucide-react";
 import { z } from "zod";
 
 export const companies = pgTable("companies", {
@@ -35,7 +36,19 @@ export const accounts = pgTable("accounts", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  email: text("email"),
+  mobilePhone: text("mobile_phone"),
+  isPersonAccount: boolean("is_person_account"),
+  isSelfEmployed: boolean("is_self_employed"),
+  isLegalEntity: boolean("is_legal_entity"),
+  isShippingAddress: boolean("is_shipping_address"),
+  isCompanyContact: boolean("is_company_contact"),
   name: text("name").notNull(),
+  companyOfficialName: text("company_official_name"),
+  companyRegistrationId: text("company_registration_id"),
+  taxId: text("tax_id"),
   address: text("address"),
   industry: text("industry").notNull(),
   ownerId: varchar("owner_id")
@@ -342,6 +355,34 @@ export const licenceAgreements = pgTable("licence_agreements", {
   licenceSeats: integer("licence_seat"),
   licenceSeatsRemaining: integer("licence_seats_remaining"),
   licenceSeatsUsed: integer("licence_seats_used"),
+});
+
+export const companySettingsMaster = pgTable("company_settings_master", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  settingFunctionalDomain: text("setting_functional_domain"),
+  settingFunctionalityName: text("setting_functionality_name"),
+  settingName: text("setting_name"),
+  settingDescription: text("setting_description"),
+  settingValues: text("setting_values"),
+  defaultValue: text("default_value"),
+});
+
+export const companySettings = pgTable("company_settings", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  companySettingsMasterId: varchar("company_settings_master_id")
+    .notNull()
+    .references(() => companySettingsMaster.id, { onDelete: "restrict" }),
+  settingName: text("setting_name"),
+  settingValue: text("setting_value"),
+  createdDate: timestamp("created_date").defaultNow(),
+  lastUpdatedDate: timestamp("last_updated_date").defaultNow(),
+  lastUpdatedBy: varchar("last_updated_by").references(() => users.id, {
+    onDelete: "restrict",
+  }),
 });
 
 export const emails = pgTable("emails", {

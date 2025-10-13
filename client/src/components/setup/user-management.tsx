@@ -113,7 +113,15 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        throw new Error(await response.text());
+        const text = await response.text();
+        let errorMessage = "Failed to update user";
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
       return await response.json();
     },
@@ -324,7 +332,15 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
         body: JSON.stringify(data),
       });
       if (!response.ok) {
-        throw new Error(await response.text());
+        const text = await response.text();
+        let errorMessage = "Failed to create user";
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          errorMessage = text;
+        }
+        throw new Error(errorMessage);
       }
       return await response.json();
     },

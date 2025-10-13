@@ -593,7 +593,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error creating user:", error);
-      res.status(500).json({ message: "Failed to create user" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to create user";
+      res.status(500).json({ message: errorMessage });
     }
   });
 
@@ -642,7 +643,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Invalid data", errors: error.errors });
       }
       console.error("Error updating user:", error);
-      res.status(500).json({ message: "Failed to update user" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to update user";
+      res.status(500).json({ message: errorMessage });
     }
   });
 

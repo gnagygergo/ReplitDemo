@@ -48,30 +48,35 @@ const setupMenuItems = [
     icon: Building,
     description: "Your company information",
     companyAdminOnly: true,
+    category: "my-company",
   },
   {
     id: "companies",
     label: "Companies",
     icon: Building2,
     description: "Manage company information and details",
+    category: "my-company",
   },
   {
     id: "users",
     label: "Users",
     icon: Users,
     description: "Manage user accounts and permissions",
+    category: "my-company",
   },
   {
     id: "company-roles",
     label: "Company Roles (in dev)",
     icon: Shield,
     description: "Manage reporting hierarchy",
+    category: "my-company",
   },
   {
     id: "releases",
     label: "Release Plan",
     icon: Rocket,
     description: "Manage release planning and tracking",
+    category: "my-company",
   },
   {
     id: "unit-of-measures",
@@ -79,6 +84,7 @@ const setupMenuItems = [
     icon: Ruler,
     description: "Manage measurement units and conversions",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "languages",
@@ -86,6 +92,7 @@ const setupMenuItems = [
     icon: Languages,
     description: "Manage system languages",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "translations",
@@ -93,6 +100,7 @@ const setupMenuItems = [
     icon: FileText,
     description: "Manage translation labels and content",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "dev-patterns",
@@ -100,6 +108,7 @@ const setupMenuItems = [
     icon: FileCode,
     description: "Manage development patterns",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "licences",
@@ -107,6 +116,7 @@ const setupMenuItems = [
     icon: Award,
     description: "Manage licence types",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "licence-agreement-templates",
@@ -114,6 +124,7 @@ const setupMenuItems = [
     icon: FileText,
     description: "Manage agreement templates",
     globalAdminOnly: true,
+    category: "business-objects",
   },
   {
     id: "licence-agreements",
@@ -121,6 +132,7 @@ const setupMenuItems = [
     icon: FileCheck,
     description: "Manage company licence agreements",
     globalAdminOnly: true,
+    category: "business-objects",
   },
 ];
 

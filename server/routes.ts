@@ -417,6 +417,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Switch company context endpoint (global admin only)
+  app.post(
+    "/api/auth/switch-company-context",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+        if (!isGlobalAdmin) {
+          return res
+            .status(403)
+            .json({ message: "Only global admins can switch company context" });
+        }
+
+        const { companyId } = req.body;
+        if (!companyId) {
+          return res.status(400).json({ message: "Company ID is required" });
+        }
+
+        // Verify the company exists
+        const company = await storage.getCompany(companyId);
+        if (!company) {
+          return res.status(404).json({ message: "Company not found" });
+        }
+
+        // Extract user ID from session
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        // Switch the company context
+        await storage.switchCompanyContext(userId, companyId);
+
+        res.json({ 
+          message: "Company context switched successfully",
+          companyId,
+          companyName: company.companyOfficialName
+        });
+      } catch (error) {
+        console.error("Error switching company context:", error);
+        res.status(500).json({ message: "Failed to switch company context" });
+      }
+    },
+  );
+
   // Protected routes - Apply authentication to all CRM endpoints
   app.use(
     [
@@ -436,6 +488,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Company routes
   app.get("/api/companies", async (req, res) => {
     try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res
+          .status(403)
+          .json({ message: "Only global admins can view all companies" });
+      }
+
       const companies = await storage.getCompanies();
       res.json(companies);
     } catch (error) {

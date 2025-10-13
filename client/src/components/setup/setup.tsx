@@ -19,7 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { Company } from "@shared/schema";
 
 // Type for admin check responses
 type GlobalAdminCheckResponse = {
@@ -170,6 +180,8 @@ function DevPatternsSetup() {
 export default function Setup() {
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const { toast } = useToast();
 
   // Query to check if user is global admin
   const { data: adminCheck, isLoading: isCheckingAdmin } =
@@ -180,6 +192,49 @@ export default function Setup() {
   // Query to check if user is company admin
   const { data: companyAdminCheck } = useQuery<CompanyAdminCheckResponse>({
     queryKey: ["/api/auth/verify-company-admin"],
+  });
+
+  // Query to fetch all companies (for global admin only)
+  const { data: companies } = useQuery<Company[]>({
+    queryKey: ["/api/companies"],
+    enabled: adminCheck?.isGlobalAdmin === true,
+  });
+
+  // Query to fetch current company context name
+  const { data: currentCompanyData } = useQuery<{ companyName: string }>({
+    queryKey: ["/api/auth/company-name"],
+    enabled: adminCheck?.isGlobalAdmin === true,
+  });
+
+  // Mutation to switch company context
+  const switchContextMutation = useMutation({
+    mutationFn: async (companyId: string) => {
+      const response = await fetch("/api/auth/switch-company-context", {
+        method: "POST",
+        body: JSON.stringify({ companyId }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to switch company context");
+      }
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "Context Switched",
+        description: `Switched to ${data.companyName}`,
+      });
+      // Invalidate all queries to refresh data with new context
+      queryClient.invalidateQueries();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to switch company context",
+        variant: "destructive",
+      });
+    },
   });
 
   // Filter menu items based on admin status and search query
@@ -218,6 +273,13 @@ export default function Setup() {
     }
   }, [adminCheck?.isGlobalAdmin, selectedItem, availableMenuItems]);
 
+  // Handler for applying company context switch
+  const handleApplyContextSwitch = () => {
+    if (selectedCompanyId) {
+      switchContextMutation.mutate(selectedCompanyId);
+    }
+  };
+
   const renderContent = () => {
     switch (selectedItem) {
       case "companies":
@@ -255,7 +317,7 @@ export default function Setup() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header Pane - Empty for now */}
+      {/* Header Pane */}
       <div className="border-b border-border bg-card">
         <div className="flex items-center justify-between p-4">
           <div>
@@ -264,6 +326,47 @@ export default function Setup() {
               Configure your application settings
             </p>
           </div>
+          
+          {/* Company Context Switcher - Only for Global Admins */}
+          {adminCheck?.isGlobalAdmin && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Company Context:</span>
+                <Select
+                  value={selectedCompanyId}
+                  onValueChange={setSelectedCompanyId}
+                >
+                  <SelectTrigger className="w-[250px]" data-testid="select-company-context">
+                    <SelectValue 
+                      placeholder={currentCompanyData?.companyName || "Select a company"}
+                    >
+                      {selectedCompanyId 
+                        ? companies?.find(c => c.id === selectedCompanyId)?.companyOfficialName 
+                        : currentCompanyData?.companyName}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies?.map((company) => (
+                      <SelectItem 
+                        key={company.id} 
+                        value={company.id}
+                        data-testid={`select-company-${company.id}`}
+                      >
+                        {company.companyOfficialName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleApplyContextSwitch}
+                disabled={!selectedCompanyId || switchContextMutation.isPending}
+                data-testid="button-apply-context"
+              >
+                {switchContextMutation.isPending ? "Applying..." : "Apply"}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

@@ -1691,6 +1691,23 @@ export class DatabaseStorage implements IStorage {
     console.log("[RLS DEBUG] Cleared company context for user:", userId);
   }
 
+  async switchCompanyContext(userId: string, newCompanyId: string): Promise<void> {
+    // Update user's company_context field to the new company ID
+    await db
+      .update(users)
+      .set({
+        companyContext: newCompanyId,
+      })
+      .where(eq(users.id, userId));
+
+    console.log(
+      "[RLS DEBUG] Switched company context for user:",
+      userId,
+      "to company:",
+      newCompanyId,
+    );
+  }
+
   // Transaction-scoped operations for RLS
   async runWithCompanyContext<T>(
     companyId: string,

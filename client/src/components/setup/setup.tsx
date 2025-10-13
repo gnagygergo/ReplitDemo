@@ -288,6 +288,16 @@ export default function Setup() {
     }
   }, [adminCheck?.isGlobalAdmin, selectedItem, availableMenuItems]);
 
+  // Reset selectedItem when switching tabs or if current item is not in filtered list
+  useEffect(() => {
+    if (filteredMenuItems.length > 0) {
+      const isCurrentItemInFiltered = filteredMenuItems.some(item => item.id === selectedItem);
+      if (!isCurrentItemInFiltered) {
+        setSelectedItem(filteredMenuItems[0].id);
+      }
+    }
+  }, [selectedTab, filteredMenuItems, selectedItem]);
+
   // Handler for applying company context switch
   const handleApplyContextSwitch = () => {
     if (selectedCompanyId) {

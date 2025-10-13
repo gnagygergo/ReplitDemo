@@ -357,6 +357,7 @@ export const licenceAgreements = pgTable("licence_agreements", {
   licenceSeatsUsed: integer("licence_seats_used"),
 });
 
+// Company Settings tables
 export const companySettingsMaster = pgTable("company_settings_master", {
   id: varchar("id")
     .primaryKey()
@@ -384,7 +385,26 @@ export const companySettings = pgTable("company_settings", {
     onDelete: "restrict",
   }),
 });
+//Knowledge Base tables
+export const knowledgeArticles = pgTable("knowledge_articles", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title"),
+  articleTitle: text("content"),
+  articleFunctionalDomain: text("content_functional_domain"),
+  articleFunctionalityName: text("content_functionality_name"),
+  articleTags: text("content_tags"),
+  articleKeywords: text("content_keywords"),
+  isPublished: boolean("is_published"),
+  languageCode: text("language_code").references(() => languages.languageCode, {
+    onDelete: "restrict"}),
+  authorId: varchar("author_id").references(() => users.id, {
+    onDelete: "restrict"}),
+  createdDate: timestamp("created_date").defaultNow(),
+  })
 
+// Emails table
 export const emails = pgTable("emails", {
   id: varchar("id")
     .primaryKey()

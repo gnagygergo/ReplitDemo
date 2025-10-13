@@ -52,17 +52,17 @@ const setupMenuItems = [
     category: "my-company",
   },
   {
-    id: "companies",
-    label: "Companies",
-    icon: Building2,
-    description: "Manage company information and details",
-    category: "my-company",
-  },
-  {
     id: "users",
     label: "Users",
     icon: Users,
     description: "Manage user accounts and permissions",
+    category: "my-company",
+  },
+  {
+    id: "companies",
+    label: "Companies",
+    icon: Building2,
+    description: "Manage company information and details",
     category: "my-company",
   },
   {

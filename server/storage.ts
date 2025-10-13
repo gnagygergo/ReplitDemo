@@ -1524,17 +1524,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async actualizeLicenceAgreementSeatsUsed(licenceAgreementId: string): Promise<LicenceAgreement | undefined> {
-    // Get the licence agreement to find the associated company
+    // Get the licence agreement
     const agreement = await this.getLicenceAgreement(licenceAgreementId);
     if (!agreement) {
       return undefined;
     }
 
-    // Count the users associated with the company
+    // Count the users associated with this licence agreement
     const userCount = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(users)
-      .where(eq(users.companyId, agreement.companyId));
+      .where(eq(users.licenceAgreementId, licenceAgreementId));
     
     const seatsUsed = userCount[0]?.count || 0;
     const licenceSeats = agreement.licenceSeats || 0;

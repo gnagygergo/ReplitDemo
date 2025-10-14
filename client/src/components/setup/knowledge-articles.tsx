@@ -233,7 +233,7 @@ export default function KnowledgeArticlesManagement() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel data-testid={`button-cancel-delete-article-${article.id}`}>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDeleteArticle(article.id)}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

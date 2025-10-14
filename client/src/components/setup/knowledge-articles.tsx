@@ -1,3 +1,16 @@
+/**
+ * Knowledge Articles Management Component
+ * 
+ * This file contains the complete implementation for managing knowledge base articles
+ * with a two-pane layout (list + detail view) similar to the Release Management pattern.
+ * 
+ * Components:
+ * - KnowledgeArticleView: Read-only view mode for displaying article details
+ * - KnowledgeArticleEdit: Form for creating/editing articles with rich text editor
+ * - KnowledgeArticleDetail: Wrapper that toggles between view and edit modes
+ * - KnowledgeArticlesManagement: Main component with two-pane layout (list + detail)
+ */
+
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Plus, Search, BookOpen, Trash2, Save, UserPlus, Edit, X } from "lucide-react";
@@ -56,7 +69,16 @@ import { Badge } from "@/components/ui/badge";
 
 type KnowledgeArticleForm = z.infer<typeof insertKnowledgeArticleSchema>;
 
-// View Mode Component - Read-only display
+/**
+ * VIEW MODE COMPONENT
+ * 
+ * Displays article details in read-only format with:
+ * - Article metadata (title, language, author, domain, functionality)
+ * - Tags and keywords
+ * - Publication and access status (isPublished, isInternal)
+ * - Rich text content rendered as HTML
+ * - Close and Edit action buttons
+ */
 function KnowledgeArticleView({ 
   article, 
   onEdit,
@@ -68,6 +90,7 @@ function KnowledgeArticleView({
 }) {
   return (
     <div className="space-y-6">
+      {/* Header with action buttons */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Knowledge Article</h3>
@@ -94,11 +117,13 @@ function KnowledgeArticleView({
         </div>
       </div>
 
+      {/* Article Metadata Card */}
       <Card>
         <CardHeader>
           <CardTitle>{article.articleTitle}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Language and Author - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Language</label>
@@ -114,6 +139,7 @@ function KnowledgeArticleView({
             </div>
           </div>
 
+          {/* Functional Domain and Functionality Name - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Functional Domain</label>
@@ -124,7 +150,8 @@ function KnowledgeArticleView({
               <p className="text-sm mt-1">{article.articleFunctionalityName || "Not specified"}</p>
             </div>
           </div>
-          
+
+          {/* Tags display (conditional) */}
           {article.articleTags && (
             <div>
               <label className="text-sm font-medium text-muted-foreground">Tags</label>
@@ -136,6 +163,7 @@ function KnowledgeArticleView({
             </div>
           )}
 
+          {/* Keywords display (conditional) */}
           {article.articleKeywords && (
             <div>
               <label className="text-sm font-medium text-muted-foreground">Keywords</label>
@@ -143,6 +171,7 @@ function KnowledgeArticleView({
             </div>
           )}
 
+          {/* Created Date display (conditional) */}
           {article.createdDate && (
             <div>
               <label className="text-sm font-medium text-muted-foreground">Created Date</label>
@@ -150,6 +179,7 @@ function KnowledgeArticleView({
             </div>
           )}
 
+          {/* Publication and Access Status - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">Published Status</label>
@@ -177,11 +207,13 @@ function KnowledgeArticleView({
         </CardContent>
       </Card>
 
+      {/* Article Content Card - Rich text display */}
       <Card>
         <CardHeader>
           <CardTitle>Article Content</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Render HTML content with sanitization handled by backend */}
           <div 
             className="prose prose-sm max-w-none dark:prose-invert"
             dangerouslySetInnerHTML={{ __html: article.articleContent || "<p class='text-muted-foreground'>No content available</p>" }}
@@ -193,7 +225,18 @@ function KnowledgeArticleView({
   );
 }
 
-// Edit Mode Component
+/**
+ * EDIT MODE COMPONENT
+ * 
+ * Form for creating or editing knowledge articles with:
+ * - Article title, language selection, and author lookup
+ * - Functional domain and functionality name
+ * - Tags and keywords for categorization
+ * - Publication status checkboxes (isPublished, isInternal)
+ * - Rich text editor (TiptapEditor) for article content
+ * - Create/Update mutations with validation
+ * - Cancel and Save actions
+ */
 function KnowledgeArticleEdit({ 
   article, 
   onCancel,
@@ -210,7 +253,7 @@ function KnowledgeArticleEdit({
 
   const isNewArticle = article === "new";
 
-  // Fetch languages for the language selector
+  // Fetch languages for the language selector dropdown
   const { data: languages = [] } = useQuery<Language[]>({
     queryKey: ["/api/languages"],
   });
@@ -220,6 +263,7 @@ function KnowledgeArticleEdit({
     queryKey: ["/api/auth/me"],
   });
 
+  // Initialize form with validation schema and default values
   const form = useForm<KnowledgeArticleForm>({
     resolver: zodResolver(insertKnowledgeArticleSchema),
     defaultValues: {
@@ -236,9 +280,10 @@ function KnowledgeArticleEdit({
     },
   });
 
-  // Set form values when article data is loaded or current user is available
+  // Populate form when editing existing article or set defaults for new article
   useEffect(() => {
     if (!isNewArticle) {
+      // Load existing article data into form
       form.reset({
         articleTitle: article.articleTitle || "",
         languageCode: article.languageCode || "",
@@ -256,7 +301,7 @@ function KnowledgeArticleEdit({
         setSelectedAuthor(article.author);
       }
     } else {
-      // Reset form completely for new article
+      // Initialize form with defaults for new article
       form.reset({
         articleTitle: "",
         languageCode: "",
@@ -274,6 +319,7 @@ function KnowledgeArticleEdit({
     }
   }, [article, currentUser, isNewArticle, form]);
 
+  // Create new article mutation
   const createArticleMutation = useMutation({
     mutationFn: async (data: KnowledgeArticleForm) => {
       return await apiRequest("POST", "/api/knowledge-articles", data);
@@ -295,6 +341,7 @@ function KnowledgeArticleEdit({
     },
   });
 
+  // Update existing article mutation
   const updateArticleMutation = useMutation({
     mutationFn: async (data: KnowledgeArticleForm) => {
       return await apiRequest("PATCH", `/api/knowledge-articles/${(article as KnowledgeArticleWithAuthor).id}`, data);
@@ -316,8 +363,9 @@ function KnowledgeArticleEdit({
     },
   });
 
+  // Form submission handler - routes to create or update based on context
   const onSubmit = (data: KnowledgeArticleForm) => {
-    // Update article content from editor
+    // Merge form data with editor content
     const formData = {
       ...data,
       articleContent: editorContent,
@@ -330,6 +378,7 @@ function KnowledgeArticleEdit({
     }
   };
 
+  // Author lookup dialog selection handler
   const handleAuthorSelect = (user: User) => {
     setSelectedAuthor(user);
     form.setValue("authorId", user.id);
@@ -337,6 +386,7 @@ function KnowledgeArticleEdit({
 
   return (
     <div className="space-y-6">
+      {/* Header with Cancel and Save buttons */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">
@@ -371,11 +421,13 @@ function KnowledgeArticleEdit({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Article Information Card */}
           <Card>
             <CardHeader>
               <CardTitle>Article Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Article Title Field */}
               <FormField
                 control={form.control}
                 name="articleTitle"
@@ -394,6 +446,7 @@ function KnowledgeArticleEdit({
                 )}
               />
 
+              {/* Language and Author Fields - 2 column grid */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -461,6 +514,7 @@ function KnowledgeArticleEdit({
                 />
               </div>
 
+              {/* Functional Domain and Functionality Name - 2 column grid */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -507,6 +561,7 @@ function KnowledgeArticleEdit({
                 />
               </div>
 
+              {/* Tags Field */}
               <FormField
                 control={form.control}
                 name="articleTags"
@@ -529,6 +584,7 @@ function KnowledgeArticleEdit({
                 )}
               />
 
+              {/* Keywords Field */}
               <FormField
                 control={form.control}
                 name="articleKeywords"
@@ -552,6 +608,7 @@ function KnowledgeArticleEdit({
                 )}
               />
 
+              {/* Publication Status Checkboxes - 2 column grid */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -604,11 +661,13 @@ function KnowledgeArticleEdit({
             </CardContent>
           </Card>
 
+          {/* Article Content Card with Rich Text Editor */}
           <Card>
             <CardHeader>
               <CardTitle>Article Content</CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Rich Text Editor (TiptapEditor) */}
               <FormField
                 control={form.control}
                 name="articleContent"
@@ -634,6 +693,7 @@ function KnowledgeArticleEdit({
         </form>
       </Form>
 
+      {/* User Lookup Dialog for Author Selection */}
       <UserLookupDialog
         open={isUserLookupOpen}
         onClose={() => setIsUserLookupOpen(false)}
@@ -644,7 +704,15 @@ function KnowledgeArticleEdit({
   );
 }
 
-// Detail View Component - Handles view/edit mode switching
+/**
+ * DETAIL WRAPPER COMPONENT
+ * 
+ * Manages the view/edit mode toggle for articles:
+ * - Shows edit mode for new articles ("new")
+ * - Shows view mode by default for existing articles
+ * - Provides seamless switching between modes
+ * - Handles cancel behavior (close for new, return to view for existing)
+ */
 function KnowledgeArticleDetail({ 
   article, 
   onClose 
@@ -654,27 +722,28 @@ function KnowledgeArticleDetail({
 }) {
   const [isEditMode, setIsEditMode] = useState(article === "new");
 
-  // Reset to view mode when article changes
+  // Reset edit mode when switching articles
   useEffect(() => {
     setIsEditMode(article === "new");
   }, [article]);
 
+  // Handle cancel action based on context
   const handleCancel = () => {
     if (article === "new") {
-      // For new articles, Cancel closes the panel
+      // New articles: Cancel closes the panel entirely
       onClose();
     } else {
-      // For existing articles, Cancel returns to view mode
+      // Existing articles: Cancel returns to view mode
       setIsEditMode(false);
     }
   };
 
+  // After successful save, close the panel
   const handleSaved = () => {
-    // After saving, close the panel
     onClose();
   };
 
-  // New articles always show edit mode
+  // Render edit mode for new articles or when edit button is clicked
   if (article === "new" || isEditMode) {
     return (
       <KnowledgeArticleEdit
@@ -685,7 +754,7 @@ function KnowledgeArticleDetail({
     );
   }
 
-  // Existing articles show view mode by default
+  // Render view mode for existing articles by default
   return (
     <KnowledgeArticleView
       article={article}
@@ -695,22 +764,33 @@ function KnowledgeArticleDetail({
   );
 }
 
-// Main Component with Two-Pane Layout
+/**
+ * MAIN COMPONENT - TWO-PANE LAYOUT
+ * 
+ * Implements the Knowledge Articles management interface with:
+ * - Left pane: Searchable list of all articles with delete action
+ * - Right pane: Selected article detail (view or edit mode)
+ * - Article list with search/filter functionality
+ * - Create, Read, Update, Delete (CRUD) operations
+ * - Performance optimization: List excludes content, detail fetches full article
+ */
 export default function KnowledgeArticlesManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArticleId, setSelectedArticleId] = useState<string | "new" | null>(null);
   const { toast } = useToast();
 
+  // Fetch article list (excludes content for performance)
   const { data: articles = [], isLoading } = useQuery<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>({
     queryKey: ["/api/knowledge-articles"],
   });
 
-  // Fetch full article when one is selected (includes content)
+  // Fetch complete article when selected (includes content for editing/viewing)
   const { data: selectedArticle, isLoading: isLoadingArticle } = useQuery<KnowledgeArticleWithAuthor>({
     queryKey: ["/api/knowledge-articles", selectedArticleId],
     enabled: !!selectedArticleId && selectedArticleId !== "new",
   });
 
+  // Delete article mutation with optimistic UI update
   const deleteArticleMutation = useMutation({
     mutationFn: (articleId: string) => apiRequest("DELETE", `/api/knowledge-articles/${articleId}`),
     onSuccess: () => {
@@ -732,6 +812,7 @@ export default function KnowledgeArticlesManagement() {
     },
   });
 
+  // Filter articles based on search query (searches across multiple fields)
   const filteredArticles = articles.filter((article) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -744,10 +825,12 @@ export default function KnowledgeArticlesManagement() {
     );
   });
 
+  // Delete handler
   const handleDeleteArticle = (articleId: string) => {
     deleteArticleMutation.mutate(articleId);
   };
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -764,8 +847,9 @@ export default function KnowledgeArticlesManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Two-Pane Layout: Left = Article List, Right = Article Detail */}
       <PanelGroup direction="horizontal" className="min-h-[600px]">
-        {/* Left Panel - List */}
+        {/* Left Panel - Article List with Search and Create */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="space-y-4 pr-4">
             {/* Search Bar */}
@@ -893,17 +977,20 @@ export default function KnowledgeArticlesManagement() {
           </div>
         </Panel>
 
+        {/* Resizable Divider */}
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Panel - Detail View */}
+        {/* Right Panel - Article Detail (View/Edit Mode) */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="pl-4">
+            {/* Create new article */}
             {selectedArticleId === "new" ? (
               <KnowledgeArticleDetail
                 article="new"
                 onClose={() => setSelectedArticleId(null)}
               />
             ) : selectedArticleId && isLoadingArticle ? (
+              /* Loading selected article */
               <Card>
                 <CardContent className="flex items-center justify-center h-full min-h-[600px]">
                   <div className="text-center">
@@ -912,11 +999,13 @@ export default function KnowledgeArticlesManagement() {
                 </CardContent>
               </Card>
             ) : selectedArticleId && selectedArticle ? (
+              /* Display selected article */
               <KnowledgeArticleDetail
                 article={selectedArticle}
                 onClose={() => setSelectedArticleId(null)}
               />
             ) : (
+              /* Empty state - no article selected */
               <Card>
                 <CardContent className="flex items-center justify-center h-full min-h-[600px]">
                   <div className="text-center text-muted-foreground">

@@ -32,6 +32,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Company } from "@shared/schema";
+import { useLocation } from "wouter";
 
 // Type for admin check responses
 type GlobalAdminCheckResponse = {
@@ -201,11 +202,25 @@ function DevPatternsSetup() {
 }
 
 export default function Setup() {
+  const [location] = useLocation();
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("my-company");
   const { toast } = useToast();
+
+  // Auto-select menu item based on URL path
+  useEffect(() => {
+    // Check for nested routes and auto-select the appropriate menu item
+    if (location.includes("/setup/knowledge-articles")) {
+      setSelectedItem("knowledge-articles");
+      setSelectedTab("business-objects");
+    } else if (location.includes("/setup/my-company")) {
+      setSelectedItem("my-company");
+      setSelectedTab("my-company");
+    }
+    // Add more nested route checks here as needed
+  }, [location]);
 
   // Query to check if user is global admin
   const { data: adminCheck, isLoading: isCheckingAdmin } =

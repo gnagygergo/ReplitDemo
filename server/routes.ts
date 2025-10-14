@@ -1399,6 +1399,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const validatedData = insertKnowledgeArticleSchema.parse(req.body);
+      
+      // Convert empty strings to null for foreign key fields
+      if (validatedData.languageCode === "") {
+        validatedData.languageCode = null;
+      }
+      
       const article = await storage.createKnowledgeArticle(validatedData);
       res.status(201).json(article);
     } catch (error) {
@@ -1422,6 +1428,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const validatedData = insertKnowledgeArticleSchema.partial().parse(req.body);
+      
+      // Convert empty strings to null for foreign key fields
+      if (validatedData.languageCode === "") {
+        validatedData.languageCode = null;
+      }
+      
       const article = await storage.updateKnowledgeArticle(
         req.params.id,
         validatedData,

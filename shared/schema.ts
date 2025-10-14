@@ -390,19 +390,22 @@ export const knowledgeArticles = pgTable("knowledge_articles", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  title: text("title"),
-  articleTitle: text("content"),
-  articleFunctionalDomain: text("content_functional_domain"),
-  articleFunctionalityName: text("content_functionality_name"),
-  articleTags: text("content_tags"),
-  articleKeywords: text("content_keywords"),
+  articleTitle: text("article_title"),
+  articleContent: text("article_content"),
+  articleFunctionalDomain: text("article_functional_domain"),
+  articleFunctionalityName: text("article_functionality_name"),
+  articleTags: text("article_tags"),
+  articleKeywords: text("article_keywords"),
   isPublished: boolean("is_published"),
+  isInternal: boolean("is_internal"),
   languageCode: text("language_code").references(() => languages.languageCode, {
-    onDelete: "restrict"}),
+    onDelete: "restrict",
+  }),
   authorId: varchar("author_id").references(() => users.id, {
-    onDelete: "restrict"}),
+    onDelete: "restrict",
+  }),
   createdDate: timestamp("created_date").defaultNow(),
-  })
+});
 
 // Emails table
 export const emails = pgTable("emails", {

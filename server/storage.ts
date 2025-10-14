@@ -47,6 +47,9 @@ import {
   type LicenceAgreementWithDetails,
   type Email,
   type InsertEmail,
+  type KnowledgeArticle,
+  type InsertKnowledgeArticle,
+  type KnowledgeArticleWithAuthor,
   companies,
   accounts,
   opportunities,
@@ -66,6 +69,7 @@ import {
   licenceAgreementTemplates,
   licenceAgreements,
   emails,
+  knowledgeArticles,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
@@ -301,6 +305,16 @@ export interface IStorage {
   getEmail(id: string): Promise<Email | undefined>;
   createEmail(email: InsertEmail): Promise<Email>;
   deleteEmail(id: string): Promise<boolean>;
+
+  // Knowledge Article methods (Global - no company context)
+  getKnowledgeArticles(): Promise<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>;
+  getKnowledgeArticle(id: string): Promise<KnowledgeArticleWithAuthor | undefined>;
+  createKnowledgeArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle>;
+  updateKnowledgeArticle(
+    id: string,
+    article: Partial<InsertKnowledgeArticle>,
+  ): Promise<KnowledgeArticle | undefined>;
+  deleteKnowledgeArticle(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1649,6 +1663,87 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(emails)
       .where(eq(emails.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Knowledge Article methods (Global - no company context)
+  async getKnowledgeArticles(): Promise<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]> {
+    const results = await db
+      .select({
+        id: knowledgeArticles.id,
+        articleTitle: knowledgeArticles.articleTitle,
+        languageCode: knowledgeArticles.languageCode,
+        articleFunctionalDomain: knowledgeArticles.articleFunctionalDomain,
+        articleFunctionalityName: knowledgeArticles.articleFunctionalityName,
+        articleTags: knowledgeArticles.articleTags,
+        articleKeywords: knowledgeArticles.articleKeywords,
+        authorId: knowledgeArticles.authorId,
+        createdDate: knowledgeArticles.createdDate,
+        author: users,
+      })
+      .from(knowledgeArticles)
+      .leftJoin(users, eq(knowledgeArticles.authorId, users.id))
+      .orderBy(sql`${knowledgeArticles.createdDate} DESC`);
+
+    return results.map(r => ({
+      id: r.id,
+      articleTitle: r.articleTitle,
+      languageCode: r.languageCode,
+      articleFunctionalDomain: r.articleFunctionalDomain,
+      articleFunctionalityName: r.articleFunctionalityName,
+      articleTags: r.articleTags,
+      articleKeywords: r.articleKeywords,
+      authorId: r.authorId,
+      createdDate: r.createdDate,
+      author: r.author!,
+    }));
+  }
+
+  async getKnowledgeArticle(id: string): Promise<KnowledgeArticleWithAuthor | undefined> {
+    const [result] = await db
+      .select({
+        article: knowledgeArticles,
+        author: users,
+      })
+      .from(knowledgeArticles)
+      .leftJoin(users, eq(knowledgeArticles.authorId, users.id))
+      .where(eq(knowledgeArticles.id, id));
+
+    if (!result) return undefined;
+
+    return {
+      ...result.article,
+      author: result.author!,
+    };
+  }
+
+  async createKnowledgeArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle> {
+    const [newArticle] = await db
+      .insert(knowledgeArticles)
+      .values({
+        ...article,
+        createdDate: sql`NOW()`,
+      })
+      .returning();
+    return newArticle;
+  }
+
+  async updateKnowledgeArticle(
+    id: string,
+    article: Partial<InsertKnowledgeArticle>,
+  ): Promise<KnowledgeArticle | undefined> {
+    const [updatedArticle] = await db
+      .update(knowledgeArticles)
+      .set(article)
+      .where(eq(knowledgeArticles.id, id))
+      .returning();
+    return updatedArticle || undefined;
+  }
+
+  async deleteKnowledgeArticle(id: string): Promise<boolean> {
+    const result = await db
+      .delete(knowledgeArticles)
+      .where(eq(knowledgeArticles.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

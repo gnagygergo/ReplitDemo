@@ -669,14 +669,6 @@ export default function KnowledgeArticlesManagement() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold">Knowledge Articles</h3>
-            <p className="text-sm text-muted-foreground">
-              Manage knowledge base articles and documentation
-            </p>
-          </div>
-        </div>
         <Card>
           <CardContent className="p-6">
             <div className="text-center py-8">

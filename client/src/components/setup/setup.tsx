@@ -95,7 +95,7 @@ const setupMenuItems = [
     icon: BookOpen,
     description: "Manage knowledge base articles and documentation",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
   {
     id: "languages",

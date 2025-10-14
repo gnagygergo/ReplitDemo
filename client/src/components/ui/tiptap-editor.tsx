@@ -90,6 +90,7 @@ interface TiptapEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  'data-testid'?: string;
 }
 
 const fontSizes = [
@@ -112,7 +113,7 @@ const colors = [
   { label: 'Pink', value: '#EC4899' },
 ];
 
-export function TiptapEditor({ content, onChange, placeholder = 'Start typing...' }: TiptapEditorProps) {
+export function TiptapEditor({ content, onChange, placeholder = 'Start typing...', 'data-testid': dataTestId }: TiptapEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -309,7 +310,9 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
         </div>
       </div>
       
-      <EditorContent editor={editor} />
+      <div data-testid={dataTestId}>
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

@@ -420,6 +420,7 @@ export default function KnowledgeArticleDetail() {
                           field.onChange(html);
                         }}
                         placeholder="Write your article content here..."
+                        data-testid="editor-article-content"
                       />
                     </FormControl>
                     <FormMessage />

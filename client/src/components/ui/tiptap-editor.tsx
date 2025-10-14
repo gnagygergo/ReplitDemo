@@ -144,12 +144,14 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
     onClick, 
     isActive, 
     icon: Icon, 
-    label 
+    label,
+    'data-testid': dataTestId
   }: { 
     onClick: () => void; 
     isActive?: boolean; 
     icon: React.ElementType; 
     label: string;
+    'data-testid'?: string;
   }) => (
     <Button
       type="button"
@@ -158,6 +160,7 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
       onClick={onClick}
       className="h-8 w-8 p-0"
       title={label}
+      data-testid={dataTestId}
     >
       <Icon className="h-4 w-4" />
     </Button>
@@ -170,11 +173,13 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           onClick={() => editor.chain().focus().undo().run()}
           icon={Undo}
           label="Undo"
+          data-testid="button-editor-undo"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
           icon={Redo}
           label="Redo"
+          data-testid="button-editor-redo"
         />
         
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -184,18 +189,21 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           isActive={editor.isActive('heading', { level: 1 })}
           icon={Heading1}
           label="Heading 1"
+          data-testid="button-editor-h1"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           isActive={editor.isActive('heading', { level: 2 })}
           icon={Heading2}
           label="Heading 2"
+          data-testid="button-editor-h2"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           isActive={editor.isActive('heading', { level: 3 })}
           icon={Heading3}
           label="Heading 3"
+          data-testid="button-editor-h3"
         />
         
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -205,24 +213,28 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           isActive={editor.isActive('bold')}
           icon={Bold}
           label="Bold"
+          data-testid="button-editor-bold"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           isActive={editor.isActive('italic')}
           icon={Italic}
           label="Italic"
+          data-testid="button-editor-italic"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           isActive={editor.isActive('strike')}
           icon={Strikethrough}
           label="Strikethrough"
+          data-testid="button-editor-strikethrough"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
           isActive={editor.isActive('code')}
           icon={Code}
           label="Inline Code"
+          data-testid="button-editor-code"
         />
         
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -232,12 +244,14 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           isActive={editor.isActive('bulletList')}
           icon={List}
           label="Bullet List"
+          data-testid="button-editor-bullet-list"
         />
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           isActive={editor.isActive('orderedList')}
           icon={ListOrdered}
           label="Numbered List"
+          data-testid="button-editor-numbered-list"
         />
         
         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -247,6 +261,7 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
           isActive={editor.isActive('codeBlock')}
           icon={FileCode}
           label="Code Block"
+          data-testid="button-editor-code-block"
         />
         
         <Separator orientation="vertical" className="h-6 mx-1" />

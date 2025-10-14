@@ -149,6 +149,31 @@ function KnowledgeArticleView({
               <p className="text-sm mt-1">{format(new Date(article.createdDate), "PPP")}</p>
             </div>
           )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Published Status</label>
+              <div className="mt-1">
+                <Badge 
+                  variant={article.isPublished ? "default" : "secondary"}
+                  data-testid="badge-is-published"
+                >
+                  {article.isPublished ? "Published" : "Not Published"}
+                </Badge>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Access Level</label>
+              <div className="mt-1">
+                <Badge 
+                  variant={article.isInternal ? "outline" : "secondary"}
+                  data-testid="badge-is-internal"
+                >
+                  {article.isInternal ? "Internal Only" : "Public"}
+                </Badge>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -535,7 +560,7 @@ function KnowledgeArticleEdit({
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={field.value ?? false}
                           onCheckedChange={field.onChange}
                           data-testid="checkbox-is-published"
                         />
@@ -559,7 +584,7 @@ function KnowledgeArticleEdit({
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={field.value ?? false}
                           onCheckedChange={field.onChange}
                           data-testid="checkbox-is-internal"
                         />

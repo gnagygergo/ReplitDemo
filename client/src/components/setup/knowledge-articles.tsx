@@ -44,6 +44,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { KnowledgeArticleWithAuthor, User, Language } from "@shared/schema";
@@ -123,7 +124,7 @@ function KnowledgeArticleView({
               <p className="text-sm mt-1">{article.articleFunctionalityName || "Not specified"}</p>
             </div>
           </div>
-
+          
           {article.articleTags && (
             <div>
               <label className="text-sm font-medium text-muted-foreground">Tags</label>
@@ -205,6 +206,8 @@ function KnowledgeArticleEdit({
       articleKeywords: "",
       articleContent: "",
       authorId: "",
+      isPublished: false,
+      isInternal: false,
     },
   });
 
@@ -220,6 +223,8 @@ function KnowledgeArticleEdit({
         articleKeywords: article.articleKeywords || "",
         articleContent: article.articleContent || "",
         authorId: article.authorId || "",
+        isPublished: article.isPublished ?? false,
+        isInternal: article.isInternal ?? false,
       });
       setEditorContent(article.articleContent || "");
       if (article.author) {
@@ -236,6 +241,8 @@ function KnowledgeArticleEdit({
         articleKeywords: "",
         articleContent: "",
         authorId: currentUser?.id || "",
+        isPublished: false,
+        isInternal: false,
       });
       setEditorContent("");
       setSelectedAuthor(currentUser || null);
@@ -682,13 +689,6 @@ export default function KnowledgeArticlesManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-semibold">Knowledge Articles</h3>
-        <p className="text-sm text-muted-foreground">
-          Manage knowledge base articles and documentation
-        </p>
-      </div>
-
       <PanelGroup direction="horizontal" className="min-h-[600px]">
         {/* Left Panel - List */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
@@ -719,7 +719,7 @@ export default function KnowledgeArticlesManagement() {
                     data-testid="button-create-article"
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Article
+                    New
                   </Button>
                 </div>
               </CardHeader>
@@ -847,7 +847,7 @@ export default function KnowledgeArticlesManagement() {
                   <div className="text-center text-muted-foreground">
                     <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
                     <p>Select an article to view details</p>
-                    <p className="text-sm mt-2">or click "Create Article" to add a new one</p>
+                    <p className="text-sm mt-2">or click "New" to add a new one</p>
                   </div>
                 </CardContent>
               </Card>

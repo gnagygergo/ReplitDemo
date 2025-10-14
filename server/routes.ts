@@ -15,6 +15,7 @@ import {
   insertUnitOfMeasureSchema,
   insertLanguageSchema,
   insertTranslationSchema,
+  insertKnowledgeArticleSchema,
   insertDevPatternSchema,
   insertLicenceSchema,
   insertLicenceAgreementTemplateSchema,
@@ -1361,6 +1362,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting translation:", error);
       res.status(500).json({ message: "Failed to delete translation" });
+    }
+  });
+
+  // Knowledge Article routes (Global - no company context, read: all users, write: global admins only)
+  app.get("/api/knowledge-articles", isAuthenticated, async (req, res) => {
+    try {
+      const articles = await storage.getKnowledgeArticles();
+      res.json(articles);
+    } catch (error) {
+      console.error("Error fetching knowledge articles:", error);
+      res.status(500).json({ message: "Failed to fetch knowledge articles" });
+    }
+  });
+
+  app.get("/api/knowledge-articles/:id", isAuthenticated, async (req, res) => {
+    try {
+      const article = await storage.getKnowledgeArticle(req.params.id);
+      if (!article) {
+        return res.status(404).json({ message: "Knowledge article not found" });
+      }
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching knowledge article:", error);
+      res.status(500).json({ message: "Failed to fetch knowledge article" });
+    }
+  });
+
+  app.post("/api/knowledge-articles", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res
+          .status(403)
+          .json({ message: "Only global admins can create knowledge articles" });
+      }
+
+      const validatedData = insertKnowledgeArticleSchema.parse(req.body);
+      const article = await storage.createKnowledgeArticle(validatedData);
+      res.status(201).json(article);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating knowledge article:", error);
+      res.status(500).json({ message: "Failed to create knowledge article" });
+    }
+  });
+
+  app.patch("/api/knowledge-articles/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res
+          .status(403)
+          .json({ message: "Only global admins can update knowledge articles" });
+      }
+
+      const validatedData = insertKnowledgeArticleSchema.partial().parse(req.body);
+      const article = await storage.updateKnowledgeArticle(
+        req.params.id,
+        validatedData,
+      );
+      if (!article) {
+        return res.status(404).json({ message: "Knowledge article not found" });
+      }
+      res.json(article);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res
+          .status(400)
+          .json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating knowledge article:", error);
+      res.status(500).json({ message: "Failed to update knowledge article" });
+    }
+  });
+
+  app.delete("/api/knowledge-articles/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res
+          .status(403)
+          .json({ message: "Only global admins can delete knowledge articles" });
+      }
+
+      const deleted = await storage.deleteKnowledgeArticle(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Knowledge article not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting knowledge article:", error);
+      res.status(500).json({ message: "Failed to delete knowledge article" });
     }
   });
 

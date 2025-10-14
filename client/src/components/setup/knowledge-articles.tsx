@@ -110,9 +110,20 @@ function KnowledgeArticleDetail({
       if (article.author) {
         setSelectedAuthor(article.author);
       }
-    } else if (currentUser) {
-      form.setValue("authorId", currentUser.id);
-      setSelectedAuthor(currentUser);
+    } else {
+      // Reset form completely for new article
+      form.reset({
+        articleTitle: "",
+        languageCode: "",
+        articleFunctionalDomain: "",
+        articleFunctionalityName: "",
+        articleTags: "",
+        articleKeywords: "",
+        articleContent: "",
+        authorId: currentUser?.id || "",
+      });
+      setEditorContent("");
+      setSelectedAuthor(currentUser || null);
     }
   }, [article, currentUser, isNewArticle, form]);
 

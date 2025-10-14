@@ -545,6 +545,16 @@ export const licenceAgreementsRelations = relations(
   }),
 );
 
+export const knowledgeArticlesRelations = relations(
+  knowledgeArticles,
+  ({ one }) => ({
+    author: one(users, {
+      fields: [knowledgeArticles.authorId],
+      references: [users.id],
+    }),
+  }),
+);
+
 export const insertCompanySchema = createInsertSchema(companies)
   .omit({
     id: true,
@@ -669,6 +679,16 @@ export const insertQuoteLineSchema = createInsertSchema(quoteLines)
   })
   .extend({
     quoteId: z.string().min(1, "Quote ID is required"),
+  });
+
+export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles)
+  .omit({
+    id: true,
+    createdDate: true,
+  })
+  .extend({
+    articleTitle: z.string().min(1, "Article title is required"),
+    authorId: z.string().min(1, "Author is required"),
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
@@ -837,6 +857,13 @@ export type LicenceAgreementTemplateWithLicence = LicenceAgreementTemplate & {
 export type LicenceAgreementWithDetails = LicenceAgreement & {
   licenceAgreementTemplate: LicenceAgreementTemplate;
   company: Company;
+};
+
+export type InsertKnowledgeArticle = z.infer<typeof insertKnowledgeArticleSchema>;
+export type KnowledgeArticle = typeof knowledgeArticles.$inferSelect;
+
+export type KnowledgeArticleWithAuthor = KnowledgeArticle & {
+  author: User;
 };
 
 // User types - Required for Replit Auth

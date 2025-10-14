@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, BookOpen, Pencil, Trash2, ArrowLeft, Save, UserPlus } from "lucide-react";
+import { Plus, Search, BookOpen, Trash2, Save, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,38 +43,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { KnowledgeArticleWithAuthor, User, Language } from "@shared/schema";
 import { insertKnowledgeArticleSchema } from "@shared/schema";
-import { useLocation, useRoute } from "wouter";
 import { format } from "date-fns";
 import { TiptapEditor } from "@/components/ui/tiptap-editor";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 
 type KnowledgeArticleForm = z.infer<typeof insertKnowledgeArticleSchema>;
 
-export default function KnowledgeArticlesManagement() {
-  const [, params] = useRoute("/setup/knowledge-articles/:id");
-  
-  // If we have params, we're in detail view
-  if (params?.id) {
-    return <KnowledgeArticleDetailView articleId={params.id} />;
-  }
-  
-  // Otherwise show list view
-  return <KnowledgeArticlesListView />;
-}
-
 // Detail View Component
-function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
-  const [, setLocation] = useLocation();
+function KnowledgeArticleDetail({ 
+  article, 
+  onClose 
+}: { 
+  article: KnowledgeArticleWithAuthor | "new"; 
+  onClose: () => void;
+}) {
   const { toast } = useToast();
   const [isUserLookupOpen, setIsUserLookupOpen] = useState(false);
   const [selectedAuthor, setSelectedAuthor] = useState<User | null>(null);
   const [editorContent, setEditorContent] = useState("");
 
-  const isNewArticle = articleId === "new";
+  const isNewArticle = article === "new";
 
   // Fetch languages for the language selector
   const { data: languages = [] } = useQuery<Language[]>({
@@ -84,12 +77,6 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
   // Fetch current user to set as default author for new articles
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/auth/me"],
-  });
-
-  // Fetch article data if editing
-  const { data: article, isLoading } = useQuery<KnowledgeArticleWithAuthor>({
-    queryKey: ["/api/knowledge-articles", articleId],
-    enabled: !isNewArticle && !!articleId,
   });
 
   const form = useForm<KnowledgeArticleForm>({
@@ -108,7 +95,7 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
 
   // Set form values when article data is loaded or current user is available
   useEffect(() => {
-    if (article) {
+    if (!isNewArticle) {
       form.reset({
         articleTitle: article.articleTitle || "",
         languageCode: article.languageCode || "",
@@ -123,7 +110,7 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
       if (article.author) {
         setSelectedAuthor(article.author);
       }
-    } else if (isNewArticle && currentUser) {
+    } else if (currentUser) {
       form.setValue("authorId", currentUser.id);
       setSelectedAuthor(currentUser);
     }
@@ -139,7 +126,7 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
         title: "Success",
         description: "Knowledge article created successfully",
       });
-      setLocation("/setup/knowledge-articles");
+      onClose();
     },
     onError: (error: any) => {
       toast({
@@ -152,16 +139,15 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
 
   const updateArticleMutation = useMutation({
     mutationFn: async (data: KnowledgeArticleForm) => {
-      return await apiRequest("PATCH", `/api/knowledge-articles/${articleId}`, data);
+      return await apiRequest("PATCH", `/api/knowledge-articles/${(article as KnowledgeArticleWithAuthor).id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-articles"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/knowledge-articles", articleId] });
       toast({
         title: "Success",
         description: "Knowledge article updated successfully",
       });
-      setLocation("/setup/knowledge-articles");
+      onClose();
     },
     onError: (error: any) => {
       toast({
@@ -191,61 +177,38 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
     form.setValue("authorId", user.id);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" onClick={() => setLocation("/setup/knowledge-articles")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h3 className="text-lg font-semibold">Loading...</h3>
-          </div>
-        </div>
-        <Card>
-          <CardContent className="p-6">
-            <div className="text-center py-8">
-              <div className="animate-pulse">Loading article...</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setLocation("/setup/knowledge-articles")}
-            data-testid="button-back"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h3 className="text-lg font-semibold">
-              {isNewArticle ? "Create Knowledge Article" : "Edit Knowledge Article"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {isNewArticle
-                ? "Create a new knowledge base article"
-                : "Update article details and content"}
-            </p>
-          </div>
+        <div>
+          <h3 className="text-lg font-semibold">
+            {isNewArticle ? "Create Knowledge Article" : "Edit Knowledge Article"}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {isNewArticle
+              ? "Create a new knowledge base article"
+              : "Update article details and content"}
+          </p>
         </div>
-        <Button
-          onClick={form.handleSubmit(onSubmit)}
-          disabled={createArticleMutation.isPending || updateArticleMutation.isPending}
-          data-testid="button-save-article"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {createArticleMutation.isPending || updateArticleMutation.isPending
-            ? "Saving..."
-            : "Save Article"}
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            data-testid="button-cancel"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={createArticleMutation.isPending || updateArticleMutation.isPending}
+            data-testid="button-save-article"
+          >
+            <Save className="mr-2 h-4 w-4" />
+            {createArticleMutation.isPending || updateArticleMutation.isPending
+              ? "Saving..."
+              : "Save Article"}
+          </Button>
+        </div>
       </div>
 
       <Form {...form}>
@@ -473,13 +436,13 @@ function KnowledgeArticleDetailView({ articleId }: { articleId: string }) {
   );
 }
 
-// List View Component
-function KnowledgeArticlesListView() {
+// Main Component with Two-Pane Layout
+export default function KnowledgeArticlesManagement() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticleWithAuthor | "new" | null>(null);
   const { toast } = useToast();
-  const [, setLocation] = useLocation();
 
-  const { data: articles = [], isLoading } = useQuery<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>({
+  const { data: articles = [], isLoading } = useQuery<KnowledgeArticleWithAuthor[]>({
     queryKey: ["/api/knowledge-articles"],
   });
 
@@ -491,6 +454,9 @@ function KnowledgeArticlesListView() {
         title: "Success",
         description: "Knowledge article deleted successfully",
       });
+      if (selectedArticle && selectedArticle !== "new") {
+        setSelectedArticle(null);
+      }
     },
     onError: (error: any) => {
       toast({
@@ -516,6 +482,18 @@ function KnowledgeArticlesListView() {
   const handleDeleteArticle = (articleId: string) => {
     deleteArticleMutation.mutate(articleId);
   };
+
+  // Update selected article when articles data changes
+  useEffect(() => {
+    if (selectedArticle && selectedArticle !== "new" && articles.length > 0) {
+      const updatedArticle = articles.find(
+        (article) => article.id === selectedArticle.id
+      );
+      if (updatedArticle) {
+        setSelectedArticle(updatedArticle);
+      }
+    }
+  }, [articles, selectedArticle]);
 
   if (isLoading) {
     return (
@@ -549,7 +527,7 @@ function KnowledgeArticlesListView() {
           </p>
         </div>
         <Button
-          onClick={() => setLocation("/setup/knowledge-articles/new")}
+          onClick={() => setSelectedArticle("new")}
           data-testid="button-create-article"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -557,147 +535,150 @@ function KnowledgeArticlesListView() {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by title, keywords, domain, functionality, or author..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-              data-testid="input-article-search"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <PanelGroup direction="horizontal" className="min-h-[600px]">
+        {/* Left Panel - List */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
+          <div className="space-y-4 pr-4">
+            {/* Search Bar */}
+            <Card>
+              <CardContent className="p-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by title, keywords, domain, functionality, or author..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                    data-testid="input-article-search"
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Articles List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Knowledge Articles ({filteredArticles.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {filteredArticles.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
-              <p>
-                {searchQuery
-                  ? "No knowledge articles match your search"
-                  : "No knowledge articles found"}
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Domain / Functionality</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredArticles
-                  .sort((a, b) => {
-                    const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
-                    const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
-                    return dateB - dateA;
-                  })
-                  .map((article) => (
-                    <TableRow
-                      key={article.id}
-                      data-testid={`row-article-${article.id}`}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => setLocation(`/setup/knowledge-articles/${article.id}`)}
-                    >
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                            <BookOpen className="h-4 w-4 text-primary" />
-                          </div>
-                          <div>
-                            <div data-testid={`text-title-${article.id}`}>
-                              {article.articleTitle}
-                            </div>
-                            {article.articleKeywords && (
-                              <div className="text-xs text-muted-foreground mt-1">
-                                {article.articleKeywords}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell data-testid={`text-domain-${article.id}`}>
-                        <div>
-                          {article.articleFunctionalDomain && (
-                            <div className="font-medium">{article.articleFunctionalDomain}</div>
-                          )}
-                          {article.articleFunctionalityName && (
-                            <div className="text-sm text-muted-foreground">
-                              {article.articleFunctionalityName}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell data-testid={`text-author-${article.id}`}>
-                        {article.author?.firstName} {article.author?.lastName}
-                      </TableCell>
-                      <TableCell data-testid={`text-created-${article.id}`}>
-                        {article.createdDate
-                          ? format(new Date(article.createdDate), "MMM d, yyyy")
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setLocation(`/setup/knowledge-articles/${article.id}`)}
-                            data-testid={`button-edit-article-${article.id}`}
+            {/* Articles List */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Knowledge Articles ({filteredArticles.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {filteredArticles.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>
+                      {searchQuery
+                        ? "No knowledge articles match your search"
+                        : "No knowledge articles found"}
+                    </p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredArticles
+                        .sort((a, b) => {
+                          const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
+                          const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+                          return dateB - dateA;
+                        })
+                        .map((article) => (
+                          <TableRow
+                            key={article.id}
+                            data-testid={`row-article-${article.id}`}
+                            className={selectedArticle && selectedArticle !== "new" && selectedArticle.id === article.id ? "bg-muted/50" : ""}
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                data-testid={`button-delete-article-${article.id}`}
+                            <TableCell className="font-medium">
+                              <button
+                                onClick={() => setSelectedArticle(article)}
+                                className="text-left hover:underline flex items-center space-x-3 w-full"
+                                data-testid={`link-article-${article.id}`}
                               >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Knowledge Article</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{article.articleTitle}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel data-testid={`button-cancel-delete-article-${article.id}`}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteArticle(article.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  data-testid={`button-confirm-delete-article-${article.id}`}
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+                                  <BookOpen className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                  <div data-testid={`text-title-${article.id}`}>
+                                    {article.articleTitle}
+                                  </div>
+                                  {article.articleFunctionalDomain && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {article.articleFunctionalDomain}
+                                      {article.articleFunctionalityName && ` / ${article.articleFunctionalityName}`}
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    data-testid={`button-delete-article-${article.id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Knowledge Article</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{article.articleTitle}"? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteArticle(article.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      data-testid={`button-confirm-delete-article-${article.id}`}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </Panel>
+
+        <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
+
+        {/* Right Panel - Detail View */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
+          <div className="pl-4">
+            {selectedArticle ? (
+              <KnowledgeArticleDetail
+                article={selectedArticle}
+                onClose={() => setSelectedArticle(null)}
+              />
+            ) : (
+              <Card>
+                <CardContent className="flex items-center justify-center h-full min-h-[600px]">
+                  <div className="text-center text-muted-foreground">
+                    <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
+                    <p>Select an article to view details</p>
+                    <p className="text-sm mt-2">or click "Create Article" to add a new one</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </Panel>
+      </PanelGroup>
     </div>
   );
 }

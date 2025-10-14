@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
 import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
+import KnowledgeArticleDetail from "@/components/setup/knowledge-detail";
 
 function AuthenticatedRouter() {
   return (
@@ -40,6 +41,7 @@ function AuthenticatedRouter() {
         <Route path="/products/:id" component={ProductDetail} />
         <Route path="/products" component={Products} />
         <Route path="/cases" component={Cases} />
+        <Route path="/setup/knowledge-articles/:id" component={KnowledgeArticleDetail} />
         <Route path="/setup" component={Setup} />
         <Route component={NotFound} />
       </Switch>

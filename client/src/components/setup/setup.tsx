@@ -13,6 +13,7 @@ import {
   Award,
   FileCheck,
   Building,
+  BookOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,14 @@ const setupMenuItems = [
     category: "business-objects",
   },
   {
+    id: "knowledge-articles",
+    label: "Knowledge Articles",
+    icon: BookOpen,
+    description: "Manage knowledge base articles and documentation",
+    globalAdminOnly: true,
+    category: "business-objects",
+  },
+  {
     id: "languages",
     label: "Languages",
     icon: Languages,
@@ -149,6 +158,7 @@ import LicencesManagement from "@/components/setup/licences";
 import LicenceAgreementTemplatesManagement from "@/components/setup/licence-agreement-templates";
 import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
 import CompanyDetail from "@/components/setup/company-detail";
+import KnowledgeArticlesManagement from "@/components/setup/knowledge-articles";
 
 // Companies management component
 function CompaniesSetup() {
@@ -317,6 +327,8 @@ export default function Setup() {
         return <ReleasesSetup />;
       case "unit-of-measures":
         return <UnitOfMeasuresSetup />;
+      case "knowledge-articles":
+        return <KnowledgeArticlesManagement />;
       case "languages":
         return <LanguagesSetup />;
       case "translations":

@@ -682,20 +682,11 @@ export default function KnowledgeArticlesManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Knowledge Articles</h3>
-          <p className="text-sm text-muted-foreground">
-            Manage knowledge base articles and documentation
-          </p>
-        </div>
-        <Button
-          onClick={() => setSelectedArticleId("new")}
-          data-testid="button-create-article"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Create Article
-        </Button>
+      <div>
+        <h3 className="text-lg font-semibold">Knowledge Articles</h3>
+        <p className="text-sm text-muted-foreground">
+          Manage knowledge base articles and documentation
+        </p>
       </div>
 
       <PanelGroup direction="horizontal" className="min-h-[600px]">
@@ -721,7 +712,16 @@ export default function KnowledgeArticlesManagement() {
             {/* Articles List */}
             <Card>
               <CardHeader>
-                <CardTitle>Knowledge Articles ({filteredArticles.length})</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Knowledge Articles ({filteredArticles.length})</CardTitle>
+                  <Button
+                    onClick={() => setSelectedArticleId("new")}
+                    data-testid="button-create-article"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Article
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {filteredArticles.length === 0 ? (

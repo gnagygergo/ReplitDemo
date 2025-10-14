@@ -364,6 +364,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
     .default(sql`gen_random_uuid()`),
   settingFunctionalDomain: text("setting_functional_domain"),
   settingFunctionalityName: text("setting_functionality_name"),
+  settingCode: text("setting_code"),
   settingName: text("setting_name"),
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),
@@ -377,8 +378,11 @@ export const companySettings = pgTable("company_settings", {
   companySettingsMasterId: varchar("company_settings_master_id")
     .notNull()
     .references(() => companySettingsMaster.id, { onDelete: "restrict" }),
+  settingCode: text("setting_code"),
   settingName: text("setting_name"),
   settingValue: text("setting_value"),
+  companyId: varchar("company_id")
+    .references(() => companies.id, { onDelete: "restrict" }),
   createdDate: timestamp("created_date").defaultNow(),
   lastUpdatedDate: timestamp("last_updated_date").defaultNow(),
   lastUpdatedBy: varchar("last_updated_by").references(() => users.id, {

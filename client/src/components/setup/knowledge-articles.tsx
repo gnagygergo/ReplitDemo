@@ -1,9 +1,9 @@
 /**
  * Knowledge Articles Management Component
- * 
+ *
  * This file contains the complete implementation for managing knowledge base articles
  * with a two-pane layout (list + detail view) similar to the Release Management pattern.
- * 
+ *
  * Components:
  * - KnowledgeArticleView: Read-only view mode for displaying article details
  * - KnowledgeArticleEdit: Form for creating/editing articles with rich text editor
@@ -13,7 +13,16 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, BookOpen, Trash2, Save, UserPlus, Edit, X } from "lucide-react";
+import {
+  Plus,
+  Search,
+  BookOpen,
+  Trash2,
+  Save,
+  UserPlus,
+  Edit,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,7 +69,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { KnowledgeArticleWithAuthor, User, Language } from "@shared/schema";
+import type {
+  KnowledgeArticleWithAuthor,
+  User,
+  Language,
+} from "@shared/schema";
 import { insertKnowledgeArticleSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { TiptapEditor } from "@/components/ui/tiptap-editor";
@@ -71,20 +84,17 @@ type KnowledgeArticleForm = z.infer<typeof insertKnowledgeArticleSchema>;
 
 /**
  * VIEW MODE COMPONENT
- * 
- * Displays article details in read-only format with:
- * - Article metadata (title, language, author, domain, functionality)
- * - Tags and keywords
- * - Publication and access status (isPublished, isInternal)
+ *
+ * Displays article details in read-only format
  * - Rich text content rendered as HTML
  * - Close and Edit action buttons
  */
-function KnowledgeArticleView({ 
-  article, 
+function KnowledgeArticleView({
+  article,
   onEdit,
-  onClose
-}: { 
-  article: KnowledgeArticleWithAuthor; 
+  onClose,
+}: {
+  article: KnowledgeArticleWithAuthor;
   onEdit: () => void;
   onClose: () => void;
 }) {
@@ -107,10 +117,7 @@ function KnowledgeArticleView({
             <X className="mr-2 h-4 w-4" />
             Close
           </Button>
-          <Button
-            onClick={onEdit}
-            data-testid="button-edit-article"
-          >
+          <Button onClick={onEdit} data-testid="button-edit-article">
             <Edit className="mr-2 h-4 w-4" />
             Edit
           </Button>
@@ -126,14 +133,21 @@ function KnowledgeArticleView({
           {/* Language and Author - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Language</label>
-              <p className="text-sm mt-1">{article.languageCode || "Not specified"}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                Language
+              </label>
+              <p className="text-sm mt-1">
+                {article.languageCode || "Not specified"}
+              </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Author</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Author
+              </label>
               <p className="text-sm mt-1">
-                {article.author 
-                  ? `${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() || article.author.email
+                {article.author
+                  ? `${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() ||
+                    article.author.email
                   : "Unknown"}
               </p>
             </div>
@@ -142,22 +156,34 @@ function KnowledgeArticleView({
           {/* Functional Domain and Functionality Name - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Functional Domain</label>
-              <p className="text-sm mt-1">{article.articleFunctionalDomain || "Not specified"}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                Functional Domain
+              </label>
+              <p className="text-sm mt-1">
+                {article.articleFunctionalDomain || "Not specified"}
+              </p>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Functionality Name</label>
-              <p className="text-sm mt-1">{article.articleFunctionalityName || "Not specified"}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                Functionality Name
+              </label>
+              <p className="text-sm mt-1">
+                {article.articleFunctionalityName || "Not specified"}
+              </p>
             </div>
           </div>
 
           {/* Tags display (conditional) */}
           {article.articleTags && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Tags</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Tags
+              </label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {article.articleTags.split(',').map((tag, idx) => (
-                  <Badge key={idx} variant="secondary">{tag.trim()}</Badge>
+                {article.articleTags.split(",").map((tag, idx) => (
+                  <Badge key={idx} variant="secondary">
+                    {tag.trim()}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -166,7 +192,9 @@ function KnowledgeArticleView({
           {/* Keywords display (conditional) */}
           {article.articleKeywords && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Keywords</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Keywords
+              </label>
               <p className="text-sm mt-1">{article.articleKeywords}</p>
             </div>
           )}
@@ -174,17 +202,23 @@ function KnowledgeArticleView({
           {/* Created Date display (conditional) */}
           {article.createdDate && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Created Date</label>
-              <p className="text-sm mt-1">{format(new Date(article.createdDate), "PPP")}</p>
+              <label className="text-sm font-medium text-muted-foreground">
+                Created Date
+              </label>
+              <p className="text-sm mt-1">
+                {format(new Date(article.createdDate), "PPP")}
+              </p>
             </div>
           )}
 
           {/* Publication and Access Status - 2 column grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Published Status</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Published Status
+              </label>
               <div className="mt-1">
-                <Badge 
+                <Badge
                   variant={article.isPublished ? "default" : "secondary"}
                   data-testid="badge-is-published"
                 >
@@ -193,9 +227,11 @@ function KnowledgeArticleView({
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Access Level</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Access Level
+              </label>
               <div className="mt-1">
-                <Badge 
+                <Badge
                   variant={article.isInternal ? "outline" : "secondary"}
                   data-testid="badge-is-internal"
                 >
@@ -214,9 +250,13 @@ function KnowledgeArticleView({
         </CardHeader>
         <CardContent>
           {/* Render HTML content with sanitization handled by backend */}
-          <div 
+          <div
             className="prose prose-sm max-w-none dark:prose-invert"
-            dangerouslySetInnerHTML={{ __html: article.articleContent || "<p class='text-muted-foreground'>No content available</p>" }}
+            dangerouslySetInnerHTML={{
+              __html:
+                article.articleContent ||
+                "<p class='text-muted-foreground'>No content available</p>",
+            }}
             data-testid="view-article-content"
           />
         </CardContent>
@@ -227,22 +267,18 @@ function KnowledgeArticleView({
 
 /**
  * EDIT MODE COMPONENT
- * 
+ *
  * Form for creating or editing knowledge articles with:
- * - Article title, language selection, and author lookup
- * - Functional domain and functionality name
- * - Tags and keywords for categorization
- * - Publication status checkboxes (isPublished, isInternal)
  * - Rich text editor (TiptapEditor) for article content
  * - Create/Update mutations with validation
  * - Cancel and Save actions
  */
-function KnowledgeArticleEdit({ 
-  article, 
+function KnowledgeArticleEdit({
+  article,
   onCancel,
-  onSaved
-}: { 
-  article: KnowledgeArticleWithAuthor | "new"; 
+  onSaved,
+}: {
+  article: KnowledgeArticleWithAuthor | "new";
   onCancel: () => void;
   onSaved: () => void;
 }) {
@@ -344,7 +380,11 @@ function KnowledgeArticleEdit({
   // Update existing article mutation
   const updateArticleMutation = useMutation({
     mutationFn: async (data: KnowledgeArticleForm) => {
-      return await apiRequest("PATCH", `/api/knowledge-articles/${(article as KnowledgeArticleWithAuthor).id}`, data);
+      return await apiRequest(
+        "PATCH",
+        `/api/knowledge-articles/${(article as KnowledgeArticleWithAuthor).id}`,
+        data,
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-articles"] });
@@ -390,7 +430,9 @@ function KnowledgeArticleEdit({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">
-            {isNewArticle ? "Create Knowledge Article" : "Edit Knowledge Article"}
+            {isNewArticle
+              ? "Create Knowledge Article"
+              : "Edit Knowledge Article"}
           </h3>
           <p className="text-sm text-muted-foreground">
             {isNewArticle
@@ -408,7 +450,9 @@ function KnowledgeArticleEdit({
           </Button>
           <Button
             onClick={form.handleSubmit(onSubmit)}
-            disabled={createArticleMutation.isPending || updateArticleMutation.isPending}
+            disabled={
+              createArticleMutation.isPending || updateArticleMutation.isPending
+            }
             data-testid="button-save-article"
           >
             <Save className="mr-2 h-4 w-4" />
@@ -454,7 +498,10 @@ function KnowledgeArticleEdit({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Language</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
                         <FormControl>
                           <SelectTrigger data-testid="select-language">
                             <SelectValue placeholder="Select language" />
@@ -530,10 +577,6 @@ function KnowledgeArticleEdit({
                           data-testid="input-functional-domain"
                         />
                       </FormControl>
-                      <FormDescription>
-                        The business domain this article relates to
-                      </FormDescription>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -552,10 +595,6 @@ function KnowledgeArticleEdit({
                           data-testid="input-functionality-name"
                         />
                       </FormControl>
-                      <FormDescription>
-                        The specific functionality this article covers
-                      </FormDescription>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -623,9 +662,7 @@ function KnowledgeArticleEdit({
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Published
-                        </FormLabel>
+                        <FormLabel>Published</FormLabel>
                         <FormDescription>
                           Article is visible to users
                         </FormDescription>
@@ -647,9 +684,7 @@ function KnowledgeArticleEdit({
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>
-                          Internal Only
-                        </FormLabel>
+                        <FormLabel>Internal Only</FormLabel>
                         <FormDescription>
                           Restricted to internal users
                         </FormDescription>
@@ -706,18 +741,18 @@ function KnowledgeArticleEdit({
 
 /**
  * DETAIL WRAPPER COMPONENT
- * 
+ *
  * Manages the view/edit mode toggle for articles:
  * - Shows edit mode for new articles ("new")
  * - Shows view mode by default for existing articles
  * - Provides seamless switching between modes
  * - Handles cancel behavior (close for new, return to view for existing)
  */
-function KnowledgeArticleDetail({ 
-  article, 
-  onClose 
-}: { 
-  article: KnowledgeArticleWithAuthor | "new"; 
+function KnowledgeArticleDetail({
+  article,
+  onClose,
+}: {
+  article: KnowledgeArticleWithAuthor | "new";
   onClose: () => void;
 }) {
   const [isEditMode, setIsEditMode] = useState(article === "new");
@@ -766,7 +801,7 @@ function KnowledgeArticleDetail({
 
 /**
  * MAIN COMPONENT - TWO-PANE LAYOUT
- * 
+ *
  * Implements the Knowledge Articles management interface with:
  * - Left pane: Searchable list of all articles with delete action
  * - Right pane: Selected article detail (view or edit mode)
@@ -776,23 +811,29 @@ function KnowledgeArticleDetail({
  */
 export default function KnowledgeArticlesManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedArticleId, setSelectedArticleId] = useState<string | "new" | null>(null);
+  const [selectedArticleId, setSelectedArticleId] = useState<
+    string | "new" | null
+  >(null);
   const { toast } = useToast();
 
   // Fetch article list (excludes content for performance)
-  const { data: articles = [], isLoading } = useQuery<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>({
+  const { data: articles = [], isLoading } = useQuery<
+    Omit<KnowledgeArticleWithAuthor, "articleContent">[]
+  >({
     queryKey: ["/api/knowledge-articles"],
   });
 
   // Fetch complete article when selected (includes content for editing/viewing)
-  const { data: selectedArticle, isLoading: isLoadingArticle } = useQuery<KnowledgeArticleWithAuthor>({
-    queryKey: ["/api/knowledge-articles", selectedArticleId],
-    enabled: !!selectedArticleId && selectedArticleId !== "new",
-  });
+  const { data: selectedArticle, isLoading: isLoadingArticle } =
+    useQuery<KnowledgeArticleWithAuthor>({
+      queryKey: ["/api/knowledge-articles", selectedArticleId],
+      enabled: !!selectedArticleId && selectedArticleId !== "new",
+    });
 
   // Delete article mutation with optimistic UI update
   const deleteArticleMutation = useMutation({
-    mutationFn: (articleId: string) => apiRequest("DELETE", `/api/knowledge-articles/${articleId}`),
+    mutationFn: (articleId: string) =>
+      apiRequest("DELETE", `/api/knowledge-articles/${articleId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/knowledge-articles"] });
       toast({
@@ -872,7 +913,9 @@ export default function KnowledgeArticlesManagement() {
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle>Knowledge Articles ({filteredArticles.length})</CardTitle>
+                  <CardTitle>
+                    Knowledge Articles ({filteredArticles.length})
+                  </CardTitle>
                   <Button
                     onClick={() => setSelectedArticleId("new")}
                     data-testid="button-create-article"
@@ -903,15 +946,23 @@ export default function KnowledgeArticlesManagement() {
                     <TableBody>
                       {filteredArticles
                         .sort((a, b) => {
-                          const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0;
-                          const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0;
+                          const dateA = a.createdDate
+                            ? new Date(a.createdDate).getTime()
+                            : 0;
+                          const dateB = b.createdDate
+                            ? new Date(b.createdDate).getTime()
+                            : 0;
                           return dateB - dateA;
                         })
                         .map((article) => (
                           <TableRow
                             key={article.id}
                             data-testid={`row-article-${article.id}`}
-                            className={selectedArticleId === article.id ? "bg-muted/50" : ""}
+                            className={
+                              selectedArticleId === article.id
+                                ? "bg-muted/50"
+                                : ""
+                            }
                           >
                             <TableCell className="font-medium">
                               <button
@@ -929,7 +980,8 @@ export default function KnowledgeArticlesManagement() {
                                   {article.articleFunctionalDomain && (
                                     <div className="text-xs text-muted-foreground">
                                       {article.articleFunctionalDomain}
-                                      {article.articleFunctionalityName && ` / ${article.articleFunctionalityName}`}
+                                      {article.articleFunctionalityName &&
+                                        ` / ${article.articleFunctionalityName}`}
                                     </div>
                                   )}
                                 </div>
@@ -949,15 +1001,23 @@ export default function KnowledgeArticlesManagement() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Knowledge Article</AlertDialogTitle>
+                                    <AlertDialogTitle>
+                                      Delete Knowledge Article
+                                    </AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to delete "{article.articleTitle}"? This action cannot be undone.
+                                      Are you sure you want to delete "
+                                      {article.articleTitle}"? This action
+                                      cannot be undone.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogCancel>
+                                      Cancel
+                                    </AlertDialogCancel>
                                     <AlertDialogAction
-                                      onClick={() => handleDeleteArticle(article.id)}
+                                      onClick={() =>
+                                        handleDeleteArticle(article.id)
+                                      }
                                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       data-testid={`button-confirm-delete-article-${article.id}`}
                                     >
@@ -1011,7 +1071,9 @@ export default function KnowledgeArticlesManagement() {
                   <div className="text-center text-muted-foreground">
                     <BookOpen className="mx-auto h-12 w-12 mb-4 opacity-50" />
                     <p>Select an article to view details</p>
-                    <p className="text-sm mt-2">or click "New" to add a new one</p>
+                    <p className="text-sm mt-2">
+                      or click "New" to add a new one
+                    </p>
                   </div>
                 </CardContent>
               </Card>

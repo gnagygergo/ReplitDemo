@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Plus, Search, BookOpen, Trash2, Save, UserPlus } from "lucide-react";
+import { Plus, Search, BookOpen, Trash2, Save, UserPlus, Edit, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -51,16 +51,131 @@ import { insertKnowledgeArticleSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { TiptapEditor } from "@/components/ui/tiptap-editor";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
+import { Badge } from "@/components/ui/badge";
 
 type KnowledgeArticleForm = z.infer<typeof insertKnowledgeArticleSchema>;
 
-// Detail View Component
-function KnowledgeArticleDetail({ 
+// View Mode Component - Read-only display
+function KnowledgeArticleView({ 
   article, 
-  onClose 
+  onEdit,
+  onClose
+}: { 
+  article: KnowledgeArticleWithAuthor; 
+  onEdit: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Knowledge Article</h3>
+          <p className="text-sm text-muted-foreground">
+            View article details and content
+          </p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            onClick={onClose}
+            data-testid="button-close"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Close
+          </Button>
+          <Button
+            onClick={onEdit}
+            data-testid="button-edit-article"
+          >
+            <Edit className="mr-2 h-4 w-4" />
+            Edit
+          </Button>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{article.articleTitle}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Language</label>
+              <p className="text-sm mt-1">{article.languageCode || "Not specified"}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Author</label>
+              <p className="text-sm mt-1">
+                {article.author 
+                  ? `${article.author.firstName || ""} ${article.author.lastName || ""}`.trim() || article.author.email
+                  : "Unknown"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Functional Domain</label>
+              <p className="text-sm mt-1">{article.articleFunctionalDomain || "Not specified"}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Functionality Name</label>
+              <p className="text-sm mt-1">{article.articleFunctionalityName || "Not specified"}</p>
+            </div>
+          </div>
+
+          {article.articleTags && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Tags</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {article.articleTags.split(',').map((tag, idx) => (
+                  <Badge key={idx} variant="secondary">{tag.trim()}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {article.articleKeywords && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Keywords</label>
+              <p className="text-sm mt-1">{article.articleKeywords}</p>
+            </div>
+          )}
+
+          {article.createdDate && (
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Created Date</label>
+              <p className="text-sm mt-1">{format(new Date(article.createdDate), "PPP")}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Article Content</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div 
+            className="prose prose-sm max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: article.articleContent || "<p class='text-muted-foreground'>No content available</p>" }}
+            data-testid="view-article-content"
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Edit Mode Component
+function KnowledgeArticleEdit({ 
+  article, 
+  onCancel,
+  onSaved
 }: { 
   article: KnowledgeArticleWithAuthor | "new"; 
-  onClose: () => void;
+  onCancel: () => void;
+  onSaved: () => void;
 }) {
   const { toast } = useToast();
   const [isUserLookupOpen, setIsUserLookupOpen] = useState(false);
@@ -137,7 +252,7 @@ function KnowledgeArticleDetail({
         title: "Success",
         description: "Knowledge article created successfully",
       });
-      onClose();
+      onSaved();
     },
     onError: (error: any) => {
       toast({
@@ -158,7 +273,7 @@ function KnowledgeArticleDetail({
         title: "Success",
         description: "Knowledge article updated successfully",
       });
-      onClose();
+      onSaved();
     },
     onError: (error: any) => {
       toast({
@@ -204,7 +319,7 @@ function KnowledgeArticleDetail({
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={onCancel}
             data-testid="button-cancel"
           >
             Cancel
@@ -444,6 +559,57 @@ function KnowledgeArticleDetail({
         selectedUserId={selectedAuthor?.id}
       />
     </div>
+  );
+}
+
+// Detail View Component - Handles view/edit mode switching
+function KnowledgeArticleDetail({ 
+  article, 
+  onClose 
+}: { 
+  article: KnowledgeArticleWithAuthor | "new"; 
+  onClose: () => void;
+}) {
+  const [isEditMode, setIsEditMode] = useState(article === "new");
+
+  // Reset to view mode when article changes
+  useEffect(() => {
+    setIsEditMode(article === "new");
+  }, [article]);
+
+  const handleCancel = () => {
+    if (article === "new") {
+      // For new articles, Cancel closes the panel
+      onClose();
+    } else {
+      // For existing articles, Cancel returns to view mode
+      setIsEditMode(false);
+    }
+  };
+
+  const handleSaved = () => {
+    // After saving, close the panel
+    onClose();
+  };
+
+  // New articles always show edit mode
+  if (article === "new" || isEditMode) {
+    return (
+      <KnowledgeArticleEdit
+        article={article}
+        onCancel={handleCancel}
+        onSaved={handleSaved}
+      />
+    );
+  }
+
+  // Existing articles show view mode by default
+  return (
+    <KnowledgeArticleView
+      article={article}
+      onEdit={() => setIsEditMode(true)}
+      onClose={onClose}
+    />
   );
 }
 

@@ -616,11 +616,17 @@ function KnowledgeArticleDetail({
 // Main Component with Two-Pane Layout
 export default function KnowledgeArticlesManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedArticle, setSelectedArticle] = useState<KnowledgeArticleWithAuthor | "new" | null>(null);
+  const [selectedArticleId, setSelectedArticleId] = useState<string | "new" | null>(null);
   const { toast } = useToast();
 
-  const { data: articles = [], isLoading } = useQuery<KnowledgeArticleWithAuthor[]>({
+  const { data: articles = [], isLoading } = useQuery<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>({
     queryKey: ["/api/knowledge-articles"],
+  });
+
+  // Fetch full article when one is selected (includes content)
+  const { data: selectedArticle, isLoading: isLoadingArticle } = useQuery<KnowledgeArticleWithAuthor>({
+    queryKey: ["/api/knowledge-articles", selectedArticleId],
+    enabled: !!selectedArticleId && selectedArticleId !== "new",
   });
 
   const deleteArticleMutation = useMutation({
@@ -631,8 +637,8 @@ export default function KnowledgeArticlesManagement() {
         title: "Success",
         description: "Knowledge article deleted successfully",
       });
-      if (selectedArticle && selectedArticle !== "new") {
-        setSelectedArticle(null);
+      if (selectedArticleId && selectedArticleId !== "new") {
+        setSelectedArticleId(null);
       }
     },
     onError: (error: any) => {
@@ -659,18 +665,6 @@ export default function KnowledgeArticlesManagement() {
   const handleDeleteArticle = (articleId: string) => {
     deleteArticleMutation.mutate(articleId);
   };
-
-  // Update selected article when articles data changes
-  useEffect(() => {
-    if (selectedArticle && selectedArticle !== "new" && articles.length > 0) {
-      const updatedArticle = articles.find(
-        (article) => article.id === selectedArticle.id
-      );
-      if (updatedArticle) {
-        setSelectedArticle(updatedArticle);
-      }
-    }
-  }, [articles, selectedArticle]);
 
   if (isLoading) {
     return (
@@ -704,7 +698,7 @@ export default function KnowledgeArticlesManagement() {
           </p>
         </div>
         <Button
-          onClick={() => setSelectedArticle("new")}
+          onClick={() => setSelectedArticleId("new")}
           data-testid="button-create-article"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -766,11 +760,11 @@ export default function KnowledgeArticlesManagement() {
                           <TableRow
                             key={article.id}
                             data-testid={`row-article-${article.id}`}
-                            className={selectedArticle && selectedArticle !== "new" && selectedArticle.id === article.id ? "bg-muted/50" : ""}
+                            className={selectedArticleId === article.id ? "bg-muted/50" : ""}
                           >
                             <TableCell className="font-medium">
                               <button
-                                onClick={() => setSelectedArticle(article)}
+                                onClick={() => setSelectedArticleId(article.id)}
                                 className="text-left hover:underline flex items-center space-x-3 w-full"
                                 data-testid={`link-article-${article.id}`}
                               >
@@ -837,10 +831,23 @@ export default function KnowledgeArticlesManagement() {
         {/* Right Panel - Detail View */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="pl-4">
-            {selectedArticle ? (
+            {selectedArticleId === "new" ? (
+              <KnowledgeArticleDetail
+                article="new"
+                onClose={() => setSelectedArticleId(null)}
+              />
+            ) : selectedArticleId && isLoadingArticle ? (
+              <Card>
+                <CardContent className="flex items-center justify-center h-full min-h-[600px]">
+                  <div className="text-center">
+                    <div className="animate-pulse">Loading article...</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : selectedArticleId && selectedArticle ? (
               <KnowledgeArticleDetail
                 article={selectedArticle}
-                onClose={() => setSelectedArticle(null)}
+                onClose={() => setSelectedArticleId(null)}
               />
             ) : (
               <Card>

@@ -40,10 +40,7 @@ function AuthenticatedRouter() {
         <Route path="/products/:id" component={ProductDetail} />
         <Route path="/products" component={Products} />
         <Route path="/cases" component={Cases} />
-        <Route path="/setup/:rest*">
-          {() => <Setup />}
-        </Route>
-        <Route path="/setup" component={Setup} />
+        <Route path="/setup*" component={Setup} />
         <Route component={NotFound} />
       </Switch>
     </>

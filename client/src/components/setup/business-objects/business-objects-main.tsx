@@ -45,98 +45,6 @@ type CompanyAdminCheckResponse = {
 
 // Setup menu items - MY COMPANY
 const setupMenuItems = [
-  {
-    id: "my-company",
-    label: "My Company",
-    icon: Building,
-    description: "Your company information",
-    companyAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "users",
-    label: "Users",
-    icon: Users,
-    description: "Manage user accounts and permissions",
-    category: "my-company",
-  },
-  {
-    id: "companies",
-    label: "Companies",
-    icon: Building2,
-    description: "Manage company information and details",
-    category: "my-company",
-  },
-  {
-    id: "company-roles",
-    label: "Company Roles (in dev)",
-    icon: Shield,
-    description: "Manage reporting hierarchy",
-    category: "my-company",
-  },
-  {
-    id: "releases",
-    label: "Release Plan",
-    icon: Rocket,
-    description: "Manage release planning and tracking",
-    category: "my-company",
-  },
-  {
-    id: "knowledge-articles",
-    label: "Knowledge Articles",
-    icon: BookOpen,
-    description: "Manage knowledge base articles and documentation",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "languages",
-    label: "Languages",
-    icon: Languages,
-    description: "Manage system languages",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "translations",
-    label: "Translations",
-    icon: FileText,
-    description: "Manage translation labels and content",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "dev-patterns",
-    label: "Dev Patterns",
-    icon: FileCode,
-    description: "Manage development patterns",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "licences",
-    label: "Licences",
-    icon: Award,
-    description: "Manage licence types",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "licence-agreement-templates",
-    label: "Licence Agreement Templates",
-    icon: FileText,
-    description: "Manage agreement templates",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
-  {
-    id: "licence-agreements",
-    label: "Licence Agreements",
-    icon: FileCheck,
-    description: "Manage company licence agreements",
-    globalAdminOnly: true,
-    category: "my-company",
-  },
   // Setup menu items - BUSINESS OBJECTS
   {
     id: "Account-management",
@@ -156,62 +64,16 @@ const setupMenuItems = [
   },
 ];
 
-import UserManagement from "@/components/setup/user-management";
-import RoleHierarchy from "@/components/setup/role-hierarchy";
-import CompanyManagement from "@/components/setup/company-management";
-import ReleaseManagement from "@/components/setup/release-management";
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
-import LanguagesManagement from "@/components/setup/languages";
-import TranslationsManagement from "@/components/setup/translations";
-import DevPatternsManagement from "@/components/setup/dev-patterns";
-import LicencesManagement from "@/components/setup/licences";
-import LicenceAgreementTemplatesManagement from "@/components/setup/licence-agreement-templates";
-import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
-import CompanyDetail from "@/components/setup/company-detail";
-import KnowledgeArticlesManagement from "@/components/setup/knowledge-articles";
 
-// Companies management component
-function CompaniesSetup() {
-  return <CompanyManagement />;
-}
-
-// Users management component
-function UsersSetup() {
-  return <UserManagement />;
-}
-
-// Company Roles management component
-function CompanyRolesSetup() {
-  return <RoleHierarchy />;
-}
-
-// Release Plan management component
-function ReleasesSetup() {
-  return <ReleaseManagement />;
-}
 
 // Unit of Measures management component
 function UnitOfMeasuresSetup() {
   return <UnitOfMeasuresManagement />;
 }
 
-// Languages management component
-function LanguagesSetup() {
-  return <LanguagesManagement />;
-}
-
-// Translations management component
-function TranslationsSetup() {
-  return <TranslationsManagement />;
-}
-
-// Dev Patterns management component
-function DevPatternsSetup() {
-  return <DevPatternsManagement />;
-}
-
 export default function Setup() {
-  const [location, setLocation] = useLocation();
+  const [location] = useLocation();
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
@@ -313,15 +175,6 @@ export default function Setup() {
       (item as any).category === selectedTab,
   );
 
-  // If selected item is companies but user is not admin, default to first available item
-  useEffect(() => {
-    if (selectedItem === "companies" && adminCheck?.isGlobalAdmin === false) {
-      if (availableMenuItems.length > 0) {
-        setSelectedItem(availableMenuItems[0].id);
-      }
-    }
-  }, [adminCheck?.isGlobalAdmin, selectedItem, availableMenuItems]);
-
   // Reset selectedItem when switching tabs or if current item is not in filtered list
   useEffect(() => {
     if (filteredMenuItems.length > 0) {
@@ -341,32 +194,9 @@ export default function Setup() {
 
   const renderContent = () => {
     switch (selectedItem) {
-      case "companies":
-        return <CompaniesSetup />;
-      case "users":
-        return <UsersSetup />;
-      case "company-roles":
-        return <CompanyRolesSetup />;
-      case "releases":
-        return <ReleasesSetup />;
+      
       case "unit-of-measures":
         return <UnitOfMeasuresSetup />;
-      case "knowledge-articles":
-        return <KnowledgeArticlesManagement />;
-      case "languages":
-        return <LanguagesSetup />;
-      case "translations":
-        return <TranslationsSetup />;
-      case "dev-patterns":
-        return <DevPatternsSetup />;
-      case "licences":
-        return <LicencesManagement />;
-      case "licence-agreement-templates":
-        return <LicenceAgreementTemplatesManagement />;
-      case "licence-agreements":
-        return <LicenceAgreementsManagement />;
-      case "my-company":
-        return <CompanyDetail />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -383,29 +213,25 @@ export default function Setup() {
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-6">
             <div>
-              <h1 className="text-2xl font-bold">Setup</h1>
+              <h1 className="text-2xl font-bold">Business Objects</h1>
               <p className="text-sm text-muted-foreground">
-                Configure your application settings
+                Configure the behavior of your system
               </p>
             </div>
-            
+
             {/* Category Tabs */}
             <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>
               <TabsList>
                 <TabsTrigger value="my-company" data-testid="tab-my-company">
                   My Company
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="business-objects" 
-                  data-testid="tab-business-objects"
-                  onClick={() => setLocation('/setup/business-objects')}
-                >
+                <TabsTrigger value="business-objects" data-testid="tab-business-objects">
                   Business objects manager
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
-          
+
           {/* Company Context Switcher - Only for Global Admins */}
           {adminCheck?.isGlobalAdmin && (
             <div className="flex items-center gap-3">

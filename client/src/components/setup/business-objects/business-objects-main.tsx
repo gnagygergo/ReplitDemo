@@ -222,7 +222,11 @@ export default function Setup() {
             {/* Category Tabs */}
             <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>
               <TabsList>
-                <TabsTrigger value="my-company" data-testid="tab-my-company">
+                <TabsTrigger 
+                  value="my-company" 
+                  data-testid="tab-my-company"
+                  onClick={() => setLocation('/setup')}
+                >
                   My Company
                 </TabsTrigger>
                 <TabsTrigger 

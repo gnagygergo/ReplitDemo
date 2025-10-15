@@ -58,6 +58,7 @@ import { useToast } from "@/hooks/use-toast";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import SmartAccountManagementDetailCard from "@/components/accounts/account-cards/smart-account-management-detail-card";
+import AccountDetailOwnershipCard from "@/components/accounts/account-cards/account-ownership-detail-card";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -367,6 +368,7 @@ export default function AccountDetail() {
       {/* Resizable Two-Pane Layout */}
       <PanelGroup direction="horizontal" className="min-h-[600px]">
         {/* Left Pane - Account Information */}
+        {/* This Panel shows when Smart Account Management is Activated */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <SmartAccountManagementDetailCard
             account={account}
@@ -379,6 +381,20 @@ export default function AccountDetail() {
             getUserDisplayName={getUserDisplayName}
             getIndustryLabel={getIndustryLabel}
             getIndustryBadgeClass={getIndustryBadgeClass}
+          />
+        </Panel>
+
+        {/* This Panel shows Account Owner info */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
+          <AccountDetailOwnershipCard
+            account={account}
+            isEditing={isEditing}
+            form={form}
+            updateMutation={updateMutation}
+            selectedOwner={selectedOwner}
+            setShowUserLookup={setShowUserLookup}
+            getUserInitials={getUserInitials}
+            getUserDisplayName={getUserDisplayName}
           />
         </Panel>
 

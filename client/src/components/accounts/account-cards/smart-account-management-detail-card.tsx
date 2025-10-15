@@ -1,3 +1,6 @@
+// This Card is used on the Account Detail View.
+// It is used when Smart Account Management is activated.
+
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
 import {

@@ -368,7 +368,8 @@ export default function AccountDetail() {
       {/* Resizable Two-Pane Layout */}
       <PanelGroup direction="horizontal" className="min-h-[600px]">
         {/* Left Pane - Account Information */}
-        {/* This Panel shows when Smart Account Management is Activated */}
+        {/* SMART ACCOUNT MANAGEMENT PANEL. This Panel shows when Smart Account Management is Activated */}
+        
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <SmartAccountManagementDetailCard
             account={account}
@@ -384,7 +385,7 @@ export default function AccountDetail() {
           />
         </Panel>
 
-        {/* This Panel shows Account Owner info */}
+        {/* Account Owner info */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <AccountDetailOwnershipCard
             account={account}
@@ -397,7 +398,8 @@ export default function AccountDetail() {
             getUserDisplayName={getUserDisplayName}
           />
         </Panel>
-
+       
+        
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
         {/* Right Pane - Opportunities and Quotes */}

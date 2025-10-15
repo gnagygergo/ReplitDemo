@@ -368,48 +368,41 @@ export default function AccountDetail() {
       {/* Resizable Two-Pane Layout */}
       <PanelGroup direction="horizontal" className="min-h-[600px]">
         {/* Left Pane - Account Information Cards (Vertically Stacked) */}
-        <Panel defaultSize={50} minSize={30} maxSize={70}>
-          <PanelGroup direction="vertical">
-            {/* SMART ACCOUNT MANAGEMENT PANEL */}
-            <Panel defaultSize={50}>
-              <SmartAccountManagementDetailCard
-                account={account}
-                isEditing={isEditing}
-                form={form}
-                updateMutation={updateMutation}
-                selectedOwner={selectedOwner}
-                setShowUserLookup={setShowUserLookup}
-                getUserInitials={getUserInitials}
-                getUserDisplayName={getUserDisplayName}
-                getIndustryLabel={getIndustryLabel}
-                getIndustryBadgeClass={getIndustryBadgeClass}
-              />
-            </Panel>
+        <Panel defaultSize={50} minSize={30} maxSize={70}> 
+          <div className="flex flex-col gap-6 h-full overflow-auto p-4">
+            <SmartAccountManagementDetailCard
+              account={account}
+              isEditing={isEditing}
+              form={form}
+              updateMutation={updateMutation}
+              selectedOwner={selectedOwner}
+              setShowUserLookup={setShowUserLookup}
+              getUserInitials={getUserInitials}
+              getUserDisplayName={getUserDisplayName}
+              getIndustryLabel={getIndustryLabel}
+              getIndustryBadgeClass={getIndustryBadgeClass}
+            />
 
-            {/* Account Owner info */}
-            <Panel defaultSize={50}>
-              <AccountDetailOwnershipCard
-                account={account}
-                isEditing={isEditing}
-                form={form}
-                updateMutation={updateMutation}
-                selectedOwner={selectedOwner}
-                setShowUserLookup={setShowUserLookup}
-                getUserInitials={getUserInitials}
-                getUserDisplayName={getUserDisplayName}
-              />
-            </Panel>
-          </PanelGroup>
+            <AccountDetailOwnershipCard
+              account={account}
+              isEditing={isEditing}
+              form={form}
+              updateMutation={updateMutation}
+              selectedOwner={selectedOwner}
+              setShowUserLookup={setShowUserLookup}
+              getUserInitials={getUserInitials}
+              getUserDisplayName={getUserDisplayName}
+            />
+          </div>
         </Panel>
 
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
         {/* Right Pane - Opportunities and Quotes (Vertically Stacked) */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
-          <PanelGroup direction="vertical">
+          <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {/* Opportunities Card */}
-            <Panel defaultSize={50}>
-              <Card>
+            <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <TrendingUp className="w-5 h-5" />
@@ -474,11 +467,9 @@ export default function AccountDetail() {
                   )}
                 </CardContent>
               </Card>
-            </Panel>
 
             {/* Quotes Card */}
-            <Panel defaultSize={50}>
-              <Card>
+            <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center space-x-2">
@@ -558,8 +549,7 @@ export default function AccountDetail() {
                   )}
                 </CardContent>
               </Card>
-            </Panel>
-          </PanelGroup>
+          </div>
         </Panel>
       </PanelGroup>
 

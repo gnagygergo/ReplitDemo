@@ -59,6 +59,7 @@ import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import SmartAccountManagementDetailCard from "@/components/accounts/account-cards/smart-account-management-detail-card";
 import AccountDetailOwnershipCard from "@/components/accounts/account-cards/account-ownership-detail-card";
+import AccountDetailCategorizationCard from "@/components/accounts/account-cards/account-categorization-detail-card";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -379,8 +380,6 @@ export default function AccountDetail() {
               setShowUserLookup={setShowUserLookup}
               getUserInitials={getUserInitials}
               getUserDisplayName={getUserDisplayName}
-              getIndustryLabel={getIndustryLabel}
-              getIndustryBadgeClass={getIndustryBadgeClass}
             />
 
             <AccountDetailOwnershipCard
@@ -392,6 +391,15 @@ export default function AccountDetail() {
               setShowUserLookup={setShowUserLookup}
               getUserInitials={getUserInitials}
               getUserDisplayName={getUserDisplayName}
+            />
+
+            <AccountDetailCategorizationCard
+              account={account}
+              isEditing={isEditing}
+              form={form}
+              updateMutation={updateMutation}
+              getIndustryLabel={getIndustryLabel}
+              getIndustryBadgeClass={getIndustryBadgeClass}
             />
           </div>
         </Panel>

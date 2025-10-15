@@ -400,35 +400,7 @@ export default function SmartAccountManagementDetailCard({
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="industry"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Industry <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger data-testid="select-edit-industry">
-                          <SelectValue placeholder="Select an industry" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="tech">Technology</SelectItem>
-                        <SelectItem value="construction">
-                          Construction
-                        </SelectItem>
-                        <SelectItem value="services">Services</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              
 
               <FormField
                 control={form.control}
@@ -593,23 +565,6 @@ export default function SmartAccountManagementDetailCard({
                 data-testid="text-account-name-value"
               >
                 {account.name}
-              </div>
-            </div>
-
-            {/* Industry */}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Industry
-              </label>
-              <div
-                className="mt-1"
-                data-testid="text-account-industry-value"
-              >
-                <Badge
-                  className={getIndustryBadgeClass(account.industry)}
-                >
-                  {getIndustryLabel(account.industry)}
-                </Badge>
               </div>
             </div>
 

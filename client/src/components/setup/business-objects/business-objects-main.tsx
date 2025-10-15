@@ -73,11 +73,11 @@ function UnitOfMeasuresSetup() {
 }
 
 export default function Setup() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("my-company");
+  const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("business-objects");
   const { toast } = useToast();
 
   // Auto-select menu item based on URL path

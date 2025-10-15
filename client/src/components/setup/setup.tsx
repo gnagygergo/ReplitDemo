@@ -43,7 +43,7 @@ type CompanyAdminCheckResponse = {
   isCompanyAdmin: boolean;
 };
 
-// Setup menu items
+// Setup menu items - MY COMPANY
 const setupMenuItems = [
   {
     id: "my-company",
@@ -80,14 +80,6 @@ const setupMenuItems = [
     icon: Rocket,
     description: "Manage release planning and tracking",
     category: "my-company",
-  },
-  {
-    id: "unit-of-measures",
-    label: "Unit of Measures",
-    icon: Ruler,
-    description: "Manage measurement units and conversions",
-    globalAdminOnly: true,
-    category: "business-objects",
   },
   {
     id: "knowledge-articles",
@@ -144,6 +136,23 @@ const setupMenuItems = [
     description: "Manage company licence agreements",
     globalAdminOnly: true,
     category: "my-company",
+  },
+  // Setup menu items - BUSINESS OBJECTS
+  {
+    id: "Account-management",
+    label: "Account Management",
+    icon: FileCheck,
+    description: "Manage your client data",
+    globalAdminOnly: false,
+    category: "business-objects",
+  },
+  {
+    id: "unit-of-measures",
+    label: "Unit of Measures",
+    icon: Ruler,
+    description: "Discover your options",
+    globalAdminOnly: true,
+    category: "business-objects",
   },
 ];
 

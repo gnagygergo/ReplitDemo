@@ -212,12 +212,12 @@ export default function Setup() {
       <div className="border-b border-border bg-card">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-6">
-            <div>
+            {/*<div>
               <h1 className="text-2xl font-bold">Business Objects</h1>
               <p className="text-sm text-muted-foreground">
                 Configure the behavior of your system
               </p>
-            </div>
+            </div>*/}
 
             {/* Category Tabs */}
             <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>
@@ -225,7 +225,11 @@ export default function Setup() {
                 <TabsTrigger value="my-company" data-testid="tab-my-company">
                   My Company
                 </TabsTrigger>
-                <TabsTrigger value="business-objects" data-testid="tab-business-objects">
+                <TabsTrigger 
+                  value="business-objects" 
+                  data-testid="tab-business-objects"
+                  onClick={() => setLocation('/setup/business-objects')}
+                >
                   Business objects manager
                 </TabsTrigger>
               </TabsList>
@@ -283,7 +287,7 @@ export default function Setup() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search setup options..."
+                placeholder="Search business objects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9"

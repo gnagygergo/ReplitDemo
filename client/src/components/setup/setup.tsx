@@ -382,12 +382,12 @@ export default function Setup() {
       <div className="border-b border-border bg-card">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-6">
-            <div>
+            {/*<div>
               <h1 className="text-2xl font-bold">Setup</h1>
               <p className="text-sm text-muted-foreground">
                 Configure your application settings
               </p>
-            </div>
+            </div>*/}
             
             {/* Category Tabs */}
             <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>

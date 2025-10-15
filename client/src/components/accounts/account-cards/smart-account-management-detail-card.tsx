@@ -41,8 +41,6 @@ interface SmartAccountManagementDetailCardProps {
   setShowUserLookup: (show: boolean) => void;
   getUserInitials: (user: User) => string;
   getUserDisplayName: (user: User) => string;
-  getIndustryLabel: (industry: string) => string;
-  getIndustryBadgeClass: (industry: string) => string;
 }
 
 export default function SmartAccountManagementDetailCard({
@@ -54,8 +52,6 @@ export default function SmartAccountManagementDetailCard({
   setShowUserLookup,
   getUserInitials,
   getUserDisplayName,
-  getIndustryLabel,
-  getIndustryBadgeClass,
 }: SmartAccountManagementDetailCardProps) {
   return (
     <Card>

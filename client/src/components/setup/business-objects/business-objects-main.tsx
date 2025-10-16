@@ -72,7 +72,7 @@ function UnitOfMeasuresSetup() {
   return <UnitOfMeasuresManagement />;
 }
 
-export default function Setup() {
+export default function BusinessObjectsSetup() {
   const [location, setLocation] = useLocation();
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");

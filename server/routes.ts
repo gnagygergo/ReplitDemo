@@ -7,6 +7,7 @@ import { registerAccountRoutes } from "./business-objects-routes/accounts-routes
 import { registerOpportunityRoutes } from "./business-objects-routes/opportunity-routes";
 import { registerCaseRoutes } from "./business-objects-routes/case-routes";
 import { registerProductRoutes } from "./business-objects-routes/product-routes";
+import { businessObjectsManagerRoutes } from "./core-routes/routes-business-objects-manager";
 import {
   insertCompanySchema,
   insertCompanyRoleSchema,
@@ -2235,6 +2236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Quote Line routes - Delegated to business-objects-routes
   registerQuoteLineRoutes(app, storage);
+
+  // Business Objects Manager routes (Company-scoped)
+  app.use("/api/business-objects", isAuthenticated, businessObjectsManagerRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -107,7 +107,7 @@ function UnitOfMeasuresSetup() {
 
 export default function BusinessObjectsSetup() {
   const [location, setLocation] = useLocation();
-  const [selectedItem, setSelectedItem] = useState("companies");
+  const [selectedItem, setSelectedItem] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("business-objects");
@@ -245,7 +245,13 @@ export default function BusinessObjectsSetup() {
   // Reset selectedItem when switching tabs or if current item is not in filtered list
   useEffect(() => {
     if (filteredMenuItems.length > 0) {
-      const isCurrentItemInFiltered = filteredMenuItems.some(item => item.id === selectedItem);
+      const isCurrentItemInFiltered = filteredMenuItems.some(item => {
+        // Check if it's a parent item
+        if (item.id === selectedItem) return true;
+        // Check if it's a child item
+        if (item.children?.some(child => child.id === selectedItem)) return true;
+        return false;
+      });
       if (!isCurrentItemInFiltered) {
         setSelectedItem(filteredMenuItems[0].id);
       }

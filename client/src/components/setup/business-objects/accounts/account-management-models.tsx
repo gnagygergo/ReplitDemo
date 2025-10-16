@@ -7,17 +7,17 @@ import { AlertCircle } from "lucide-react";
 type CompanySetting = {
   id: string;
   companySettingsMasterId: string;
-  settingCode: string;
-  settingName: string;
-  settingValue: string;
-  companyId: string;
-  createdDate: string;
-  lastUpdatedDate: string;
-  lastUpdatedBy: string;
-  settingFunctionalDomain: string;
-  settingDescription: string;
-  settingValues: string;
-  defaultValue: string;
+  settingCode: string | null;
+  settingName: string | null;
+  settingValue: string | null;
+  companyId: string | null;
+  createdDate: Date | null;
+  lastUpdatedDate: Date | null;
+  lastUpdatedBy: string | null;
+  settingFunctionalDomain: string | null;
+  settingDescription: string | null;
+  settingValues: string | null;
+  defaultValue: string | null;
 };
 
 export default function AccountManagementModels() {

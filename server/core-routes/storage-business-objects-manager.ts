@@ -2,7 +2,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "../db";
 import { companySettings, companySettingsMaster } from "@shared/schema";
 
-// Type for the joined result
+// Type for the flattened result
 export type CompanySettingWithMaster = {
   id: string;
   companySettingsMasterId: string;
@@ -13,16 +13,10 @@ export type CompanySettingWithMaster = {
   createdDate: Date | null;
   lastUpdatedDate: Date | null;
   lastUpdatedBy: string | null;
-  master: {
-    id: string;
-    settingFunctionalDomain: string | null;
-    settingFunctionalityName: string | null;
-    settingCode: string | null;
-    settingName: string | null;
-    settingDescription: string | null;
-    settingValues: string | null;
-    defaultValue: string | null;
-  };
+  settingFunctionalDomain: string | null;
+  settingDescription: string | null;
+  settingValues: string | null;
+  defaultValue: string | null;
 };
 
 export class BusinessObjectsManagerStorage {
@@ -47,16 +41,10 @@ export class BusinessObjectsManagerStorage {
         createdDate: companySettings.createdDate,
         lastUpdatedDate: companySettings.lastUpdatedDate,
         lastUpdatedBy: companySettings.lastUpdatedBy,
-        master: {
-          id: companySettingsMaster.id,
-          settingFunctionalDomain: companySettingsMaster.settingFunctionalDomain,
-          settingFunctionalityName: companySettingsMaster.settingFunctionalityName,
-          settingCode: companySettingsMaster.settingCode,
-          settingName: companySettingsMaster.settingName,
-          settingDescription: companySettingsMaster.settingDescription,
-          settingValues: companySettingsMaster.settingValues,
-          defaultValue: companySettingsMaster.defaultValue,
-        },
+        settingFunctionalDomain: companySettingsMaster.settingFunctionalDomain,
+        settingDescription: companySettingsMaster.settingDescription,
+        settingValues: companySettingsMaster.settingValues,
+        defaultValue: companySettingsMaster.defaultValue,
       })
       .from(companySettings)
       .innerJoin(

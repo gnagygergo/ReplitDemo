@@ -362,8 +362,10 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  settingFunctionalDomain: text("setting_functional_domain"),
+  settingFunctionalDomainCode: text("setting_functional_domain_code"),
+  settingFunctionalDomainName: text("setting_functional_domain_name"),
   settingFunctionalityName: text("setting_functionality_name"),
+  settingFunctionalityCode: text("setting_functionality_code"),
   settingCode: text("setting_code"),
   settingName: text("setting_name"),
   settingDescription: text("setting_description"),

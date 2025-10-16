@@ -98,7 +98,7 @@ const setupMenuItems: MenuItem[] = [
 ];
 
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
-
+import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
 
 // Unit of Measures management component
 function UnitOfMeasuresSetup() {

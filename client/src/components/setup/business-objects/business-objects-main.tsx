@@ -284,33 +284,37 @@ export default function BusinessObjectsSetup() {
     }
   };
 
-  const renderContent = () => {
-    switch (selectedItem) {
-      case "account-list":
-        return <AccountManagementModels />;
-      case "account-types":
-        return (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-bold">Account Types</h2>
-              <p className="text-muted-foreground">Configure account types</p>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Account types configuration will be displayed here.</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
-      case "unit-of-measures":
-        return <UnitOfMeasuresSetup />;
-      default:
-        return (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>Select a setup option from the menu</p>
-          </div>
-        );
+  // Helper function to find the component for the selected menu item
+  const getSelectedComponent = (): React.ComponentType | null => {
+    // Search through all menu items
+    for (const item of setupMenuItems) {
+      // Check if it's a parent item (no children) with a component
+      if (item.id === selectedItem && item.component) {
+        return item.component;
+      }
+      // Check if it's in the children
+      if (item.children) {
+        const child = item.children.find(c => c.id === selectedItem);
+        if (child?.component) {
+          return child.component;
+        }
+      }
     }
+    return null;
+  };
+
+  const renderContent = () => {
+    const Component = getSelectedComponent();
+    
+    if (Component) {
+      return <Component />;
+    }
+    
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        <p>Select a setup option from the menu</p>
+      </div>
+    );
   };
 
   return (

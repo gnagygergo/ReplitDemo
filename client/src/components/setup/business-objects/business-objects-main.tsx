@@ -69,9 +69,9 @@ type MenuItem = {
 const setupMenuItems: MenuItem[] = [
   {
     id: "accounts",
-    label: "Accounts",
+    label: "Account management",
     icon: FileCheck,
-    description: "Account management",
+    description: "The database of your clients",
     globalAdminOnly: false,
     category: "business-objects",
     children: [

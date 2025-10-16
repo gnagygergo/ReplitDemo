@@ -21,12 +21,18 @@ type CompanySetting = {
 };
 
 export default function AccountManagementModels() {
+  const functionalDomain = "Account Management";
+  
   const { data: settings, isLoading, error } = useQuery<CompanySetting[]>({
-    queryKey: ["/api/business-objects/company-settings", "Account Management"],
+    queryKey: ["/api/business-objects/company-settings", functionalDomain],
     queryFn: async () => {
-      const response = await fetch("/api/business-objects/company-settings/Account Management");
+      const encodedDomain = encodeURIComponent(functionalDomain);
+      const response = await fetch(`/api/business-objects/company-settings/${encodedDomain}`, {
+        credentials: "include",
+      });
       if (!response.ok) {
-        throw new Error("Failed to fetch company settings");
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to fetch company settings");
       }
       return response.json();
     },

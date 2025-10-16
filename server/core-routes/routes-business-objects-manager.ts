@@ -14,11 +14,15 @@ businessObjectsManagerRoutes.get(
   "/company-settings/:domain",
   async (req: Request, res: Response) => {
     try {
-      // Verify user is company admin
-      const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
-      if (!isCompanyAdmin) {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
         return res.status(403).json({
-          message: "Access denied. Company admin role required.",
+          message: "Access denied. Admin role required.",
         });
       }
 

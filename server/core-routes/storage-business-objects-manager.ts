@@ -13,7 +13,8 @@ export type CompanySettingWithMaster = {
   createdDate: Date | null;
   lastUpdatedDate: Date | null;
   lastUpdatedBy: string | null;
-  settingFunctionalDomain: string | null;
+  settingFunctionalDomainCode: string | null;
+  settingFunctionalDomainName: string | null;
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
@@ -41,7 +42,8 @@ export class BusinessObjectsManagerStorage {
         createdDate: companySettings.createdDate,
         lastUpdatedDate: companySettings.lastUpdatedDate,
         lastUpdatedBy: companySettings.lastUpdatedBy,
-        settingFunctionalDomain: companySettingsMaster.settingFunctionalDomain,
+        settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
+        settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
@@ -53,7 +55,7 @@ export class BusinessObjectsManagerStorage {
       )
       .where(
         and(
-          eq(companySettingsMaster.settingFunctionalDomain, settingFunctionalDomain),
+          eq(companySettingsMaster.settingFunctionalDomainCode, settingFunctionalDomain),
           eq(companySettings.companyId, companyId)
         )
       );

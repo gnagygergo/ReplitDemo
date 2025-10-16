@@ -14,7 +14,8 @@ type CompanySetting = {
   createdDate: Date | null;
   lastUpdatedDate: Date | null;
   lastUpdatedBy: string | null;
-  settingFunctionalDomain: string | null;
+  settingFunctionalDomainCode: string | null;
+  settingFunctionalDomainName: string | null;
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;

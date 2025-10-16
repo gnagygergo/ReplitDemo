@@ -371,30 +371,95 @@ export default function BusinessObjectsSetup() {
             <div className="space-y-2">
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
-                const isSelected = selectedItem === item.id;
+                const hasChildren = item.children && item.children.length > 0;
+                const isExpanded = expandedItems.has(item.id);
+                const isParentSelected = selectedItem === item.id;
 
-                return (
-                  <Button
-                    key={item.id}
-                    variant={isSelected ? "secondary" : "ghost"}
-                    className="w-full justify-start p-3 h-auto"
-                    onClick={() => setSelectedItem(item.id)}
-                    data-testid={`button-setup-${item.id}`}
-                  >
-                    <div className="flex items-center space-x-3 w-full">
-                      <Icon className="h-5 w-5 flex-shrink-0" />
-                      <div className="flex-1 text-left space-y-1">
-                        <div className="font-medium">{item.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {item.description}
+                if (hasChildren) {
+                  // Render collapsible parent item with children
+                  return (
+                    <Collapsible
+                      key={item.id}
+                      open={isExpanded}
+                      onOpenChange={() => toggleExpanded(item.id)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start p-3 h-auto"
+                          data-testid={`button-setup-${item.id}`}
+                        >
+                          <div className="flex items-center space-x-3 w-full">
+                            <Icon className="h-5 w-5 flex-shrink-0" />
+                            <div className="flex-1 text-left space-y-1">
+                              <div className="font-medium">{item.label}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {item.description}
+                              </div>
+                            </div>
+                            <ChevronDown
+                              className={`h-4 w-4 flex-shrink-0 transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                            />
+                          </div>
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="ml-9 mt-1 space-y-1">
+                          {item.children.map((child) => {
+                            const isChildSelected = selectedItem === child.id;
+                            return (
+                              <Button
+                                key={child.id}
+                                variant={isChildSelected ? "secondary" : "ghost"}
+                                className="w-full justify-start p-2 h-auto text-sm"
+                                onClick={() => setSelectedItem(child.id)}
+                                data-testid={`button-setup-${child.id}`}
+                              >
+                                <div className="flex items-center space-x-2 w-full">
+                                  <div className="flex-1 text-left">
+                                    <div className="font-medium">{child.label}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {child.description}
+                                    </div>
+                                  </div>
+                                  {isChildSelected && (
+                                    <ChevronRight className="h-3 w-3 flex-shrink-0" />
+                                  )}
+                                </div>
+                              </Button>
+                            );
+                          })}
                         </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                } else {
+                  // Render regular item without children
+                  return (
+                    <Button
+                      key={item.id}
+                      variant={isParentSelected ? "secondary" : "ghost"}
+                      className="w-full justify-start p-3 h-auto"
+                      onClick={() => setSelectedItem(item.id)}
+                      data-testid={`button-setup-${item.id}`}
+                    >
+                      <div className="flex items-center space-x-3 w-full">
+                        <Icon className="h-5 w-5 flex-shrink-0" />
+                        <div className="flex-1 text-left space-y-1">
+                          <div className="font-medium">{item.label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {item.description}
+                          </div>
+                        </div>
+                        {isParentSelected && (
+                          <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                        )}
                       </div>
-                      {isSelected && (
-                        <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                      )}
-                    </div>
-                  </Button>
-                );
+                    </Button>
+                  );
+                }
               })}
             </div>
 

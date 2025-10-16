@@ -49,7 +49,19 @@ type CompanyAdminCheckResponse = {
   isCompanyAdmin: boolean;
 };
 
-// Type for menu items
+// Import page components
+import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
+import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
+
+// Type for child menu items with component
+type ChildMenuItem = {
+  id: string;
+  label: string;
+  description: string;
+  component: React.ComponentType;
+};
+
+// Type for parent menu items
 type MenuItem = {
   id: string;
   label: string;
@@ -58,14 +70,14 @@ type MenuItem = {
   globalAdminOnly?: boolean;
   companyAdminOnly?: boolean;
   category: string;
-  children?: Array<{
-    id: string;
-    label: string;
-    description: string;
-  }>;
+  component?: React.ComponentType; // For items without children
+  children?: ChildMenuItem[]; // For parent items
 };
 
 // Setup menu items - BUSINESS OBJECTS
+// To add a new menu item:
+// 1. Import the component at the top
+// 2. Add the menu item here with component reference
 const setupMenuItems: MenuItem[] = [
   {
     id: "accounts",
@@ -79,11 +91,25 @@ const setupMenuItems: MenuItem[] = [
         id: "account-list",
         label: "Account List",
         description: "View and manage all accounts",
+        component: AccountManagementModels,
       },
       {
         id: "account-types",
         label: "Account Types",
         description: "Configure account types",
+        component: () => (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Account Types</h2>
+              <p className="text-muted-foreground">Configure account types</p>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">Account types configuration will be displayed here.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ),
       },
     ],
   },
@@ -94,16 +120,9 @@ const setupMenuItems: MenuItem[] = [
     description: "Discover your options",
     globalAdminOnly: true,
     category: "business-objects",
+    component: UnitOfMeasuresManagement,
   },
 ];
-
-import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
-import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
-
-// Unit of Measures management component
-function UnitOfMeasuresSetup() {
-  return <UnitOfMeasuresManagement />;
-}
 
 export default function BusinessObjectsSetup() {
   const [location, setLocation] = useLocation();

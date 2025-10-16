@@ -728,7 +728,7 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(
     licenceId: z.string().min(1, "Licence is required"),
     validFrom: z.string().optional(),
     validTo: z.string().optional(),
-    price: z.number().min(0, "Price must be positive"),
+    price: z.string().min(1, "Price is required"),
     currency: z.string().min(1, "Currency is required"),
   });
 
@@ -745,7 +745,7 @@ export const insertLicenceAgreementSchema = createInsertSchema(
     companyId: z.string().min(1, "Company is required"),
     validFrom: z.string().optional(),
     validTo: z.string().optional(),
-    price: z.number().optional(),
+    price: z.string().optional(),
     currency: z.string().optional(),
     licenceSeats: z.number().int().optional(),
   });

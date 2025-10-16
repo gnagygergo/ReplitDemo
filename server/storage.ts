@@ -1436,7 +1436,7 @@ export class DatabaseStorage implements IStorage {
   ): Promise<LicenceAgreementTemplate> {
     const [template] = await db
       .insert(licenceAgreementTemplates)
-      .values(insertTemplate)
+      .values([insertTemplate])
       .returning();
     return template;
   }
@@ -1514,7 +1514,7 @@ export class DatabaseStorage implements IStorage {
   ): Promise<LicenceAgreement> {
     const [agreement] = await db
       .insert(licenceAgreements)
-      .values(insertAgreement)
+      .values([insertAgreement])
       .returning();
     
     // Update seat counts based on actual user count
@@ -1677,6 +1677,8 @@ export class DatabaseStorage implements IStorage {
         articleFunctionalityName: knowledgeArticles.articleFunctionalityName,
         articleTags: knowledgeArticles.articleTags,
         articleKeywords: knowledgeArticles.articleKeywords,
+        isPublished: knowledgeArticles.isPublished,
+        isInternal: knowledgeArticles.isInternal,
         authorId: knowledgeArticles.authorId,
         createdDate: knowledgeArticles.createdDate,
         author: users,
@@ -1693,6 +1695,8 @@ export class DatabaseStorage implements IStorage {
       articleFunctionalityName: r.articleFunctionalityName,
       articleTags: r.articleTags,
       articleKeywords: r.articleKeywords,
+      isPublished: r.isPublished,
+      isInternal: r.isInternal,
       authorId: r.authorId,
       createdDate: r.createdDate,
       author: r.author!,

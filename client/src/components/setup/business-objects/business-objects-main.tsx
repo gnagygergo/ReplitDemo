@@ -261,7 +261,34 @@ export default function BusinessObjectsSetup() {
 
   const renderContent = () => {
     switch (selectedItem) {
-      
+      case "account-list":
+        return (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Account List</h2>
+              <p className="text-muted-foreground">View and manage all accounts</p>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">Account list content will be displayed here.</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case "account-types":
+        return (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">Account Types</h2>
+              <p className="text-muted-foreground">Configure account types</p>
+            </div>
+            <Card>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground">Account types configuration will be displayed here.</p>
+              </CardContent>
+            </Card>
+          </div>
+        );
       case "unit-of-measures":
         return <UnitOfMeasuresSetup />;
       default:
@@ -407,7 +434,7 @@ export default function BusinessObjectsSetup() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <div className="ml-9 mt-1 space-y-1">
-                          {item.children.map((child) => {
+                          {item.children!.map((child) => {
                             const isChildSelected = selectedItem === child.id;
                             return (
                               <Button

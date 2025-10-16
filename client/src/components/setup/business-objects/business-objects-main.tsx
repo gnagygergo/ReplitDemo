@@ -111,6 +111,7 @@ export default function BusinessObjectsSetup() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("business-objects");
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // Auto-select menu item based on URL path
@@ -180,6 +181,19 @@ export default function BusinessObjectsSetup() {
     },
   });
 
+  // Toggle expanded state for parent items
+  const toggleExpanded = (itemId: string) => {
+    setExpandedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
   // Filter menu items based on admin status and search query
   const availableMenuItems = setupMenuItems.filter((item) => {
     // Hide companies menu item if user is not global admin
@@ -187,12 +201,12 @@ export default function BusinessObjectsSetup() {
       return false;
     }
     // Hide items marked globalAdminOnly if user is not global admin
-    if ((item as any).globalAdminOnly && !adminCheck?.isGlobalAdmin) {
+    if (item.globalAdminOnly && !adminCheck?.isGlobalAdmin) {
       return false;
     }
     // Hide items marked companyAdminOnly if user is not company admin or global admin
     if (
-      (item as any).companyAdminOnly &&
+      item.companyAdminOnly &&
       !companyAdminCheck?.isCompanyAdmin &&
       !adminCheck?.isGlobalAdmin
     ) {
@@ -201,12 +215,32 @@ export default function BusinessObjectsSetup() {
     return true;
   });
 
-  const filteredMenuItems = availableMenuItems.filter(
-    (item) =>
-      (item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (item as any).category === selectedTab,
-  );
+  const filteredMenuItems = availableMenuItems.filter((item) => {
+    const matchesCategory = item.category === selectedTab;
+    if (!matchesCategory) return false;
+
+    const query = searchQuery.toLowerCase();
+    if (!query) return true;
+
+    // Check if parent matches
+    const parentMatches = 
+      item.label.toLowerCase().includes(query) ||
+      item.description.toLowerCase().includes(query);
+
+    // Check if any child matches
+    const childMatches = item.children?.some(
+      (child) =>
+        child.label.toLowerCase().includes(query) ||
+        child.description.toLowerCase().includes(query)
+    );
+
+    // Auto-expand parent if child matches search
+    if (childMatches && !expandedItems.has(item.id)) {
+      setExpandedItems((prev) => new Set(prev).add(item.id));
+    }
+
+    return parentMatches || childMatches;
+  });
 
   // Reset selectedItem when switching tabs or if current item is not in filtered list
   useEffect(() => {

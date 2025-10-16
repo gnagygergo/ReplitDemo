@@ -262,19 +262,7 @@ export default function BusinessObjectsSetup() {
   const renderContent = () => {
     switch (selectedItem) {
       case "account-list":
-        return (
-          <div className="space-y-4">
-            <div>
-              <h2 className="text-2xl font-bold">Account List</h2>
-              <p className="text-muted-foreground">View and manage all accounts</p>
-            </div>
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-muted-foreground">Account list content will be displayed here.</p>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        return <AccountManagementModels />;
       case "account-types":
         return (
           <div className="space-y-4">

@@ -3,6 +3,7 @@ import {
   Search,
   Users,
   ChevronRight,
+  ChevronDown,
   Shield,
   Building2,
   Rocket,
@@ -21,6 +22,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Select,
@@ -43,16 +49,43 @@ type CompanyAdminCheckResponse = {
   isCompanyAdmin: boolean;
 };
 
-// Setup menu items - MY COMPANY
-const setupMenuItems = [
-  // Setup menu items - BUSINESS OBJECTS
+// Type for menu items
+type MenuItem = {
+  id: string;
+  label: string;
+  icon: any;
+  description: string;
+  globalAdminOnly?: boolean;
+  companyAdminOnly?: boolean;
+  category: string;
+  children?: Array<{
+    id: string;
+    label: string;
+    description: string;
+  }>;
+};
+
+// Setup menu items - BUSINESS OBJECTS
+const setupMenuItems: MenuItem[] = [
   {
-    id: "Account-management",
-    label: "Account Management",
+    id: "accounts",
+    label: "Accounts",
     icon: FileCheck,
-    description: "Manage your client data",
+    description: "Account management",
     globalAdminOnly: false,
     category: "business-objects",
+    children: [
+      {
+        id: "account-list",
+        label: "Account List",
+        description: "View and manage all accounts",
+      },
+      {
+        id: "account-types",
+        label: "Account Types",
+        description: "Configure account types",
+      },
+    ],
   },
   {
     id: "unit-of-measures",

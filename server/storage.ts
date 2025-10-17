@@ -56,7 +56,9 @@ import {
   type InsertCompanySettingMasterFunctionality,
   type CompanySettingsMaster,
   type InsertCompanySettingsMaster,
+  type CompanySetting,
   companies,
+  companySettings,
   accounts,
   opportunities,
   cases,
@@ -90,6 +92,24 @@ import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
+
+// Type for company settings with master data
+export type CompanySettingWithMaster = {
+  id: string;
+  companySettingsMasterId: string;
+  settingCode: string | null;
+  settingName: string | null;
+  settingValue: string | null;
+  companyId: string | null;
+  createdDate: Date | null;
+  lastUpdatedDate: Date | null;
+  lastUpdatedBy: string | null;
+  settingFunctionalDomainCode: string | null;
+  settingFunctionalDomainName: string | null;
+  settingDescription: string | null;
+  settingValues: string | null;
+  defaultValue: string | null;
+};
 
 export interface IStorage {
   // User methods
@@ -345,6 +365,9 @@ export interface IStorage {
   createCompanySettingsMaster(settingMaster: InsertCompanySettingsMaster): Promise<CompanySettingsMaster>;
   updateCompanySettingsMaster(id: string, settingMaster: Partial<InsertCompanySettingsMaster>): Promise<CompanySettingsMaster | undefined>;
   deleteCompanySettingsMaster(id: string): Promise<boolean>;
+
+  // Company Settings methods (Company-scoped)
+  GetCompanySettingsByFunctionalDomain(domain: string, companyId: string): Promise<CompanySettingWithMaster[]>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1884,6 +1907,43 @@ export class DatabaseStorage implements IStorage {
       .delete(companySettingsMaster)
       .where(eq(companySettingsMaster.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Company Settings methods (Company-scoped)
+  async GetCompanySettingsByFunctionalDomain(
+    settingFunctionalDomain: string,
+    companyId: string
+  ): Promise<CompanySettingWithMaster[]> {
+    const results = await db
+      .select({
+        id: companySettings.id,
+        companySettingsMasterId: companySettings.companySettingsMasterId,
+        settingCode: companySettings.settingCode,
+        settingName: companySettings.settingName,
+        settingValue: companySettings.settingValue,
+        companyId: companySettings.companyId,
+        createdDate: companySettings.createdDate,
+        lastUpdatedDate: companySettings.lastUpdatedDate,
+        lastUpdatedBy: companySettings.lastUpdatedBy,
+        settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
+        settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingDescription: companySettingsMaster.settingDescription,
+        settingValues: companySettingsMaster.settingValues,
+        defaultValue: companySettingsMaster.defaultValue,
+      })
+      .from(companySettings)
+      .innerJoin(
+        companySettingsMaster,
+        eq(companySettings.companySettingsMasterId, companySettingsMaster.id)
+      )
+      .where(
+        and(
+          eq(companySettingsMaster.settingFunctionalDomainCode, settingFunctionalDomain),
+          eq(companySettings.companyId, companyId)
+        )
+      );
+
+    return results as CompanySettingWithMaster[];
   }
 
   // Row Level Security context methods

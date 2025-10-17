@@ -1476,6 +1476,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/knowledge-articles/by-code/:code", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      const article = await storage.getKnowledgeArticleByCode(req.params.code);
+      if (!article) {
+        return res.status(404).json({ message: "Knowledge article not found" });
+      }
+      res.json(article);
+    } catch (error) {
+      console.error("Error fetching knowledge article by code:", error);
+      res.status(500).json({ message: "Failed to fetch knowledge article" });
+    }
+  });
+
   // Company Setting Master Domain routes (Global - read: all users, write: global admins only)
   app.get("/api/company-setting-master-domains", isAuthenticated, async (req, res) => {
     try {
@@ -1762,6 +1787,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching company settings:", error);
       res.status(500).json({
         message: "Failed to fetch company settings",
+      });
+    }
+  });
+
+  // Get or create company setting by code
+  app.get("/api/business-objects/company-settings/by-code/:code", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      // Get user's company context and user ID
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = (req.user as any)?.claims?.sub;
+      }
+
+      if (!userId) {
+        return res.status(400).json({
+          message: "User ID not found",
+        });
+      }
+
+      const setting = await storage.getOrCreateCompanySettingByCode(
+        req.params.code,
+        companyContext,
+        userId
+      );
+
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching/creating company setting:", error);
+      res.status(500).json({
+        message: "Failed to fetch/create company setting",
+      });
+    }
+  });
+
+  // Update company setting value
+  app.patch("/api/business-objects/company-settings/:id", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = (req.user as any)?.claims?.sub;
+      }
+
+      if (!userId) {
+        return res.status(400).json({
+          message: "User ID not found",
+        });
+      }
+
+      const { settingValue } = req.body;
+      if (settingValue === undefined) {
+        return res.status(400).json({
+          message: "settingValue is required",
+        });
+      }
+
+      const updatedSetting = await storage.updateCompanySetting(
+        req.params.id,
+        settingValue,
+        userId
+      );
+
+      if (!updatedSetting) {
+        return res.status(404).json({ message: "Company setting not found" });
+      }
+
+      res.json(updatedSetting);
+    } catch (error) {
+      console.error("Error updating company setting:", error);
+      res.status(500).json({
+        message: "Failed to update company setting",
       });
     }
   });

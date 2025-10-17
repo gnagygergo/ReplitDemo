@@ -337,6 +337,7 @@ export interface IStorage {
   // Knowledge Article methods (Global - no company context)
   getKnowledgeArticles(): Promise<Omit<KnowledgeArticleWithAuthor, 'articleContent'>[]>;
   getKnowledgeArticle(id: string): Promise<KnowledgeArticleWithAuthor | undefined>;
+  getKnowledgeArticleByCode(articleCode: string): Promise<KnowledgeArticleWithAuthor | undefined>;
   createKnowledgeArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle>;
   updateKnowledgeArticle(
     id: string,
@@ -367,6 +368,8 @@ export interface IStorage {
 
   // Company Settings methods (Company-scoped)
   GetCompanySettingsByFunctionalDomain(domain: string, companyId: string): Promise<CompanySettingWithMaster[]>;
+  getOrCreateCompanySettingByCode(settingCode: string, companyId: string, userId: string): Promise<CompanySettingWithMaster>;
+  updateCompanySetting(id: string, settingValue: string, userId: string): Promise<any>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1773,6 +1776,24 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getKnowledgeArticleByCode(articleCode: string): Promise<KnowledgeArticleWithAuthor | undefined> {
+    const [result] = await db
+      .select({
+        article: knowledgeArticles,
+        author: users,
+      })
+      .from(knowledgeArticles)
+      .leftJoin(users, eq(knowledgeArticles.authorId, users.id))
+      .where(eq(knowledgeArticles.articleCode, articleCode));
+
+    if (!result) return undefined;
+
+    return {
+      ...result.article,
+      author: result.author!,
+    };
+  }
+
   async createKnowledgeArticle(article: InsertKnowledgeArticle): Promise<KnowledgeArticle> {
     const [newArticle] = await db
       .insert(knowledgeArticles)
@@ -1949,6 +1970,100 @@ export class DatabaseStorage implements IStorage {
       );
 
     return results as CompanySettingWithMaster[];
+  }
+
+  async getOrCreateCompanySettingByCode(
+    settingCode: string,
+    companyId: string,
+    userId: string
+  ): Promise<CompanySettingWithMaster> {
+    // First, try to get the setting master by code
+    const [settingMaster] = await db
+      .select()
+      .from(companySettingsMaster)
+      .where(eq(companySettingsMaster.settingCode, settingCode));
+
+    if (!settingMaster) {
+      throw new Error(`Setting master not found for code: ${settingCode}`);
+    }
+
+    // Try to find existing company setting
+    const [existingSetting] = await db
+      .select({
+        id: companySettings.id,
+        companySettingsMasterId: companySettings.companySettingsMasterId,
+        settingCode: companySettings.settingCode,
+        settingName: companySettings.settingName,
+        settingValue: companySettings.settingValue,
+        companyId: companySettings.companyId,
+        createdDate: companySettings.createdDate,
+        lastUpdatedDate: companySettings.lastUpdatedDate,
+        lastUpdatedBy: companySettings.lastUpdatedBy,
+        settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
+        settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingDescription: companySettingsMaster.settingDescription,
+        settingValues: companySettingsMaster.settingValues,
+        defaultValue: companySettingsMaster.defaultValue,
+      })
+      .from(companySettings)
+      .innerJoin(
+        companySettingsMaster,
+        eq(companySettings.companySettingsMasterId, companySettingsMaster.id)
+      )
+      .where(
+        and(
+          eq(companySettings.settingCode, settingCode),
+          eq(companySettings.companyId, companyId)
+        )
+      );
+
+    if (existingSetting) {
+      return existingSetting as CompanySettingWithMaster;
+    }
+
+    // Create new company setting with default value
+    const [newSetting] = await db
+      .insert(companySettings)
+      .values({
+        companySettingsMasterId: settingMaster.id,
+        settingCode: settingMaster.settingCode,
+        settingName: settingMaster.settingName,
+        settingValue: settingMaster.defaultValue || 'FALSE',
+        companyId: companyId,
+        lastUpdatedBy: userId,
+      })
+      .returning();
+
+    // Return the newly created setting with master data
+    return {
+      id: newSetting.id,
+      companySettingsMasterId: newSetting.companySettingsMasterId,
+      settingCode: newSetting.settingCode,
+      settingName: newSetting.settingName,
+      settingValue: newSetting.settingValue,
+      companyId: newSetting.companyId,
+      createdDate: newSetting.createdDate,
+      lastUpdatedDate: newSetting.lastUpdatedDate,
+      lastUpdatedBy: newSetting.lastUpdatedBy,
+      settingFunctionalDomainCode: settingMaster.settingFunctionalDomainCode,
+      settingFunctionalDomainName: settingMaster.settingFunctionalDomainName,
+      settingDescription: settingMaster.settingDescription,
+      settingValues: settingMaster.settingValues,
+      defaultValue: settingMaster.defaultValue,
+    } as CompanySettingWithMaster;
+  }
+
+  async updateCompanySetting(id: string, settingValue: string, userId: string): Promise<any> {
+    const [updatedSetting] = await db
+      .update(companySettings)
+      .set({
+        settingValue: settingValue,
+        lastUpdatedDate: sql`NOW()`,
+        lastUpdatedBy: userId,
+      })
+      .where(eq(companySettings.id, id))
+      .returning();
+    return updatedSetting;
   }
 
   // Row Level Security context methods

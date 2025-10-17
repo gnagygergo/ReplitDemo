@@ -50,6 +50,12 @@ import {
   type KnowledgeArticle,
   type InsertKnowledgeArticle,
   type KnowledgeArticleWithAuthor,
+  type CompanySettingMasterDomain,
+  type InsertCompanySettingMasterDomain,
+  type CompanySettingMasterFunctionality,
+  type InsertCompanySettingMasterFunctionality,
+  type CompanySettingsMaster,
+  type InsertCompanySettingsMaster,
   companies,
   accounts,
   opportunities,
@@ -70,6 +76,9 @@ import {
   licenceAgreements,
   emails,
   knowledgeArticles,
+  companySettingMasterDomains,
+  companySettingMasterFunctionalities,
+  companySettingsMaster,
 } from "@shared/schema";
 import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
@@ -315,6 +324,27 @@ export interface IStorage {
     article: Partial<InsertKnowledgeArticle>,
   ): Promise<KnowledgeArticle | undefined>;
   deleteKnowledgeArticle(id: string): Promise<boolean>;
+
+  // Company Setting Master Domain methods (Global - no company context)
+  getCompanySettingMasterDomains(): Promise<CompanySettingMasterDomain[]>;
+  getCompanySettingMasterDomain(id: string): Promise<CompanySettingMasterDomain | undefined>;
+  createCompanySettingMasterDomain(domain: InsertCompanySettingMasterDomain): Promise<CompanySettingMasterDomain>;
+  updateCompanySettingMasterDomain(id: string, domain: Partial<InsertCompanySettingMasterDomain>): Promise<CompanySettingMasterDomain | undefined>;
+  deleteCompanySettingMasterDomain(id: string): Promise<boolean>;
+
+  // Company Setting Master Functionality methods (Global - no company context)
+  getCompanySettingMasterFunctionalities(): Promise<CompanySettingMasterFunctionality[]>;
+  getCompanySettingMasterFunctionality(id: string): Promise<CompanySettingMasterFunctionality | undefined>;
+  createCompanySettingMasterFunctionality(functionality: InsertCompanySettingMasterFunctionality): Promise<CompanySettingMasterFunctionality>;
+  updateCompanySettingMasterFunctionality(id: string, functionality: Partial<InsertCompanySettingMasterFunctionality>): Promise<CompanySettingMasterFunctionality | undefined>;
+  deleteCompanySettingMasterFunctionality(id: string): Promise<boolean>;
+
+  // Company Settings Master methods (Global - no company context)
+  getCompanySettingsMasters(): Promise<CompanySettingsMaster[]>;
+  getCompanySettingsMaster(id: string): Promise<CompanySettingsMaster | undefined>;
+  createCompanySettingsMaster(settingMaster: InsertCompanySettingsMaster): Promise<CompanySettingsMaster>;
+  updateCompanySettingsMaster(id: string, settingMaster: Partial<InsertCompanySettingsMaster>): Promise<CompanySettingsMaster | undefined>;
+  deleteCompanySettingsMaster(id: string): Promise<boolean>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -1748,6 +1778,117 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(knowledgeArticles)
       .where(eq(knowledgeArticles.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Company Setting Master Domain methods
+  async getCompanySettingMasterDomains(): Promise<CompanySettingMasterDomain[]> {
+    return await db.select().from(companySettingMasterDomains);
+  }
+
+  async getCompanySettingMasterDomain(id: string): Promise<CompanySettingMasterDomain | undefined> {
+    const [domain] = await db
+      .select()
+      .from(companySettingMasterDomains)
+      .where(eq(companySettingMasterDomains.id, id));
+    return domain;
+  }
+
+  async createCompanySettingMasterDomain(domain: InsertCompanySettingMasterDomain): Promise<CompanySettingMasterDomain> {
+    const [newDomain] = await db
+      .insert(companySettingMasterDomains)
+      .values(domain)
+      .returning();
+    return newDomain;
+  }
+
+  async updateCompanySettingMasterDomain(id: string, domain: Partial<InsertCompanySettingMasterDomain>): Promise<CompanySettingMasterDomain | undefined> {
+    const [updatedDomain] = await db
+      .update(companySettingMasterDomains)
+      .set(domain)
+      .where(eq(companySettingMasterDomains.id, id))
+      .returning();
+    return updatedDomain || undefined;
+  }
+
+  async deleteCompanySettingMasterDomain(id: string): Promise<boolean> {
+    const result = await db
+      .delete(companySettingMasterDomains)
+      .where(eq(companySettingMasterDomains.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Company Setting Master Functionality methods
+  async getCompanySettingMasterFunctionalities(): Promise<CompanySettingMasterFunctionality[]> {
+    return await db.select().from(companySettingMasterFunctionalities);
+  }
+
+  async getCompanySettingMasterFunctionality(id: string): Promise<CompanySettingMasterFunctionality | undefined> {
+    const [functionality] = await db
+      .select()
+      .from(companySettingMasterFunctionalities)
+      .where(eq(companySettingMasterFunctionalities.id, id));
+    return functionality;
+  }
+
+  async createCompanySettingMasterFunctionality(functionality: InsertCompanySettingMasterFunctionality): Promise<CompanySettingMasterFunctionality> {
+    const [newFunctionality] = await db
+      .insert(companySettingMasterFunctionalities)
+      .values(functionality)
+      .returning();
+    return newFunctionality;
+  }
+
+  async updateCompanySettingMasterFunctionality(id: string, functionality: Partial<InsertCompanySettingMasterFunctionality>): Promise<CompanySettingMasterFunctionality | undefined> {
+    const [updatedFunctionality] = await db
+      .update(companySettingMasterFunctionalities)
+      .set(functionality)
+      .where(eq(companySettingMasterFunctionalities.id, id))
+      .returning();
+    return updatedFunctionality || undefined;
+  }
+
+  async deleteCompanySettingMasterFunctionality(id: string): Promise<boolean> {
+    const result = await db
+      .delete(companySettingMasterFunctionalities)
+      .where(eq(companySettingMasterFunctionalities.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Company Settings Master methods
+  async getCompanySettingsMasters(): Promise<CompanySettingsMaster[]> {
+    return await db.select().from(companySettingsMaster);
+  }
+
+  async getCompanySettingsMaster(id: string): Promise<CompanySettingsMaster | undefined> {
+    const [settingMaster] = await db
+      .select()
+      .from(companySettingsMaster)
+      .where(eq(companySettingsMaster.id, id));
+    return settingMaster;
+  }
+
+  async createCompanySettingsMaster(settingMaster: InsertCompanySettingsMaster): Promise<CompanySettingsMaster> {
+    const [newSettingMaster] = await db
+      .insert(companySettingsMaster)
+      .values(settingMaster)
+      .returning();
+    return newSettingMaster;
+  }
+
+  async updateCompanySettingsMaster(id: string, settingMaster: Partial<InsertCompanySettingsMaster>): Promise<CompanySettingsMaster | undefined> {
+    const [updatedSettingMaster] = await db
+      .update(companySettingsMaster)
+      .set(settingMaster)
+      .where(eq(companySettingsMaster.id, id))
+      .returning();
+    return updatedSettingMaster || undefined;
+  }
+
+  async deleteCompanySettingsMaster(id: string): Promise<boolean> {
+    const result = await db
+      .delete(companySettingsMaster)
+      .where(eq(companySettingsMaster.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

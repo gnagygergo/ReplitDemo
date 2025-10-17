@@ -508,6 +508,66 @@ export default function CompanySettingMasterAdmin() {
               </div>
             </CardHeader>
             <CardContent>
+              <div className="flex gap-4 mb-4 items-end">
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-1 block">Filter by Domain</label>
+                  <Select
+                    value={selectedDomainFilter}
+                    onValueChange={setSelectedDomainFilter}
+                  >
+                    <SelectTrigger data-testid="select-filter-domain">
+                      <SelectValue placeholder="All Domains" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" data-testid="select-filter-domain-all">All Domains</SelectItem>
+                      {domains.map((domain) => (
+                        <SelectItem 
+                          key={domain.id} 
+                          value={domain.id}
+                          data-testid={`select-filter-domain-${domain.id}`}
+                        >
+                          {domain.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-sm font-medium mb-1 block">Filter by Functionality</label>
+                  <Select
+                    value={selectedFunctionalityFilter}
+                    onValueChange={setSelectedFunctionalityFilter}
+                  >
+                    <SelectTrigger data-testid="select-filter-functionality">
+                      <SelectValue placeholder="All Functionalities" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all" data-testid="select-filter-functionality-all">All Functionalities</SelectItem>
+                      {functionalities.map((functionality) => (
+                        <SelectItem 
+                          key={functionality.id} 
+                          value={functionality.id}
+                          data-testid={`select-filter-functionality-${functionality.id}`}
+                        >
+                          {functionality.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedDomainFilter("");
+                    setSelectedFunctionalityFilter("");
+                  }}
+                  disabled={!selectedDomainFilter && !selectedFunctionalityFilter}
+                  data-testid="button-clear-filters"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              </div>
               {settingsMastersLoading ? (
                 <div>Loading...</div>
               ) : (

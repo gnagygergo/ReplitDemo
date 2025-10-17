@@ -317,6 +317,26 @@ export default function CompanySettingMasterAdmin() {
     }
   };
 
+  // Filter settings masters based on selected filters
+  const filteredSettingsMasters = settingsMasters.filter((setting) => {
+    // If domain filter is set and not "all", check if setting's domain matches
+    if (selectedDomainFilter && selectedDomainFilter !== "all") {
+      const settingFunctionality = functionalities.find(f => f.id === setting.functionalityId);
+      if (!settingFunctionality || settingFunctionality.domainId !== selectedDomainFilter) {
+        return false;
+      }
+    }
+
+    // If functionality filter is set and not "all", check if setting's functionality matches
+    if (selectedFunctionalityFilter && selectedFunctionalityFilter !== "all") {
+      if (setting.functionalityId !== selectedFunctionalityFilter) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -582,7 +602,7 @@ export default function CompanySettingMasterAdmin() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {settingsMasters.map((settingsMaster) => (
+                    {filteredSettingsMasters.map((settingsMaster) => (
                       <TableRow key={settingsMaster.id} data-testid={`row-settings-master-${settingsMaster.id}`}>
                         <TableCell data-testid={`text-settings-name-${settingsMaster.id}`}>{settingsMaster.settingName}</TableCell>
                         <TableCell data-testid={`text-settings-code-${settingsMaster.id}`}>{settingsMaster.settingCode}</TableCell>

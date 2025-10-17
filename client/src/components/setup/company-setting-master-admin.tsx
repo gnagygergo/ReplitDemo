@@ -127,7 +127,7 @@ export default function CompanySettingMasterAdmin() {
   // Domain Mutations
   const createDomainMutation = useMutation({
     mutationFn: async (data: DomainFormData) =>
-      await apiRequest("/api/company-setting-master-domains", "POST", data),
+      await apiRequest("POST", "/api/company-setting-master-domains", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-domains"] });
       toast({ title: "Domain created successfully" });
@@ -141,7 +141,7 @@ export default function CompanySettingMasterAdmin() {
 
   const updateDomainMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<DomainFormData> }) =>
-      await apiRequest(`/api/company-setting-master-domains/${id}`, "PATCH", data),
+      await apiRequest("PATCH", `/api/company-setting-master-domains/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-domains"] });
       toast({ title: "Domain updated successfully" });
@@ -156,7 +156,7 @@ export default function CompanySettingMasterAdmin() {
 
   const deleteDomainMutation = useMutation({
     mutationFn: async (id: string) =>
-      await apiRequest(`/api/company-setting-master-domains/${id}`, "DELETE"),
+      await apiRequest("DELETE", `/api/company-setting-master-domains/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-domains"] });
       toast({ title: "Domain deleted successfully" });
@@ -169,7 +169,7 @@ export default function CompanySettingMasterAdmin() {
   // Functionality Mutations
   const createFunctionalityMutation = useMutation({
     mutationFn: async (data: FunctionalityFormData) =>
-      await apiRequest("/api/company-setting-master-functionalities", "POST", data),
+      await apiRequest("POST", "/api/company-setting-master-functionalities", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-functionalities"] });
       toast({ title: "Functionality created successfully" });
@@ -183,7 +183,7 @@ export default function CompanySettingMasterAdmin() {
 
   const updateFunctionalityMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<FunctionalityFormData> }) =>
-      await apiRequest(`/api/company-setting-master-functionalities/${id}`, "PATCH", data),
+      await apiRequest("PATCH", `/api/company-setting-master-functionalities/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-functionalities"] });
       toast({ title: "Functionality updated successfully" });
@@ -198,7 +198,7 @@ export default function CompanySettingMasterAdmin() {
 
   const deleteFunctionalityMutation = useMutation({
     mutationFn: async (id: string) =>
-      await apiRequest(`/api/company-setting-master-functionalities/${id}`, "DELETE"),
+      await apiRequest("DELETE", `/api/company-setting-master-functionalities/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-functionalities"] });
       toast({ title: "Functionality deleted successfully" });
@@ -211,7 +211,7 @@ export default function CompanySettingMasterAdmin() {
   // Settings Master Mutations
   const createSettingsMasterMutation = useMutation({
     mutationFn: async (data: SettingsMasterFormData) =>
-      await apiRequest("/api/company-settings-masters", "POST", data),
+      await apiRequest("POST", "/api/company-settings-masters", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-settings-masters"] });
       toast({ title: "Settings master created successfully" });
@@ -225,7 +225,7 @@ export default function CompanySettingMasterAdmin() {
 
   const updateSettingsMasterMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<SettingsMasterFormData> }) =>
-      await apiRequest(`/api/company-settings-masters/${id}`, "PATCH", data),
+      await apiRequest("PATCH", `/api/company-settings-masters/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-settings-masters"] });
       toast({ title: "Settings master updated successfully" });
@@ -240,7 +240,7 @@ export default function CompanySettingMasterAdmin() {
 
   const deleteSettingsMasterMutation = useMutation({
     mutationFn: async (id: string) =>
-      await apiRequest(`/api/company-settings-masters/${id}`, "DELETE"),
+      await apiRequest("DELETE", `/api/company-settings-masters/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/company-settings-masters"] });
       toast({ title: "Settings master deleted successfully" });

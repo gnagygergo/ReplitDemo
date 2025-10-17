@@ -89,12 +89,12 @@ const setupMenuItems: MenuItem[] = [
     children: [
       {
         id: "account-list",
-        label: "Account List",
+        label: "Account Types",
         description: "View and manage all accounts",
         component: AccountManagementModels,
       },
       {
-        id: "account-types",
+        id: "account-types2",
         label: "Account Types",
         description: "Configure account types",
         component: () => (

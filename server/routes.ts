@@ -2113,6 +2113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req, res) => {
       try {
         const companyContext = await storage.GetCompanyContext(req);
+        if (!companyContext) {
+          return res.status(403).json({ message: "No company context available" });
+        }
         const agreements =
           await storage.getLicenceAgreementsByCompany(companyContext);
         const availableAgreements = agreements.filter(

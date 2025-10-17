@@ -87,7 +87,6 @@ import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
-import { SetupDatabaseStorage } from "./setup-storage";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -366,7 +365,6 @@ export class DatabaseStorage implements IStorage {
   private opportunityStorage: OpportunityStorage;
   private caseStorage: CaseStorage;
   private productStorage: ProductStorage;
-  private setupStorage: SetupDatabaseStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage(
@@ -385,22 +383,55 @@ export class DatabaseStorage implements IStorage {
       this.getUser.bind(this)
     );
     this.productStorage = new ProductStorage();
-    this.setupStorage = new SetupDatabaseStorage();
   }
 
   // Method called by all GETTERs of business objects
   async GetCompanyContext(req: any): Promise<string | null> {
-    return this.setupStorage.GetCompanyContext(req);
+    try {
+      // Extract user ID from session
+      const sessionUser = (req.session as any).user;
+      let userId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+      if (!userId) return null;
+      // Get user's company context
+      const user = await this.getUser(userId);
+      return user?.companyContext || null;
+    } catch (error) {
+      console.error("Error getting company context:", error);
+      return null;
+    }
   }
 
   // Method to get company name based on current user's company context
   async GetCompanyNameBasedOnContext(req: any): Promise<string | null> {
-    return this.setupStorage.GetCompanyNameBasedOnContext(req);
+    try {
+      // Use existing method to get company context ID
+      const companyId = await this.GetCompanyContext(req);
+      if (!companyId) return null;
+
+      // Query companies table to get company name
+      const company = await db
+        .select()
+        .from(companies)
+        .where(eq(companies.id, companyId))
+        .limit(1);
+
+      return company[0]?.companyOfficialName || null;
+    } catch (error) {
+      console.error("Error getting company name:", error);
+      return null;
+    }
   }
 
-  // User methods - Delegated to setupStorage
+  // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.setupStorage.getUser(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUsers(companyContext?: string): Promise<User[]> {
@@ -537,11 +568,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyGlobalAdmin(req: any): Promise<boolean> {
-    return this.setupStorage.verifyGlobalAdmin(req);
+    try {
+      const sessionUser = (req.session as any).user;
+      let userId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+
+      if (!userId) return false;
+
+      const user = await this.getUser(userId);
+      return user?.isGlobalAdmin === true;
+    } catch (error) {
+      console.error("Error verifying global admin:", error);
+      return false;
+    }
   }
 
   async verifyCompanyAdmin(req: any): Promise<boolean> {
-    return this.setupStorage.verifyCompanyAdmin(req);
+    try {
+      const sessionUser = (req.session as any).user;
+      let userId;
+
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+
+      if (!userId) return false;
+
+      const user = await this.getUser(userId);
+      return user?.isAdmin === true || user?.isGlobalAdmin === true;
+    } catch (error) {
+      console.error("Error verifying company admin:", error);
+      return false;
+    }
   }
 
   // Company methods

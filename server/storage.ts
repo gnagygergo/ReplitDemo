@@ -371,6 +371,7 @@ export interface IStorage {
   getOrCreateCompanySettingByCode(settingCode: string, companyId: string, userId: string): Promise<CompanySettingWithMaster>;
   getCompanySettingsByCodePrefix(prefix: string, companyId: string): Promise<CompanySettingWithMaster[]>;
   updateCompanySetting(id: string, settingValue: string, userId: string): Promise<any>;
+  serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -2101,6 +2102,73 @@ export class DatabaseStorage implements IStorage {
       .where(eq(companySettings.id, id))
       .returning();
     return updatedSetting;
+  }
+
+  async serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }> {
+    // Use a transaction to ensure all-or-nothing operation
+    const result = await db.transaction(async (tx) => {
+      // Get all companies
+      const allCompanies = await tx.select().from(companies);
+      
+      // Get all company settings master records
+      const allMasterSettings = await tx.select().from(companySettingsMaster);
+      
+      // Count existing records before insertion
+      const existingRecords = await tx
+        .select({
+          companyId: companySettings.companyId,
+          masterId: companySettings.companySettingsMasterId,
+        })
+        .from(companySettings);
+      
+      const existingSet = new Set(
+        existingRecords.map(r => `${r.companyId}_${r.masterId}`)
+      );
+      
+      // Prepare bulk insert values
+      const valuesToInsert = [];
+      for (const company of allCompanies) {
+        for (const masterSetting of allMasterSettings) {
+          const key = `${company.id}_${masterSetting.id}`;
+          if (!existingSet.has(key)) {
+            valuesToInsert.push({
+              companySettingsMasterId: masterSetting.id,
+              settingCode: masterSetting.settingCode,
+              settingName: masterSetting.settingName,
+              settingValue: masterSetting.defaultValue || 'FALSE',
+              companyId: company.id,
+              lastUpdatedBy: userId,
+            });
+          }
+        }
+      }
+      
+      // Bulk insert with ON CONFLICT DO NOTHING to handle race conditions
+      let createdCount = 0;
+      if (valuesToInsert.length > 0) {
+        const inserted = await tx
+          .insert(companySettings)
+          .values(valuesToInsert)
+          .onConflictDoNothing({
+            target: [companySettings.companyId, companySettings.companySettingsMasterId]
+          })
+          .returning({ id: companySettings.id });
+        
+        createdCount = inserted.length;
+      }
+      
+      const totalPossible = allCompanies.length * allMasterSettings.length;
+      const skippedCount = totalPossible - createdCount;
+      
+      return {
+        created: createdCount,
+        skipped: skippedCount,
+        totalCompanies: allCompanies.length,
+        totalMasterSettings: allMasterSettings.length,
+      };
+    });
+    
+    return result;
   }
 
   // Row Level Security context methods

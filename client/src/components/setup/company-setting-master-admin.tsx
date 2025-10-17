@@ -45,8 +45,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Database } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   insertCompanySettingMasterDomainSchema,
   insertCompanySettingMasterFunctionalitySchema,
@@ -72,6 +82,7 @@ export default function CompanySettingMasterAdmin() {
   const [editingSettingsMaster, setEditingSettingsMaster] = useState<CompanySettingsMaster | null>(null);
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("");
   const [selectedFunctionalityFilter, setSelectedFunctionalityFilter] = useState<string>("");
+  const [serializeDialogOpen, setSerializeDialogOpen] = useState(false);
 
   // Domains Query
   const { data: domains = [], isLoading: domainsLoading } = useQuery<CompanySettingMasterDomain[]>({
@@ -248,6 +259,32 @@ export default function CompanySettingMasterAdmin() {
     },
     onError: (error: any) => {
       toast({ title: "Error deleting settings master", description: error.message, variant: "destructive" });
+    },
+  });
+
+  // Companies Query (for serialize confirmation)
+  const { data: companies = [] } = useQuery<any[]>({
+    queryKey: ["/api/companies"],
+  });
+
+  // Serialize Mutation
+  const serializeMutation = useMutation({
+    mutationFn: async () =>
+      await apiRequest("POST", "/api/company-settings-masters/serialize", {}),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings"] });
+      toast({ 
+        title: "Serialization complete", 
+        description: `Created ${data.created} settings, skipped ${data.skipped} existing settings across ${data.totalCompanies} companies.`,
+      });
+      setSerializeDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error serializing company settings", 
+        description: error.message, 
+        variant: "destructive" 
+      });
     },
   });
 
@@ -505,28 +542,38 @@ export default function CompanySettingMasterAdmin() {
                   <CardTitle>Company Settings Master</CardTitle>
                   <CardDescription>Manage master settings for companies</CardDescription>
                 </div>
-                <Button
-                  onClick={() => {
-                    setEditingSettingsMaster(null);
-                    settingsMasterForm.reset({
-                      functionalityId: "",
-                      settingFunctionalDomainCode: "",
-                      settingFunctionalDomainName: "",
-                      settingFunctionalityName: "",
-                      settingFunctionalityCode: "",
-                      settingCode: "",
-                      settingName: "",
-                      settingDescription: "",
-                      settingValues: "",
-                      defaultValue: "",
-                    });
-                    setSettingsMasterDialogOpen(true);
-                  }}
-                  data-testid="button-create-settings-master"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Setting
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSerializeDialogOpen(true)}
+                    data-testid="button-serialize-company-settings"
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    Serialize Company Settings
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setEditingSettingsMaster(null);
+                      settingsMasterForm.reset({
+                        functionalityId: "",
+                        settingFunctionalDomainCode: "",
+                        settingFunctionalDomainName: "",
+                        settingFunctionalityName: "",
+                        settingFunctionalityCode: "",
+                        settingCode: "",
+                        settingName: "",
+                        settingDescription: "",
+                        settingValues: "",
+                        defaultValue: "",
+                      });
+                      setSettingsMasterDialogOpen(true);
+                    }}
+                    data-testid="button-create-settings-master"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Setting
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -978,6 +1025,32 @@ export default function CompanySettingMasterAdmin() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Serialize Confirmation Dialog */}
+      <AlertDialog open={serializeDialogOpen} onOpenChange={setSerializeDialogOpen}>
+        <AlertDialogContent data-testid="dialog-serialize-confirmation">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Serialize Company Settings?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create company settings for {companies.length} registered {companies.length === 1 ? 'company' : 'companies'} based on {settingsMasters.length} master {settingsMasters.length === 1 ? 'template' : 'templates'}.
+              <br /><br />
+              Existing settings will not be modified. This operation is safe to run multiple times.
+              <br /><br />
+              Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-serialize">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => serializeMutation.mutate()}
+              disabled={serializeMutation.isPending}
+              data-testid="button-confirm-serialize"
+            >
+              {serializeMutation.isPending ? "Serializing..." : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

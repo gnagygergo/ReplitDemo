@@ -1750,6 +1750,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Serialize Company Settings - creates company_settings records for all companies from master templates
+  app.post("/api/company-settings-masters/serialize", isAuthenticated, async (req: any, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can serialize company settings" });
+      }
+
+      // Get user ID for audit trail
+      const sessionUser = (req.session as any).user;
+      let userId;
+      
+      if (sessionUser && sessionUser.isDbUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = req.user?.claims?.sub;
+      }
+
+      if (!userId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const stats = await storage.serializeCompanySettings(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error serializing company settings:", error);
+      res.status(500).json({ message: "Failed to serialize company settings" });
+    }
+  });
+
   // Business Objects Manager - Company Settings by Domain (Company-scoped)
   app.get("/api/business-objects/company-settings/:domain", isAuthenticated, async (req, res) => {
     try {

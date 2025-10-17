@@ -412,7 +412,9 @@ export const companySettings = pgTable("company_settings", {
   lastUpdatedBy: varchar("last_updated_by").references(() => users.id, {
     onDelete: "restrict",
   }),
-});
+}, (table) => ({
+  uniqueCompanyMaster: unique().on(table.companyId, table.companySettingsMasterId),
+}));
 //Knowledge Base tables
 export const knowledgeArticles = pgTable("knowledge_articles", {
   id: varchar("id")

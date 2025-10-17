@@ -56,7 +56,6 @@ import {
   type InsertCompanySettingMasterFunctionality,
   type CompanySettingsMaster,
   type InsertCompanySettingsMaster,
-  type CompanySetting,
   companies,
   companySettings,
   accounts,

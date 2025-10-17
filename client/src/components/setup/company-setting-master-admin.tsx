@@ -45,7 +45,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, X } from "lucide-react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   insertCompanySettingMasterDomainSchema,
@@ -70,6 +70,8 @@ export default function CompanySettingMasterAdmin() {
   const [editingDomain, setEditingDomain] = useState<CompanySettingMasterDomain | null>(null);
   const [editingFunctionality, setEditingFunctionality] = useState<CompanySettingMasterFunctionality | null>(null);
   const [editingSettingsMaster, setEditingSettingsMaster] = useState<CompanySettingsMaster | null>(null);
+  const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("");
+  const [selectedFunctionalityFilter, setSelectedFunctionalityFilter] = useState<string>("");
 
   // Domains Query
   const { data: domains = [], isLoading: domainsLoading } = useQuery<CompanySettingMasterDomain[]>({

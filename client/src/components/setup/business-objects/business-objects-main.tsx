@@ -88,9 +88,9 @@ const setupMenuItems: MenuItem[] = [
     category: "business-objects",
     children: [
       {
-        id: "account-list",
+        id: "account-types",
         label: "Account Types",
-        description: "View and manage all accounts",
+        description: "Handle different client types",
         component: AccountManagementModels,
       },
       {
@@ -117,7 +117,7 @@ const setupMenuItems: MenuItem[] = [
     id: "unit-of-measures",
     label: "Unit of Measures",
     icon: Ruler,
-    description: "Discover your options",
+    description: "Count and measure products",
     globalAdminOnly: true,
     category: "business-objects",
     component: UnitOfMeasuresManagement,

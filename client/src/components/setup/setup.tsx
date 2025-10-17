@@ -154,6 +154,14 @@ const setupMenuItems = [
     globalAdminOnly: true,
     category: "business-objects",
   },
+  {
+    id: "company-setting-master-admin",
+    label: "Company Settings Master Admin",
+    icon: FileCheck,
+    description: "Manage functional domains, functionalities, and settings master data",
+    globalAdminOnly: true,
+    category: "business-objects",
+  },
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -169,6 +177,7 @@ import LicenceAgreementTemplatesManagement from "@/components/setup/licence-agre
 import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
 import CompanyDetail from "@/components/setup/company-detail";
 import KnowledgeArticlesManagement from "@/components/setup/knowledge-articles";
+import CompanySettingMasterAdmin from "@/components/setup/company-setting-master-admin";
 
 // Companies management component
 function CompaniesSetup() {
@@ -351,6 +360,8 @@ export default function Setup() {
         return <ReleasesSetup />;
       case "unit-of-measures":
         return <UnitOfMeasuresSetup />;
+      case "company-setting-master-admin":
+        return <CompanySettingMasterAdmin />;
       case "knowledge-articles":
         return <KnowledgeArticlesManagement />;
       case "languages":

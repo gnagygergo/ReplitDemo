@@ -52,7 +52,7 @@ export default function AccountManagementModels() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Account Management Settings</CardTitle>
+          <CardTitle>Smart Account Management</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (

@@ -87,6 +87,7 @@ import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
+import { SetupDatabaseStorage } from "./setup-storage";
 import { eq, and, sql, lte, gte } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -365,6 +366,7 @@ export class DatabaseStorage implements IStorage {
   private opportunityStorage: OpportunityStorage;
   private caseStorage: CaseStorage;
   private productStorage: ProductStorage;
+  private setupStorage: SetupDatabaseStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage(
@@ -383,55 +385,22 @@ export class DatabaseStorage implements IStorage {
       this.getUser.bind(this)
     );
     this.productStorage = new ProductStorage();
+    this.setupStorage = new SetupDatabaseStorage();
   }
 
   // Method called by all GETTERs of business objects
   async GetCompanyContext(req: any): Promise<string | null> {
-    try {
-      // Extract user ID from session
-      const sessionUser = (req.session as any).user;
-      let userId;
-
-      if (sessionUser && sessionUser.isDbUser) {
-        userId = sessionUser.id;
-      } else {
-        userId = req.user?.claims?.sub;
-      }
-      if (!userId) return null;
-      // Get user's company context
-      const user = await this.getUser(userId);
-      return user?.companyContext || null;
-    } catch (error) {
-      console.error("Error getting company context:", error);
-      return null;
-    }
+    return this.setupStorage.GetCompanyContext(req);
   }
 
   // Method to get company name based on current user's company context
   async GetCompanyNameBasedOnContext(req: any): Promise<string | null> {
-    try {
-      // Use existing method to get company context ID
-      const companyId = await this.GetCompanyContext(req);
-      if (!companyId) return null;
-
-      // Query companies table to get company name
-      const company = await db
-        .select()
-        .from(companies)
-        .where(eq(companies.id, companyId))
-        .limit(1);
-
-      return company[0]?.companyOfficialName || null;
-    } catch (error) {
-      console.error("Error getting company name:", error);
-      return null;
-    }
+    return this.setupStorage.GetCompanyNameBasedOnContext(req);
   }
 
-  // User methods
+  // User methods - Delegated to setupStorage
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    return this.setupStorage.getUser(id);
   }
 
   async getUsers(companyContext?: string): Promise<User[]> {
@@ -568,51 +537,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async verifyGlobalAdmin(req: any): Promise<boolean> {
-    try {
-      // Extract user ID from session (same pattern as GetCompanyContext)
-      const sessionUser = (req.session as any).user;
-      let userId;
-      if (sessionUser && sessionUser.isDbUser) {
-        userId = sessionUser.id;
-      } else {
-        userId = req.user?.claims?.sub;
-      }
-
-      if (!userId) return false;
-
-      // Get user record from database
-      const user = await this.getUser(userId);
-
-      // Return the is_global_admin value (false if user not found)
-      return user?.isGlobalAdmin || false;
-    } catch (error) {
-      console.error("Error verifying global admin:", error);
-      return false;
-    }
+    return this.setupStorage.verifyGlobalAdmin(req);
   }
 
   async verifyCompanyAdmin(req: any): Promise<boolean> {
-    try {
-      // Extract user ID from session (same pattern as GetCompanyContext)
-      const sessionUser = (req.session as any).user;
-      let userId;
-      if (sessionUser && sessionUser.isDbUser) {
-        userId = sessionUser.id;
-      } else {
-        userId = req.user?.claims?.sub;
-      }
-
-      if (!userId) return false;
-
-      // Get user record from database
-      const user = await this.getUser(userId);
-
-      // Return the is_admin value (false if user not found)
-      return user?.isAdmin || false;
-    } catch (error) {
-      console.error("Error verifying global admin:", error);
-      return false;
-    }
+    return this.setupStorage.verifyCompanyAdmin(req);
   }
 
   // Company methods

@@ -1898,6 +1898,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get company settings by code prefix
+  app.get("/api/business-objects/company-settings/by-prefix/:prefix", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      // Get user's company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      const settings = await storage.getCompanySettingsByCodePrefix(
+        req.params.prefix,
+        companyContext
+      );
+
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching company settings by prefix:", error);
+      res.status(500).json({
+        message: "Failed to fetch company settings",
+      });
+    }
+  });
+
   // Dev Pattern routes (Global - no company context, all operations require global admin)
   app.get("/api/dev-patterns", isAuthenticated, async (req, res) => {
     try {

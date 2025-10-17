@@ -84,6 +84,20 @@ export default function AccountManagementModels() {
     },
   });
 
+  const { data: accountTypeSettings, isLoading: isLoadingAccountTypes, error: accountTypesError } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/by-prefix", "smart_account_management_accountType_"],
+    queryFn: async () => {
+      const response = await fetch("/api/business-objects/company-settings/by-prefix/smart_account_management_accountType_", {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to fetch account type settings");
+      }
+      return response.json();
+    },
+  });
+
   const updateSettingMutation = useMutation({
     mutationFn: async (newValue: string) => {
       if (!setting?.id) throw new Error("Setting ID not found");
@@ -105,11 +119,37 @@ export default function AccountManagementModels() {
     },
   });
 
+  const updateAccountTypeSettingMutation = useMutation({
+    mutationFn: async ({ id, newValue }: { id: string; newValue: string }) => {
+      return apiRequest("PATCH", `/api/business-objects/company-settings/${id}`, { settingValue: newValue });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", "smart_account_management_accountType_"] });
+      toast({
+        title: "Success",
+        description: "Account type setting updated",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update setting",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleToggleChange = (checked: boolean) => {
     // Only allow FALSE to TRUE
     if (checked && setting?.settingValue === "FALSE") {
       updateSettingMutation.mutate("TRUE");
     }
+  };
+
+  const handleAccountTypeToggleChange = (accountTypeSetting: CompanySettingWithMaster, checked: boolean) => {
+    // Freely toggle between TRUE and FALSE
+    const newValue = checked ? "TRUE" : "FALSE";
+    updateAccountTypeSettingMutation.mutate({ id: accountTypeSetting.id, newValue });
   };
 
   const isActivated = setting?.settingValue === "TRUE";
@@ -202,6 +242,49 @@ export default function AccountManagementModels() {
                 />
               </CollapsibleContent>
             </Collapsible>
+          ) : null}
+
+          {isLoadingAccountTypes ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : accountTypesError ? (
+            <Alert variant="destructive" data-testid="alert-account-types-error">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Failed to load account type settings.
+              </AlertDescription>
+            </Alert>
+          ) : accountTypeSettings && accountTypeSettings.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground">Account Types</h3>
+              {accountTypeSettings.map((accountTypeSetting) => (
+                <div 
+                  key={accountTypeSetting.id} 
+                  className="flex items-center justify-between space-x-4 rounded-lg border p-4"
+                  data-testid={`account-type-setting-${accountTypeSetting.id}`}
+                >
+                  <div className="flex-1 space-y-1">
+                    <Label htmlFor={`toggle-${accountTypeSetting.id}`} className="text-base font-medium">
+                      {accountTypeSetting.settingName}
+                    </Label>
+                    {accountTypeSetting.settingDescription && (
+                      <p className="text-sm text-muted-foreground">
+                        {accountTypeSetting.settingDescription}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    id={`toggle-${accountTypeSetting.id}`}
+                    checked={accountTypeSetting.settingValue === "TRUE"}
+                    onCheckedChange={(checked) => handleAccountTypeToggleChange(accountTypeSetting, checked)}
+                    disabled={updateAccountTypeSettingMutation.isPending}
+                    data-testid={`switch-account-type-${accountTypeSetting.id}`}
+                  />
+                </div>
+              ))}
+            </div>
           ) : null}
         </CardContent>
       </Card>

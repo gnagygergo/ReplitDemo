@@ -392,6 +392,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
+  articleCode: text("article_code"),
 });
 
 export const companySettings = pgTable("company_settings", {
@@ -419,6 +420,11 @@ export const knowledgeArticles = pgTable("knowledge_articles", {
     .default(sql`gen_random_uuid()`),
   articleTitle: text("article_title"),
   articleContent: text("article_content"),
+  articleCode: text("article_code"),
+  functionalDomainId: varchar("functional_domain_id")
+    .references(() => companySettingMasterDomains.id, { onDelete: "set null" }),
+  functionalityId: varchar("functionality_id")
+    .references(() => companySettingMasterFunctionalities.id, { onDelete: "set null" }),
   articleFunctionalDomain: text("article_functional_domain"),
   articleFunctionalityName: text("article_functionality_name"),
   articleTags: text("article_tags"),
@@ -579,6 +585,14 @@ export const knowledgeArticlesRelations = relations(
       fields: [knowledgeArticles.authorId],
       references: [users.id],
     }),
+    functionalDomain: one(companySettingMasterDomains, {
+      fields: [knowledgeArticles.functionalDomainId],
+      references: [companySettingMasterDomains.id],
+    }),
+    functionality: one(companySettingMasterFunctionalities, {
+      fields: [knowledgeArticles.functionalityId],
+      references: [companySettingMasterFunctionalities.id],
+    }),
   }),
 );
 
@@ -716,6 +730,9 @@ export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles
   .extend({
     articleTitle: z.string().min(1, "Article title is required"),
     authorId: z.string().min(1, "Author is required"),
+    articleCode: z.string().optional(),
+    functionalDomainId: z.string().optional(),
+    functionalityId: z.string().optional(),
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
@@ -828,6 +845,7 @@ export const insertCompanySettingsMasterSchema = createInsertSchema(companySetti
     settingDescription: z.string().optional(),
     settingValues: z.string().optional(),
     defaultValue: z.string().optional(),
+    articleCode: z.string().optional(),
   });
 
 export type InsertCompany = z.infer<typeof insertCompanySchema>;

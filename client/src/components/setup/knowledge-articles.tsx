@@ -22,6 +22,7 @@ import {
   UserPlus,
   Edit,
   X,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,12 +74,20 @@ import type {
   KnowledgeArticleWithAuthor,
   User,
   Language,
+  CompanySettingMasterDomain,
+  CompanySettingMasterFunctionality,
 } from "@shared/schema";
 import { insertKnowledgeArticleSchema } from "@shared/schema";
 import { format } from "date-fns";
 import { TiptapEditor } from "@/components/ui/tiptap-editor";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type KnowledgeArticleForm = z.infer<typeof insertKnowledgeArticleSchema>;
 
@@ -294,6 +303,16 @@ function KnowledgeArticleEdit({
     queryKey: ["/api/languages"],
   });
 
+  // Fetch functional domains for the dropdown
+  const { data: functionalDomains = [] } = useQuery<CompanySettingMasterDomain[]>({
+    queryKey: ["/api/company-setting-master-domains"],
+  });
+
+  // Fetch functionalities for the dropdown
+  const { data: functionalities = [] } = useQuery<CompanySettingMasterFunctionality[]>({
+    queryKey: ["/api/company-setting-master-functionalities"],
+  });
+
   // Fetch current user to set as default author for new articles
   const { data: currentUser } = useQuery<User>({
     queryKey: ["/api/auth/me"],
@@ -304,6 +323,9 @@ function KnowledgeArticleEdit({
     resolver: zodResolver(insertKnowledgeArticleSchema),
     defaultValues: {
       articleTitle: "",
+      articleCode: "",
+      functionalDomainId: "",
+      functionalityId: "",
       languageCode: "",
       articleFunctionalDomain: "",
       articleFunctionalityName: "",
@@ -322,6 +344,9 @@ function KnowledgeArticleEdit({
       // Load existing article data into form
       form.reset({
         articleTitle: article.articleTitle || "",
+        articleCode: article.articleCode || "",
+        functionalDomainId: article.functionalDomainId || "",
+        functionalityId: article.functionalityId || "",
         languageCode: article.languageCode || "",
         articleFunctionalDomain: article.articleFunctionalDomain || "",
         articleFunctionalityName: article.articleFunctionalityName || "",
@@ -340,6 +365,9 @@ function KnowledgeArticleEdit({
       // Initialize form with defaults for new article
       form.reset({
         articleTitle: "",
+        articleCode: "",
+        functionalDomainId: "",
+        functionalityId: "",
         languageCode: "",
         articleFunctionalDomain: "",
         articleFunctionalityName: "",
@@ -561,40 +589,100 @@ function KnowledgeArticleEdit({
                 />
               </div>
 
-              {/* Functional Domain and Functionality Name - 2 column grid */}
+              {/* Article Code Field with help tooltip */}
+              <FormField
+                control={form.control}
+                name="articleCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex items-center gap-2">
+                      <FormLabel>Article Code</FormLabel>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Use this code to embed this article to a certain Page.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter article code"
+                        {...field}
+                        value={field.value || ""}
+                        data-testid="input-article-code"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Functional Domain and Functionality - 2 column grid */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="articleFunctionalDomain"
+                  name="functionalDomainId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Functional Domain</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Sales, Marketing, Finance"
-                          {...field}
-                          value={field.value || ""}
-                          data-testid="input-functional-domain"
-                        />
-                      </FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-functional-domain">
+                            <SelectValue placeholder="Select functional domain" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {functionalDomains.map((domain) => (
+                            <SelectItem
+                              key={domain.id}
+                              value={domain.id}
+                              data-testid={`option-domain-${domain.id}`}
+                            >
+                              {domain.code} - {domain.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
                 <FormField
                   control={form.control}
-                  name="articleFunctionalityName"
+                  name="functionalityId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Functionality Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., Lead Management, Email Campaigns"
-                          {...field}
-                          value={field.value || ""}
-                          data-testid="input-functionality-name"
-                        />
-                      </FormControl>
+                      <FormLabel>Functionality</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-functionality">
+                            <SelectValue placeholder="Select functionality" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {functionalities.map((functionality) => (
+                            <SelectItem
+                              key={functionality.id}
+                              value={functionality.id}
+                              data-testid={`option-functionality-${functionality.id}`}
+                            >
+                              {functionality.code} - {functionality.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

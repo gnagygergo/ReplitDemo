@@ -121,6 +121,7 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: "",
       settingValues: "",
       defaultValue: "",
+      articleCode: "",
     },
   });
 
@@ -300,6 +301,7 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: settingsMaster.settingDescription || "",
       settingValues: settingsMaster.settingValues || "",
       defaultValue: settingsMaster.defaultValue || "",
+      articleCode: settingsMaster.articleCode || "",
     });
     setSettingsMasterDialogOpen(true);
   };
@@ -937,6 +939,19 @@ export default function CompanySettingMasterAdmin() {
                     <FormLabel>Default Value</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} data-testid="input-default-value" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={settingsMasterForm.control}
+                name="articleCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Article Code</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} data-testid="input-article-code-settings" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

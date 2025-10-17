@@ -1718,6 +1718,9 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: knowledgeArticles.id,
         articleTitle: knowledgeArticles.articleTitle,
+        articleCode: knowledgeArticles.articleCode,
+        functionalDomainId: knowledgeArticles.functionalDomainId,
+        functionalityId: knowledgeArticles.functionalityId,
         languageCode: knowledgeArticles.languageCode,
         articleFunctionalDomain: knowledgeArticles.articleFunctionalDomain,
         articleFunctionalityName: knowledgeArticles.articleFunctionalityName,
@@ -1736,6 +1739,9 @@ export class DatabaseStorage implements IStorage {
     return results.map(r => ({
       id: r.id,
       articleTitle: r.articleTitle,
+      articleCode: r.articleCode,
+      functionalDomainId: r.functionalDomainId,
+      functionalityId: r.functionalityId,
       languageCode: r.languageCode,
       articleFunctionalDomain: r.articleFunctionalDomain,
       articleFunctionalityName: r.articleFunctionalityName,

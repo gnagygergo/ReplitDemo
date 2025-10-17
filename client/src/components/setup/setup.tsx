@@ -137,31 +137,16 @@ const setupMenuItems = [
     globalAdminOnly: true,
     category: "my-company",
   },
-  // Setup menu items - BUSINESS OBJECTS
-  {
-    id: "Account-management",
-    label: "Account Management",
-    icon: FileCheck,
-    description: "Manage your client data",
-    globalAdminOnly: false,
-    category: "business-objects",
-  },
-  {
-    id: "unit-of-measures",
-    label: "Unit of Measures",
-    icon: Ruler,
-    description: "Discover your options",
-    globalAdminOnly: true,
-    category: "business-objects",
-  },
   {
     id: "company-setting-master-admin",
     label: "Company Settings Master Admin",
     icon: FileCheck,
     description: "Manage functional domains, functionalities, and settings master data",
     globalAdminOnly: true,
-    category: "business-objects",
+    category: "my-company",
   },
+  
+  
 ];
 
 import UserManagement from "@/components/setup/user-management";

@@ -22,6 +22,9 @@ import {
   insertLicenceAgreementTemplateSchema,
   insertLicenceAgreementSchema,
   insertEmailSchema,
+  insertCompanySettingMasterDomainSchema,
+  insertCompanySettingMasterFunctionalitySchema,
+  insertCompanySettingsMasterSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { sendEmail } from "./email";
@@ -1471,6 +1474,255 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting knowledge article:", error);
       res.status(500).json({ message: "Failed to delete knowledge article" });
+    }
+  });
+
+  // Company Setting Master Domain routes (Global - read: all users, write: global admins only)
+  app.get("/api/company-setting-master-domains", isAuthenticated, async (req, res) => {
+    try {
+      const domains = await storage.getCompanySettingMasterDomains();
+      res.json(domains);
+    } catch (error) {
+      console.error("Error fetching domains:", error);
+      res.status(500).json({ message: "Failed to fetch domains" });
+    }
+  });
+
+  app.get("/api/company-setting-master-domains/:id", isAuthenticated, async (req, res) => {
+    try {
+      const domain = await storage.getCompanySettingMasterDomain(req.params.id);
+      if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+      }
+      res.json(domain);
+    } catch (error) {
+      console.error("Error fetching domain:", error);
+      res.status(500).json({ message: "Failed to fetch domain" });
+    }
+  });
+
+  app.post("/api/company-setting-master-domains", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create domains" });
+      }
+
+      const validatedData = insertCompanySettingMasterDomainSchema.parse(req.body);
+      const domain = await storage.createCompanySettingMasterDomain(validatedData);
+      res.status(201).json(domain);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating domain:", error);
+      res.status(500).json({ message: "Failed to create domain" });
+    }
+  });
+
+  app.patch("/api/company-setting-master-domains/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update domains" });
+      }
+
+      const validatedData = insertCompanySettingMasterDomainSchema.partial().parse(req.body);
+      const domain = await storage.updateCompanySettingMasterDomain(req.params.id, validatedData);
+      if (!domain) {
+        return res.status(404).json({ message: "Domain not found" });
+      }
+      res.json(domain);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating domain:", error);
+      res.status(500).json({ message: "Failed to update domain" });
+    }
+  });
+
+  app.delete("/api/company-setting-master-domains/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete domains" });
+      }
+
+      const deleted = await storage.deleteCompanySettingMasterDomain(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Domain not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting domain:", error);
+      res.status(500).json({ message: "Failed to delete domain" });
+    }
+  });
+
+  // Company Setting Master Functionality routes (Global - read: all users, write: global admins only)
+  app.get("/api/company-setting-master-functionalities", isAuthenticated, async (req, res) => {
+    try {
+      const functionalities = await storage.getCompanySettingMasterFunctionalities();
+      res.json(functionalities);
+    } catch (error) {
+      console.error("Error fetching functionalities:", error);
+      res.status(500).json({ message: "Failed to fetch functionalities" });
+    }
+  });
+
+  app.get("/api/company-setting-master-functionalities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const functionality = await storage.getCompanySettingMasterFunctionality(req.params.id);
+      if (!functionality) {
+        return res.status(404).json({ message: "Functionality not found" });
+      }
+      res.json(functionality);
+    } catch (error) {
+      console.error("Error fetching functionality:", error);
+      res.status(500).json({ message: "Failed to fetch functionality" });
+    }
+  });
+
+  app.post("/api/company-setting-master-functionalities", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create functionalities" });
+      }
+
+      const validatedData = insertCompanySettingMasterFunctionalitySchema.parse(req.body);
+      const functionality = await storage.createCompanySettingMasterFunctionality(validatedData);
+      res.status(201).json(functionality);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating functionality:", error);
+      res.status(500).json({ message: "Failed to create functionality" });
+    }
+  });
+
+  app.patch("/api/company-setting-master-functionalities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update functionalities" });
+      }
+
+      const validatedData = insertCompanySettingMasterFunctionalitySchema.partial().parse(req.body);
+      const functionality = await storage.updateCompanySettingMasterFunctionality(req.params.id, validatedData);
+      if (!functionality) {
+        return res.status(404).json({ message: "Functionality not found" });
+      }
+      res.json(functionality);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating functionality:", error);
+      res.status(500).json({ message: "Failed to update functionality" });
+    }
+  });
+
+  app.delete("/api/company-setting-master-functionalities/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete functionalities" });
+      }
+
+      const deleted = await storage.deleteCompanySettingMasterFunctionality(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Functionality not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting functionality:", error);
+      res.status(500).json({ message: "Failed to delete functionality" });
+    }
+  });
+
+  // Company Settings Master routes (Global - read: all users, write: global admins only)
+  app.get("/api/company-settings-masters", isAuthenticated, async (req, res) => {
+    try {
+      const settingsMasters = await storage.getCompanySettingsMasters();
+      res.json(settingsMasters);
+    } catch (error) {
+      console.error("Error fetching settings masters:", error);
+      res.status(500).json({ message: "Failed to fetch settings masters" });
+    }
+  });
+
+  app.get("/api/company-settings-masters/:id", isAuthenticated, async (req, res) => {
+    try {
+      const settingsMaster = await storage.getCompanySettingsMaster(req.params.id);
+      if (!settingsMaster) {
+        return res.status(404).json({ message: "Settings master not found" });
+      }
+      res.json(settingsMaster);
+    } catch (error) {
+      console.error("Error fetching settings master:", error);
+      res.status(500).json({ message: "Failed to fetch settings master" });
+    }
+  });
+
+  app.post("/api/company-settings-masters", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can create settings masters" });
+      }
+
+      const validatedData = insertCompanySettingsMasterSchema.parse(req.body);
+      const settingsMaster = await storage.createCompanySettingsMaster(validatedData);
+      res.status(201).json(settingsMaster);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error creating settings master:", error);
+      res.status(500).json({ message: "Failed to create settings master" });
+    }
+  });
+
+  app.patch("/api/company-settings-masters/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can update settings masters" });
+      }
+
+      const validatedData = insertCompanySettingsMasterSchema.partial().parse(req.body);
+      const settingsMaster = await storage.updateCompanySettingsMaster(req.params.id, validatedData);
+      if (!settingsMaster) {
+        return res.status(404).json({ message: "Settings master not found" });
+      }
+      res.json(settingsMaster);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error("Error updating settings master:", error);
+      res.status(500).json({ message: "Failed to update settings master" });
+    }
+  });
+
+  app.delete("/api/company-settings-masters/:id", isAuthenticated, async (req, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can delete settings masters" });
+      }
+
+      const deleted = await storage.deleteCompanySettingsMaster(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Settings master not found" });
+      }
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting settings master:", error);
+      res.status(500).json({ message: "Failed to delete settings master" });
     }
   });
 

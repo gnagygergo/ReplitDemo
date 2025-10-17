@@ -358,10 +358,31 @@ export const licenceAgreements = pgTable("licence_agreements", {
 });
 
 // Company Settings tables
+export const companySettingMasterDomains = pgTable("company_setting_master_domains", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  code: text("code").notNull(),
+  name: text("name").notNull(),
+});
+
+export const companySettingMasterFunctionalities = pgTable("company_setting_master_functionalities", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  code: text("code").notNull(),
+  name: text("name").notNull(),
+  domainId: varchar("domain_id")
+    .notNull()
+    .references(() => companySettingMasterDomains.id, { onDelete: "restrict" }),
+});
+
 export const companySettingsMaster = pgTable("company_settings_master", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
+  functionalityId: varchar("functionality_id")
+    .references(() => companySettingMasterFunctionalities.id, { onDelete: "restrict" }),
   settingFunctionalDomainCode: text("setting_functional_domain_code"),
   settingFunctionalDomainName: text("setting_functional_domain_name"),
   settingFunctionalityName: text("setting_functionality_name"),
@@ -777,6 +798,38 @@ export const insertEmailSchema = createInsertSchema(emails)
     createdBy: z.string().min(1, "Created by is required"),
   });
 
+export const insertCompanySettingMasterDomainSchema = createInsertSchema(companySettingMasterDomains)
+  .omit({
+    id: true,
+  })
+  .extend({
+    code: z.string().min(1, "Code is required"),
+    name: z.string().min(1, "Name is required"),
+  });
+
+export const insertCompanySettingMasterFunctionalitySchema = createInsertSchema(companySettingMasterFunctionalities)
+  .omit({
+    id: true,
+  })
+  .extend({
+    code: z.string().min(1, "Code is required"),
+    name: z.string().min(1, "Name is required"),
+    domainId: z.string().min(1, "Domain is required"),
+  });
+
+export const insertCompanySettingsMasterSchema = createInsertSchema(companySettingsMaster)
+  .omit({
+    id: true,
+  })
+  .extend({
+    functionalityId: z.string().optional(),
+    settingName: z.string().min(1, "Setting name is required"),
+    settingCode: z.string().optional(),
+    settingDescription: z.string().optional(),
+    settingValues: z.string().optional(),
+    defaultValue: z.string().optional(),
+  });
+
 export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
@@ -820,6 +873,12 @@ export type InsertLicenceAgreement = z.infer<
 export type LicenceAgreement = typeof licenceAgreements.$inferSelect;
 export type InsertEmail = z.infer<typeof insertEmailSchema>;
 export type Email = typeof emails.$inferSelect;
+export type InsertCompanySettingMasterDomain = z.infer<typeof insertCompanySettingMasterDomainSchema>;
+export type CompanySettingMasterDomain = typeof companySettingMasterDomains.$inferSelect;
+export type InsertCompanySettingMasterFunctionality = z.infer<typeof insertCompanySettingMasterFunctionalitySchema>;
+export type CompanySettingMasterFunctionality = typeof companySettingMasterFunctionalities.$inferSelect;
+export type InsertCompanySettingsMaster = z.infer<typeof insertCompanySettingsMasterSchema>;
+export type CompanySettingsMaster = typeof companySettingsMaster.$inferSelect;
 
 export type AccountWithOwner = Account & {
   owner: User;

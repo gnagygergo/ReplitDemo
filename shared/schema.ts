@@ -901,6 +901,26 @@ export type InsertCompanySettingsMaster = z.infer<typeof insertCompanySettingsMa
 export type CompanySettingsMaster = typeof companySettingsMaster.$inferSelect;
 export type CompanySetting = typeof companySettings.$inferSelect;
 
+// Company settings with master data (used by API endpoints)
+export type CompanySettingWithMaster = {
+  id: string;
+  companySettingsMasterId: string;
+  settingCode: string | null;
+  settingName: string | null;
+  settingValue: string | null;
+  companyId: string | null;
+  createdDate: Date | null;
+  lastUpdatedDate: Date | null;
+  lastUpdatedBy: string | null;
+  settingFunctionalDomainCode: string | null;
+  settingFunctionalDomainName: string | null;
+  settingFunctionalityName: string | null;
+  settingFunctionalityCode: string | null;
+  settingDescription: string | null;
+  settingValues: string | null;
+  defaultValue: string | null;
+};
+
 export type AccountWithOwner = Account & {
   owner: User;
 };

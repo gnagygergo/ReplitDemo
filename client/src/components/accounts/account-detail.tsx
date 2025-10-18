@@ -10,7 +10,7 @@ import {
   type User,
   type OpportunityWithAccountAndOwner,
   type Quote,
-  type CompanySetting,
+  type CompanySettingWithMaster,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,8 +93,8 @@ export default function AccountDetail() {
   });
 
   // Fetch company settings for smart account management
-  const { data: companySettings = [] } = useQuery<CompanySetting[]>({
-    queryKey: ["/api/business-objects/company-settings", "smart_account_management"],
+  const { data: companySettings = [] } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/smart_account_management"],
   });
 
   // Helper function to check if a company setting is enabled

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRoute } from "wouter";
+import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -63,30 +63,32 @@ import AccountDetailCategorizationCard from "@/components/accounts/account-cards
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
-  const [isEditing, setIsEditing] = useState(false);
+  const [, setLocation] = useLocation();
+  const isCreating = params?.id === "new";
+  const [isEditing, setIsEditing] = useState(isCreating);
   const [showUserLookup, setShowUserLookup] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch account data
+  // Fetch account data (skip when creating new account)
   const { data: account, isLoading: isLoadingAccount } =
     useQuery<AccountWithOwner>({
       queryKey: ["/api/accounts", params?.id],
-      enabled: !!params?.id,
+      enabled: !!params?.id && !isCreating,
     });
 
-  // Fetch opportunities for this account
+  // Fetch opportunities for this account (skip when creating new account)
   const { data: opportunities = [], isLoading: isLoadingOpportunities } =
     useQuery<OpportunityWithAccountAndOwner[]>({
       queryKey: ["/api/accounts", params?.id, "opportunities"],
-      enabled: !!params?.id,
+      enabled: !!params?.id && !isCreating,
     });
 
-  // Fetch quotes for this account
+  // Fetch quotes for this account (skip when creating new account)
   const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery<Quote[]>({
     queryKey: ["/api/accounts", params?.id, "quotes"],
-    enabled: !!params?.id,
+    enabled: !!params?.id && !isCreating,
   });
 
   const form = useForm<InsertAccount>({
@@ -106,6 +108,29 @@ export default function AccountDetail() {
       isCompanyContact: false,
       isLegalEntity: false,
       isShippingAddress: false,
+    },
+  });
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: async (data: InsertAccount) => {
+      const response = await apiRequest("POST", "/api/accounts", data);
+      return response.json();
+    },
+    onSuccess: (newAccount: AccountWithOwner) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      toast({
+        title: "Account created successfully",
+      });
+      // Navigate to the new account's detail page
+      setLocation(`/accounts/${newAccount.id}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to create account",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -134,30 +159,39 @@ export default function AccountDetail() {
   });
 
   const onSubmit = (data: InsertAccount) => {
-    updateMutation.mutate(data);
+    if (isCreating) {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate(data);
+    }
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
-    // Reset form to current account data
-    if (account) {
-      form.reset({
-        name: account.name,
-        firstName: account.firstName || "",
-        lastName: account.lastName || "",
-        email: account.email || "",
-        mobilePhone: account.mobilePhone || "",
-        companyRegistrationId: account.companyRegistrationId || "",
-        address: account.address || "",
-        industry: account.industry as "tech" | "construction" | "services",
-        ownerId: account.ownerId,
-        isPersonAccount: account.isPersonAccount || false,
-        isSelfEmployed: account.isSelfEmployed || false,
-        isCompanyContact: account.isCompanyContact || false,
-        isLegalEntity: account.isLegalEntity || false,
-        isShippingAddress: account.isShippingAddress || false,
-      });
-      setSelectedOwner(account.owner);
+    if (isCreating) {
+      // Navigate back to accounts list when canceling creation
+      setLocation("/accounts");
+    } else {
+      setIsEditing(false);
+      // Reset form to current account data
+      if (account) {
+        form.reset({
+          name: account.name,
+          firstName: account.firstName || "",
+          lastName: account.lastName || "",
+          email: account.email || "",
+          mobilePhone: account.mobilePhone || "",
+          companyRegistrationId: account.companyRegistrationId || "",
+          address: account.address || "",
+          industry: account.industry as "tech" | "construction" | "services",
+          ownerId: account.ownerId,
+          isPersonAccount: account.isPersonAccount || false,
+          isSelfEmployed: account.isSelfEmployed || false,
+          isCompanyContact: account.isCompanyContact || false,
+          isLegalEntity: account.isLegalEntity || false,
+          isShippingAddress: account.isShippingAddress || false,
+        });
+        setSelectedOwner(account.owner);
+      }
     }
   };
 
@@ -272,29 +306,32 @@ export default function AccountDetail() {
     }
   }, [account, form]);
 
-  if (isLoadingAccount) {
-    return (
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="animate-pulse">Loading account details...</div>
-      </div>
-    );
-  }
-
-  if (!account) {
-    return (
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center py-12">
-          <Building className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">Account not found</h3>
-          <p className="text-muted-foreground mb-4">
-            The account you're looking for doesn't exist.
-          </p>
-          <Link href="/accounts">
-            <Button variant="outline">Back to Accounts</Button>
-          </Link>
+  // Skip loading and not found states when creating new account
+  if (!isCreating) {
+    if (isLoadingAccount) {
+      return (
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">Loading account details...</div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    if (!account) {
+      return (
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <Building className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Account not found</h3>
+            <p className="text-muted-foreground mb-4">
+              The account you're looking for doesn't exist.
+            </p>
+            <Link href="/accounts">
+              <Button variant="outline">Back to Accounts</Button>
+            </Link>
+          </div>
+        </div>
+      );
+    }
   }
 
   return (
@@ -305,7 +342,9 @@ export default function AccountDetail() {
           Accounts
         </Link>
         <span>/</span>
-        <span className="text-foreground font-medium">{account.name}</span>
+        <span className="text-foreground font-medium">
+          {isCreating ? "New Account" : account?.name}
+        </span>
       </div>
 
       {/* Account Headline */}
@@ -313,7 +352,7 @@ export default function AccountDetail() {
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
             {(() => {
-              const IconComponent = getAccountIcon(account);
+              const IconComponent = account ? getAccountIcon(account) : Building;
               return <IconComponent className="w-6 h-6 text-primary" />;
             })()}
           </div>
@@ -322,13 +361,13 @@ export default function AccountDetail() {
               className="text-3xl font-bold text-foreground"
               data-testid="text-account-name"
             >
-              {account.name}
+              {isCreating ? "New Account" : account?.name}
             </h1>
             <p
               className="text-muted-foreground"
               data-testid="text-account-type-label"
             >
-              {getAccountTypeLabel(account)}
+              {isCreating ? "Create a new account" : account && getAccountTypeLabel(account)}
             </p>
           </div>
         </div>
@@ -339,7 +378,7 @@ export default function AccountDetail() {
               <Button
                 variant="outline"
                 onClick={handleCancel}
-                disabled={updateMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-cancel-edit"
               >
                 <X className="w-4 h-4 mr-2" />
@@ -347,11 +386,15 @@ export default function AccountDetail() {
               </Button>
               <Button
                 onClick={form.handleSubmit(onSubmit)}
-                disabled={updateMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-save-edit"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                {createMutation.isPending || updateMutation.isPending 
+                  ? "Saving..." 
+                  : isCreating 
+                    ? "Create Account" 
+                    : "Save Changes"}
               </Button>
             </>
           ) : (
@@ -372,10 +415,10 @@ export default function AccountDetail() {
         <Panel defaultSize={50} minSize={30} maxSize={70}> 
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             <SmartAccountManagementDetailCard
-              account={account}
+              account={account || null}
               isEditing={isEditing}
               form={form}
-              updateMutation={updateMutation}
+              updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
               getUserInitials={getUserInitials}
@@ -383,10 +426,10 @@ export default function AccountDetail() {
             />
 
             <AccountDetailOwnershipCard
-              account={account}
+              account={account || null}
               isEditing={isEditing}
               form={form}
-              updateMutation={updateMutation}
+              updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
               getUserInitials={getUserInitials}
@@ -394,10 +437,10 @@ export default function AccountDetail() {
             />
 
             <AccountDetailCategorizationCard
-              account={account}
+              account={account || null}
               isEditing={isEditing}
               form={form}
-              updateMutation={updateMutation}
+              updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               getIndustryLabel={getIndustryLabel}
               getIndustryBadgeClass={getIndustryBadgeClass}
             />

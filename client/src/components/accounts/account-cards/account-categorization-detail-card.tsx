@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
 interface AccountDetailCategorizationCardProps {
-  account: AccountWithOwner;
+  account: AccountWithOwner | null;
   isEditing: boolean;
   form: UseFormReturn<InsertAccount>;
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
@@ -89,11 +89,14 @@ export default function AccountDetailCategorizationCard({
             </form>
           </Form>
         ) : (
-
-      // VIEW MODE
-          <div className="space-y-6">
-            {/* Industry */}
-            <div>
+          // VIEW MODE
+          <>
+            {!account ? (
+              <div>No account data</div>
+            ) : (
+              <div className="space-y-6">
+                {/* Industry */}
+                <div>
               <label className="text-sm font-medium text-muted-foreground">
                 Industry
               </label>
@@ -107,8 +110,10 @@ export default function AccountDetailCategorizationCard({
                   {getIndustryLabel(account.industry)}
                 </Badge>
               </div>
-            </div>
-          </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

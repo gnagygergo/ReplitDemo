@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
 interface SmartAccountManagementDetailCardProps {
-  account: AccountWithOwner;
+  account: AccountWithOwner | null;
   isEditing: boolean;
   form: UseFormReturn<InsertAccount>;
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
@@ -475,9 +475,13 @@ export default function SmartAccountManagementDetailCard({
             </form>
           </Form>
         ) : (
-          <div className="space-y-6">
-            {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
-            {!account.isShippingAddress && !account.isLegalEntity && (
+          <>
+            {!account ? (
+              <div>No account data</div>
+            ) : (
+              <div className="space-y-6">
+                {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
+                {!account.isShippingAddress && !account.isLegalEntity && (
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   First Name
@@ -604,7 +608,9 @@ export default function SmartAccountManagementDetailCard({
                 </div>
               </div>
             </div>
-          </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

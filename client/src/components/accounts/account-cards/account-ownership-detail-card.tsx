@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
 interface AccountDetailOwnershipCardProps {
-  account: AccountWithOwner;
+  account: AccountWithOwner | null;
   isEditing: boolean;
   form: UseFormReturn<InsertAccount>;
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
@@ -117,11 +117,14 @@ export default function AccountDetailOwnershipCard({
             </form>
           </Form>
         ) : (
-
-      // VIEW MODE
-          <div className="space-y-6">
-            {/* Owner */}
-            <div>
+          // VIEW MODE
+          <>
+            {!account ? (
+              <div>No account data</div>
+            ) : (
+              <div className="space-y-6">
+                {/* Owner */}
+                <div>
               <label className="text-sm font-medium text-muted-foreground">
                 Account Owner
               </label>
@@ -146,8 +149,10 @@ export default function AccountDetailOwnershipCard({
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

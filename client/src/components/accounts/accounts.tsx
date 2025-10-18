@@ -11,12 +11,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import AccountForm from "@/components/accounts/account-form";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Accounts() {
-  const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
   const [sortBy, setSortBy] = useState<string>('name'); // Added for sorting capability on Tables
@@ -91,10 +89,6 @@ export default function Accounts() {
     return 'U';
   };
 
-  const handleCloseForm = () => {
-    setShowForm(false);
-  };
-
   const handleSort = (column: string) => { // Added for sorting capability on Tables
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -133,14 +127,15 @@ export default function Accounts() {
             <h2 className="text-2xl font-bold text-foreground">Accounts</h2>
             <p className="text-muted-foreground mt-1">Manage your customer accounts and their information</p>
           </div>
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center space-x-2"
-            data-testid="button-create-account"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Account</span>
-          </Button>
+          <Link href="/accounts/new">
+            <Button 
+              className="flex items-center space-x-2"
+              data-testid="button-create-account"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Account</span>
+            </Button>
+          </Link>
         </div>
 
         {/* Filters */}
@@ -375,11 +370,6 @@ export default function Accounts() {
           )}
         </Card>
       </div>
-
-      <AccountForm 
-        open={showForm} 
-        onClose={handleCloseForm}
-      />
     </>
   );
 }

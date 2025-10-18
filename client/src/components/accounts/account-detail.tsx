@@ -97,10 +97,22 @@ export default function AccountDetail() {
     queryKey: ["/api/business-objects/company-settings/smart_account_management"],
   });
 
+  // Debug: log settings on load
+  useEffect(() => {
+    if (companySettings.length > 0) {
+      console.log('Company Settings loaded:', companySettings.map(s => ({
+        code: s.settingCode,
+        value: s.settingValue
+      })));
+    }
+  }, [companySettings]);
+
   // Helper function to check if a company setting is enabled
   const isSettingEnabled = (settingCode: string): boolean => {
     const setting = companySettings.find((s) => s.settingCode === settingCode);
-    return setting?.settingValue?.toLowerCase() === "true";
+    const result = setting?.settingValue?.toLowerCase() === "true";
+    console.log(`isSettingEnabled("${settingCode}"):`, result, 'setting:', setting);
+    return result;
   };
 
   const form = useForm<InsertAccount>({

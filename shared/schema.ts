@@ -899,6 +899,7 @@ export type InsertCompanySettingMasterFunctionality = z.infer<typeof insertCompa
 export type CompanySettingMasterFunctionality = typeof companySettingMasterFunctionalities.$inferSelect;
 export type InsertCompanySettingsMaster = z.infer<typeof insertCompanySettingsMasterSchema>;
 export type CompanySettingsMaster = typeof companySettingsMaster.$inferSelect;
+export type CompanySetting = typeof companySettings.$inferSelect;
 
 export type AccountWithOwner = Account & {
   owner: User;

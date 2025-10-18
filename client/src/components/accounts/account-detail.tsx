@@ -10,6 +10,7 @@ import {
   type User,
   type OpportunityWithAccountAndOwner,
   type Quote,
+  type CompanySetting,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,6 +91,17 @@ export default function AccountDetail() {
     queryKey: ["/api/accounts", params?.id, "quotes"],
     enabled: !!params?.id && !isCreating,
   });
+
+  // Fetch company settings for smart account management
+  const { data: companySettings = [] } = useQuery<CompanySetting[]>({
+    queryKey: ["/api/business-objects/company-settings", "smart_account_management"],
+  });
+
+  // Helper function to check if a company setting is enabled
+  const isSettingEnabled = (settingCode: string): boolean => {
+    const setting = companySettings.find((s) => s.settingCode === settingCode);
+    return setting?.settingValue?.toLowerCase() === "true";
+  };
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
@@ -423,6 +435,7 @@ export default function AccountDetail() {
               setShowUserLookup={setShowUserLookup}
               getUserInitials={getUserInitials}
               getUserDisplayName={getUserDisplayName}
+              isSettingEnabled={isSettingEnabled}
             />
 
             <AccountDetailOwnershipCard

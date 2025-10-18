@@ -258,7 +258,7 @@ export default function AccountManagementModels() {
             </Alert>
           ) : accountTypeSettings && accountTypeSettings.length > 0 ? (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-muted-foreground">Account Types</h3>
+              <h3 className="text-sm font-semibold text-muted-foreground">Account Types - tell us who are your clients</h3>
               {accountTypeSettings.map((accountTypeSetting) => (
                 <div 
                   key={accountTypeSetting.id} 

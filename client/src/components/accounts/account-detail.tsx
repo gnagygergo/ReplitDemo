@@ -94,25 +94,13 @@ export default function AccountDetail() {
 
   // Fetch company settings for smart account management
   const { data: companySettings = [] } = useQuery<CompanySettingWithMaster[]>({
-    queryKey: ["/api/business-objects/company-settings/smart_account_management"],
+    queryKey: ["/api/business-objects/company-settings/account_management"],
   });
-
-  // Debug: log settings on load
-  useEffect(() => {
-    if (companySettings.length > 0) {
-      console.log('Company Settings loaded:', companySettings.map(s => ({
-        code: s.settingCode,
-        value: s.settingValue
-      })));
-    }
-  }, [companySettings]);
 
   // Helper function to check if a company setting is enabled
   const isSettingEnabled = (settingCode: string): boolean => {
     const setting = companySettings.find((s) => s.settingCode === settingCode);
-    const result = setting?.settingValue?.toLowerCase() === "true";
-    console.log(`isSettingEnabled("${settingCode}"):`, result, 'setting:', setting);
-    return result;
+    return setting?.settingValue?.toLowerCase() === "true";
   };
 
   const form = useForm<InsertAccount>({

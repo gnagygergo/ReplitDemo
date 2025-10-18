@@ -70,177 +70,158 @@ export default function SmartAccountManagementDetailCard({
                   Account Nature
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
-                  {/* Person-related checkboxes */}
-                  {!form.watch("isLegalEntity") &&
+                  {/* Private Person checkbox - Show if setting enabled OR currently checked */}
+                  {(isSettingEnabled("smart_account_management_accountType_PrivatePerson_enabled") || form.watch("isPersonAccount")) &&
+                    !form.watch("isLegalEntity") &&
                     !form.watch("isShippingAddress") && (
-                      <>
-                        <FormField
-                          control={form.control}
-                          name="isPersonAccount"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={!!field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (checked) {
-                                      form.setValue(
-                                        "isLegalEntity",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isShippingAddress",
-                                        false,
-                                      );
-                                    }
-                                  }}
-                                  data-testid="checkbox-is-person-account"
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0 cursor-pointer">
-                                Person Account
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="isSelfEmployed"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={!!field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (checked) {
-                                      form.setValue(
-                                        "isLegalEntity",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isShippingAddress",
-                                        false,
-                                      );
-                                    }
-                                  }}
-                                  data-testid="checkbox-is-self-employed"
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0 cursor-pointer">
-                                Self Employed
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="isCompanyContact"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={!!field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (checked) {
-                                      form.setValue(
-                                        "isLegalEntity",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isShippingAddress",
-                                        false,
-                                      );
-                                    }
-                                  }}
-                                  data-testid="checkbox-is-company-contact"
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0 cursor-pointer">
-                                Company Contact
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      </>
+                      <FormField
+                        control={form.control}
+                        name="isPersonAccount"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    form.setValue("isLegalEntity", false);
+                                    form.setValue("isShippingAddress", false);
+                                  }
+                                }}
+                                data-testid="checkbox-is-person-account"
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0 cursor-pointer">
+                              Private Person
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
                     )}
 
-                  {/* Entity-related checkboxes */}
-                  {!form.watch("isPersonAccount") &&
+                  {/* Self Employed checkbox - Show if setting enabled OR currently checked */}
+                  {(isSettingEnabled("smart_account_management_accountType_SelfEmployed_enabled") || form.watch("isSelfEmployed")) &&
+                    !form.watch("isLegalEntity") &&
+                    !form.watch("isShippingAddress") && (
+                      <FormField
+                        control={form.control}
+                        name="isSelfEmployed"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    form.setValue("isLegalEntity", false);
+                                    form.setValue("isShippingAddress", false);
+                                  }
+                                }}
+                                data-testid="checkbox-is-self-employed"
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0 cursor-pointer">
+                              Self Employed
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                  {/* Company Contact checkbox - Show if setting enabled OR currently checked */}
+                  {(isSettingEnabled("smart_account_management_accountType_companyContact_enabled") || form.watch("isCompanyContact")) &&
+                    !form.watch("isLegalEntity") &&
+                    !form.watch("isShippingAddress") && (
+                      <FormField
+                        control={form.control}
+                        name="isCompanyContact"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    form.setValue("isLegalEntity", false);
+                                    form.setValue("isShippingAddress", false);
+                                  }
+                                }}
+                                data-testid="checkbox-is-company-contact"
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0 cursor-pointer">
+                              Company Contact
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                  {/* Legal Entity checkbox - Show if setting enabled OR currently checked */}
+                  {(isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") || form.watch("isLegalEntity")) &&
+                    !form.watch("isPersonAccount") &&
                     !form.watch("isSelfEmployed") &&
                     !form.watch("isCompanyContact") && (
-                      <>
-                        <FormField
-                          control={form.control}
-                          name="isLegalEntity"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={!!field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (checked) {
-                                      form.setValue(
-                                        "isPersonAccount",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isSelfEmployed",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isCompanyContact",
-                                        false,
-                                      );
-                                    }
-                                  }}
-                                  data-testid="checkbox-is-legal-entity"
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0 cursor-pointer">
-                                Legal Entity
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="isShippingAddress"
-                          render={({ field }) => (
-                            <FormItem className="flex items-center space-x-2 space-y-0">
-                              <FormControl>
-                                <Checkbox
-                                  checked={!!field.value}
-                                  onCheckedChange={(checked) => {
-                                    field.onChange(checked);
-                                    if (checked) {
-                                      form.setValue(
-                                        "isPersonAccount",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isSelfEmployed",
-                                        false,
-                                      );
-                                      form.setValue(
-                                        "isCompanyContact",
-                                        false,
-                                      );
-                                    }
-                                  }}
-                                  data-testid="checkbox-is-shipping-address"
-                                />
-                              </FormControl>
-                              <FormLabel className="!mt-0 cursor-pointer">
-                                Shipping Address
-                              </FormLabel>
-                            </FormItem>
-                          )}
-                        />
-                      </>
+                      <FormField
+                        control={form.control}
+                        name="isLegalEntity"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    form.setValue("isPersonAccount", false);
+                                    form.setValue("isSelfEmployed", false);
+                                    form.setValue("isCompanyContact", false);
+                                  }
+                                }}
+                                data-testid="checkbox-is-legal-entity"
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0 cursor-pointer">
+                              Legal Entity
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                  {/* Shipping Address checkbox - Show if setting enabled OR currently checked */}
+                  {(isSettingEnabled("smart_account_management_accountType_shipping_enabled") || form.watch("isShippingAddress")) &&
+                    !form.watch("isPersonAccount") &&
+                    !form.watch("isSelfEmployed") &&
+                    !form.watch("isCompanyContact") && (
+                      <FormField
+                        control={form.control}
+                        name="isShippingAddress"
+                        render={({ field }) => (
+                          <FormItem className="flex items-center space-x-2 space-y-0">
+                            <FormControl>
+                              <Checkbox
+                                checked={!!field.value}
+                                onCheckedChange={(checked) => {
+                                  field.onChange(checked);
+                                  if (checked) {
+                                    form.setValue("isPersonAccount", false);
+                                    form.setValue("isSelfEmployed", false);
+                                    form.setValue("isCompanyContact", false);
+                                  }
+                                }}
+                                data-testid="checkbox-is-shipping-address"
+                              />
+                            </FormControl>
+                            <FormLabel className="!mt-0 cursor-pointer">
+                              Shipping Address
+                            </FormLabel>
+                          </FormItem>
+                        )}
+                      />
                     )}
                 </div>
               </div>

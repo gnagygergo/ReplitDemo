@@ -28,8 +28,10 @@ import {
 import { z } from "zod";
 import { sendEmail } from "./email";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { pool } from "./db";
+import { pool, db } from "./db";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { companySettings } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
@@ -1969,6 +1971,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching company settings by prefix:", error);
       res.status(500).json({
         message: "Failed to fetch company settings",
+      });
+    }
+  });
+
+  // Get dependent settings (settings that depend on a specific setting)
+  app.get("/api/business-objects/company-settings/:id/dependents", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      // Get user's company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      // First get the setting to find its settingCode
+      const setting = await db
+        .select({ settingCode: companySettings.settingCode })
+        .from(companySettings)
+        .where(eq(companySettings.id, req.params.id))
+        .limit(1);
+
+      if (setting.length === 0 || !setting[0].settingCode) {
+        return res.status(404).json({
+          message: "Setting not found",
+        });
+      }
+
+      const dependentSettings = await storage.getDependentSettings(
+        setting[0].settingCode,
+        companyContext
+      );
+
+      res.json(dependentSettings);
+    } catch (error) {
+      console.error("Error fetching dependent settings:", error);
+      res.status(500).json({
+        message: "Failed to fetch dependent settings",
+      });
+    }
+  });
+
+  // Bulk update company settings
+  app.post("/api/business-objects/company-settings/bulk-update", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      // Get user's company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = (req.user as any)?.claims?.sub;
+      }
+
+      if (!userId) {
+        return res.status(400).json({
+          message: "User ID not found",
+        });
+      }
+
+      // Validate request body with Zod
+      const bulkUpdateSchema = z.object({
+        updates: z.array(
+          z.object({
+            id: z.string().uuid(),
+            settingValue: z.enum(["TRUE", "FALSE"]),
+          })
+        ).min(1, "At least one update is required"),
+      });
+
+      const validatedData = bulkUpdateSchema.parse(req.body);
+
+      const updatedSettings = await storage.bulkUpdateSettings(
+        validatedData.updates,
+        userId,
+        companyContext
+      );
+
+      res.json(updatedSettings);
+    } catch (error: any) {
+      console.error("Error bulk updating company settings:", error);
+      
+      // Handle validation errors
+      if (error.name === "ZodError") {
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: error.errors,
+        });
+      }
+      
+      // Handle security errors
+      if (error.message && error.message.includes("Access denied")) {
+        return res.status(403).json({
+          message: error.message,
+        });
+      }
+      
+      res.status(500).json({
+        message: "Failed to bulk update company settings",
       });
     }
   });

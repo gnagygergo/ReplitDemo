@@ -374,6 +374,8 @@ export interface IStorage {
   getOrCreateCompanySettingByCode(settingCode: string, companyId: string, userId: string): Promise<CompanySettingWithMaster>;
   getCompanySettingsByCodePrefix(prefix: string, companyId: string): Promise<CompanySettingWithMaster[]>;
   updateCompanySetting(id: string, settingValue: string, userId: string): Promise<any>;
+  getDependentSettings(settingCode: string, companyId: string): Promise<CompanySettingWithMaster[]>;
+  bulkUpdateSettings(updates: Array<{ id: string; settingValue: string }>, userId: string, companyId: string): Promise<any[]>;
   serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }>;
 
   // Row Level Security context methods
@@ -2160,6 +2162,95 @@ export class DatabaseStorage implements IStorage {
       .where(eq(companySettings.id, id))
       .returning();
     return updatedSetting;
+  }
+
+  async getDependentSettings(settingCode: string, companyId: string): Promise<CompanySettingWithMaster[]> {
+    // Find all settings that have cantBeTrueIfTheFollowingIsFalse = settingCode
+    // AND are currently set to TRUE (only TRUE settings matter for cascade off)
+    const results = await db
+      .select({
+        id: companySettings.id,
+        companySettingsMasterId: companySettings.companySettingsMasterId,
+        settingCode: companySettings.settingCode,
+        settingName: companySettings.settingName,
+        settingValue: companySettings.settingValue,
+        companyId: companySettings.companyId,
+        createdDate: companySettings.createdDate,
+        lastUpdatedDate: companySettings.lastUpdatedDate,
+        lastUpdatedBy: companySettings.lastUpdatedBy,
+        settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
+        settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingDescription: companySettingsMaster.settingDescription,
+        settingValues: companySettingsMaster.settingValues,
+        defaultValue: companySettingsMaster.defaultValue,
+        cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
+        settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
+        settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+      })
+      .from(companySettings)
+      .innerJoin(
+        companySettingsMaster,
+        eq(companySettings.companySettingsMasterId, companySettingsMaster.id)
+      )
+      .where(
+        and(
+          eq(companySettingsMaster.cantBeTrueIfTheFollowingIsFalse, settingCode),
+          eq(companySettings.companyId, companyId),
+          eq(companySettings.settingValue, "TRUE")
+        )
+      );
+
+    return results as CompanySettingWithMaster[];
+  }
+
+  async bulkUpdateSettings(updates: Array<{ id: string; settingValue: string }>, userId: string, companyId: string): Promise<any[]> {
+    // Use a transaction to update all settings atomically
+    const result = await db.transaction(async (tx) => {
+      // First, verify all IDs belong to the specified company
+      const settingIds = updates.map(u => u.id);
+      const existingSettings = await tx
+        .select({ id: companySettings.id, companyId: companySettings.companyId })
+        .from(companySettings)
+        .where(sql`${companySettings.id} = ANY(${settingIds})`);
+      
+      // Check that all settings exist and belong to the company
+      if (existingSettings.length !== settingIds.length) {
+        throw new Error("One or more settings not found");
+      }
+      
+      const invalidSettings = existingSettings.filter(s => s.companyId !== companyId);
+      if (invalidSettings.length > 0) {
+        throw new Error("Access denied: Cannot update settings from another company");
+      }
+      
+      // Proceed with updates
+      const updatedSettings = [];
+      
+      for (const update of updates) {
+        const [updatedSetting] = await tx
+          .update(companySettings)
+          .set({
+            settingValue: update.settingValue,
+            lastUpdatedDate: sql`NOW()`,
+            lastUpdatedBy: userId,
+          })
+          .where(
+            and(
+              eq(companySettings.id, update.id),
+              eq(companySettings.companyId, companyId)
+            )
+          )
+          .returning();
+        
+        if (updatedSetting) {
+          updatedSettings.push(updatedSetting);
+        }
+      }
+      
+      return updatedSettings;
+    });
+    
+    return result;
   }
 
   async serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }> {

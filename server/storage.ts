@@ -108,6 +108,9 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  cantBeTrueIfTheFollowingIsFalse: string | null;
+  settingOrderWithinFunctionality: number | null;
+  settingShowsInLevel: number | null;
 };
 
 export interface IStorage {
@@ -2096,6 +2099,57 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompanySetting(id: string, settingValue: string, userId: string): Promise<any> {
+    // If trying to set to TRUE, check for dependency validation
+    if (settingValue === "TRUE") {
+      // First, get the current setting with its master data to check cantBeTrueIfTheFollowingIsFalse
+      const currentSettingData = await db
+        .select({
+          id: companySettings.id,
+          companyId: companySettings.companyId,
+          settingName: companySettings.settingName,
+          cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
+        })
+        .from(companySettings)
+        .innerJoin(
+          companySettingsMaster,
+          eq(companySettings.companySettingsMasterId, companySettingsMaster.id)
+        )
+        .where(eq(companySettings.id, id))
+        .limit(1);
+
+      if (currentSettingData.length > 0) {
+        const settingData = currentSettingData[0];
+        
+        // Check if there's a dependency
+        if (settingData.cantBeTrueIfTheFollowingIsFalse) {
+          const dependentSettingCode = settingData.cantBeTrueIfTheFollowingIsFalse;
+          
+          // Fetch the dependent setting by settingCode and companyId
+          const dependentSettingData = await db
+            .select({
+              settingValue: companySettings.settingValue,
+              settingName: companySettings.settingName,
+            })
+            .from(companySettings)
+            .where(
+              and(
+                eq(companySettings.settingCode, dependentSettingCode),
+                eq(companySettings.companyId, settingData.companyId!)
+              )
+            )
+            .limit(1);
+
+          // If the dependent setting exists and is FALSE, throw an error
+          if (dependentSettingData.length > 0 && dependentSettingData[0].settingValue === "FALSE") {
+            throw new Error(
+              `You can't turn this on, without turning ${dependentSettingData[0].settingName} on first.`
+            );
+          }
+        }
+      }
+    }
+
+    // Proceed with the update if validation passes
     const [updatedSetting] = await db
       .update(companySettings)
       .set({

@@ -1920,8 +1920,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(updatedSetting);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating company setting:", error);
+      
+      // Check if it's a validation error (dependency not met)
+      if (error.message && error.message.includes("You can't turn this on")) {
+        return res.status(400).json({
+          message: error.message,
+        });
+      }
+      
       res.status(500).json({
         message: "Failed to update company setting",
       });

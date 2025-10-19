@@ -2144,7 +2144,7 @@ export class DatabaseStorage implements IStorage {
           // If the dependent setting exists and is FALSE, throw an error
           if (dependentSettingData.length > 0 && dependentSettingData[0].settingValue === "FALSE") {
             throw new Error(
-              `You can't turn this on, without turning ${dependentSettingData[0].settingName} on first.`
+              `To turn this setting on, please turn the following setting on first: ${dependentSettingData[0].settingName} `
             );
           }
         }

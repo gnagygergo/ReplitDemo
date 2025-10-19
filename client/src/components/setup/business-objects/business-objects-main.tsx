@@ -100,12 +100,15 @@ const setupMenuItems: MenuItem[] = [
         component: () => (
           <div className="space-y-4">
             <div>
-              <h2 className="text-2xl font-bold">Account Types</h2>
-              <p className="text-muted-foreground">Configure account types</p>
+              <h2 className="text-2xl font-bold">Account Lifecycle</h2>
+              <p className="text-muted-foreground"></p>
             </div>
             <Card>
               <CardContent className="p-6">
-                <p className="text-muted-foreground">Account types configuration will be displayed here.</p>
+                <p className="text-muted-foreground">Coming Soon:</p>
+                <p className="text-muted-foreground">Account Statuses</p>
+                <p className="text-muted-foreground">Account Approval Processes</p>
+                <p className="text-muted-foreground">Credit limit</p>
               </CardContent>
             </Card>
           </div>

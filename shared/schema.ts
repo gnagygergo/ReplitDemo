@@ -394,6 +394,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   defaultValue: text("default_value"),
   articleCode: text("article_code"),
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
+  settingShowsInLevel: integer("setting_shows_in_level"),
 });
 
 export const companySettings = pgTable("company_settings", {
@@ -920,7 +921,6 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
-  settingOrderWithinFunctionality: number | null;
 };
 
 export type AccountWithOwner = Account & {

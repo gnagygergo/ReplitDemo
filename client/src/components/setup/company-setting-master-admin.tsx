@@ -1029,6 +1029,25 @@ export default function CompanySettingMasterAdmin() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={settingsMasterForm.control}
+                name="settingShowsInLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Setting Shows in Level</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        value={field.value ?? ""} 
+                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                        data-testid="input-setting-order" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"

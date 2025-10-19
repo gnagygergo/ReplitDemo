@@ -567,6 +567,8 @@ export default function CompanySettingMasterAdmin() {
                         settingDescription: "",
                         settingValues: "",
                         defaultValue: "",
+                        articleCode: "",
+                        settingOrderWithinFunctionality: undefined,
                       });
                       setSettingsMasterDialogOpen(true);
                     }}
@@ -646,7 +648,7 @@ export default function CompanySettingMasterAdmin() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Setting Name</TableHead>
-                      <TableHead>Setting Code</TableHead>
+                      <TableHead className="max-w-[200px]">Setting Code</TableHead>
                       <TableHead>Functionality</TableHead>
                       <TableHead>Domain</TableHead>
                       <TableHead>Order in funct.</TableHead>
@@ -657,10 +659,10 @@ export default function CompanySettingMasterAdmin() {
                     {filteredSettingsMasters.map((settingsMaster) => (
                       <TableRow key={settingsMaster.id} data-testid={`row-settings-master-${settingsMaster.id}`}>
                         <TableCell data-testid={`text-settings-name-${settingsMaster.id}`}>{settingsMaster.settingName}</TableCell>
-                        <TableCell data-testid={`text-settings-code-${settingsMaster.id}`}>{settingsMaster.settingCode}</TableCell>
+                        <TableCell className="max-w-[200px] break-all" data-testid={`text-settings-code-${settingsMaster.id}`}>{settingsMaster.settingCode}</TableCell>
                         <TableCell data-testid={`text-settings-functionality-${settingsMaster.id}`}>{settingsMaster.settingFunctionalityName}</TableCell>
                         <TableCell data-testid={`text-settings-domain-${settingsMaster.id}`}>{settingsMaster.settingFunctionalDomainName}</TableCell>
-                        <TableCell data-testid={`text-settings-domain-${settingsMaster.id}`}>{settingsMaster.settingOrderWithinFunctionality}</TableCell>
+                        <TableCell data-testid={`text-settings-order-${settingsMaster.id}`}>{settingsMaster.settingOrderWithinFunctionality}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button

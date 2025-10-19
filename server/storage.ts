@@ -2075,6 +2075,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
       })
       .from(companySettings)
       .innerJoin(
@@ -2086,7 +2087,8 @@ export class DatabaseStorage implements IStorage {
           sql`${companySettings.settingCode} LIKE ${prefix + '%'}`,
           eq(companySettings.companyId, companyId)
         )
-      );
+      )
+      .orderBy(companySettingsMaster.settingOrderWithinFunctionality);
 
     return results as CompanySettingWithMaster[];
   }

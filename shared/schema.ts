@@ -920,6 +920,7 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  settingOrderWithinFunctionality: number | null;
 };
 
 export type AccountWithOwner = Account & {

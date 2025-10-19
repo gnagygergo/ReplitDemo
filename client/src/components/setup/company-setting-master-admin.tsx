@@ -133,6 +133,7 @@ export default function CompanySettingMasterAdmin() {
       settingValues: "",
       defaultValue: "",
       articleCode: "",
+      settingOrderWithinFunctionality: undefined,
     },
   });
 
@@ -339,6 +340,7 @@ export default function CompanySettingMasterAdmin() {
       settingValues: settingsMaster.settingValues || "",
       defaultValue: settingsMaster.defaultValue || "",
       articleCode: settingsMaster.articleCode || "",
+      settingOrderWithinFunctionality: settingsMaster.settingOrderWithinFunctionality ?? undefined,
     });
     setSettingsMasterDialogOpen(true);
   };
@@ -1001,6 +1003,25 @@ export default function CompanySettingMasterAdmin() {
                     <FormLabel>Article Code</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} data-testid="input-article-code-settings" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={settingsMasterForm.control}
+                name="settingOrderWithinFunctionality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Setting Order Within Functionality</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        value={field.value ?? ""} 
+                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                        data-testid="input-setting-order" 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

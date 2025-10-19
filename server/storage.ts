@@ -88,7 +88,7 @@ import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { CaseStorage } from "./business-objects-routes/case-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
-import { eq, and, sql, lte, gte } from "drizzle-orm";
+import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
 
@@ -2211,7 +2211,7 @@ export class DatabaseStorage implements IStorage {
       const existingSettings = await tx
         .select({ id: companySettings.id, companyId: companySettings.companyId })
         .from(companySettings)
-        .where(sql`${companySettings.id} = ANY(${settingIds})`);
+        .where(inArray(companySettings.id, settingIds));
       
       // Check that all settings exist and belong to the company
       if (existingSettings.length !== settingIds.length) {

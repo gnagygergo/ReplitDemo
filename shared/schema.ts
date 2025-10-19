@@ -393,6 +393,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
   articleCode: text("article_code"),
+  settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
 });
 
 export const companySettings = pgTable("company_settings", {

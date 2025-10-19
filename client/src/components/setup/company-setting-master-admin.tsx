@@ -647,6 +647,7 @@ export default function CompanySettingMasterAdmin() {
                       <TableHead>Setting Code</TableHead>
                       <TableHead>Functionality</TableHead>
                       <TableHead>Domain</TableHead>
+                      <TableHead>Order in funct.</TableHead>
                       <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -657,6 +658,7 @@ export default function CompanySettingMasterAdmin() {
                         <TableCell data-testid={`text-settings-code-${settingsMaster.id}`}>{settingsMaster.settingCode}</TableCell>
                         <TableCell data-testid={`text-settings-functionality-${settingsMaster.id}`}>{settingsMaster.settingFunctionalityName}</TableCell>
                         <TableCell data-testid={`text-settings-domain-${settingsMaster.id}`}>{settingsMaster.settingFunctionalDomainName}</TableCell>
+                        <TableCell data-testid={`text-settings-domain-${settingsMaster.id}`}>{settingsMaster.settingOrderWithinFunctionality}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button

@@ -26,6 +26,9 @@ type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  cantBeTrueIfTheFollowingIsFalse: string | null;
+  settingOrderWithinFunctionality: number | null;
+  settingShowsInLevel: number | null;
 };
 
 type KnowledgeArticle = {
@@ -55,6 +58,14 @@ type KnowledgeArticle = {
 export default function AccountManagementModels() {
   const [isArticleOpen, setIsArticleOpen] = useState(true);
   const { toast } = useToast();
+  
+  // Helper function to get indentation class based on settingShowsInLevel
+  const getIndentationClass = (level: number | null | undefined): string => {
+    if (!level || level === 1) return "ml-0";
+    if (level === 2) return "ml-8";
+    if (level === 3) return "ml-16";
+    return "ml-0"; // Default for any other value
+  };
   
   const { data: setting, isLoading: isLoadingSetting, error: settingError } = useQuery<CompanySettingWithMaster>({
     queryKey: ["/api/business-objects/company-settings/by-code", "Smart_account_management_activated"],
@@ -262,7 +273,7 @@ export default function AccountManagementModels() {
               {accountTypeSettings.map((accountTypeSetting) => (
                 <div 
                   key={accountTypeSetting.id} 
-                  className="flex items-center justify-between space-x-4 rounded-lg border p-4"
+                  className={`flex items-center justify-between space-x-4 rounded-lg border p-4 ${getIndentationClass(accountTypeSetting.settingShowsInLevel)}`}
                   data-testid={`account-type-setting-${accountTypeSetting.id}`}
                 >
                   <div className="flex-1 space-y-1">

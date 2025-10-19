@@ -132,8 +132,10 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: "",
       settingValues: "",
       defaultValue: "",
+      cantBeTrueIfTheFollowingIsFalse: "",
       articleCode: "",
       settingOrderWithinFunctionality: undefined,
+      settingShowsInLevel: undefined,
     },
   });
 
@@ -339,8 +341,10 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: settingsMaster.settingDescription || "",
       settingValues: settingsMaster.settingValues || "",
       defaultValue: settingsMaster.defaultValue || "",
+      cantBeTrueIfTheFollowingIsFalse: settingsMaster.cantBeTrueIfTheFollowingIsFalse || "",
       articleCode: settingsMaster.articleCode || "",
       settingOrderWithinFunctionality: settingsMaster.settingOrderWithinFunctionality ?? undefined,
+      settingShowsInLevel: settingsMaster.settingShowsInLevel ?? undefined,
     });
     setSettingsMasterDialogOpen(true);
   };
@@ -567,8 +571,10 @@ export default function CompanySettingMasterAdmin() {
                         settingDescription: "",
                         settingValues: "",
                         defaultValue: "",
+                        cantBeTrueIfTheFollowingIsFalse: "",
                         articleCode: "",
                         settingOrderWithinFunctionality: undefined,
+                        settingShowsInLevel: undefined,
                       });
                       setSettingsMasterDialogOpen(true);
                     }}
@@ -997,6 +1003,7 @@ export default function CompanySettingMasterAdmin() {
                   </FormItem>
                 )}
               />
+              
               <FormField
                 control={settingsMasterForm.control}
                 name="articleCode"
@@ -1005,6 +1012,19 @@ export default function CompanySettingMasterAdmin() {
                     <FormLabel>Article Code</FormLabel>
                     <FormControl>
                       <Input {...field} value={field.value || ""} data-testid="input-article-code-settings" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={settingsMasterForm.control}
+                name="cantBeTrueIfTheFollowingIsFalse"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Can't be TRUE if the following is false</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} data-testid="input-cant-be-true-if-false" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1022,7 +1042,7 @@ export default function CompanySettingMasterAdmin() {
                         type="number"
                         value={field.value ?? ""} 
                         onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                        data-testid="input-setting-order" 
+                        data-testid="input-setting-order-within-functionality" 
                       />
                     </FormControl>
                     <FormMessage />
@@ -1041,7 +1061,7 @@ export default function CompanySettingMasterAdmin() {
                         type="number"
                         value={field.value ?? ""} 
                         onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
-                        data-testid="input-setting-order" 
+                        data-testid="input-setting-shows-in-level" 
                       />
                     </FormControl>
                     <FormMessage />

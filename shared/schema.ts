@@ -392,6 +392,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
+  cantBeTrueIfTheFollowingIsFalse: text("cant_be_true_if_the_following_is_false"),
   articleCode: text("article_code"),
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
   settingShowsInLevel: integer("setting_shows_in_level"),
@@ -921,6 +922,9 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  cantBeTrueIfTheFollowingIsFalse: string | null;
+  settingOrderWithinFunctionality: number | null;
+  settingShowsInLevel: number | null;
 };
 
 export type AccountWithOwner = Account & {

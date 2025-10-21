@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, Plus, X, Database } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
   AlertDialog,
@@ -136,6 +137,7 @@ export default function CompanySettingMasterAdmin() {
       articleCode: "",
       settingOrderWithinFunctionality: undefined,
       settingShowsInLevel: undefined,
+      settingOnceEnabledCannotBeDisabled: undefined,
     },
   });
 
@@ -345,6 +347,7 @@ export default function CompanySettingMasterAdmin() {
       articleCode: settingsMaster.articleCode || "",
       settingOrderWithinFunctionality: settingsMaster.settingOrderWithinFunctionality ?? undefined,
       settingShowsInLevel: settingsMaster.settingShowsInLevel ?? undefined,
+      settingOnceEnabledCannotBeDisabled: settingsMaster.settingOnceEnabledCannotBeDisabled ?? undefined,
     });
     setSettingsMasterDialogOpen(true);
   };
@@ -575,6 +578,7 @@ export default function CompanySettingMasterAdmin() {
                         articleCode: "",
                         settingOrderWithinFunctionality: undefined,
                         settingShowsInLevel: undefined,
+                        settingOnceEnabledCannotBeDisabled: undefined,
                       });
                       setSettingsMasterDialogOpen(true);
                     }}
@@ -1065,6 +1069,29 @@ export default function CompanySettingMasterAdmin() {
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={settingsMasterForm.control}
+                name="settingOnceEnabledCannotBeDisabled"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Once Enabled Cannot Be Disabled
+                      </FormLabel>
+                      <div className="text-sm text-muted-foreground">
+                        When enabled, users won't be able to turn this setting off once it's been turned on
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value === true}
+                        onCheckedChange={(checked) => field.onChange(checked ? true : undefined)}
+                        data-testid="switch-setting-once-enabled-cannot-be-disabled"
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

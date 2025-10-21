@@ -1960,9 +1960,15 @@ export class DatabaseStorage implements IStorage {
         lastUpdatedBy: companySettings.lastUpdatedBy,
         settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
         settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingFunctionalityName: companySettingsMaster.settingFunctionalityName,
+        settingFunctionalityCode: companySettingsMaster.settingFunctionalityCode,
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
+        settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
+        settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+        settingOnceEnabledCannotBeDisabled: companySettingsMaster.settingOnceEnabledCannotBeDisabled,
       })
       .from(companySettings)
       .innerJoin(
@@ -2008,9 +2014,15 @@ export class DatabaseStorage implements IStorage {
         lastUpdatedBy: companySettings.lastUpdatedBy,
         settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
         settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingFunctionalityName: companySettingsMaster.settingFunctionalityName,
+        settingFunctionalityCode: companySettingsMaster.settingFunctionalityCode,
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
+        settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
+        settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+        settingOnceEnabledCannotBeDisabled: companySettingsMaster.settingOnceEnabledCannotBeDisabled,
       })
       .from(companySettings)
       .innerJoin(
@@ -2054,9 +2066,15 @@ export class DatabaseStorage implements IStorage {
       lastUpdatedBy: newSetting.lastUpdatedBy,
       settingFunctionalDomainCode: settingMaster.settingFunctionalDomainCode,
       settingFunctionalDomainName: settingMaster.settingFunctionalDomainName,
+      settingFunctionalityName: settingMaster.settingFunctionalityName,
+      settingFunctionalityCode: settingMaster.settingFunctionalityCode,
       settingDescription: settingMaster.settingDescription,
       settingValues: settingMaster.settingValues,
       defaultValue: settingMaster.defaultValue,
+      cantBeTrueIfTheFollowingIsFalse: settingMaster.cantBeTrueIfTheFollowingIsFalse,
+      settingOrderWithinFunctionality: settingMaster.settingOrderWithinFunctionality,
+      settingShowsInLevel: settingMaster.settingShowsInLevel,
+      settingOnceEnabledCannotBeDisabled: settingMaster.settingOnceEnabledCannotBeDisabled,
     } as CompanySettingWithMaster;
   }
 
@@ -2083,6 +2101,7 @@ export class DatabaseStorage implements IStorage {
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+        settingOnceEnabledCannotBeDisabled: companySettingsMaster.settingOnceEnabledCannotBeDisabled,
       })
       .from(companySettings)
       .innerJoin(
@@ -2186,6 +2205,7 @@ export class DatabaseStorage implements IStorage {
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+        settingOnceEnabledCannotBeDisabled: companySettingsMaster.settingOnceEnabledCannotBeDisabled,
       })
       .from(companySettings)
       .innerJoin(

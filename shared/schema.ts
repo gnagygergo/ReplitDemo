@@ -926,6 +926,7 @@ export type CompanySettingWithMaster = {
   cantBeTrueIfTheFollowingIsFalse: string | null;
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
+  settingOnceEnabledCannotBeDisabled: boolean | null;
 };
 
 export type AccountWithOwner = Account & {

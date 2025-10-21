@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,7 +39,18 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [parentSetting, setParentSetting] = useState<CompanySettingWithMaster | null>(null);
   const [dependentSettings, setDependentSettings] = useState<CompanySettingWithMaster[]>([]);
+  const [highlightedSettingId, setHighlightedSettingId] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Auto-clear highlight after 5 seconds
+  useEffect(() => {
+    if (highlightedSettingId) {
+      const timer = setTimeout(() => {
+        setHighlightedSettingId(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedSettingId]);
   
   // Helper function to get indentation class based on settingShowsInLevel
   const getIndentationClass = (level: number | null | undefined): string => {
@@ -69,17 +80,45 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix] });
+      // Clear any highlight when successful
+      setHighlightedSettingId(null);
       toast({
         title: "Success",
         description: "Setting updated",
       });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update setting",
-        variant: "destructive",
-      });
+      // Check if this is a dependency error
+      const isDependencyError = error.message && error.message.includes("To turn this setting on");
+      
+      if (isDependencyError && settings) {
+        // Parse parent setting name from error message
+        // Format: "To turn this setting on, please turn the following setting on first: [Setting Name] "
+        const match = error.message.match(/first:\s*(.+?)(?:\s*$)/);
+        if (match && match[1]) {
+          const parentSettingName = match[1].trim();
+          
+          // Find the parent setting in the settings array
+          const parentSetting = settings.find(s => s.settingName === parentSettingName);
+          if (parentSetting) {
+            setHighlightedSettingId(parentSetting.id);
+          }
+        }
+        
+        // Show warning toast instead of error
+        toast({
+          title: "Parent Setting Required",
+          description: error.message,
+          className: "border-amber-500 bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-100",
+        });
+      } else {
+        // Regular error
+        toast({
+          title: "Error",
+          description: error.message || "Failed to update setting",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -184,31 +223,38 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     <>
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-muted-foreground" data-testid="heading-toggle-list">{title}</h3>
-        {settings.map((setting) => (
-          <div 
-            key={setting.id} 
-            className={`flex items-center justify-between space-x-4 rounded-lg border p-4 ${getIndentationClass(setting.settingShowsInLevel)}`}
-            data-testid={`setting-${setting.id}`}
-          >
-            <div className="flex-1 space-y-1">
-              <Label htmlFor={`toggle-${setting.id}`} className="text-base font-medium">
-                {setting.settingName}
-              </Label>
-              {setting.settingDescription && (
-                <p className="text-sm text-muted-foreground">
-                  {setting.settingDescription}
-                </p>
-              )}
+        {settings.map((setting) => {
+          const isHighlighted = setting.id === highlightedSettingId;
+          return (
+            <div 
+              key={setting.id} 
+              className={`flex items-center justify-between space-x-4 rounded-lg border p-4 transition-all ${getIndentationClass(setting.settingShowsInLevel)} ${
+                isHighlighted 
+                  ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30 shadow-lg shadow-amber-500/20 animate-pulse" 
+                  : ""
+              }`}
+              data-testid={`setting-${setting.id}`}
+            >
+              <div className="flex-1 space-y-1">
+                <Label htmlFor={`toggle-${setting.id}`} className="text-base font-medium">
+                  {setting.settingName}
+                </Label>
+                {setting.settingDescription && (
+                  <p className="text-sm text-muted-foreground">
+                    {setting.settingDescription}
+                  </p>
+                )}
+              </div>
+              <Switch
+                id={`toggle-${setting.id}`}
+                checked={setting.settingValue === "TRUE"}
+                onCheckedChange={(checked) => handleToggleChange(setting, checked)}
+                disabled={updateSettingMutation.isPending}
+                data-testid={`switch-${setting.id}`}
+              />
             </div>
-            <Switch
-              id={`toggle-${setting.id}`}
-              checked={setting.settingValue === "TRUE"}
-              onCheckedChange={(checked) => handleToggleChange(setting, checked)}
-              disabled={updateSettingMutation.isPending}
-              data-testid={`switch-${setting.id}`}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>

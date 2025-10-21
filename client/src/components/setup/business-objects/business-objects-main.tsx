@@ -52,6 +52,7 @@ type CompanyAdminCheckResponse = {
 // Import page components
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
+import QuoteManagement from "@/components/setup/business-objects/quotes/quote-settings";
 
 // Type for child menu items with component
 type ChildMenuItem = {
@@ -117,11 +118,20 @@ const setupMenuItems: MenuItem[] = [
     ],
   },
   {
+    id: "quote-settings",
+    label: "Quote Settings",
+    icon: Ruler,
+    description: "false",
+    globalAdminOnly: true,
+    category: "business-objects",
+    component: QuoteManagement,
+  },
+  {
     id: "unit-of-measures",
     label: "Unit of Measures",
     icon: Ruler,
     description: "Count and measure products",
-    globalAdminOnly: true,
+    globalAdminOnly: false,
     category: "business-objects",
     component: UnitOfMeasuresManagement,
   },

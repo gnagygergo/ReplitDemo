@@ -1,0 +1,286 @@
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+
+type CompanySettingWithMaster = {
+  id: string;
+  companySettingsMasterId: string;
+  settingCode: string | null;
+  settingName: string | null;
+  settingValue: string | null;
+  companyId: string | null;
+  createdDate: Date | null;
+  lastUpdatedDate: Date | null;
+  lastUpdatedBy: string | null;
+  settingFunctionalDomainCode: string | null;
+  settingFunctionalDomainName: string | null;
+  settingDescription: string | null;
+  settingValues: string | null;
+  defaultValue: string | null;
+  cantBeTrueIfTheFollowingIsFalse: string | null;
+  settingOrderWithinFunctionality: number | null;
+  settingShowsInLevel: number | null;
+};
+
+interface SetupToggleListerProps {
+  settingPrefix: string;
+  title?: string;
+}
+
+export default function SetupToggleLister({ settingPrefix, title = "Settings" }: SetupToggleListerProps) {
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [parentSetting, setParentSetting] = useState<CompanySettingWithMaster | null>(null);
+  const [dependentSettings, setDependentSettings] = useState<CompanySettingWithMaster[]>([]);
+  const { toast } = useToast();
+  
+  // Helper function to get indentation class based on settingShowsInLevel
+  const getIndentationClass = (level: number | null | undefined): string => {
+    if (!level || level === 1) return "ml-0";
+    if (level === 2) return "ml-8";
+    if (level === 3) return "ml-16";
+    return "ml-0"; // Default for any other value
+  };
+
+  const { data: settings, isLoading, error } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix],
+    queryFn: async () => {
+      const response = await fetch(`/api/business-objects/company-settings/by-prefix/${settingPrefix}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Failed to fetch settings");
+      }
+      return response.json();
+    },
+  });
+
+  const updateSettingMutation = useMutation({
+    mutationFn: async ({ id, newValue }: { id: string; newValue: string }) => {
+      return apiRequest("PATCH", `/api/business-objects/company-settings/${id}`, { settingValue: newValue });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix] });
+      toast({
+        title: "Success",
+        description: "Setting updated",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update setting",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async (updates: Array<{ id: string; settingValue: string }>) => {
+      const response = await apiRequest("POST", "/api/business-objects/company-settings/bulk-update", { updates });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix] });
+      setIsConfirmDialogOpen(false);
+      setParentSetting(null);
+      setDependentSettings([]);
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update settings",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleChange = async (setting: CompanySettingWithMaster, checked: boolean) => {
+    // If turning ON, just update directly
+    if (checked) {
+      updateSettingMutation.mutate({ id: setting.id, newValue: "TRUE" });
+      return;
+    }
+
+    // If turning OFF, check for dependent settings
+    try {
+      const response = await fetch(`/api/business-objects/company-settings/${setting.id}/dependents`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to check dependencies");
+      }
+      
+      const dependents: CompanySettingWithMaster[] = await response.json();
+      
+      if (dependents.length > 0) {
+        // Show confirmation dialog with dependent settings
+        setParentSetting(setting);
+        setDependentSettings(dependents);
+        setIsConfirmDialogOpen(true);
+      } else {
+        // No dependents, just update directly
+        updateSettingMutation.mutate({ id: setting.id, newValue: "FALSE" });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to check dependencies",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleConfirmTurnOffAll = () => {
+    if (!parentSetting) return;
+
+    // Create updates array: parent + all dependents
+    const updates = [
+      { id: parentSetting.id, settingValue: "FALSE" },
+      ...dependentSettings.map(dep => ({ id: dep.id, settingValue: "FALSE" }))
+    ];
+
+    bulkUpdateMutation.mutate(updates);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" data-testid="alert-settings-error">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load settings.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!settings || settings.length === 0) {
+    return null;
+  }
+
+  return (
+    <>
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-muted-foreground" data-testid="heading-toggle-list">{title}</h3>
+        {settings.map((setting) => (
+          <div 
+            key={setting.id} 
+            className={`flex items-center justify-between space-x-4 rounded-lg border p-4 ${getIndentationClass(setting.settingShowsInLevel)}`}
+            data-testid={`setting-${setting.id}`}
+          >
+            <div className="flex-1 space-y-1">
+              <Label htmlFor={`toggle-${setting.id}`} className="text-base font-medium">
+                {setting.settingName}
+              </Label>
+              {setting.settingDescription && (
+                <p className="text-sm text-muted-foreground">
+                  {setting.settingDescription}
+                </p>
+              )}
+            </div>
+            <Switch
+              id={`toggle-${setting.id}`}
+              checked={setting.settingValue === "TRUE"}
+              onCheckedChange={(checked) => handleToggleChange(setting, checked)}
+              disabled={updateSettingMutation.isPending}
+              data-testid={`switch-${setting.id}`}
+            />
+          </div>
+        ))}
+      </div>
+
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Turn Off Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              You tried to turn off <strong>{parentSetting?.settingName}</strong>. There are settings that are dependent on this and must be turned off if you want to turn off "{parentSetting?.settingName}":
+            </p>
+            
+            <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+              {/* Parent Setting */}
+              {parentSetting && (
+                <div className="flex items-center justify-between space-x-4 rounded-lg border bg-background p-3">
+                  <div className="flex-1">
+                    <Label className="text-base font-medium">{parentSetting.settingName}</Label>
+                  </div>
+                  <Switch
+                    checked={false}
+                    disabled
+                    data-testid="switch-parent-preview"
+                  />
+                </div>
+              )}
+              
+              {/* Dependent Settings */}
+              {dependentSettings.length > 0 && (
+                <>
+                  <p className="text-sm font-medium mt-4">Dependent Settings:</p>
+                  {dependentSettings.map((depSetting) => (
+                    <div 
+                      key={depSetting.id}
+                      className="flex items-center justify-between space-x-4 rounded-lg border bg-background p-3"
+                    >
+                      <div className="flex-1">
+                        <Label className="text-base font-medium">{depSetting.settingName}</Label>
+                      </div>
+                      <Switch
+                        checked={false}
+                        disabled
+                        data-testid={`switch-dependent-preview-${depSetting.id}`}
+                      />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+
+            <p className="text-sm font-medium">
+              Do you want to turn these off, as well as the setting "{parentSetting?.settingName}"?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmDialogOpen(false)}
+              data-testid="button-cancel-turnoff"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmTurnOffAll}
+              disabled={bulkUpdateMutation.isPending}
+              data-testid="button-confirm-turnoff"
+            >
+              {bulkUpdateMutation.isPending ? "Turning off..." : "Okay, turn off all"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -28,6 +28,7 @@ type CompanySettingWithMaster = {
   cantBeTrueIfTheFollowingIsFalse: string | null;
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
+  settingOnceEnabledCannotBeDisabled: boolean | null;
 };
 
 interface SetupToggleListerProps {
@@ -37,6 +38,8 @@ interface SetupToggleListerProps {
 
 export default function SetupToggleLister({ settingPrefix, title = "Settings" }: SetupToggleListerProps) {
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [isLockedSettingConfirmOpen, setIsLockedSettingConfirmOpen] = useState(false);
+  const [pendingLockedSetting, setPendingLockedSetting] = useState<CompanySettingWithMaster | null>(null);
   const [parentSetting, setParentSetting] = useState<CompanySettingWithMaster | null>(null);
   const [dependentSettings, setDependentSettings] = useState<CompanySettingWithMaster[]>([]);
   const [highlightedSettingId, setHighlightedSettingId] = useState<string | null>(null);
@@ -147,9 +150,28 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
   });
 
   const handleToggleChange = async (setting: CompanySettingWithMaster, checked: boolean) => {
-    // If turning ON, just update directly
+    // If turning ON
     if (checked) {
+      // Check if this is a locked setting (once enabled cannot be disabled)
+      if (setting.settingOnceEnabledCannotBeDisabled === true) {
+        // Show confirmation dialog
+        setPendingLockedSetting(setting);
+        setIsLockedSettingConfirmOpen(true);
+        return;
+      }
+      // Normal setting, update directly
       updateSettingMutation.mutate({ id: setting.id, newValue: "TRUE" });
+      return;
+    }
+
+    // If turning OFF, first check if this is a locked setting
+    if (setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE") {
+      // Show warning - cannot turn off locked setting
+      toast({
+        title: "Cannot Turn Off",
+        description: "This setting can't be turned off.",
+        className: "border-amber-500 bg-amber-50 dark:bg-amber-950 text-amber-900 dark:text-amber-100",
+      });
       return;
     }
 
@@ -195,6 +217,13 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     bulkUpdateMutation.mutate(updates);
   };
 
+  const handleConfirmLockedSettingEnable = () => {
+    if (!pendingLockedSetting) return;
+    updateSettingMutation.mutate({ id: pendingLockedSetting.id, newValue: "TRUE" });
+    setIsLockedSettingConfirmOpen(false);
+    setPendingLockedSetting(null);
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -225,6 +254,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
         <h3 className="text-sm font-semibold text-muted-foreground" data-testid="heading-toggle-list">{title}</h3>
         {settings.map((setting) => {
           const isHighlighted = setting.id === highlightedSettingId;
+          const isLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE";
           return (
             <div 
               key={setting.id} 
@@ -249,7 +279,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
                 id={`toggle-${setting.id}`}
                 checked={setting.settingValue === "TRUE"}
                 onCheckedChange={(checked) => handleToggleChange(setting, checked)}
-                disabled={updateSettingMutation.isPending}
+                disabled={updateSettingMutation.isPending || isLocked}
                 data-testid={`switch-${setting.id}`}
               />
             </div>
@@ -323,6 +353,41 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
               data-testid="button-confirm-turnoff"
             >
               {bulkUpdateMutation.isPending ? "Turning off..." : "Okay, turn off all"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isLockedSettingConfirmOpen} onOpenChange={setIsLockedSettingConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Permanent Setting</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Once you turn this setting on, it <strong>cannot be turned off anymore</strong>.
+            </p>
+            <p className="text-sm font-medium">
+              Do you want to turn it on?
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsLockedSettingConfirmOpen(false);
+                setPendingLockedSetting(null);
+              }}
+              data-testid="button-cancel-locked-setting"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmLockedSettingEnable}
+              disabled={updateSettingMutation.isPending}
+              data-testid="button-confirm-locked-setting"
+            >
+              {updateSettingMutation.isPending ? "Turning on..." : "Yes, turn on"}
             </Button>
           </DialogFooter>
         </DialogContent>

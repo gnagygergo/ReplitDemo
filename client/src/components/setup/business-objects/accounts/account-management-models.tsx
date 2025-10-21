@@ -119,15 +119,6 @@ export default function AccountManagementModels() {
     },
   });
 
-  const handleToggleChange = (checked: boolean) => {
-    // Only allow FALSE to TRUE
-    if (checked && setting?.settingValue === "FALSE") {
-      updateSettingMutation.mutate("TRUE");
-    }
-  };
-
-  const isActivated = setting?.settingValue === "TRUE";
-
   // Sanitize HTML content from knowledge article
   const sanitizedContent = useMemo(() => {
     if (!article?.articleContent) return "";
@@ -150,39 +141,10 @@ export default function AccountManagementModels() {
           <CardTitle>Smart Account Management</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isLoadingSetting ? (
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          ) : settingError ? (
-            <Alert variant="destructive" data-testid="alert-error">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to load setting. Please try again.
-              </AlertDescription>
-            </Alert>
-          ) : setting ? (
-            <div className="flex items-center justify-between space-x-4 rounded-lg border p-4">
-              <div className="flex-1 space-y-1">
-                <Label htmlFor="smart-account-toggle" className="text-base font-medium">
-                  {setting.settingName}
-                </Label>
-                {setting.settingDescription && (
-                  <p className="text-sm text-muted-foreground">
-                    {setting.settingDescription}
-                  </p>
-                )}
-              </div>
-              <Switch
-                id="smart-account-toggle"
-                checked={isActivated}
-                onCheckedChange={handleToggleChange}
-                disabled={isActivated || updateSettingMutation.isPending}
-                data-testid="switch-smart-account-management"
-              />
-            </div>
-          ) : null}
+          <SetupToggleLister 
+            settingPrefix="Smart_account_management_activated"
+            title=""
+          />
 
           {isLoadingArticle ? (
             <div className="space-y-3">

@@ -396,6 +396,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   articleCode: text("article_code"),
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
   settingShowsInLevel: integer("setting_shows_in_level"),
+  settingOnceEnabledCannotBeDisabled: boolean("setting_once_enabled_cannot_be_disabled"),
 });
 
 export const companySettings = pgTable("company_settings", {

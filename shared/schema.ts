@@ -736,9 +736,9 @@ export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles
   .extend({
     articleTitle: z.string().min(1, "Article title is required"),
     authorId: z.string().min(1, "Author is required"),
-    articleCode: z.string().optional(),
-    functionalDomainId: z.string().optional(),
-    functionalityId: z.string().optional(),
+    articleCode: z.string().transform(val => val === "" ? null : val).nullable().optional(),
+    functionalDomainId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
+    functionalityId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)

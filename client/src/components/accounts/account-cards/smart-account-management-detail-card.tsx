@@ -413,60 +413,6 @@ export default function SmartAccountManagementDetailCard({
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Owner <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full justify-start h-auto p-3"
-                        onClick={() => setShowUserLookup(true)}
-                        data-testid="button-edit-owner-lookup"
-                      >
-                        {selectedOwner ? (
-                          <div className="flex items-center space-x-3">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage
-                                src={
-                                  selectedOwner.profileImageUrl ||
-                                  undefined
-                                }
-                              />
-                              <AvatarFallback className="text-xs">
-                                {getUserInitials(selectedOwner)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col items-start">
-                              <span
-                                className="font-medium"
-                                data-testid={`text-edit-owner-${selectedOwner.id}`}
-                              >
-                                {getUserDisplayName(selectedOwner)}
-                              </span>
-                              <span className="text-sm text-muted-foreground">
-                                {selectedOwner.email}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center space-x-2 text-muted-foreground">
-                            <Users className="h-4 w-4" />
-                            <span>Select owner</span>
-                          </div>
-                        )}
-                      </Button>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
                 </>
               )}
               </form>
@@ -575,34 +521,6 @@ export default function SmartAccountManagementDetailCard({
                 data-testid="text-account-address-value"
               >
                 {account.address || "No address provided"}
-              </div>
-            </div>
-
-            {/* Owner */}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Account Owner
-              </label>
-              <div
-                className="mt-1 flex items-center space-x-3"
-                data-testid="text-account-owner-value"
-              >
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={account.owner?.profileImageUrl || undefined}
-                  />
-                  <AvatarFallback>
-                    {getUserInitials(account.owner)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-foreground">
-                    {getUserDisplayName(account.owner)}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {account.owner?.email}
-                  </div>
-                </div>
               </div>
             </div>
               </div>

@@ -1,37 +1,55 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"; // Added ArrowUpDown, ArrowUp, ArrowDown for sorting capability on Tables
+import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
 import { Link } from "wouter";
-import { type Account, type AccountWithOwner } from "@shared/schema";
+import { type Account, type AccountWithOwner, type CompanySettingWithMaster } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+type AccountNatureType = 'privatePerson' | 'selfEmployed' | 'companyContact' | 'legalEntity' | 'shippingAddress';
+
 export default function Accounts() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("");
-  const [sortBy, setSortBy] = useState<string>('name'); // Added for sorting capability on Tables
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Added for sorting capability on Tables
+  const [accountNatureFilter, setAccountNatureFilter] = useState<AccountNatureType[]>([]);
+  const [tempNatureSelections, setTempNatureSelections] = useState<AccountNatureType[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
-    queryKey: ["/api/accounts", sortBy, sortOrder], // Added sortBy, sortOrder for sorting capability on Tables
-    queryFn: async () => { // Added custom queryFn for sorting capability on Tables
-      const params = new URLSearchParams({ sortBy, sortOrder }); // Added for sorting capability on Tables
-      const res = await fetch(`/api/accounts?${params}`, { // Added for sorting capability on Tables
+    queryKey: ["/api/accounts", sortBy, sortOrder],
+    queryFn: async () => {
+      const params = new URLSearchParams({ sortBy, sortOrder });
+      const res = await fetch(`/api/accounts?${params}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error('Failed to fetch accounts');
       return res.json();
+    },
+  });
+
+  const { data: accountSettings = [] } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/by-prefix", "smart_account_management_accountType"],
+    queryFn: async () => {
+      const response = await fetch(`/api/business-objects/company-settings/by-prefix/smart_account_management_accountType`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch account type settings");
+      }
+      return response.json();
     },
   });
 
@@ -52,11 +70,50 @@ export default function Accounts() {
     },
   });
 
+  // Helper function to check if a setting is enabled
+  const isSettingEnabled = (settingCode: string): boolean => {
+    const setting = accountSettings.find(s => s.settingCode === settingCode);
+    return setting?.settingValue === "true";
+  };
+
+  // Helper function to toggle nature selection in temp state
+  const toggleNatureSelection = (nature: AccountNatureType) => {
+    setTempNatureSelections(prev =>
+      prev.includes(nature)
+        ? prev.filter(n => n !== nature)
+        : [...prev, nature]
+    );
+  };
+
+  // Apply filter selections
+  const applyNatureFilter = () => {
+    setAccountNatureFilter(tempNatureSelections);
+    setIsFilterOpen(false);
+  };
+
   const filteredAccounts = accounts.filter((account) => {
     const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (account.address || "").toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesIndustry = !industryFilter || industryFilter === "all" || account.industry === industryFilter;
-    return matchesSearch && matchesIndustry;
+    
+    // Filter by account nature
+    const matchesNature = accountNatureFilter.length === 0 || accountNatureFilter.some(nature => {
+      switch (nature) {
+        case 'privatePerson':
+          return account.isPersonAccount === true;
+        case 'selfEmployed':
+          return account.isSelfEmployed === true;
+        case 'companyContact':
+          return account.isCompanyContact === true;
+        case 'legalEntity':
+          return account.isLegalEntity === true;
+        case 'shippingAddress':
+          return account.isShippingAddress === true;
+        default:
+          return false;
+      }
+    });
+    
+    return matchesSearch && matchesNature;
   });
 
   const handleDelete = (account: AccountWithOwner) => {
@@ -156,25 +213,135 @@ export default function Accounts() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 </div>
               </div>
-              <div className="w-full md:w-48">
-                <label className="block text-sm font-medium text-foreground mb-2">Industry</label>
-                <Select value={industryFilter} onValueChange={setIndustryFilter}>
-                  <SelectTrigger data-testid="select-industry-filter">
-                    <SelectValue placeholder="All Industries" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Industries</SelectItem>
-                    <SelectItem value="tech">Technology</SelectItem>
-                    <SelectItem value="construction">Construction</SelectItem>
-                    <SelectItem value="services">Services</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-end">
-                <Button variant="secondary" className="flex items-center space-x-2">
-                  <Filter className="w-4 h-4" />
-                  <span>Filter</span>
-                </Button>
+              <div className="w-full md:w-64">
+                <label className="block text-sm font-medium text-foreground mb-2">Nature of account</label>
+                <Popover open={isFilterOpen} onOpenChange={(open) => {
+                  setIsFilterOpen(open);
+                  if (open) {
+                    setTempNatureSelections(accountNatureFilter);
+                  }
+                }}>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between"
+                      data-testid="button-nature-filter"
+                    >
+                      <span className="truncate">
+                        {accountNatureFilter.length === 0 
+                          ? "All account types" 
+                          : `${accountNatureFilter.length} selected`}
+                      </span>
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-4" align="start">
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        {/* Private Person */}
+                        {isSettingEnabled("smart_account_management_accountType_PrivatePerson_enabled") && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="nature-privatePerson"
+                              checked={tempNatureSelections.includes('privatePerson')}
+                              onCheckedChange={() => toggleNatureSelection('privatePerson')}
+                              data-testid="checkbox-filter-private-person"
+                            />
+                            <label 
+                              htmlFor="nature-privatePerson"
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              Private Person
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Self Employed */}
+                        {isSettingEnabled("smart_account_management_accountType_SelfEmployed_enabled") && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="nature-selfEmployed"
+                              checked={tempNatureSelections.includes('selfEmployed')}
+                              onCheckedChange={() => toggleNatureSelection('selfEmployed')}
+                              data-testid="checkbox-filter-self-employed"
+                            />
+                            <label 
+                              htmlFor="nature-selfEmployed"
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              Self Employed
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Company Contact */}
+                        {isSettingEnabled("smart_account_management_accountType_companyContact_enabled") && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="nature-companyContact"
+                              checked={tempNatureSelections.includes('companyContact')}
+                              onCheckedChange={() => toggleNatureSelection('companyContact')}
+                              data-testid="checkbox-filter-company-contact"
+                            />
+                            <label 
+                              htmlFor="nature-companyContact"
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              Company Contact
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Legal Entity */}
+                        {isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="nature-legalEntity"
+                              checked={tempNatureSelections.includes('legalEntity')}
+                              onCheckedChange={() => toggleNatureSelection('legalEntity')}
+                              data-testid="checkbox-filter-legal-entity"
+                            />
+                            <label 
+                              htmlFor="nature-legalEntity"
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              Legal Entity
+                            </label>
+                          </div>
+                        )}
+
+                        {/* Shipping Address */}
+                        {isSettingEnabled("smart_account_management_accountType_shipping_enabled") && (
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="nature-shippingAddress"
+                              checked={tempNatureSelections.includes('shippingAddress')}
+                              onCheckedChange={() => toggleNatureSelection('shippingAddress')}
+                              data-testid="checkbox-filter-shipping-address"
+                            />
+                            <label 
+                              htmlFor="nature-shippingAddress"
+                              className="text-sm cursor-pointer flex-1"
+                            >
+                              Shipping Address
+                            </label>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t">
+                        <Button 
+                          onClick={applyNatureFilter}
+                          className="w-full"
+                          data-testid="button-apply-nature-filter"
+                        >
+                          <Filter className="w-4 h-4 mr-2" />
+                          Filter
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </CardContent>
@@ -272,7 +439,7 @@ export default function Accounts() {
                       <div className="flex flex-col items-center space-y-2">
                         <Building className="w-8 h-8 text-muted-foreground" />
                         <p className="text-muted-foreground">
-                          {searchTerm || industryFilter ? "No accounts found matching your filters" : "No accounts yet. Create your first account to get started."}
+                          {searchTerm || accountNatureFilter.length > 0 ? "No accounts found matching your filters" : "No accounts yet. Create your first account to get started."}
                         </p>
                       </div>
                     </TableCell>

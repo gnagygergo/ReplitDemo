@@ -55,6 +55,14 @@ export default function SmartAccountManagementDetailCard({
   getUserDisplayName,
   isSettingEnabled,
 }: SmartAccountManagementDetailCardProps) {
+  // Check if any account nature checkbox is selected
+  const hasAnyAccountNature =
+    form.watch("isPersonAccount") ||
+    form.watch("isSelfEmployed") ||
+    form.watch("isCompanyContact") ||
+    form.watch("isLegalEntity") ||
+    form.watch("isShippingAddress");
+
   return (
     <Card>
       <CardHeader>
@@ -64,7 +72,7 @@ export default function SmartAccountManagementDetailCard({
         {isEditing ? (
           <Form {...form}>
             <form className="space-y-6">
-              {/* Account Nature Section - Only visible in edit mode */}
+              {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
                 <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                   Account Nature
@@ -226,8 +234,12 @@ export default function SmartAccountManagementDetailCard({
                 </div>
               </div>
 
-              {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
-              {!form.watch("isShippingAddress") &&
+              {/* ====== FIELDS LAYOUT SECTION ====== */}
+              {/* Only show fields when at least one account nature checkbox is selected */}
+              {hasAnyAccountNature && (
+                <>
+                  {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
+                  {!form.watch("isShippingAddress") &&
                 !form.watch("isLegalEntity") && (
                   <FormField
                     control={form.control}
@@ -455,6 +467,8 @@ export default function SmartAccountManagementDetailCard({
                   </FormItem>
                 )}
               />
+                </>
+              )}
             </form>
           </Form>
         ) : (

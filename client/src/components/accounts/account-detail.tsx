@@ -118,6 +118,8 @@ export default function AccountDetail() {
       toast({
         title: "Account created successfully",
       });
+      // Switch to view mode before navigating
+      setIsEditing(false);
       // Navigate to the new account's detail page
       setLocation(`/accounts/${newAccount.id}`);
     },

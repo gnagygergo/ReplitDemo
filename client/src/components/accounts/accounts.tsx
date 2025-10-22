@@ -73,7 +73,7 @@ export default function Accounts() {
   // Helper function to check if a setting is enabled
   const isSettingEnabled = (settingCode: string): boolean => {
     const setting = accountSettings.find(s => s.settingCode === settingCode);
-    return setting?.settingValue === "true";
+    return setting?.settingValue === "TRUE";
   };
 
   // Helper function to toggle nature selection in temp state

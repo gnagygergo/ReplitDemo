@@ -370,10 +370,12 @@ export default function AccountDetail() {
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {!isCreating && params?.id && (
               <>
+                {(isSettingEnabled("opportunity_management_activated") && 
                 <AccountOpportunitiesListCard
                   accountId={params.id}
                   isEditing={isEditing}
                 />
+                )}
                 <AccountQuoteListCard
                   accountId={params.id}
                   accountName={account?.name || ""}

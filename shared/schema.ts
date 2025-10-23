@@ -54,6 +54,8 @@ export const accounts = pgTable("accounts", {
   ownerId: varchar("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
+  parentAccountId: varchar("parent_account_id")
+    .references((): AnyPgColumn => accounts.id, { onDelete: "cascade" }),
   companyId: varchar("company_id"),
 });
 
@@ -617,6 +619,7 @@ export const insertAccountSchema = createInsertSchema(accounts)
   .extend({
     industry: z.enum(["tech", "construction", "services"]),
     ownerId: z.string().min(1, "Owner is required"),
+    parentAccountId: z.string().optional().transform(val => val === "" ? null : val),
   });
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)

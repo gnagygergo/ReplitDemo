@@ -40,6 +40,7 @@ interface SmartAccountManagementDetailCardProps {
   selectedOwner: User | null;
   setShowUserLookup: (show: boolean) => void;
   isSettingEnabled: (settingCode: string) => boolean;
+  showAccountNature?: boolean;
 }
 
 export default function SmartAccountManagementDetailCard({
@@ -50,6 +51,7 @@ export default function SmartAccountManagementDetailCard({
   selectedOwner,
   setShowUserLookup,
   isSettingEnabled,
+  showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {
   // Check if any account nature checkbox is selected
   const hasAnyAccountNature =
@@ -69,6 +71,7 @@ export default function SmartAccountManagementDetailCard({
           <Form {...form}>
             <form className="space-y-6">
               {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
+              {showAccountNature && (
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
                 <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                   Account Nature
@@ -229,6 +232,7 @@ export default function SmartAccountManagementDetailCard({
                     )}
                 </div>
               </div>
+              )}
 
               {/* ====== FIELDS LAYOUT SECTION ====== */}
               {/* Only show fields when at least one account nature checkbox is selected */}

@@ -141,6 +141,8 @@ export interface IStorage {
   // Account methods
   getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]>;
   getAccount(id: string): Promise<AccountWithOwner | undefined>;
+  getChildAccounts(parentAccountId: string, accountType?: string): Promise<AccountWithOwner[]>;
+  getParentAccounts(childAccountId: string): Promise<AccountWithOwner[]>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(
     id: string,
@@ -695,6 +697,14 @@ export class DatabaseStorage implements IStorage {
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {
     return this.accountStorage.getAccount(id);
+  }
+
+  async getChildAccounts(parentAccountId: string, accountType?: string): Promise<AccountWithOwner[]> {
+    return this.accountStorage.getChildAccounts(parentAccountId, accountType);
+  }
+
+  async getParentAccounts(childAccountId: string): Promise<AccountWithOwner[]> {
+    return this.accountStorage.getParentAccounts(childAccountId);
   }
 
   async createAccount(insertAccount: InsertAccount): Promise<Account> {

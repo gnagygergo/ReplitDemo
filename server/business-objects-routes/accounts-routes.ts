@@ -111,4 +111,30 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         .json({ message: "Failed to fetch quotes for account" });
     }
   });
+
+  app.get("/api/accounts/:accountId/children", async (req, res) => {
+    try {
+      const accountType = req.query.type as string | undefined;
+      const childAccounts = await storage.getChildAccounts(
+        req.params.accountId,
+        accountType,
+      );
+      res.json(childAccounts);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed to fetch child accounts" });
+    }
+  });
+
+  app.get("/api/accounts/:accountId/parents", async (req, res) => {
+    try {
+      const parentAccounts = await storage.getParentAccounts(req.params.accountId);
+      res.json(parentAccounts);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed to fetch parent accounts" });
+    }
+  });
 }

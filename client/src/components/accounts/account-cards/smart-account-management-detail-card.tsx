@@ -64,7 +64,7 @@ export default function SmartAccountManagementDetailCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Account Information</CardTitle>
+        <CardTitle>{isEditing ? "" : account?.name}</CardTitle>
       </CardHeader>
       <CardContent>
         {isEditing ? (

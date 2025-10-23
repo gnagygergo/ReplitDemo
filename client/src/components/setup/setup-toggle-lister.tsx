@@ -63,6 +63,14 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     return "ml-0"; // Default for any other value
   };
 
+  // Helper function to check if settingValues only allows FALSE
+  const isOnlyFalseAllowed = (settingValues: string | null): boolean => {
+    if (!settingValues) return false;
+    // Remove whitespace and convert to uppercase for comparison
+    const normalized = settingValues.trim().toUpperCase();
+    return normalized === "FALSE";
+  };
+
   const { data: settings, isLoading, error } = useQuery<CompanySettingWithMaster[]>({
     queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix],
     queryFn: async () => {
@@ -148,6 +156,22 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
       });
     },
   });
+
+  // Auto-correct FALSE-only settings that have TRUE values
+  useEffect(() => {
+    if (!settings) return;
+    
+    const settingsToCorrect = settings.filter(setting => 
+      isOnlyFalseAllowed(setting.settingValues) && setting.settingValue === "TRUE"
+    );
+
+    if (settingsToCorrect.length > 0) {
+      // Correct each setting to FALSE
+      settingsToCorrect.forEach(setting => {
+        updateSettingMutation.mutate({ id: setting.id, newValue: "FALSE" });
+      });
+    }
+  }, [settings, updateSettingMutation]);
 
   const handleToggleChange = async (setting: CompanySettingWithMaster, checked: boolean) => {
     // If turning ON
@@ -255,6 +279,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
         {settings.map((setting) => {
           const isHighlighted = setting.id === highlightedSettingId;
           const isLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE";
+          const isFalseOnly = isOnlyFalseAllowed(setting.settingValues);
           return (
             <div 
               key={setting.id} 
@@ -277,9 +302,9 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
               </div>
               <Switch
                 id={`toggle-${setting.id}`}
-                checked={setting.settingValue === "TRUE"}
+                checked={isFalseOnly ? false : setting.settingValue === "TRUE"}
                 onCheckedChange={(checked) => handleToggleChange(setting, checked)}
-                disabled={updateSettingMutation.isPending || isLocked}
+                disabled={updateSettingMutation.isPending || isLocked || isFalseOnly}
                 data-testid={`switch-${setting.id}`}
               />
             </div>

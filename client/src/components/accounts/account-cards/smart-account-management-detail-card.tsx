@@ -233,183 +233,180 @@ export default function SmartAccountManagementDetailCard({
               {/* ====== FIELDS LAYOUT SECTION ====== */}
               {/* Only show fields when at least one account nature checkbox is selected */}
               {hasAnyAccountNature && (
-                <>
-                  {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
-                  {!form.watch("isShippingAddress") &&
-                !form.watch("isLegalEntity") && (
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter first name"
-                            data-testid="input-edit-first-name"
-                            onChange={(e) => {
-                              field.onChange(e);
-                              const lastName = form.getValues("lastName");
-                              const newName =
-                                `${e.target.value} ${lastName || ""}`.trim();
-                              form.setValue("name", newName);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+                <div className="space-y-4">
+                  {/* Row 1: First Name + Last Name (grid-cols-2) */}
+                  {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* First Name */}
+                      <FormField
+                        control={form.control}
+                        name="firstName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>First Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter first name"
+                                data-testid="input-edit-first-name"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  const lastName = form.getValues("lastName");
+                                  const newName =
+                                    `${e.target.value} ${lastName || ""}`.trim();
+                                  form.setValue("name", newName);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-              {/* Last Name - Hidden when isShippingAddress or isLegalEntity */}
-              {!form.watch("isShippingAddress") &&
-                !form.watch("isLegalEntity") && (
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter last name"
-                            data-testid="input-edit-last-name"
-                            onChange={(e) => {
-                              field.onChange(e);
-                              const firstName =
-                                form.getValues("firstName");
-                              const newName =
-                                `${firstName || ""} ${e.target.value}`.trim();
-                              form.setValue("name", newName);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-              {/* Email - Hidden when isShippingAddress or isLegalEntity */}
-              {!form.watch("isShippingAddress") &&
-                !form.watch("isLegalEntity") && (
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="email"
-                            placeholder="Enter email address"
-                            data-testid="input-edit-email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-              {/* Mobile Phone - Hidden when isShippingAddress or isLegalEntity */}
-              {!form.watch("isShippingAddress") &&
-                !form.watch("isLegalEntity") && (
-                  <FormField
-                    control={form.control}
-                    name="mobilePhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mobile Phone</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="tel"
-                            placeholder="Enter mobile phone"
-                            data-testid="input-edit-mobile-phone"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-              {/* Company Registration ID - Visible when isSelfEmployed or isLegalEntity */}
-              {(form.watch("isSelfEmployed") ||
-                form.watch("isLegalEntity")) && (
-                <FormField
-                  control={form.control}
-                  name="companyRegistrationId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Registration ID</FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value || ""}
-                          placeholder="Enter registration ID"
-                          data-testid="input-edit-company-registration-id"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                      {/* Last Name */}
+                      <FormField
+                        control={form.control}
+                        name="lastName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Last Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter last name"
+                                data-testid="input-edit-last-name"
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  const firstName =
+                                    form.getValues("firstName");
+                                  const newName =
+                                    `${firstName || ""} ${e.target.value}`.trim();
+                                  form.setValue("name", newName);
+                                }}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   )}
-                />
-              )}
 
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Account Name{" "}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Enter account name"
-                        data-testid="input-edit-account-name"
+                  {/* Row 2: Account Name (full width) */}
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Account Name{" "}
+                          <span className="text-destructive">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="Enter account name"
+                            data-testid="input-edit-account-name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Row 3: Company Registration ID (full width) - Visible when isSelfEmployed or isLegalEntity */}
+                  {(form.watch("isSelfEmployed") || form.watch("isLegalEntity")) && (
+                    <FormField
+                      control={form.control}
+                      name="companyRegistrationId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Company Registration ID</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter registration ID"
+                              data-testid="input-edit-company-registration-id"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
+                  {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Email */}
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="email"
+                                placeholder="Enter email address"
+                                data-testid="input-edit-email"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              
-
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        value={field.value || ""}
-                        rows={3}
-                        placeholder="Enter full address"
-                        className="resize-none"
-                        data-testid="input-edit-address"
+                      {/* Mobile Phone */}
+                      <FormField
+                        control={form.control}
+                        name="mobilePhone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mobile Phone</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                type="tel"
+                                placeholder="Enter mobile phone"
+                                data-testid="input-edit-mobile-phone"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-                </>
+                    </div>
+                  )}
+
+                  {/* Row 5: Address (full width) */}
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value || ""}
+                            rows={3}
+                            placeholder="Enter full address"
+                            className="resize-none"
+                            data-testid="input-edit-address"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
               </form>
           </Form>
@@ -418,107 +415,109 @@ export default function SmartAccountManagementDetailCard({
             {!account ? (
               <div>No account data</div>
             ) : (
-              <div className="space-y-6">
-                {/* First Name - Hidden when isShippingAddress or isLegalEntity */}
+              <div className="space-y-4">
+                {/* Row 1: First Name + Last Name (grid-cols-2) */}
                 {!account.isShippingAddress && !account.isLegalEntity && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  First Name
-                </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-first-name-value"
-                >
-                  {account.firstName || "Not provided"}
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* First Name */}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        First Name
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-first-name-value"
+                      >
+                        {account.firstName || "Not provided"}
+                      </div>
+                    </div>
+
+                    {/* Last Name */}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Last Name
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-last-name-value"
+                      >
+                        {account.lastName || "Not provided"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Row 2: Account Name (full width) */}
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Account Name
+                  </label>
+                  <div
+                    className="mt-1 text-foreground"
+                    data-testid="text-account-name-value"
+                  >
+                    {account.name}
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {/* Last Name - Hidden when isShippingAddress or isLegalEntity */}
-            {!account.isShippingAddress && !account.isLegalEntity && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Last Name
-                </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-last-name-value"
-                >
-                  {account.lastName || "Not provided"}
+                {/* Row 3: Company Registration ID (full width) - Visible when isSelfEmployed or isLegalEntity */}
+                {(account.isSelfEmployed || account.isLegalEntity) && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Company Registration ID
+                    </label>
+                    <div
+                      className="mt-1 text-foreground"
+                      data-testid="text-company-registration-id-value"
+                    >
+                      {account.companyRegistrationId || "Not provided"}
+                    </div>
+                  </div>
+                )}
+
+                {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
+                {!account.isShippingAddress && !account.isLegalEntity && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Email */}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Email
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-email-value"
+                      >
+                        {account.email || "Not provided"}
+                      </div>
+                    </div>
+
+                    {/* Mobile Phone */}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">
+                        Mobile Phone
+                      </label>
+                      <div
+                        className="mt-1 text-foreground"
+                        data-testid="text-mobile-phone-value"
+                      >
+                        {account.mobilePhone || "Not provided"}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Row 5: Address (full width) */}
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Address
+                  </label>
+                  <div
+                    className="mt-1 text-foreground whitespace-pre-wrap"
+                    data-testid="text-account-address-value"
+                  >
+                    {account.address || "No address provided"}
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Email - Hidden when isShippingAddress or isLegalEntity */}
-            {!account.isShippingAddress && !account.isLegalEntity && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Email
-                </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-email-value"
-                >
-                  {account.email || "Not provided"}
-                </div>
-              </div>
-            )}
-
-            {/* Mobile Phone - Hidden when isShippingAddress or isLegalEntity */}
-            {!account.isShippingAddress && !account.isLegalEntity && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Mobile Phone
-                </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-mobile-phone-value"
-                >
-                  {account.mobilePhone || "Not provided"}
-                </div>
-              </div>
-            )}
-
-            {/* Company Registration ID - Visible when isSelfEmployed or isLegalEntity */}
-            {(account.isSelfEmployed || account.isLegalEntity) && (
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Company Registration ID
-                </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-company-registration-id-value"
-                >
-                  {account.companyRegistrationId || "Not provided"}
-                </div>
-              </div>
-            )}
-
-            {/* Account Name */}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Account Name
-              </label>
-              <div
-                className="mt-1 text-foreground"
-                data-testid="text-account-name-value"
-              >
-                {account.name}
-              </div>
-            </div>
-
-            {/* Address */}
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Address
-              </label>
-              <div
-                className="mt-1 text-foreground whitespace-pre-wrap"
-                data-testid="text-account-address-value"
-              >
-                {account.address || "No address provided"}
-              </div>
-            </div>
               </div>
             )}
           </>

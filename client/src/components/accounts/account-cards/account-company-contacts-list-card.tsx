@@ -35,6 +35,7 @@ interface AccountCompanyContactsListCardProps {
   isEditing: boolean;
   isSettingEnabled: (settingCode: string) => boolean;
   ownerId: string;
+  industry: string;
 }
 
 export default function AccountCompanyContactsListCard({
@@ -43,6 +44,7 @@ export default function AccountCompanyContactsListCard({
   isEditing,
   isSettingEnabled,
   ownerId,
+  industry,
 }: AccountCompanyContactsListCardProps) {
   const { toast } = useToast();
   const [showNewDialog, setShowNewDialog] = useState(false);

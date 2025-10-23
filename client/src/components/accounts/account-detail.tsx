@@ -58,10 +58,10 @@ import AccountDetailOwnershipCard from "@/components/accounts/account-cards/acco
 import AccountDetailCategorizationCard from "@/components/accounts/account-cards/account-categorization-detail-card";
 import AccountOpportunitiesListCard from "@/components/accounts/account-cards/account-opportunities-list-card";
 import AccountQuoteListCard from "@/components/accounts/account-cards/account-quote-list-card";
-import AccountCompanyContactsListCard from "@/components/accounts/account-cards/account-company-contacts-list-card";
-import AccountShippingAddressesListCard from "@/components/accounts/account-cards/account-shipping-addresses-list-card";
-import AccountSubAccountsListCard from "@/components/accounts/account-cards/account-sub-accounts-list-card";
-import AccountParentAccountsListCard from "@/components/accounts/account-cards/account-parent-accounts-list-card";
+import AccountCompanyContactsListCard from "@/components/accounts/account-cards/smart-account-company-contacts-list-card";
+import AccountShippingAddressesListCard from "@/components/accounts/account-cards/smart-account-shipping-addresses-list-card";
+import AccountSubAccountsListCard from "@/components/accounts/account-cards/smart-account-sub-accounts-list-card";
+import AccountParentAccountsListCard from "@/components/accounts/account-cards/smart-account-parent-accounts-list-card";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");

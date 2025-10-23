@@ -156,26 +156,6 @@ export default function Accounts() {
     }
   };
 
-  const getIndustryBadge = (industry: string) => {
-    const variants = {
-      tech: "bg-blue-100 text-blue-800",
-      construction: "bg-orange-100 text-orange-800",
-      services: "bg-green-100 text-green-800",
-    };
-    
-    const labels = {
-      tech: "Technology",
-      construction: "Construction", 
-      services: "Services",
-    };
-
-    return (
-      <Badge className={variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"}>
-        {labels[industry as keyof typeof labels] || industry}
-      </Badge>
-    );
-  };
-
   return (
     <>
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -183,7 +163,6 @@ export default function Accounts() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Accounts</h2>
-            <p className="text-muted-foreground mt-1">Manage your customer accounts and their information</p>
           </div>
           <Link href="/accounts/new">
             <Button 
@@ -370,19 +349,6 @@ export default function Accounts() {
                   <TableHead> {/* Added for sorting capability on Tables */}
                     <div 
                       className="flex items-center gap-1 cursor-pointer hover:text-foreground"
-                      onClick={() => handleSort('industry')}
-                      data-testid="header-sort-industry"
-                    >
-                      <span>Industry</span>
-                      {sortBy === 'industry' && (
-                        sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-                      )}
-                      {sortBy !== 'industry' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
-                    </div>
-                  </TableHead>
-                  <TableHead> {/* Added for sorting capability on Tables */}
-                    <div 
-                      className="flex items-center gap-1 cursor-pointer hover:text-foreground"
                       onClick={() => handleSort('address')}
                       data-testid="header-sort-address"
                     >
@@ -465,9 +431,6 @@ export default function Accounts() {
                             <div className="text-sm text-muted-foreground">{getAccountTypeLabel(account)}</div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell data-testid={`text-industry-${account.id}`}>
-                        {account.industry ? getIndustryBadge(account.industry) : <span className="text-muted-foreground text-sm">-</span>}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground" data-testid={`text-address-${account.id}`}>
                         {account.address || "No address provided"}

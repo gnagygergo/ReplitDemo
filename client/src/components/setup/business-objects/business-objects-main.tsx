@@ -53,6 +53,7 @@ type CompanyAdminCheckResponse = {
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
 import QuoteManagement from "@/components/setup/business-objects/quotes/quote-settings";
+import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
 
 // Type for child menu items with component
 type ChildMenuItem = {
@@ -132,6 +133,23 @@ const setupMenuItems: MenuItem[] = [
         component: QuoteManagement,
       },
       
+    ],
+  },
+  {
+    id: "opportunities",
+    label: "Opportunity management",
+    icon: FileCheck,
+    description: "Manage your Sales process",
+    globalAdminOnly: false,
+    category: "business-objects",
+    children: [
+      {
+        id: "opportunity-settings",
+        label: "Opportunity Settings",
+        description: "The fundamentals",
+        component: OpportunityManagement,
+      },
+
     ],
   },
   {

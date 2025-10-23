@@ -9,7 +9,7 @@ export default function OpportunitySettings() {
           className="text-3xl font-bold"
           data-testid="heading-opportunity-settings"
         >
-          Quote Settings
+          Opportunity Management Settings
         </h2>
         <p className="text-muted-foreground mt-2">
           Configure the basics of your Opportunity Management
@@ -18,7 +18,7 @@ export default function OpportunitySettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Basic Opportunity Settings</CardTitle>
+          <CardTitle>Basic Opportunity Management Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <SetupToggleLister

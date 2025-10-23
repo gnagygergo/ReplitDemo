@@ -95,9 +95,9 @@ const setupMenuItems: MenuItem[] = [
         component: AccountManagementModels,
       },
       {
-        id: "account-types2",
-        label: "Account Types",
-        description: "Configure account types",
+        id: "account-lifecycle",
+        label: "Account Lifecycle",
+        description: "From new, to idle",
         component: () => (
           <div className="space-y-4">
             <div>
@@ -118,13 +118,21 @@ const setupMenuItems: MenuItem[] = [
     ],
   },
   {
-    id: "quote-settings",
-    label: "Quote Settings",
-    icon: Ruler,
-    description: "false",
-    globalAdminOnly: true,
+    id: "quotes",
+    label: "Quote management",
+    icon: FileCheck,
+    description: "Manage your Quoting process",
+    globalAdminOnly: false,
     category: "business-objects",
-    component: QuoteManagement,
+    children: [
+      {
+        id: "quote-settings",
+        label: "Quote Settings",
+        description: "The fundamentals",
+        component: QuoteManagement,
+      },
+      
+    ],
   },
   {
     id: "unit-of-measures",

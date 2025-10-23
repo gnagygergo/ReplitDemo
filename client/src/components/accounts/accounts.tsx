@@ -214,7 +214,7 @@ export default function Accounts() {
                 </div>
               </div>
               <div className="w-full md:w-64">
-                <label className="block text-sm font-medium text-foreground mb-2">Nature of account</label>
+                <label className="block text-sm font-medium text-foreground mb-2">Filter by Account Nature</label>
                 <Popover open={isFilterOpen} onOpenChange={(open) => {
                   setIsFilterOpen(open);
                   if (open) {
@@ -229,7 +229,7 @@ export default function Accounts() {
                     >
                       <span className="truncate">
                         {accountNatureFilter.length === 0 
-                          ? "All account types" 
+                          ? "No filter applied" 
                           : `${accountNatureFilter.length} selected`}
                       </span>
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

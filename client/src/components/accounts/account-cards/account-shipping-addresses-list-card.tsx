@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -80,6 +80,26 @@ export default function AccountShippingAddressesListCard({
       ownerId: ownerId,
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      name: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      mobilePhone: "",
+      address: "",
+      companyRegistrationId: "",
+      isShippingAddress: true,
+      isLegalEntity: false,
+      isPersonAccount: false,
+      isSelfEmployed: false,
+      isCompanyContact: false,
+      parentAccountId: accountId,
+      ownerId: ownerId,
+    });
+    setSelectedOwner(null);
+  }, [accountId, ownerId, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertAccount) => {

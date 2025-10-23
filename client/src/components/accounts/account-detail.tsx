@@ -199,46 +199,6 @@ export default function AccountDetail() {
     setShowUserLookup(false);
   };
 
-  const getUserDisplayName = (user: User) => {
-    if (user.firstName || user.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
-    }
-    return user.email || "Unknown User";
-  };
-
-  const getUserInitials = (user: User) => {
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user.firstName) {
-      return user.firstName[0].toUpperCase();
-    }
-    if (user.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "U";
-  };
-
-  const getIndustryLabel = (industry: string) => {
-    const labels = {
-      tech: "Technology",
-      construction: "Construction",
-      services: "Services",
-    };
-    return labels[industry as keyof typeof labels] || industry;
-  };
-
-  const getIndustryBadgeClass = (industry: string) => {
-    const variants = {
-      tech: "bg-blue-100 text-blue-800",
-      construction: "bg-orange-100 text-orange-800",
-      services: "bg-green-100 text-green-800",
-    };
-    return (
-      variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"
-    );
-  };
-
   // Helper function to determine which icon to display based on account type
   const getAccountIcon = (account: AccountWithOwner) => {
     const isPerson =
@@ -407,8 +367,6 @@ export default function AccountDetail() {
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
-              getUserInitials={getUserInitials}
-              getUserDisplayName={getUserDisplayName}
               isSettingEnabled={isSettingEnabled}
             />
 
@@ -419,8 +377,6 @@ export default function AccountDetail() {
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
-              getUserInitials={getUserInitials}
-              getUserDisplayName={getUserDisplayName}
             />
 
             <AccountDetailCategorizationCard
@@ -428,8 +384,6 @@ export default function AccountDetail() {
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-              getIndustryLabel={getIndustryLabel}
-              getIndustryBadgeClass={getIndustryBadgeClass}
             />
           </div>
         </Panel>

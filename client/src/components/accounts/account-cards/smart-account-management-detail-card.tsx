@@ -39,8 +39,6 @@ interface SmartAccountManagementDetailCardProps {
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
   selectedOwner: User | null;
   setShowUserLookup: (show: boolean) => void;
-  getUserInitials: (user: User) => string;
-  getUserDisplayName: (user: User) => string;
   isSettingEnabled: (settingCode: string) => boolean;
 }
 
@@ -51,8 +49,6 @@ export default function SmartAccountManagementDetailCard({
   updateMutation,
   selectedOwner,
   setShowUserLookup,
-  getUserInitials,
-  getUserDisplayName,
   isSettingEnabled,
 }: SmartAccountManagementDetailCardProps) {
   // Check if any account nature checkbox is selected

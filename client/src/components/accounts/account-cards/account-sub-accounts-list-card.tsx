@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,6 +59,11 @@ export default function AccountSubAccountsListCard({
     enabled: !!accountId,
   });
 
+  const { data: parentAccount } = useQuery<AccountWithOwner>({
+    queryKey: ["/api/accounts", accountId],
+    enabled: !!accountId,
+  });
+
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
     defaultValues: {
@@ -78,6 +83,12 @@ export default function AccountSubAccountsListCard({
       ownerId: "",
     },
   });
+
+  useEffect(() => {
+    if (parentAccount?.ownerId) {
+      form.setValue("ownerId", parentAccount.ownerId);
+    }
+  }, [parentAccount, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertAccount) => {

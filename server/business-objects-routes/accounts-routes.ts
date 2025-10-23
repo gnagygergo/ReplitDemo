@@ -19,6 +19,13 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
 
   app.post("/api/accounts", async (req, res) => {
     try {
+      console.log("[DEBUG] POST /api/accounts received data:", {
+        name: req.body.name,
+        parentAccountId: req.body.parentAccountId,
+        ownerId: req.body.ownerId,
+        isShippingAddress: req.body.isShippingAddress,
+        isCompanyContact: req.body.isCompanyContact,
+      });
       const validatedData = insertAccountSchema.parse(req.body);
       const account = await storage.createAccount(validatedData);
       res.status(201).json(account);

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown } from "lucide-react";
+import { Building, Search, Filter, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, ChevronDown, User as UserIcon } from "lucide-react";
 import { Link } from "wouter";
 import { type Account, type AccountWithOwner, type CompanySettingWithMaster } from "@shared/schema";
+import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -450,7 +451,10 @@ export default function Accounts() {
                       <TableCell>
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mr-3">
-                            <Building className="w-5 h-5 text-primary" />
+                            {(() => {
+                              const IconComponent = getAccountIcon(account);
+                              return <IconComponent className="w-5 h-5 text-primary" />;
+                            })()}
                           </div>
                           <div>
                             <Link href={`/accounts/${account.id}`}>
@@ -458,12 +462,12 @@ export default function Accounts() {
                                 {account.name}
                               </div>
                             </Link>
-                            <div className="text-sm text-muted-foreground">Account</div>
+                            <div className="text-sm text-muted-foreground">{getAccountTypeLabel(account)}</div>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell data-testid={`text-industry-${account.id}`}>
-                        {getIndustryBadge(account.industry)}
+                        {account.industry ? getIndustryBadge(account.industry) : <span className="text-muted-foreground text-sm">-</span>}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground" data-testid={`text-address-${account.id}`}>
                         {account.address || "No address provided"}

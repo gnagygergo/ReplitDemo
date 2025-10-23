@@ -51,6 +51,7 @@ import {
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import SmartAccountManagementDetailCard from "@/components/accounts/account-cards/smart-account-management-detail-card";
@@ -201,36 +202,6 @@ export default function AccountDetail() {
     setSelectedOwner(user);
     form.setValue("ownerId", user.id);
     setShowUserLookup(false);
-  };
-
-  // Helper function to determine which icon to display based on account type
-  const getAccountIcon = (account: AccountWithOwner) => {
-    const isPerson =
-      account.isPersonAccount ||
-      account.isCompanyContact ||
-      account.isSelfEmployed;
-    const isEntity = account.isLegalEntity || account.isShippingAddress;
-
-    if (isPerson) {
-      return UserIcon;
-    }
-    if (isEntity) {
-      return Building;
-    }
-    return Building; // Default to Building
-  };
-
-  // Helper function to generate dynamic title text from boolean fields
-  const getAccountTypeLabel = (account: AccountWithOwner) => {
-    const labels: string[] = [];
-
-    if (account.isPersonAccount) labels.push("Person Account");
-    if (account.isCompanyContact) labels.push("Company Contact");
-    if (account.isSelfEmployed) labels.push("Self Employed");
-    if (account.isLegalEntity) labels.push("Legal Entity");
-    if (account.isShippingAddress) labels.push("Shipping Address");
-
-    return labels.length > 0 ? labels.join(" | ") : "Account Details";
   };
 
   // Initialize form when account data is loaded

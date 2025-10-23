@@ -417,6 +417,7 @@ export default function AccountDetail() {
                       accountName={account?.name || ""}
                       isEditing={isEditing}
                       isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
                     />
                   )}
                 
@@ -428,6 +429,7 @@ export default function AccountDetail() {
                       accountName={account?.name || ""}
                       isEditing={isEditing}
                       isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
                     />
                   )}
                 
@@ -439,6 +441,7 @@ export default function AccountDetail() {
                       accountName={account?.name || ""}
                       isEditing={isEditing}
                       isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
                     />
                   )}
                 

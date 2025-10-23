@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,6 +34,7 @@ interface AccountCompanyContactsListCardProps {
   accountName: string;
   isEditing: boolean;
   isSettingEnabled: (settingCode: string) => boolean;
+  ownerId: string;
 }
 
 export default function AccountCompanyContactsListCard({
@@ -41,6 +42,7 @@ export default function AccountCompanyContactsListCard({
   accountName,
   isEditing,
   isSettingEnabled,
+  ownerId,
 }: AccountCompanyContactsListCardProps) {
   const { toast } = useToast();
   const [showNewDialog, setShowNewDialog] = useState(false);
@@ -56,11 +58,6 @@ export default function AccountCompanyContactsListCard({
       if (!response.ok) throw new Error("Failed to fetch company contacts");
       return response.json();
     },
-    enabled: !!accountId,
-  });
-
-  const { data: parentAccount } = useQuery<AccountWithOwner>({
-    queryKey: ["/api/accounts", accountId],
     enabled: !!accountId,
   });
 
@@ -80,15 +77,9 @@ export default function AccountCompanyContactsListCard({
       isSelfEmployed: false,
       isShippingAddress: false,
       parentAccountId: accountId,
-      ownerId: "",
+      ownerId: ownerId,
     },
   });
-
-  useEffect(() => {
-    if (parentAccount?.ownerId) {
-      form.setValue("ownerId", parentAccount.ownerId);
-    }
-  }, [parentAccount, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertAccount) => {

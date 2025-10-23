@@ -5,7 +5,10 @@ export default function OpportunitySettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold" data-testid="heading-opportunity-settings">
+        <h2
+          className="text-3xl font-bold"
+          data-testid="heading-opportunity-settings"
+        >
           Quote Settings
         </h2>
         <p className="text-muted-foreground mt-2">
@@ -18,8 +21,8 @@ export default function OpportunitySettings() {
           <CardTitle>Basic Opportunity Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <SetupToggleLister 
-            settingPrefix="general_opportunity_setting"
+          <SetupToggleLister
+            settingPrefix="opportunity_management_activated"
             title=""
           />
         </CardContent>

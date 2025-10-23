@@ -410,8 +410,8 @@ export default function AccountDetail() {
                 />
                 
                 {/* Company Contacts - Show if smart account management and company contact type are enabled */}
-                {isSettingEnabled("smart_account_management_enabled") &&
-                  isSettingEnabled("smart_account_management_accountType_CompanyContact_enabled") && (
+                {isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_accountType_companyContact_enabled") && (
                     <AccountCompanyContactsListCard
                       accountId={params.id}
                       accountName={account?.name || ""}
@@ -421,7 +421,7 @@ export default function AccountDetail() {
                   )}
                 
                 {/* Shipping Addresses - Show if smart account management and shipping address type are enabled */}
-                {isSettingEnabled("smart_account_management_enabled") &&
+                {isSettingEnabled("Smart_account_management_activated") &&
                   isSettingEnabled("smart_account_management_accountType_shipping_enabled") && (
                     <AccountShippingAddressesListCard
                       accountId={params.id}
@@ -432,8 +432,8 @@ export default function AccountDetail() {
                   )}
                 
                 {/* Sub-Accounts - Show if smart account management and legal entity type are enabled */}
-                {isSettingEnabled("smart_account_management_enabled") &&
-                  isSettingEnabled("smart_account_management_accountType_legalEntity_enabled") && (
+                {isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") && (
                     <AccountSubAccountsListCard
                       accountId={params.id}
                       accountName={account?.name || ""}
@@ -443,7 +443,7 @@ export default function AccountDetail() {
                   )}
                 
                 {/* Parent Accounts - Show if smart account management is enabled */}
-                {isSettingEnabled("smart_account_management_enabled") && (
+                {isSettingEnabled("Smart_account_management_activated") && (
                   <AccountParentAccountsListCard
                     accountId={params.id}
                   />

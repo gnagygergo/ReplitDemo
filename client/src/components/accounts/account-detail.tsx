@@ -58,6 +58,10 @@ import AccountDetailOwnershipCard from "@/components/accounts/account-cards/acco
 import AccountDetailCategorizationCard from "@/components/accounts/account-cards/account-categorization-detail-card";
 import AccountOpportunitiesListCard from "@/components/accounts/account-cards/account-opportunities-list-card";
 import AccountQuoteListCard from "@/components/accounts/account-cards/account-quote-list-card";
+import AccountCompanyContactsListCard from "@/components/accounts/account-cards/account-company-contacts-list-card";
+import AccountShippingAddressesListCard from "@/components/accounts/account-cards/account-shipping-addresses-list-card";
+import AccountSubAccountsListCard from "@/components/accounts/account-cards/account-sub-accounts-list-card";
+import AccountParentAccountsListCard from "@/components/accounts/account-cards/account-parent-accounts-list-card";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -390,7 +394,7 @@ export default function AccountDetail() {
 
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Pane - Opportunities and Quotes (Vertically Stacked) */}
+        {/* Right Pane - Opportunities, Quotes, and Hierarchical Accounts (Vertically Stacked) */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {!isCreating && params?.id && (
@@ -404,6 +408,46 @@ export default function AccountDetail() {
                   accountName={account?.name || ""}
                   isEditing={isEditing}
                 />
+                
+                {/* Company Contacts - Show if smart account management and company contact type are enabled */}
+                {isSettingEnabled("smart_account_management_enabled") &&
+                  isSettingEnabled("smart_account_management_accountType_CompanyContact_enabled") && (
+                    <AccountCompanyContactsListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                    />
+                  )}
+                
+                {/* Shipping Addresses - Show if smart account management and shipping address type are enabled */}
+                {isSettingEnabled("smart_account_management_enabled") &&
+                  isSettingEnabled("smart_account_management_accountType_shipping_enabled") && (
+                    <AccountShippingAddressesListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                    />
+                  )}
+                
+                {/* Sub-Accounts - Show if smart account management and legal entity type are enabled */}
+                {isSettingEnabled("smart_account_management_enabled") &&
+                  isSettingEnabled("smart_account_management_accountType_legalEntity_enabled") && (
+                    <AccountSubAccountsListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                    />
+                  )}
+                
+                {/* Parent Accounts - Show if smart account management is enabled */}
+                {isSettingEnabled("smart_account_management_enabled") && (
+                  <AccountParentAccountsListCard
+                    accountId={params.id}
+                  />
+                )}
               </>
             )}
           </div>

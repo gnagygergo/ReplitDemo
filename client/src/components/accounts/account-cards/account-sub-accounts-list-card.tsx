@@ -55,7 +55,7 @@ export default function AccountSubAccountsListCard({
       const response = await fetch(
         `/api/accounts/${accountId}/children?type=legal_entity`
       );
-      if (!response.ok) throw new Error("Failed to fetch sub-accounts");
+      if (!response.ok) throw new Error("Failed to fetch subsidiaries");
       return response.json();
     },
     enabled: !!accountId,
@@ -113,7 +113,7 @@ export default function AccountSubAccountsListCard({
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
       toast({
         title: "Success",
-        description: "Sub-account created successfully",
+        description: "Subsidiary created successfully",
       });
       setShowNewDialog(false);
       form.reset();
@@ -144,7 +144,7 @@ export default function AccountSubAccountsListCard({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Building2 className="w-5 h-5" />
-            <span>Sub-Accounts</span>
+            <span>Subsidiaries</span>
             <Badge variant="secondary" className="ml-2" data-testid="badge-sub-accounts-count">
               {subAccounts.length}
             </Badge>
@@ -158,12 +158,12 @@ export default function AccountSubAccountsListCard({
                   data-testid="button-new-sub-account"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>New Sub-Account</span>
+                  <span>New Subsidiary</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>New Sub-Account for {accountName}</DialogTitle>
+                  <DialogTitle>New Subsidiary for {accountName}</DialogTitle>
                 </DialogHeader>
                 <SmartAccountManagementDetailCard
                   account={null}
@@ -192,7 +192,7 @@ export default function AccountSubAccountsListCard({
                     disabled={createMutation.isPending}
                     data-testid="button-save-new-sub-account"
                   >
-                    {createMutation.isPending ? "Creating..." : "Create Sub-Account"}
+                    {createMutation.isPending ? "Creating..." : "Create subsidiary"}
                   </Button>
                 </div>
               </DialogContent>
@@ -203,12 +203,12 @@ export default function AccountSubAccountsListCard({
       <CardContent>
         {isLoading ? (
           <div className="text-center py-8 text-muted-foreground">
-            <div className="animate-pulse">Loading sub-accounts...</div>
+            <div className="animate-pulse">Loading subsidiaries...</div>
           </div>
         ) : subAccounts.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Building2 className="mx-auto h-12 w-12 mb-4 opacity-50" />
-            <p>No sub-accounts found for this account</p>
+            <p>No subsidiaries found for this account</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

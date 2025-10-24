@@ -366,6 +366,21 @@ export default function QuoteHeaderCard({
                               {...field}
                               placeholder="Enter customer name"
                               data-testid="input-edit-customer-name"
+                              onChange={(e) => {
+                                field.onChange(e);
+
+                                // Get current date in 'en-US' format so that Quote Name field can be auto-filled
+                                const today = new Date();
+                                const formattedDate = today.toLocaleDateString("hu-HU", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                });
+
+                                // Combine customer name + date
+                                const newQuoteName = `${e.target.value} ${formattedDate}`.trim();
+                                form.setValue("quoteName", newQuoteName);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />

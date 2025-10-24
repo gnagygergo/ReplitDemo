@@ -48,7 +48,8 @@ export default function QuoteHeaderCard({
 }: QuoteHeaderCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [showAccountLookup, setShowAccountLookup] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState<AccountWithOwner | null>(null);
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<AccountWithOwner | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -239,7 +240,6 @@ export default function QuoteHeaderCard({
 
   return (
     <>
-
       {/* Quote Details Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -290,220 +290,226 @@ export default function QuoteHeaderCard({
             <Form {...form}>
               <form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="quoteName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Quote Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter quote name"
-                            data-testid="input-edit-quote-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Column 1 */}
+                  <div className="flex flex-col gap-6">
+                    <FormField
+                      control={form.control}
+                      name="quoteName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quote Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter quote name"
+                              data-testid="input-edit-quote-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer</FormLabel>
-                        <FormControl>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full justify-start h-auto p-3"
-                            onClick={handleOpenAccountLookup}
-                            data-testid="button-customer-lookup"
-                          >
-                            {selectedCustomer ? (
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                  <Building className="w-4 h-4 text-primary" />
+                    <FormField
+                      control={form.control}
+                      name="customerId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer Link</FormLabel>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start h-auto p-3"
+                              onClick={handleOpenAccountLookup}
+                              data-testid="button-customer-lookup"
+                            >
+                              {selectedCustomer ? (
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Building className="w-4 h-4 text-primary" />
+                                  </div>
+                                  <div className="flex flex-col items-start">
+                                    <span
+                                      className="font-medium"
+                                      data-testid={`text-customer-${selectedCustomer.id}`}
+                                    >
+                                      {selectedCustomer.name}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {selectedCustomer.industry}
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="flex flex-col items-start">
-                                  <span
-                                    className="font-medium"
-                                    data-testid={`text-customer-${selectedCustomer.id}`}
-                                  >
-                                    {selectedCustomer.name}
-                                  </span>
-                                  <span className="text-sm text-muted-foreground">
-                                    {selectedCustomer.industry}
-                                  </span>
+                              ) : (
+                                <div className="flex items-center space-x-2 text-muted-foreground">
+                                  <Building className="h-4 w-4" />
+                                  <span>Select customer</span>
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center space-x-2 text-muted-foreground">
-                                <Building className="h-4 w-4" />
-                                <span>Select customer</span>
-                              </div>
-                            )}
-                          </Button>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                              )}
+                            </Button>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter customer name"
-                            data-testid="input-edit-customer-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="customerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter customer name"
+                              data-testid="input-edit-customer-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="customerAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Customer Address</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter customer address"
-                            data-testid="input-edit-customer-address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="customerAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Customer Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter customer address"
+                              data-testid="input-edit-customer-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller name"
-                            data-testid="input-edit-seller-name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="quoteExpirationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quote Expiration Date</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              type="date"
+                              data-testid="input-edit-expiration-date"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                  <FormField
-                    control={form.control}
-                    name="sellerAddress"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Address</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller address"
-                            data-testid="input-edit-seller-address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Column 2 */}
+                  <div className="flex flex-col gap-6">
+                    <FormField
+                      control={form.control}
+                      name="sellerName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller name"
+                              data-testid="input-edit-seller-name"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerBankAccount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Bank Account</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter bank account"
-                            data-testid="input-edit-seller-bank-account"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerPhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Phone</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller phone"
+                              data-testid="input-edit-seller-phone"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerEmail"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Email</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="email"
-                            placeholder="Enter seller email"
-                            data-testid="input-edit-seller-email"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              type="email"
+                              placeholder="Enter seller email"
+                              data-testid="input-edit-seller-email"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="sellerPhone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Seller Phone</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            placeholder="Enter seller phone"
-                            data-testid="input-edit-seller-phone"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter seller address"
+                              data-testid="input-edit-seller-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="quoteExpirationDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Expiration Date</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type="date"
-                            data-testid="input-edit-expiration-date"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="sellerBankAccount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Seller Bank Account</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter bank account"
+                              data-testid="input-edit-seller-bank-account"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
                 {isNewQuote && (
                   <div className="flex justify-end space-x-3">
@@ -532,6 +538,7 @@ export default function QuoteHeaderCard({
             </Form>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* First column (view mode) */}
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   Quote Name
@@ -542,11 +549,9 @@ export default function QuoteHeaderCard({
                 >
                   {quote?.quoteName}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Customer
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Customer Link
                 </label>
                 <div
                   className="mt-1 text-foreground"
@@ -570,26 +575,43 @@ export default function QuoteHeaderCard({
                     "N/A"
                   )}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Customer Name
                 </label>
                 <div className="mt-1 text-foreground">
                   {quote?.customerName || "N/A"}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Customer Address
                 </label>
                 <div className="mt-1 text-foreground">
                   {quote?.customerAddress || "N/A"}
                 </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Quote Expiration Date
+                </label>
+                <div className="mt-1 text-foreground">
+                  {quote?.quoteExpirationDate || "N/A"}
+                </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Quote Creation Date
+                </label>
+                <div className="mt-1 text-foreground">
+                  {quote?.createdDate
+                    ? new Date(quote.createdDate).toLocaleDateString("hu-HU", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : "N/A"}
+                </div>
               </div>
 
+              {/* Second column (view mode) */}
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   Seller Name
@@ -597,50 +619,33 @@ export default function QuoteHeaderCard({
                 <div className="mt-1 text-foreground">
                   {quote?.sellerName || "N/A"}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Address
-                </label>
-                <div className="mt-1 text-foreground">
-                  {quote?.sellerAddress || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Bank Account
-                </label>
-                <div className="mt-1 text-foreground">
-                  {quote?.sellerBankAccount || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Seller Email
-                </label>
-                <div className="mt-1 text-foreground">
-                  {quote?.sellerEmail || "N/A"}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Seller Phone
                 </label>
                 <div className="mt-1 text-foreground">
                   {quote?.sellerPhone || "N/A"}
                 </div>
-              </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Expiration Date
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Seller Email
                 </label>
                 <div className="mt-1 text-foreground">
-                  {quote?.quoteExpirationDate || "N/A"}
+                  {quote?.sellerEmail || "N/A"}
+                </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Seller Address
+                </label>
+                <div className="mt-1 text-foreground">
+                  {quote?.sellerAddress || "N/A"}
+                </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Seller Bank Account
+                </label>
+                <div className="mt-1 text-foreground">
+                  {quote?.sellerBankAccount || "N/A"}
                 </div>
               </div>
             </div>

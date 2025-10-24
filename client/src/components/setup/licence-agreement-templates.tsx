@@ -136,8 +136,9 @@ function TemplateDialog({
       licenceId: template?.licenceId || "",
       validFrom: template?.ValidFrom || "",
       validTo: template?.ValidTo || "",
-      price: template?.price ? parseFloat(template.price) : 0,
+      price: template?.price || "",
       currency: template?.currency || "USD",
+      agreementBaseDurationMonths: template?.agreementBaseDurationMonths || undefined,
     },
   });
 
@@ -311,8 +312,6 @@ function TemplateDialog({
                         type="number"
                         step="0.01"
                         {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
                         data-testid="input-template-price"
                       />
                     </FormControl>
@@ -349,7 +348,7 @@ function TemplateDialog({
                         step="1"
                         {...field}
                         value={field.value ?? ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                         data-testid="input-template-duration"
                       />
                     </FormControl>

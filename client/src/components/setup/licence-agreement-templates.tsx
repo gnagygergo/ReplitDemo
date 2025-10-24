@@ -614,11 +614,11 @@ export default function LicenceAgreementTemplatesManagement() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Valid From</h4>
+                      <h4 className="text-sm font-medium mb-1">Agreement Offer Valid From</h4>
                       <p className="text-sm text-muted-foreground">{selectedTemplate.ValidFrom || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Valid To</h4>
+                      <h4 className="text-sm font-medium mb-1">Agreement Offer Valid To</h4>
                       <p className="text-sm text-muted-foreground">{selectedTemplate.ValidTo || "N/A"}</p>
                     </div>
                   </div>

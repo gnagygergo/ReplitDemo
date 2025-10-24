@@ -9,7 +9,7 @@ import { Form } from "@/components/ui/form";
 import { Edit, Save, X, Package, Plus } from "lucide-react";
 import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { QuoteLineItem } from "@/components/quotes/quote-line-item";
+import { QuoteLineItem } from "@/components/quotes/quote-cards/quote-line-item";
 import { z } from "zod";
 
 const quoteLinesFormSchema = z.object({

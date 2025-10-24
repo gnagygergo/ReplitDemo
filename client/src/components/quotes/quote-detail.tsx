@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type Quote,
@@ -9,8 +9,6 @@ import {
   insertQuoteSchema,
   type AccountWithOwner,
   type QuoteLine,
-  type InsertQuoteLine,
-  insertQuoteLineSchema,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,9 +29,6 @@ import {
   Save,
   X,
   Building,
-  Plus,
-  Trash2,
-  Package,
 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
@@ -41,25 +36,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
-import { QuoteLineItem } from "@/components/quotes/quote-line-item";
-import EmailPanel from "@/components/emails/email-panel";
-import { z } from "zod";
-
-const quoteLinesFormSchema = z.object({
-  lines: z.array(
-    insertQuoteLineSchema.partial().extend({
-      id: z.string().optional(),
-    }),
-  ),
-});
-
-type QuoteLinesFormData = z.infer<typeof quoteLinesFormSchema>;
+import QuoteHeaderCard from "@/components/quotes/quote-cards/quote-header-card";
+import QuoteLinesCard from "@/components/quotes/quote-cards/quote-lines-card";
+import QuoteEmailsCard from "@/components/quotes/quote-cards/quote-emails-card";
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
   const [location, navigate] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
-  const [isEditingLines, setIsEditingLines] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -107,18 +91,6 @@ export default function QuoteDetail() {
       quoteExpirationDate: undefined,
       createdBy: user?.id || "",
     },
-  });
-
-  const linesForm = useForm<QuoteLinesFormData>({
-    resolver: zodResolver(quoteLinesFormSchema),
-    defaultValues: {
-      lines: [],
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control: linesForm.control,
-    name: "lines",
   });
 
   const createMutation = useMutation({
@@ -177,43 +149,12 @@ export default function QuoteDetail() {
     },
   });
 
-  const batchSaveLinesMutation = useMutation({
-    mutationFn: async (data: QuoteLinesFormData) => {
-      const response = await apiRequest(
-        "POST",
-        `/api/quotes/${params?.id}/quote-lines/batch`,
-        { lines: data.lines },
-      );
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["/api/quotes", params?.id, "quote-lines"],
-      });
-      toast({
-        title: "Quote lines saved successfully",
-      });
-      setIsEditingLines(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to save quote lines",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const onSubmit = (data: InsertQuote) => {
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {
       updateMutation.mutate(data);
     }
-  };
-
-  const onSubmitLines = (data: QuoteLinesFormData) => {
-    batchSaveLinesMutation.mutate(data);
   };
 
   const handleCancel = () => {
@@ -238,74 +179,6 @@ export default function QuoteDetail() {
         });
       }
     }
-  };
-
-  const handleCancelLines = () => {
-    setIsEditingLines(false);
-    linesForm.reset({
-      lines: quoteLines.map((line) => ({
-        ...line,
-        quoteId: params?.id || "",
-      })),
-    });
-  };
-
-  const handleEditQuoteHeader = () => {
-    if (isEditingLines) {
-      // Save lines first
-      linesForm.handleSubmit((data) => {
-        batchSaveLinesMutation.mutate(data, {
-          onSuccess: () => {
-            setIsEditingLines(false);
-            setIsEditing(true);
-          },
-        });
-      })();
-    } else {
-      setIsEditing(true);
-    }
-  };
-
-  const handleEditLines = () => {
-    if (isEditing) {
-      // Save quote first
-      form.handleSubmit((data) => {
-        updateMutation.mutate(data, {
-          onSuccess: () => {
-            setIsEditing(false);
-            setIsEditingLines(true);
-          },
-        });
-      })();
-    } else {
-      setIsEditingLines(true);
-    }
-  };
-
-  const handleAddLine = () => {
-    append({
-      quoteId: params?.id || "",
-      productId: null,
-      productName: null,
-      productUnitPrice: null,
-      unitPriceCurrency: null,
-      productUnitPriceOverride: null,
-      quoteUnitPrice: null,
-      unitPriceDiscountPercent: "0",
-      unitPriceDiscountAmount: "0",
-      finalUnitPrice: null,
-      salesUom: null,
-      quotedQuantity: null,
-      subtotalBeforeRowDiscounts: null,
-      discountPercentOnSubtotal: "0",
-      discountAmountOnSubtotal: "0",
-      finalSubtotal: null,
-      vatPercent: null,
-      vatUnitAmount: null,
-      vatOnSubtotal: null,
-      grossSubtotal: null,
-      quoteName: null,
-    });
   };
 
   const handleOpenAccountLookup = () => {
@@ -342,21 +215,6 @@ export default function QuoteDetail() {
       });
     }
   }, [quote, form]);
-
-  useEffect(() => {
-    if (quoteLines.length > 0) {
-      linesForm.reset({
-        lines: quoteLines.map((line) => ({
-          ...line,
-          quoteId: params?.id || "",
-          unitPriceDiscountPercent: line.unitPriceDiscountPercent ?? "0",
-          unitPriceDiscountAmount: line.unitPriceDiscountAmount ?? "0",
-          discountPercentOnSubtotal: line.discountPercentOnSubtotal ?? "0",
-          discountAmountOnSubtotal: line.discountAmountOnSubtotal ?? "0",
-        })),
-      });
-    }
-  }, [quoteLines, linesForm, params?.id]);
 
   useEffect(() => {
     if (customerAccount) {
@@ -434,22 +292,7 @@ export default function QuoteDetail() {
         </span>
       </div>
       {/* Quote Header Section */}
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-            <FileSpreadsheet className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1
-              className="text-3xl font-bold text-foreground"
-              data-testid="text-quote-name"
-            >
-              {isNewQuote ? "New Quote" : quote?.quoteName}
-            </h1>
-            <p className="text-muted-foreground">Quote Details</p>
-          </div>
-        </div>
-      </div>
+      <QuoteHeaderCard quoteName={quote?.quoteName || null} isNewQuote={isNewQuote} />
 
       <Tabs defaultValue="quote" className="w-full">
         <TabsList className="mb-6">
@@ -493,7 +336,7 @@ export default function QuoteDetail() {
                 ) : (
                   <Button
                     size="sm"
-                    onClick={handleEditQuoteHeader}
+                    onClick={() => setIsEditing(true)}
                     data-testid="button-edit-quote-header"
                   >
                     <Edit className="w-4 h-4 mr-2" />
@@ -905,175 +748,19 @@ export default function QuoteDetail() {
         </Card>
 
         {/* Products Card - Only show when quote is saved */}
-        {!isNewQuote && quote && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-              <CardTitle className="flex items-center space-x-2">
-                <Package className="w-5 h-5" />
-                <span>Products</span>
-              </CardTitle>
-              <div className="flex space-x-3">
-                {isEditingLines ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelLines}
-                      disabled={batchSaveLinesMutation.isPending}
-                      data-testid="button-cancel-lines-edit"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={linesForm.handleSubmit(onSubmitLines)}
-                      disabled={batchSaveLinesMutation.isPending}
-                      data-testid="button-save-lines"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {batchSaveLinesMutation.isPending
-                        ? "Saving..."
-                        : "Save Changes"}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={handleEditLines}
-                    disabled={isEditing}
-                    data-testid="button-edit-lines"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Lines
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isEditingLines ? (
-                <Form {...linesForm}>
-                  <form className="space-y-6">
-                    {fields.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Package className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                        <p>
-                          No products added yet. Click "Add Line" to get
-                          started.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-6">
-                        {fields.map((field, index) => (
-                          <QuoteLineItem
-                            key={field.id}
-                            control={linesForm.control}
-                            index={index}
-                            onRemove={() => remove(index)}
-                            setValue={linesForm.setValue}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleAddLine}
-                      data-testid="button-add-line"
-                      className="w-full"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Line
-                    </Button>
-                  </form>
-                </Form>
-              ) : (
-                <div>
-                  {isLoadingLines ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Loading quote lines...
-                    </div>
-                  ) : quoteLines.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Package className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      <p>No products added yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {quoteLines.map((line, index) => (
-                        <div
-                          key={line.id}
-                          className="border rounded-lg p-4"
-                          data-testid={`line-view-${index}`}
-                        >
-                          <h4 className="text-sm font-medium mb-3">
-                            Line {index + 1}
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <label className="text-muted-foreground">
-                                Product
-                              </label>
-                              <div className="font-medium">
-                                {line.productName || "N/A"}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground">
-                                Quantity
-                              </label>
-                              <div className="font-medium">
-                                {line.quotedQuantity || "N/A"}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground">
-                                Final Unit Price
-                              </label>
-                              <div className="font-medium">
-                                {line.finalUnitPrice
-                                  ? `${line.finalUnitPrice} ${line.unitPriceCurrency || ""}`
-                                  : "N/A"}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-muted-foreground">
-                                Final Subtotal
-                              </label>
-                              <div className="font-medium">
-                                {line.finalSubtotal
-                                  ? `${line.finalSubtotal} ${line.unitPriceCurrency || ""}`
-                                  : "N/A"}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {!isNewQuote && quote && params?.id && (
+          <QuoteLinesCard
+            quoteId={params.id}
+            quoteLines={quoteLines}
+            isLoadingLines={isLoadingLines}
+            isQuoteEditing={isEditing}
+          />
         )}
         </TabsContent>
 
         <TabsContent value="communication" className="space-y-6">
           {/* Emails */}
-          {!isNewQuote && quote && (
-            <EmailPanel parentType="Quote" parentId={quote.id} />
-          )}
-          {isNewQuote && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Emails</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">Save the quote first to access email functionality.</p>
-              </CardContent>
-            </Card>
-          )}
+          <QuoteEmailsCard quote={quote || null} isNewQuote={isNewQuote} />
         </TabsContent>
       </Tabs>
 

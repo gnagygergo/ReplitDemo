@@ -33,6 +33,7 @@ interface QuoteHeaderCardProps {
   isNewQuote: boolean;
   urlCustomerId: string | null;
   onQuoteCreated: (quoteId: string) => void;
+  onCancelNewQuote: () => void;
   onEditingChange: (isEditing: boolean) => void;
 }
 
@@ -42,6 +43,7 @@ export default function QuoteHeaderCard({
   isNewQuote,
   urlCustomerId,
   onQuoteCreated,
+  onCancelNewQuote,
   onEditingChange,
 }: QuoteHeaderCardProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -141,23 +143,27 @@ export default function QuoteHeaderCard({
   };
 
   const handleCancel = () => {
-    setIsEditing(false);
-    onEditingChange(false);
-    if (quote) {
-      form.reset({
-        quoteName: quote.quoteName || "",
-        customerId: quote.customerId || "",
-        customerName: quote.customerName || "",
-        customerAddress: quote.customerAddress || "",
-        companyId: quote.companyId || "",
-        sellerName: quote.sellerName || "",
-        sellerAddress: quote.sellerAddress || "",
-        sellerBankAccount: quote.sellerBankAccount || "",
-        sellerEmail: quote.sellerEmail || "",
-        sellerPhone: quote.sellerPhone || "",
-        quoteExpirationDate: quote.quoteExpirationDate || undefined,
-        createdBy: quote.createdBy || "",
-      });
+    if (isNewQuote) {
+      onCancelNewQuote();
+    } else {
+      setIsEditing(false);
+      onEditingChange(false);
+      if (quote) {
+        form.reset({
+          quoteName: quote.quoteName || "",
+          customerId: quote.customerId || "",
+          customerName: quote.customerName || "",
+          customerAddress: quote.customerAddress || "",
+          companyId: quote.companyId || "",
+          sellerName: quote.sellerName || "",
+          sellerAddress: quote.sellerAddress || "",
+          sellerBankAccount: quote.sellerBankAccount || "",
+          sellerEmail: quote.sellerEmail || "",
+          sellerPhone: quote.sellerPhone || "",
+          quoteExpirationDate: quote.quoteExpirationDate || undefined,
+          createdBy: quote.createdBy || "",
+        });
+      }
     }
   };
 

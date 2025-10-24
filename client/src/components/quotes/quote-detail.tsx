@@ -1,41 +1,10 @@
-import { useState, useEffect } from "react";
-import { useRoute, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type Quote,
-  type InsertQuote,
-  insertQuoteSchema,
-  type AccountWithOwner,
-  type QuoteLine,
-} from "@shared/schema";
+import { useState } from "react";
+import { useRoute, useLocation, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { type Quote, type QuoteLine } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  FileSpreadsheet,
-  Edit,
-  Save,
-  X,
-  Building,
-} from "lucide-react";
-import { Link } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
-import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
+import { FileSpreadsheet } from "lucide-react";
 import QuoteHeaderCard from "@/components/quotes/quote-cards/quote-header-card";
 import QuoteLinesCard from "@/components/quotes/quote-cards/quote-lines-card";
 import QuoteEmailsCard from "@/components/quotes/quote-cards/quote-emails-card";
@@ -43,13 +12,7 @@ import QuoteEmailsCard from "@/components/quotes/quote-cards/quote-emails-card";
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
   const [location, navigate] = useLocation();
-  const [isEditing, setIsEditing] = useState(false);
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [showAccountLookup, setShowAccountLookup] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] =
-    useState<AccountWithOwner | null>(null);
+  const [isQuoteEditing, setIsQuoteEditing] = useState(false);
 
   const isNewQuote = params?.id === "new";
 
@@ -63,11 +26,6 @@ export default function QuoteDetail() {
     enabled: !!params?.id && !isNewQuote,
   });
 
-  const { data: customerAccount } = useQuery<AccountWithOwner>({
-    queryKey: ["/api/accounts", quote?.customerId],
-    enabled: !!quote?.customerId && !isNewQuote && !isEditing,
-  });
-
   const { data: quoteLines = [], isLoading: isLoadingLines } = useQuery<
     QuoteLine[]
   >({
@@ -75,174 +33,13 @@ export default function QuoteDetail() {
     enabled: !!params?.id && !isNewQuote,
   });
 
-  const form = useForm<InsertQuote>({
-    resolver: zodResolver(insertQuoteSchema),
-    defaultValues: {
-      quoteName: "",
-      customerId: urlCustomerId || "",
-      customerName: "",
-      customerAddress: "",
-      companyId: "",
-      sellerName: "",
-      sellerAddress: "",
-      sellerBankAccount: "",
-      sellerEmail: "",
-      sellerPhone: "",
-      quoteExpirationDate: undefined,
-      createdBy: user?.id || "",
-    },
-  });
-
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertQuote) => {
-      const response = await apiRequest("POST", "/api/quotes", data);
-      return response.json();
-    },
-    onSuccess: (newQuote: Quote) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
-      if (urlCustomerId) {
-        queryClient.invalidateQueries({
-          queryKey: ["/api/accounts", urlCustomerId, "quotes"],
-        });
-      }
-      queryClient.setQueryData(["/api/quotes", newQuote.id], newQuote);
-      toast({
-        title: "Quote created successfully",
-      });
-      setIsEditing(false);
-      navigate(`/quotes/${newQuote.id}`, { replace: true });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create quote",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: InsertQuote) => {
-      const response = await apiRequest(
-        "PATCH",
-        `/api/quotes/${params?.id}`,
-        data,
-      );
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/quotes", params?.id],
-      });
-      toast({
-        title: "Quote updated successfully",
-      });
-      setIsEditing(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update quote",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: InsertQuote) => {
-    if (isNewQuote) {
-      createMutation.mutate(data);
-    } else {
-      updateMutation.mutate(data);
-    }
+  const handleQuoteCreated = (newQuoteId: string) => {
+    navigate(`/quotes/${newQuoteId}`, { replace: true });
   };
 
-  const handleCancel = () => {
-    if (isNewQuote) {
-      navigate("/quotes");
-    } else {
-      setIsEditing(false);
-      if (quote) {
-        form.reset({
-          quoteName: quote.quoteName || "",
-          customerId: quote.customerId || "",
-          customerName: quote.customerName || "",
-          customerAddress: quote.customerAddress || "",
-          companyId: quote.companyId || "",
-          sellerName: quote.sellerName || "",
-          sellerAddress: quote.sellerAddress || "",
-          sellerBankAccount: quote.sellerBankAccount || "",
-          sellerEmail: quote.sellerEmail || "",
-          sellerPhone: quote.sellerPhone || "",
-          quoteExpirationDate: quote.quoteExpirationDate || undefined,
-          createdBy: quote.createdBy || "",
-        });
-      }
-    }
+  const handleCancelNewQuote = () => {
+    navigate("/quotes");
   };
-
-  const handleOpenAccountLookup = () => {
-    setShowAccountLookup(true);
-  };
-
-  const handleAccountSelect = (account: AccountWithOwner) => {
-    setSelectedCustomer(account);
-    form.setValue("customerId", account.id);
-    form.setValue("customerName", account.name);
-    form.setValue("customerAddress", account.address || "");
-    setShowAccountLookup(false);
-  };
-
-  const handleCloseAccountLookup = () => {
-    setShowAccountLookup(false);
-  };
-
-  useEffect(() => {
-    if (quote) {
-      form.reset({
-        quoteName: quote.quoteName || "",
-        customerId: quote.customerId || "",
-        customerName: quote.customerName || "",
-        customerAddress: quote.customerAddress || "",
-        companyId: quote.companyId || "",
-        sellerName: quote.sellerName || "",
-        sellerAddress: quote.sellerAddress || "",
-        sellerBankAccount: quote.sellerBankAccount || "",
-        sellerEmail: quote.sellerEmail || "",
-        sellerPhone: quote.sellerPhone || "",
-        quoteExpirationDate: quote.quoteExpirationDate || undefined,
-        createdBy: quote.createdBy || "",
-      });
-    }
-  }, [quote, form]);
-
-  useEffect(() => {
-    if (customerAccount) {
-      setSelectedCustomer(customerAccount);
-    }
-  }, [customerAccount]);
-
-  useEffect(() => {
-    if (isNewQuote) {
-      setIsEditing(true);
-      form.reset({
-        quoteName: "",
-        customerId: urlCustomerId || "",
-        customerName: "",
-        customerAddress: "",
-        companyId: "",
-        sellerName: "",
-        sellerAddress: "",
-        sellerBankAccount: "",
-        sellerEmail: "",
-        sellerPhone: "",
-        quoteExpirationDate: undefined,
-        createdBy: user?.id || "",
-      });
-    } else {
-      setIsEditing(false);
-    }
-  }, [isNewQuote, urlCustomerId, user, form]);
 
   if (isLoadingQuote && !isNewQuote) {
     return (
@@ -291,485 +88,45 @@ export default function QuoteDetail() {
           {isNewQuote ? "New Quote" : quote?.quoteName}
         </span>
       </div>
-      {/* Quote Header Section */}
-      <QuoteHeaderCard quoteName={quote?.quoteName || null} isNewQuote={isNewQuote} />
 
-      <Tabs defaultValue="quote" className="w-full">
+      {/* Quote Header and Details Card */}
+      <QuoteHeaderCard
+        quoteId={params?.id || null}
+        quote={quote || null}
+        isNewQuote={isNewQuote}
+        urlCustomerId={urlCustomerId}
+        onQuoteCreated={handleQuoteCreated}
+        onCancelNewQuote={handleCancelNewQuote}
+        onEditingChange={setIsQuoteEditing}
+      />
+
+      <Tabs defaultValue="quote" className="w-full mt-6">
         <TabsList className="mb-6">
-          <TabsTrigger value="quote" data-testid="tab-quote">Quote</TabsTrigger>
-          <TabsTrigger value="communication" data-testid="tab-communication">Communication</TabsTrigger>
+          <TabsTrigger value="quote" data-testid="tab-quote">
+            Quote
+          </TabsTrigger>
+          <TabsTrigger value="communication" data-testid="tab-communication">
+            Communication
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="quote" className="space-y-6">
-          {/* Quote Details Card */}
-          <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <CardTitle>Quote Details</CardTitle>
-            {!isNewQuote && (
-              <div className="flex space-x-3">
-                {isEditing ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancel}
-                      disabled={
-                        createMutation.isPending || updateMutation.isPending
-                      }
-                      data-testid="button-cancel-quote-edit"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={form.handleSubmit(onSubmit)}
-                      disabled={
-                        createMutation.isPending || updateMutation.isPending
-                      }
-                      data-testid="button-save-quote"
-                    >
-                      <Save className="w-4 h-4 mr-2" />
-                      {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                    data-testid="button-edit-quote-header"
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Quote Header
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardHeader>
-          <CardContent>
-            {isEditing || isNewQuote ? (
-              <Form {...form}>
-                <form className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="quoteName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quote Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter quote name"
-                              data-testid="input-edit-quote-name"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="customerId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer</FormLabel>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full justify-start h-auto p-3"
-                              onClick={handleOpenAccountLookup}
-                              data-testid="button-customer-lookup"
-                            >
-                              {selectedCustomer ? (
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <Building className="w-4 h-4 text-primary" />
-                                  </div>
-                                  <div className="flex flex-col items-start">
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-customer-${selectedCustomer.id}`}
-                                    >
-                                      {selectedCustomer.name}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {selectedCustomer.industry}
-                                    </span>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-center space-x-2 text-muted-foreground">
-                                  <Building className="h-4 w-4" />
-                                  <span>Select customer</span>
-                                </div>
-                              )}
-                            </Button>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="customerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter customer name"
-                              data-testid="input-edit-customer-name"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="customerAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer Address</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter customer address"
-                              data-testid="input-edit-customer-address"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sellerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seller Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter seller name"
-                              data-testid="input-edit-seller-name"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sellerAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seller Address</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter seller address"
-                              data-testid="input-edit-seller-address"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sellerBankAccount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seller Bank Account</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter bank account"
-                              data-testid="input-edit-seller-bank-account"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sellerEmail"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seller Email</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              type="email"
-                              placeholder="Enter seller email"
-                              data-testid="input-edit-seller-email"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="sellerPhone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Seller Phone</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter seller phone"
-                              data-testid="input-edit-seller-phone"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="quoteExpirationDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Expiration Date</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              type="date"
-                              data-testid="input-edit-expiration-date"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  {isNewQuote && (
-                    <div className="flex justify-end space-x-3">
-                      <Button
-                        variant="outline"
-                        onClick={handleCancel}
-                        disabled={createMutation.isPending}
-                        data-testid="button-cancel-new-quote"
-                      >
-                        <X className="w-4 h-4 mr-2" />
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={form.handleSubmit(onSubmit)}
-                        disabled={createMutation.isPending}
-                        data-testid="button-create-quote"
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        {createMutation.isPending
-                          ? "Creating..."
-                          : "Create Quote"}
-                      </Button>
-                    </div>
-                  )}
-                </form>
-              </Form>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Quote Name
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-quote-name-value"
-                  >
-                    {quote?.quoteName}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Customer
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-customer-value"
-                  >
-                    {customerAccount ? (
-                      <Link
-                        href={`/accounts/${customerAccount.id}`}
-                        className="text-primary hover:underline"
-                      >
-                        {customerAccount.name}
-                      </Link>
-                    ) : quote?.customerId ? (
-                      <span className="text-muted-foreground">Loading...</span>
-                    ) : (
-                      <span className="text-muted-foreground">N/A</span>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Customer Name
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-customer-name-value"
-                  >
-                    {quote?.customerName || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Customer Address
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-customer-address-value"
-                  >
-                    {quote?.customerAddress || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Seller Name
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-seller-name-value"
-                  >
-                    {quote?.sellerName || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Seller Address
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-seller-address-value"
-                  >
-                    {quote?.sellerAddress || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Seller Bank Account
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-seller-bank-account-value"
-                  >
-                    {quote?.sellerBankAccount || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Seller Email
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-seller-email-value"
-                  >
-                    {quote?.sellerEmail || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Seller Phone
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-seller-phone-value"
-                  >
-                    {quote?.sellerPhone || "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Expiration Date
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-expiration-date-value"
-                  >
-                    {quote?.quoteExpirationDate
-                      ? format(
-                          new Date(quote.quoteExpirationDate),
-                          "MMM dd, yyyy",
-                        )
-                      : "N/A"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Created Date
-                  </label>
-                  <div
-                    className="mt-1 text-foreground"
-                    data-testid="text-created-date-value"
-                  >
-                    {quote?.createdDate
-                      ? format(new Date(quote.createdDate), "MMM dd, yyyy")
-                      : "N/A"}
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Products Card - Only show when quote is saved */}
-        {!isNewQuote && quote && params?.id && (
-          <QuoteLinesCard
-            quoteId={params.id}
-            quoteLines={quoteLines}
-            isLoadingLines={isLoadingLines}
-            isQuoteEditing={isEditing}
-          />
-        )}
+          {/* Products Card */}
+          {!isNewQuote && (
+            <QuoteLinesCard
+              quoteId={params?.id || ""}
+              quoteLines={quoteLines}
+              isLoadingLines={isLoadingLines}
+              isQuoteEditing={isQuoteEditing}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="communication" className="space-y-6">
-          {/* Emails */}
+          {/* Emails Card */}
           <QuoteEmailsCard quote={quote || null} isNewQuote={isNewQuote} />
         </TabsContent>
       </Tabs>
-
-      <AccountLookupDialog
-        open={showAccountLookup}
-        onClose={handleCloseAccountLookup}
-        onSelect={handleAccountSelect}
-        selectedAccountId={selectedCustomer?.id}
-      />
     </div>
   );
 }

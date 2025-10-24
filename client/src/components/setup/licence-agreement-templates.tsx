@@ -267,7 +267,7 @@ function TemplateDialog({
                 name="validFrom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valid From</FormLabel>
+                    <FormLabel>Ageement Offer Valid From</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -285,7 +285,7 @@ function TemplateDialog({
                 name="validTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valid To</FormLabel>
+                    <FormLabel>Agreement Offer Valid To</FormLabel>
                     <FormControl>
                       <Input
                         type="date"

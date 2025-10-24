@@ -107,6 +107,25 @@ function KnowledgeArticleView({
   onEdit: () => void;
   onClose: () => void;
 }) {
+  // Fetch functional domains and functionalities to look up names by ID
+  const { data: functionalDomains = [] } = useQuery<CompanySettingMasterDomain[]>({
+    queryKey: ["/api/company-setting-master-domains"],
+  });
+
+  const { data: functionalities = [] } = useQuery<CompanySettingMasterFunctionality[]>({
+    queryKey: ["/api/company-setting-master-functionalities"],
+  });
+
+  // Look up the functional domain name by ID
+  const functionalDomainName = article.functionalDomainId
+    ? functionalDomains.find(d => d.id === article.functionalDomainId)?.name || "Not specified"
+    : "Not specified";
+
+  // Look up the functionality name by ID
+  const functionalityName = article.functionalityId
+    ? functionalities.find(f => f.id === article.functionalityId)?.name || "Not specified"
+    : "Not specified";
+
   return (
     <div className="space-y-6">
       {/* Header with action buttons */}
@@ -169,7 +188,7 @@ function KnowledgeArticleView({
                 Functional Domain
               </label>
               <p className="text-sm mt-1">
-                {article.articleFunctionalDomain || "Not specified"}
+                {functionalDomainName}
               </p>
             </div>
             <div>
@@ -177,7 +196,7 @@ function KnowledgeArticleView({
                 Functionality Name
               </label>
               <p className="text-sm mt-1">
-                {article.articleFunctionalityName || "Not specified"}
+                {functionalityName}
               </p>
             </div>
           </div>
@@ -528,7 +547,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Language</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-language">
@@ -631,7 +650,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Functional Domain</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-functional-domain">
@@ -663,7 +682,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Functionality</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-functionality">

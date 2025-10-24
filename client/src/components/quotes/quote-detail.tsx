@@ -88,18 +88,25 @@ export default function QuoteDetail() {
           {isNewQuote ? "New Quote" : quote?.quoteName}
         </span>
       </div>
-
-      {/* Quote Header and Details Card */}
-      <QuoteHeaderCard
-        quoteId={params?.id || null}
-        quote={quote || null}
-        isNewQuote={isNewQuote}
-        urlCustomerId={urlCustomerId}
-        onQuoteCreated={handleQuoteCreated}
-        onCancelNewQuote={handleCancelNewQuote}
-        onEditingChange={setIsQuoteEditing}
-      />
-
+      
+      {/* Page Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <FileSpreadsheet className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <h1
+              className="text-3xl font-bold text-foreground"
+              data-testid="text-quote-name"
+            >
+              {isNewQuote ? "New Quote" : quote?.quoteName}
+            </h1>
+            <p className="text-muted-foreground">Quote Details</p>
+          </div>
+        </div>
+      </div>
+      
       <Tabs defaultValue="quote" className="w-full mt-6">
         <TabsList className="mb-6">
           <TabsTrigger value="quote" data-testid="tab-quote">
@@ -111,6 +118,17 @@ export default function QuoteDetail() {
         </TabsList>
 
         <TabsContent value="quote" className="space-y-6">
+          {/* Quote Header and Details Card */}
+          <QuoteHeaderCard
+            quoteId={params?.id || null}
+            quote={quote || null}
+            isNewQuote={isNewQuote}
+            urlCustomerId={urlCustomerId}
+            onQuoteCreated={handleQuoteCreated}
+            onCancelNewQuote={handleCancelNewQuote}
+            onEditingChange={setIsQuoteEditing}
+          />
+          
           {/* Products Card */}
           {!isNewQuote && (
             <QuoteLinesCard

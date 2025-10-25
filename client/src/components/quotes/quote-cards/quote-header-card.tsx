@@ -1,3 +1,4 @@
+// It’s called a React Hook, and its purpose is: To let functional components store and manage state (data that can change over time).
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -27,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 
+// TypeScript interface, it defines the shape of the props (inputs) that the QuoteHeaderCard React component expects from its parent
 interface QuoteHeaderCardProps {
   quoteId: string | null;
   quote: Quote | null;
@@ -46,6 +48,8 @@ export default function QuoteHeaderCard({
   onCancelNewQuote,
   onEditingChange,
 }: QuoteHeaderCardProps) {
+  // Local state variables. The component’s “setup phase” or “hook initialization block”. It’s the section where React Hooks and local state variables are declared and initialized.
+ // useState returns 2 values, the first is the STATE, and the second is a function to change that. Here, each returned value is saved into a variable: isEditing and setIsEditing. Later we can call setIsEditing to change the value of isEditing.
   const [isEditing, setIsEditing] = useState(false);
   const [showAccountLookup, setShowAccountLookup] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =

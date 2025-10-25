@@ -422,7 +422,7 @@ export const companySettings = pgTable("company_settings", {
     onDelete: "restrict",
   }),
 }, (table) => ({
-  uniqueCompanyMaster: unique().on(table.companyId, table.companySettingsMasterId),
+  uniqueCompanyMaster: unique("company_settings_company_id_company_settings_master_id_unique").on(table.companyId, table.companySettingsMasterId),
 }));
 //Knowledge Base tables
 export const knowledgeArticles = pgTable("knowledge_articles", {

@@ -63,6 +63,12 @@ export default function QuoteHeaderCard({
     enabled: !!quote?.customerId && !isNewQuote && !isEditing,
   });
 
+  // Fetch customer account when creating a new quote from an account detail page
+  const { data: urlCustomerAccount } = useQuery<AccountWithOwner>({
+    queryKey: ["/api/accounts", urlCustomerId],
+    enabled: !!urlCustomerId && isNewQuote,
+  });
+
   const form = useForm<InsertQuote>({
     resolver: zodResolver(insertQuoteSchema),
     defaultValues: {
@@ -217,6 +223,15 @@ export default function QuoteHeaderCard({
       setSelectedCustomer(customerAccount);
     }
   }, [customerAccount]);
+
+  // Populate customer details when creating a new quote from an account
+  useEffect(() => {
+    if (urlCustomerAccount && isNewQuote) {
+      setSelectedCustomer(urlCustomerAccount);
+      form.setValue("customerName", urlCustomerAccount.name);
+      form.setValue("customerAddress", urlCustomerAccount.address || "");
+    }
+  }, [urlCustomerAccount, isNewQuote, form]);
 
   useEffect(() => {
     if (isNewQuote) {

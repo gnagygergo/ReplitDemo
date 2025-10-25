@@ -445,9 +445,7 @@ export default function QuoteHeaderCard({
                                     >
                                       {selectedCustomer.name}
                                     </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {selectedCustomer.industry}
-                                    </span>
+                                    
                                   </div>
                                 </div>
                               ) : (
@@ -586,9 +584,7 @@ export default function QuoteHeaderCard({
                                     >
                                       {getUserDisplayName(selectedSalesRep)}
                                     </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {selectedSalesRep.email}
-                                    </span>
+                                    
                                   </div>
                                 </div>
                               ) : (

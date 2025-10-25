@@ -8,6 +8,8 @@ import {
   type InsertQuote,
   insertQuoteSchema,
   type AccountWithOwner,
+  type User,
+  type Company,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,12 +23,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { FileSpreadsheet, Edit, Save, X, Building } from "lucide-react";
+import { FileSpreadsheet, Edit, Save, X, Building, User as UserIcon } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
+import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 
 // TypeScript interface, it defines the shape of the props (inputs) that the QuoteHeaderCard React component expects from its parent
 interface QuoteHeaderCardProps {
@@ -52,8 +56,10 @@ export default function QuoteHeaderCard({
  // useState returns 2 values, the first is the STATE, and the second is a function to change that. Here, each returned value is saved into a variable: isEditing and setIsEditing. Later we can call setIsEditing to change the value of isEditing.
   const [isEditing, setIsEditing] = useState(false);
   const [showAccountLookup, setShowAccountLookup] = useState(false);
+  const [showUserLookup, setShowUserLookup] = useState(false);
   const [selectedCustomer, setSelectedCustomer] =
     useState<AccountWithOwner | null>(null);
+  const [selectedSalesRep, setSelectedSalesRep] = useState<User | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -69,6 +75,18 @@ export default function QuoteHeaderCard({
     enabled: !!urlCustomerId && isNewQuote,
   });
 
+  // Fetch my company details to populate seller fields
+  const { data: myCompany } = useQuery<Company>({
+    queryKey: ["/api/auth/my-company"],
+    enabled: isNewQuote || isEditing,
+  });
+
+  // Fetch sales rep user details when quote has sellerUserId
+  const { data: salesRepUser } = useQuery<User>({
+    queryKey: ["/api/users", quote?.sellerUserId],
+    enabled: !!quote?.sellerUserId && !isNewQuote && !isEditing,
+  });
+
   const form = useForm<InsertQuote>({
     resolver: zodResolver(insertQuoteSchema),
     defaultValues: {
@@ -80,6 +98,7 @@ export default function QuoteHeaderCard({
       sellerName: "",
       sellerAddress: "",
       sellerBankAccount: "",
+      sellerUserId: user?.id || "",
       sellerEmail: "",
       sellerPhone: "",
       quoteExpirationDate: undefined,
@@ -169,6 +188,7 @@ export default function QuoteHeaderCard({
           sellerName: quote.sellerName || "",
           sellerAddress: quote.sellerAddress || "",
           sellerBankAccount: quote.sellerBankAccount || "",
+          sellerUserId: quote.sellerUserId || "",
           sellerEmail: quote.sellerEmail || "",
           sellerPhone: quote.sellerPhone || "",
           quoteExpirationDate: quote.quoteExpirationDate || undefined,
@@ -199,6 +219,47 @@ export default function QuoteHeaderCard({
     setShowAccountLookup(false);
   };
 
+  const handleOpenUserLookup = () => {
+    setShowUserLookup(true);
+  };
+
+  const handleUserSelect = (selectedUser: User) => {
+    setSelectedSalesRep(selectedUser);
+    form.setValue("sellerUserId", selectedUser.id);
+    
+    // Populate seller phone and email from selected user
+    form.setValue("sellerEmail", selectedUser.email || "");
+    form.setValue("sellerPhone", selectedUser.phone || "");
+    
+    setShowUserLookup(false);
+  };
+
+  const handleCloseUserLookup = () => {
+    setShowUserLookup(false);
+  };
+
+  const getUserDisplayName = (user: User | null) => {
+    if (!user) return "";
+    if (user.firstName || user.lastName) {
+      return `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    }
+    return user.email || 'Unknown User';
+  };
+
+  const getUserInitials = (user: User | null) => {
+    if (!user) return 'U';
+    if (user.firstName && user.lastName) {
+      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+    }
+    if (user.firstName) {
+      return user.firstName[0].toUpperCase();
+    }
+    if (user.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
   useEffect(() => {
     if (quote) {
       form.reset({
@@ -210,6 +271,7 @@ export default function QuoteHeaderCard({
         sellerName: quote.sellerName || "",
         sellerAddress: quote.sellerAddress || "",
         sellerBankAccount: quote.sellerBankAccount || "",
+        sellerUserId: quote.sellerUserId || "",
         sellerEmail: quote.sellerEmail || "",
         sellerPhone: quote.sellerPhone || "",
         quoteExpirationDate: quote.quoteExpirationDate || undefined,
@@ -224,6 +286,13 @@ export default function QuoteHeaderCard({
     }
   }, [customerAccount]);
 
+  // Set sales rep from fetched data
+  useEffect(() => {
+    if (salesRepUser) {
+      setSelectedSalesRep(salesRepUser);
+    }
+  }, [salesRepUser]);
+
   // Populate customer details when creating a new quote from an account
   useEffect(() => {
     if (urlCustomerAccount && isNewQuote) {
@@ -232,6 +301,25 @@ export default function QuoteHeaderCard({
       form.setValue("customerAddress", urlCustomerAccount.address || "");
     }
   }, [urlCustomerAccount, isNewQuote, form]);
+
+  // Populate company and seller fields from company data
+  useEffect(() => {
+    if (myCompany && (isNewQuote || isEditing)) {
+      form.setValue("sellerName", myCompany.companyOfficialName || "");
+      form.setValue("sellerAddress", myCompany.address || "");
+      form.setValue("sellerBankAccount", myCompany.bankAccountNumber || "");
+    }
+  }, [myCompany, isNewQuote, isEditing, form]);
+
+  // Set current user as default sales rep for new quotes and populate their email/phone
+  useEffect(() => {
+    if (user && isNewQuote) {
+      setSelectedSalesRep(user);
+      form.setValue("sellerUserId", user.id);
+      form.setValue("sellerEmail", user.email || "");
+      form.setValue("sellerPhone", user.phone || "");
+    }
+  }, [user, isNewQuote, form]);
 
   useEffect(() => {
     if (isNewQuote) {
@@ -246,6 +334,7 @@ export default function QuoteHeaderCard({
         sellerName: "",
         sellerAddress: "",
         sellerBankAccount: "",
+        sellerUserId: user?.id || "",
         sellerEmail: "",
         sellerPhone: "",
         quoteExpirationDate: undefined,
@@ -458,9 +547,57 @@ export default function QuoteHeaderCard({
                             <Input
                               {...field}
                               value={field.value || ""}
-                              placeholder="Enter seller name"
+                              placeholder="Populated from company"
                               data-testid="input-edit-seller-name"
+                              disabled
                             />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="sellerUserId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sales Representative</FormLabel>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="w-full justify-start h-auto p-3"
+                              onClick={handleOpenUserLookup}
+                              data-testid="button-sales-rep-lookup"
+                            >
+                              {selectedSalesRep ? (
+                                <div className="flex items-center space-x-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarImage src={selectedSalesRep.profileImageUrl || undefined} />
+                                    <AvatarFallback className="text-xs bg-muted">
+                                      {getUserInitials(selectedSalesRep)}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col items-start">
+                                    <span
+                                      className="font-medium"
+                                      data-testid={`text-sales-rep-${selectedSalesRep.id}`}
+                                    >
+                                      {getUserDisplayName(selectedSalesRep)}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                      {selectedSalesRep.email}
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2 text-muted-foreground">
+                                  <UserIcon className="h-4 w-4" />
+                                  <span>Select sales representative</span>
+                                </div>
+                              )}
+                            </Button>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -477,8 +614,9 @@ export default function QuoteHeaderCard({
                             <Input
                               {...field}
                               value={field.value || ""}
-                              placeholder="Enter seller phone"
+                              placeholder="Populated from sales rep"
                               data-testid="input-edit-seller-phone"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -497,8 +635,9 @@ export default function QuoteHeaderCard({
                               {...field}
                               value={field.value || ""}
                               type="email"
-                              placeholder="Enter seller email"
+                              placeholder="Populated from sales rep"
                               data-testid="input-edit-seller-email"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -516,8 +655,9 @@ export default function QuoteHeaderCard({
                             <Textarea
                               {...field}
                               value={field.value || ""}
-                              placeholder="Enter seller address"
+                              placeholder="Populated from company"
                               data-testid="input-edit-seller-address"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -535,8 +675,9 @@ export default function QuoteHeaderCard({
                             <Input
                               {...field}
                               value={field.value || ""}
-                              placeholder="Enter bank account"
+                              placeholder="Populated from company"
                               data-testid="input-edit-seller-bank-account"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -655,6 +796,25 @@ export default function QuoteHeaderCard({
                 </div>
 
                 <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Sales Representative
+                </label>
+                <div className="mt-1 text-foreground">
+                  {selectedSalesRep ? (
+                    <div className="flex items-center space-x-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={selectedSalesRep.profileImageUrl || undefined} />
+                        <AvatarFallback className="text-xs bg-muted">
+                          {getUserInitials(selectedSalesRep)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{getUserDisplayName(selectedSalesRep)}</span>
+                    </div>
+                  ) : (
+                    "N/A"
+                  )}
+                </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Seller Phone
                 </label>
                 <div className="mt-1 text-foreground">
@@ -692,6 +852,14 @@ export default function QuoteHeaderCard({
         open={showAccountLookup}
         onClose={handleCloseAccountLookup}
         onSelect={handleAccountSelect}
+      />
+
+      {/* User Lookup Dialog */}
+      <UserLookupDialog
+        open={showUserLookup}
+        onClose={handleCloseUserLookup}
+        onSelect={handleUserSelect}
+        selectedUserId={form.getValues("sellerUserId") || undefined}
       />
     </>
   );

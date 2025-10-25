@@ -240,6 +240,9 @@ export const quotes = pgTable("quotes", {
   sellerName: text("seller_name"),
   sellerAddress: text("seller_address"),
   sellerBankAccount: text("seller_bank_account"),
+  sellerUserId: varchar("seller_user_id").references(() => users.id, {
+    onDelete: "restrict",
+  }),
   sellerEmail: text("seller_email"),
   sellerPhone: text("seller_phone"),
   quoteExpirationDate: date("quote_expiration_date"),

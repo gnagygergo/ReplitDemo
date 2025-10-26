@@ -10,6 +10,7 @@ import {
   type AccountWithOwner,
   type User,
   type Company,
+  type CompanySetting,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -87,8 +88,30 @@ export default function QuoteHeaderCard({
     enabled: !!quote?.sellerUserId && !isNewQuote && !isEditing,
   });
 
+  // Fetch company setting for quote customer requirement
+  const { data: quoteCustomerSettings = [] } = useQuery<CompanySetting[]>({
+    queryKey: ["/api/business-objects/company-settings/by-prefix/general_quote_setting_allow_quote_creation_without_customerKey"],
+  });
+  
+  const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "true";
+
+  // Create conditional schema based on company setting
+  const quoteSchema = insertQuoteSchema.refine(
+    (data) => {
+      // If setting is false (don't allow quotes without customer), customerId is required
+      if (!allowQuoteWithoutCustomer) {
+        return data.customerId !== "" && data.customerId !== null;
+      }
+      return true;
+    },
+    {
+      message: "Customer is required",
+      path: ["customerId"],
+    }
+  );
+
   const form = useForm<InsertQuote>({
-    resolver: zodResolver(insertQuoteSchema),
+    resolver: zodResolver(quoteSchema),
     defaultValues: {
       quoteName: "",
       customerId: urlCustomerId || "",

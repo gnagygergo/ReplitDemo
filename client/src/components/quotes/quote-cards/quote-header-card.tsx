@@ -93,7 +93,7 @@ export default function QuoteHeaderCard({
     queryKey: ["/api/business-objects/company-settings/by-prefix/general_quote_setting_allow_quote_creation_without_customerKey"],
   });
 
-  const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "true";
+  const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "TRUE";
 
   const form = useForm<InsertQuote>({
     resolver: zodResolver(insertQuoteSchema),

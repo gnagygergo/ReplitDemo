@@ -35,12 +35,34 @@ export default function AccountLookupDialog({
 
   // Build query key and params based on filters
   const hasFilters = filters && (filters.isLegalEntity || filters.isPersonAccount || filters.isSelfEmployed);
+  
+  // Build the query URL with proper query parameters
+  const buildQueryUrl = () => {
+    if (!hasFilters) {
+      return "/api/accounts";
+    }
+    
+    const params = new URLSearchParams();
+    if (filters?.isLegalEntity) params.append('isLegalEntity', 'true');
+    if (filters?.isPersonAccount) params.append('isPersonAccount', 'true');
+    if (filters?.isSelfEmployed) params.append('isSelfEmployed', 'true');
+    
+    return `/api/accounts/search?${params.toString()}`;
+  };
+
   const queryKey = hasFilters 
     ? ["/api/accounts/search", filters]
     : ["/api/accounts"];
 
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
     queryKey,
+    queryFn: async () => {
+      const response = await fetch(buildQueryUrl());
+      if (!response.ok) {
+        throw new Error('Failed to fetch accounts');
+      }
+      return response.json();
+    },
     enabled: open,
   });
 

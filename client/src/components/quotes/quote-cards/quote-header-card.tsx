@@ -344,6 +344,8 @@ export default function QuoteHeaderCard({
     if (isNewQuote) {
       setIsEditing(true);
       onEditingChange(true);
+
+      // Initialize seller email/phone from the logged-in user so reset doesn't wipe them out.
       form.reset({
         quoteName: "",
         customerId: urlCustomerId || "",
@@ -354,11 +356,16 @@ export default function QuoteHeaderCard({
         sellerAddress: "",
         sellerBankAccount: "",
         sellerUserId: user?.id || "",
-        sellerEmail: "",
-        sellerPhone: "",
+        sellerEmail: user?.email || "",
+        sellerPhone: user?.phone || "",
         quoteExpirationDate: undefined,
         createdBy: user?.id || "",
       });
+
+      // Also set selectedSalesRep so the UI shows the avatar/name correctly
+      if (user) {
+        setSelectedSalesRep(user);
+      }
     } else {
       setIsEditing(false);
       onEditingChange(false);

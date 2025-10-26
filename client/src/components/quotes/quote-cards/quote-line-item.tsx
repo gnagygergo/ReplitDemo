@@ -391,7 +391,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.productName`}
           render={({ field: f }) => (
-            <FormItem className="md:col-span-5">
+            <FormItem className="md:col-span-6">
               <FormLabel>Product Name</FormLabel>
               <FormControl>
                 <Input
@@ -435,7 +435,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.unitPriceCurrency`}
           render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
+            <FormItem className="md:col-span-1">
               <FormLabel>Currency</FormLabel>
               <FormControl>
                 <Input

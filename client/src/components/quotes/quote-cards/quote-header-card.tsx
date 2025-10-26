@@ -322,25 +322,6 @@ export default function QuoteHeaderCard({
     }
   }, [salesRepUser]);
 
-  // Populate customer details when creating a new quote from an account
-  useEffect(() => {
-    if (urlCustomerAccount && isNewQuote) {
-      setSelectedCustomer(urlCustomerAccount);
-      form.setValue("customerName", urlCustomerAccount.name);
-      form.setValue("customerAddress", urlCustomerAccount.address || "");
-
-      // Auto-fill Quote Name when Customer Link is autopopulated (new quote from account)
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString("hu-HU", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      });
-      const newQuoteName = `${urlCustomerAccount.name} ${formattedDate}`.trim();
-      form.setValue("quoteName", newQuoteName);
-    }
-  }, [urlCustomerAccount, isNewQuote, form]);
-
   // Populate company and seller fields from company data
   useEffect(() => {
     if (myCompany && (isNewQuote || isEditing)) {
@@ -365,12 +346,24 @@ export default function QuoteHeaderCard({
       setIsEditing(true);
       onEditingChange(true);
 
-      // Initialize seller email/phone from the logged-in user so reset doesn't wipe them out.
+      // Calculate quote name if we have customer data
+      let initialQuoteName = "";
+      if (urlCustomerAccount) {
+        const today = new Date();
+        const formattedDate = today.toLocaleDateString("hu-HU", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+        initialQuoteName = `${urlCustomerAccount.name} ${formattedDate}`.trim();
+      }
+
+      // Initialize form with customer data if coming from account view
       form.reset({
-        quoteName: "",
+        quoteName: initialQuoteName,
         customerId: urlCustomerId || "",
-        customerName: "",
-        customerAddress: "",
+        customerName: urlCustomerAccount?.name || "",
+        customerAddress: urlCustomerAccount?.address || "",
         companyId: "",
         sellerName: "",
         sellerAddress: "",
@@ -382,15 +375,18 @@ export default function QuoteHeaderCard({
         createdBy: user?.id || "",
       });
 
-      // Also set selectedSalesRep so the UI shows the avatar/name correctly
+      // Also set selectedSalesRep and selectedCustomer so the UI shows correctly
       if (user) {
         setSelectedSalesRep(user);
+      }
+      if (urlCustomerAccount) {
+        setSelectedCustomer(urlCustomerAccount);
       }
     } else {
       setIsEditing(false);
       onEditingChange(false);
     }
-  }, [isNewQuote, urlCustomerId, user, form, onEditingChange]);
+  }, [isNewQuote, urlCustomerId, urlCustomerAccount, user, form, onEditingChange]);
 
   return (
     <>

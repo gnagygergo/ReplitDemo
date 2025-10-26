@@ -140,6 +140,11 @@ export interface IStorage {
 
   // Account methods
   getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]>;
+  searchAccounts(companyContext: string | undefined, filters: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  }): Promise<AccountWithOwner[]>;
   getAccount(id: string): Promise<AccountWithOwner | undefined>;
   getChildAccounts(parentAccountId: string, accountType?: string): Promise<AccountWithOwner[]>;
   getParentAccounts(childAccountId: string): Promise<AccountWithOwner[]>;
@@ -693,6 +698,14 @@ export class DatabaseStorage implements IStorage {
 
   async getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]> {
     return this.accountStorage.getAccounts(companyContext, sortBy, sortOrder);
+  }
+
+  async searchAccounts(companyContext: string | undefined, filters: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  }): Promise<AccountWithOwner[]> {
+    return this.accountStorage.searchAccounts(companyContext, filters);
   }
 
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {

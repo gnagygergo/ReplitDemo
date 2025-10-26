@@ -896,6 +896,11 @@ export default function QuoteHeaderCard({
         open={showAccountLookup}
         onClose={handleCloseAccountLookup}
         onSelect={handleAccountSelect}
+        filters={{
+          isLegalEntity: true,
+          isPersonAccount: true,
+          isSelfEmployed: true,
+        }}
       />
 
       {/* User Lookup Dialog */}

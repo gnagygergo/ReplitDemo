@@ -16,19 +16,31 @@ interface AccountLookupDialogProps {
   onClose: () => void;
   onSelect: (account: AccountWithOwner) => void;
   selectedAccountId?: string;
+  filters?: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  };
 }
 
 export default function AccountLookupDialog({ 
   open, 
   onClose, 
   onSelect, 
-  selectedAccountId 
+  selectedAccountId,
+  filters
 }: AccountLookupDialogProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedId, setSelectedId] = useState<string>(selectedAccountId || "");
 
+  // Build query key and params based on filters
+  const hasFilters = filters && (filters.isLegalEntity || filters.isPersonAccount || filters.isSelfEmployed);
+  const queryKey = hasFilters 
+    ? ["/api/accounts/search", filters]
+    : ["/api/accounts"];
+
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
-    queryKey: ["/api/accounts"],
+    queryKey,
     enabled: open,
   });
 
@@ -187,7 +199,7 @@ export default function AccountLookupDialog({
                           htmlFor={account.id} 
                           className="cursor-pointer"
                         >
-                          {getIndustryBadge(account.industry)}
+                          {account.industry ? getIndustryBadge(account.industry) : <Badge className="bg-gray-100 text-gray-800">No Industry</Badge>}
                         </Label>
                       </TableCell>
                       <TableCell>

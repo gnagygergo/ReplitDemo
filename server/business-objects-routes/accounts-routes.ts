@@ -17,6 +17,23 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // Search accounts with filters
+  app.get("/api/accounts/search", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const filters = {
+        isLegalEntity: req.query.isLegalEntity === "true",
+        isPersonAccount: req.query.isPersonAccount === "true",
+        isSelfEmployed: req.query.isSelfEmployed === "true",
+      };
+      
+      const accounts = await storage.searchAccounts(companyContext || undefined, filters);
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search accounts" });
+    }
+  });
+
   app.post("/api/accounts", async (req, res) => {
     try {
       console.log("[DEBUG] POST /api/accounts received data:", {

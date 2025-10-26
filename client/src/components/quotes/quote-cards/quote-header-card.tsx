@@ -809,13 +809,6 @@ export default function QuoteHeaderCard({
                 </div>
 
                 <label className="text-sm font-medium text-muted-foreground mt-4 block">
-                  Quote Expiration Date
-                </label>
-                <div className="mt-1 text-foreground">
-                  {quote?.quoteExpirationDate || "N/A"}
-                </div>
-
-                <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Quote Creation Date
                 </label>
                 <div className="mt-1 text-foreground">
@@ -827,6 +820,14 @@ export default function QuoteHeaderCard({
                       })
                     : "N/A"}
                 </div>
+
+                <label className="text-sm font-medium text-muted-foreground mt-4 block">
+                  Quote Expiration Date
+                </label>
+                <div className="mt-1 text-foreground">
+                  {quote?.quoteExpirationDate || "N/A"}
+                </div>
+                
               </div>
 
               {/* Second column (view mode) */}

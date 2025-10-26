@@ -95,23 +95,8 @@ export default function QuoteHeaderCard({
   
   const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "true";
 
-  // Create conditional schema based on company setting
-  const quoteSchema = insertQuoteSchema.refine(
-    (data) => {
-      // If setting is false (don't allow quotes without customer), customerId is required
-      if (!allowQuoteWithoutCustomer) {
-        return data.customerId !== "" && data.customerId !== null;
-      }
-      return true;
-    },
-    {
-      message: "Customer is required",
-      path: ["customerId"],
-    }
-  );
-
   const form = useForm<InsertQuote>({
-    resolver: zodResolver(quoteSchema),
+    resolver: zodResolver(insertQuoteSchema),
     defaultValues: {
       quoteName: "",
       customerId: urlCustomerId || "",
@@ -188,6 +173,15 @@ export default function QuoteHeaderCard({
   });
 
   const onSubmit = (data: InsertQuote) => {
+    // Conditional validation: if quotes cannot be created without customer, validate customerId
+    if (!allowQuoteWithoutCustomer && !data.customerId) {
+      form.setError("customerId", {
+        type: "manual",
+        message: "Customer is required",
+      });
+      return;
+    }
+
     if (isNewQuote) {
       createMutation.mutate(data);
     } else {
@@ -235,6 +229,8 @@ export default function QuoteHeaderCard({
     form.setValue("customerId", account.id);
     form.setValue("customerName", account.name);
     form.setValue("customerAddress", account.address || "");
+    // Clear any validation errors when customer is selected
+    form.clearErrors("customerId");
     setShowAccountLookup(false);
   };
 
@@ -484,57 +480,62 @@ export default function QuoteHeaderCard({
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="customerName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter customer name"
-                              data-testid="input-edit-customer-name"
-                              onChange={(e) => {
-                                field.onChange(e);
+                    {/* Only show Customer Name and Address fields when quotes can be created without customer link */}
+                    {allowQuoteWithoutCustomer && (
+                      <>
+                        <FormField
+                          control={form.control}
+                          name="customerName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Customer Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  placeholder="Enter customer name"
+                                  data-testid="input-edit-customer-name"
+                                  onChange={(e) => {
+                                    field.onChange(e);
 
-                                // Get current date in 'en-US' format so that Quote Name field can be auto-filled
-                                const today = new Date();
-                                const formattedDate = today.toLocaleDateString("hu-HU", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                });
+                                    // Get current date in 'en-US' format so that Quote Name field can be auto-filled
+                                    const today = new Date();
+                                    const formattedDate = today.toLocaleDateString("hu-HU", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    });
 
-                                // Combine customer name + date
-                                const newQuoteName = `${e.target.value} ${formattedDate}`.trim();
-                                form.setValue("quoteName", newQuoteName);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                                    // Combine customer name + date
+                                    const newQuoteName = `${e.target.value} ${formattedDate}`.trim();
+                                    form.setValue("quoteName", newQuoteName);
+                                  }}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <FormField
-                      control={form.control}
-                      name="customerAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Customer Address</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="Enter customer address"
-                              data-testid="input-edit-customer-address"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="customerAddress"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Customer Address</FormLabel>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  value={field.value || ""}
+                                  placeholder="Enter customer address"
+                                  data-testid="input-edit-customer-address"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </>
+                    )}
 
                     <FormField
                       control={form.control}

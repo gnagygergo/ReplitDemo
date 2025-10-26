@@ -92,7 +92,7 @@ export default function QuoteHeaderCard({
   const { data: quoteCustomerSettings = [] } = useQuery<CompanySetting[]>({
     queryKey: ["/api/business-objects/company-settings/by-prefix/general_quote_setting_allow_quote_creation_without_customerKey"],
   });
-  
+
   const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "true";
 
   const form = useForm<InsertQuote>({
@@ -232,6 +232,16 @@ export default function QuoteHeaderCard({
     // Clear any validation errors when customer is selected
     form.clearErrors("customerId");
     setShowAccountLookup(false);
+
+    // Auto-fill Quote Name when Customer Link is set/changed
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString("hu-HU", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const newQuoteName = `${account.name} ${formattedDate}`.trim();
+    form.setValue("quoteName", newQuoteName);
   };
 
   const handleCloseAccountLookup = () => {
@@ -245,11 +255,11 @@ export default function QuoteHeaderCard({
   const handleUserSelect = (selectedUser: User) => {
     setSelectedSalesRep(selectedUser);
     form.setValue("sellerUserId", selectedUser.id);
-    
+
     // Populate seller phone and email from selected user
     form.setValue("sellerEmail", selectedUser.email || "");
     form.setValue("sellerPhone", selectedUser.phone || "");
-    
+
     setShowUserLookup(false);
   };
 
@@ -318,6 +328,16 @@ export default function QuoteHeaderCard({
       setSelectedCustomer(urlCustomerAccount);
       form.setValue("customerName", urlCustomerAccount.name);
       form.setValue("customerAddress", urlCustomerAccount.address || "");
+
+      // Auto-fill Quote Name when Customer Link is autopopulated (new quote from account)
+      const today = new Date();
+      const formattedDate = today.toLocaleDateString("hu-HU", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+      const newQuoteName = `${urlCustomerAccount.name} ${formattedDate}`.trim();
+      form.setValue("quoteName", newQuoteName);
     }
   }, [urlCustomerAccount, isNewQuote, form]);
 
@@ -471,7 +491,7 @@ export default function QuoteHeaderCard({
                                     >
                                       {selectedCustomer.name}
                                     </span>
-                                    
+
                                   </div>
                                 </div>
                               ) : (
@@ -615,7 +635,7 @@ export default function QuoteHeaderCard({
                                     >
                                       {getUserDisplayName(selectedSalesRep)}
                                     </span>
-                                    
+
                                   </div>
                                 </div>
                               ) : (

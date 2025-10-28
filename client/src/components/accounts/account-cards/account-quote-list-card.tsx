@@ -78,7 +78,6 @@ export default function AccountQuoteListCard({
               <TableHeader>
                 <TableRow>
                   <TableHead>Quote Name</TableHead>
-                  <TableHead>Customer Name</TableHead>
                   <TableHead>Expiration Date</TableHead>
                 </TableRow>
               </TableHeader>
@@ -97,11 +96,6 @@ export default function AccountQuoteListCard({
                           {quote.quoteName || "N/A"}
                         </span>
                       </Link>
-                    </TableCell>
-                    <TableCell
-                      data-testid={`text-quote-customer-name-${quote.id}`}
-                    >
-                      {quote.customerName || "N/A"}
                     </TableCell>
                     <TableCell
                       data-testid={`text-quote-expiration-${quote.id}`}

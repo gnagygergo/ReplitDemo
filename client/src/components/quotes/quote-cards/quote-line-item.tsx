@@ -740,7 +740,6 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
                   type="number"
                   step="1"
                   placeholder="0.00"
-                  disabled
                   className="disabled:opacity-100"
                   onClick={(e) => e.currentTarget.select()}
                   data-testid={`input-line-${index}-vat-percent`}

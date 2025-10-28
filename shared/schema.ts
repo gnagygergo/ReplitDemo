@@ -248,6 +248,8 @@ export const quotes = pgTable("quotes", {
   quoteExpirationDate: date("quote_expiration_date"),
   createdBy: varchar("created_by"),
   createdDate: timestamp("created_date").defaultNow(),
+  netGrandTotal: decimal("net_grand_total", { precision: 12, scale: 3 }),
+  grossGrandTotal: decimal("gross_grand_total", { precision: 12, scale: 3 })
 });
 
 export const quoteLines = pgTable("quote_lines", {
@@ -277,32 +279,18 @@ export const quoteLines = pgTable("quote_lines", {
     precision: 12,
     scale: 3,
   }),
-  finalUnitPrice: decimal("final_unit_price", {
-    precision: 12,
-    scale: 3,
-  }),
+  finalUnitPrice: decimal("final_unit_price", {precision: 12,scale: 3,}),
   salesUom: text("sales_uom"),
   quotedQuantity: decimal("quoted_quantity", { precision: 12, scale: 3 }),
-  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {
-    precision: 12,
-    scale: 3,
-  }),
-  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
-  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
-  finalSubtotal: decimal("final_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
+  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {precision: 12,scale: 3,}),
+  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {precision: 12,scale: 3,}),
+  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {precision: 12,scale: 3,}),
+  finalSubtotal: decimal("final_subtotal", {precision: 12, scale: 3,}),
   vatPercent: decimal("vat_percent", { precision: 12, scale: 3 }),
   vatUnitAmount: decimal("vat_unit_amount", { precision: 12, scale: 3 }),
   vatOnSubtotal: decimal("vat_on_subtotal", { precision: 12, scale: 3 }),
-  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 }),
+  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 })
+  
 });
 
 export const devPatterns = pgTable("dev_patterns", {

@@ -10,6 +10,7 @@ import {
   Settings,
   Package,
   FileSpreadsheet,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +36,7 @@ export default function Header() {
   });
 
   // Fetch admin status for current user
-  const { data: adminStatus } = useQuery<{
+  const { data: adminStatus } = useQuery<{ 
     isGlobalAdmin: boolean;
     isCompanyAdmin: boolean;
     hasAdminAccess: boolean;
@@ -93,20 +94,32 @@ export default function Header() {
             </nav>
           </div>
           <div className="flex items-center space-x-4">
-            
-
             {/* Setup/Settings Link - Only show for Company Admin or Global Admin */}
             {adminStatus?.hasAdminAccess && (
-              <Link href="/setup">
+              <>
+                {/* Graduation cap / training icon placed to the left of the settings (gear) icon */}
                 <Button
                   variant="ghost"
                   size="sm"
                   className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-                  data-testid="button-setup"
+                  title="Training"
+                  aria-label="Training"
+                  data-testid="button-training"
                 >
-                  <Settings className="w-5 h-5" />
+                  <GraduationCap className="w-5 h-5" />
                 </Button>
-              </Link>
+
+                <Link href="/setup">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                    data-testid="button-setup"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </Button>
+                </Link>
+              </>
             )}
 
             {/* User Menu */}

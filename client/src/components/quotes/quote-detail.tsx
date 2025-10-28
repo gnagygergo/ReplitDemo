@@ -8,6 +8,7 @@ import { FileSpreadsheet } from "lucide-react";
 import QuoteHeaderCard from "@/components/quotes/quote-cards/quote-header-card";
 import QuoteLinesCard from "@/components/quotes/quote-cards/quote-lines-card";
 import QuoteEmailsCard from "@/components/quotes/quote-cards/quote-emails-card";
+import QuoteFooterCard from "@/components/quotes/quote-cards/quote-footer-card";
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");
@@ -138,6 +139,9 @@ export default function QuoteDetail() {
               isQuoteEditing={isQuoteEditing}
             />
           )}
+
+          <QuoteFooterCard quote={quote || null} />
+          
         </TabsContent>
 
         <TabsContent value="communication" className="space-y-6">

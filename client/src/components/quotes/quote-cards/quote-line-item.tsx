@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Trash2, Search } from "lucide-react";
-import { type Product, type UnitOfMeasure } from "@shared/schema";
+import { type Product, type UnitOfMeasure, type CompanySettingWithMaster } from "@shared/schema";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
 import {
   Select,
@@ -132,6 +132,23 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
     queryKey: ["/api/products", productId],
     enabled: !!productId,
   });
+
+  // Fetch discount settings
+  const { data: discountSettings = [] } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/by-prefix/discount_setting"],
+  });
+
+  // Extract setting values (uppercase TRUE/FALSE)
+  // Default to true if setting not found to preserve existing behavior
+  const unitPriceDiscountSetting = discountSettings.find(
+    s => s.settingCode === "discount_setting_show_unit_price_discount"
+  );
+  const showUnitPriceDiscount = unitPriceDiscountSetting?.settingValue !== "FALSE";
+
+  const rowDiscountSetting = discountSettings.find(
+    s => s.settingCode === "discount_setting_show_row_discount"
+  );
+  const showRowDiscount = rowDiscountSetting?.settingValue !== "FALSE";
 
   // Get the type of the selected product's sales UoM
   const productUomType = selectedProduct?.salesUomId
@@ -491,81 +508,85 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
 
       {/* Row 2: Discount fields, Final Unit Price, Quantity, UoM */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <FormField
-          control={control}
-          name={`lines.${index}.unitPriceDiscountPercent`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-start-2 md:col-span-2">
-              <FormLabel>Discount %</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="1"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedDiscountField.current = 'percent';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-discount-percent`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {showUnitPriceDiscount && (
+          <>
+            <FormField
+              control={control}
+              name={`lines.${index}.unitPriceDiscountPercent`}
+              render={({ field: f }) => (
+                <FormItem className="md:col-start-2 md:col-span-2">
+                  <FormLabel>Discount %</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...f}
+                      value={f.value ?? 0}
+                      type="number"
+                      step="1"
+                      placeholder="0.00"
+                      onChange={(e) => {
+                        lastEditedDiscountField.current = 'percent';
+                        f.onChange(e);
+                      }}
+                      onClick={(e) => e.currentTarget.select()}
+                      data-testid={`input-line-${index}-discount-percent`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={control}
-          name={`lines.${index}.unitPriceDiscountAmount`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Discount Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="1"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedDiscountField.current = 'amount';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-discount-amount`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={control}
+              name={`lines.${index}.unitPriceDiscountAmount`}
+              render={({ field: f }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Discount Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...f}
+                      value={f.value ?? 0}
+                      type="number"
+                      step="1"
+                      placeholder="0.00"
+                      onChange={(e) => {
+                        lastEditedDiscountField.current = 'amount';
+                        f.onChange(e);
+                      }}
+                      onClick={(e) => e.currentTarget.select()}
+                      data-testid={`input-line-${index}-discount-amount`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={control}
-          name={`lines.${index}.finalUnitPrice`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Final Unit Price</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  type="number"
-                  step="1"
-                  placeholder="0.00"
-                  disabled
-                  className="disabled:opacity-100"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-final-unit-price`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={control}
+              name={`lines.${index}.finalUnitPrice`}
+              render={({ field: f }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Final Unit Price</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...f}
+                      value={f.value || ""}
+                      type="number"
+                      step="1"
+                      placeholder="0.00"
+                      disabled
+                      className="disabled:opacity-100"
+                      onClick={(e) => e.currentTarget.select()}
+                      data-testid={`input-line-${index}-final-unit-price`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <FormField
           control={control}
@@ -646,59 +667,61 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
 
       {/* Row 3: Subtotal before discount, row discount, row discount amount, final subtotal */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        
+        {showRowDiscount && (
+          <>
+            <FormField
+              control={control}
+              name={`lines.${index}.discountPercentOnSubtotal`}
+              render={({ field: f }) => (
+                <FormItem className="md:col-start-2 md:col-span-2">
+                  <FormLabel>Row Discount %</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...f}
+                      value={f.value ?? 0}
+                      type="number"
+                      step="1"
+                      placeholder="0.00"
+                      onChange={(e) => {
+                        lastEditedSubtotalDiscountField.current = 'percent';
+                        f.onChange(e);
+                      }}
+                      onClick={(e) => e.currentTarget.select()}
+                      data-testid={`input-line-${index}-row-discount-percent`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={control}
-          name={`lines.${index}.discountPercentOnSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-start-2 md:col-span-2">
-              <FormLabel>Row Discount %</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="1"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedSubtotalDiscountField.current = 'percent';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-row-discount-percent`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={control}
-          name={`lines.${index}.discountAmountOnSubtotal`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
-              <FormLabel>Row Discount Amount</FormLabel>
-              <FormControl>
-                <Input
-                  {...f}
-                  value={f.value ?? 0}
-                  type="number"
-                  step="1"
-                  placeholder="0.00"
-                  onChange={(e) => {
-                    lastEditedSubtotalDiscountField.current = 'amount';
-                    f.onChange(e);
-                  }}
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-row-discount-amount`}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={control}
+              name={`lines.${index}.discountAmountOnSubtotal`}
+              render={({ field: f }) => (
+                <FormItem className="md:col-span-2">
+                  <FormLabel>Row Discount Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...f}
+                      value={f.value ?? 0}
+                      type="number"
+                      step="1"
+                      placeholder="0.00"
+                      onChange={(e) => {
+                        lastEditedSubtotalDiscountField.current = 'amount';
+                        f.onChange(e);
+                      }}
+                      onClick={(e) => e.currentTarget.select()}
+                      data-testid={`input-line-${index}-row-discount-amount`}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         <FormField
           control={control}

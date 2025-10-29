@@ -2,6 +2,8 @@ import { db } from "../db";
 import { quoteLines, quotes } from "@shared/schema";
 import type { QuoteLine, InsertQuoteLine } from "@shared/schema";
 import { eq, and, inArray } from "drizzle-orm";
+import { sql } from "drizzle-orm";
+import { tx } from "../db";
 
 export class QuoteLineStorage {
   async getQuoteLine(
@@ -228,6 +230,24 @@ export class QuoteLineStorage {
         return 0;
       }
     }
+
+    // Recalculate totals using a single aggregation query (scoped to this quote)
+    const [agg] = await tx
+      .select({
+        netGrandTotal: sql`coalesce(sum(${quoteLines.finalSubtotal}), 0)`,
+        grossGrandTotal: sql`coalesce(sum(${quoteLines.grossSubtotal}), 0)`,
+      })
+      .from(quoteLines)
+      .where(eq(quoteLines.quoteId, quoteId));
+
+    // Persist totals to quotes table
+    await tx
+      .update(quotes)
+      .set({
+        netGrandTotal: Number(agg.netGrandTotal ?? 0),
+        grossGrandTotal: Number(agg.grossGrandTotal ?? 0),
+      })
+      .where(eq(quotes.id, quoteId));
 
     const result = await db
       .delete(quoteLines)

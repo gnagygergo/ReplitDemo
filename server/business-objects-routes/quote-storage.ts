@@ -1,5 +1,7 @@
 import { db } from "../db";
 import { quotes } from "@shared/schema";
+import { sql } from "drizzle-orm";
+import { quoteLines } from "@shared/schema";
 import type {
   Quote,
   InsertQuote,
@@ -143,5 +145,56 @@ export class QuoteStorage {
         ),
       )
       .orderBy(quotes.createdDate);
+  }
+
+
+  /**
+   * Recalculate and persist quote totals (netGrandTotal and grossGrandTotal)
+   * using a single SQL aggregation query, scoped to companyContext.
+   *
+   * - netGrandTotal := SUM(quote_lines.finalSubtotal)
+   * - grossGrandTotal := SUM(quote_lines.grossSubtotal)
+   *
+   * Returns the updated Quote or undefined if companyContext is not provided
+   * or the quote does not belong to the companyContext.
+   */
+  async updateQuoteTotals(
+    quoteId: string,
+    companyContext?: string,
+  ): Promise<Quote | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    // Ensure the target quote belongs to the requested company context
+    const [quoteExists] = await db
+      .select()
+      .from(quotes)
+      .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)));
+
+    if (!quoteExists) {
+      return undefined;
+    }
+
+    // Single aggregation query to compute the sums (coalesce to 0 if no rows)
+    const [agg] = await db
+      .select({
+        netGrandTotal: sql`coalesce(sum(${quoteLines.finalSubtotal}), 0)`,
+        grossGrandTotal: sql`coalesce(sum(${quoteLines.grossSubtotal}), 0)`,
+      })
+      .from(quoteLines)
+      .where(eq(quoteLines.quoteId, quoteId));
+
+    // Persist the aggregated totals back to the quotes table (scoped by company)
+    const [updated] = await db
+      .update(quotes)
+      .set({
+        netGrandTotal: Number(agg.netGrandTotal ?? 0),
+        grossGrandTotal: Number(agg.grossGrandTotal ?? 0),
+      })
+      .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)))
+      .returning();
+
+    return updated || undefined;
   }
 }

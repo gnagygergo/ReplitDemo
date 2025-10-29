@@ -859,6 +859,7 @@ export const insertCompanySettingsMasterSchema = createInsertSchema(companySetti
     settingDescription: z.string().optional(),
     settingValues: z.string().optional(),
     defaultValue: z.string().optional(),
+    specialValueSet: z.string().optional(),
     articleCode: z.string().optional(),
   });
 

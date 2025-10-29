@@ -133,6 +133,7 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: "",
       settingValues: "",
       defaultValue: "",
+      specialValueSet: "",
       cantBeTrueIfTheFollowingIsFalse: "",
       articleCode: "",
       settingOrderWithinFunctionality: undefined,
@@ -343,6 +344,7 @@ export default function CompanySettingMasterAdmin() {
       settingDescription: settingsMaster.settingDescription || "",
       settingValues: settingsMaster.settingValues || "",
       defaultValue: settingsMaster.defaultValue || "",
+      specialValueSet: settingsMaster.specialValueSet || "",
       cantBeTrueIfTheFollowingIsFalse: settingsMaster.cantBeTrueIfTheFollowingIsFalse || "",
       articleCode: settingsMaster.articleCode || "",
       settingOrderWithinFunctionality: settingsMaster.settingOrderWithinFunctionality ?? undefined,
@@ -574,6 +576,7 @@ export default function CompanySettingMasterAdmin() {
                         settingDescription: "",
                         settingValues: "",
                         defaultValue: "",
+                        specialValueSet: "",
                         cantBeTrueIfTheFollowingIsFalse: "",
                         articleCode: "",
                         settingOrderWithinFunctionality: undefined,
@@ -1003,6 +1006,41 @@ export default function CompanySettingMasterAdmin() {
                     <FormControl>
                       <Input {...field} value={field.value || ""} data-testid="input-default-value" />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={settingsMasterForm.control}
+                name="specialValueSet"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Special Value Set</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-special-value-set">
+                          <SelectValue placeholder="Select a value set" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="" data-testid="option-special-value-set-none">
+                          None
+                        </SelectItem>
+                        <SelectItem value="Currency list" data-testid="option-special-value-set-currency">
+                          Currency list
+                        </SelectItem>
+                        <SelectItem value="Country list (coming)" data-testid="option-special-value-set-country">
+                          Country list (coming)
+                        </SelectItem>
+                        <SelectItem value="Language list (coming)" data-testid="option-special-value-set-language">
+                          Language list (coming)
+                        </SelectItem>
+                        <SelectItem value="Timezone list (coming)" data-testid="option-special-value-set-timezone">
+                          Timezone list (coming)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

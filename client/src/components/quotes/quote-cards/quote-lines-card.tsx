@@ -64,6 +64,10 @@ export default function QuoteLinesCard({
       queryClient.invalidateQueries({
         queryKey: ["/api/quotes", quoteId, "quote-lines"],
       });
+      // Invalidate the quote data to refresh totals in quote-footer-card
+      queryClient.invalidateQueries({
+        queryKey: ["/api/quotes", quoteId],
+      });
       toast({
         title: "Quote lines saved successfully",
       });

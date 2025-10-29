@@ -1180,6 +1180,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Currency routes (Global - no company context, read-only for all authenticated users)
+  app.get("/api/currencies", isAuthenticated, async (req, res) => {
+    try {
+      const currencies = await storage.getCurrencies();
+      res.json(currencies);
+    } catch (error) {
+      console.error("Error fetching currencies:", error);
+      res.status(500).json({ message: "Failed to fetch currencies" });
+    }
+  });
+
   // Language routes (Global - no company context, read: all users, write: global admins only)
   app.get("/api/languages", isAuthenticated, async (req, res) => {
     try {

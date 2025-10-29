@@ -6,9 +6,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Currency } from "@shared/schema";
 
 type CompanySettingWithMaster = {
   id: string;
@@ -25,6 +27,7 @@ type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  specialValueSet: string | null;
   cantBeTrueIfTheFollowingIsFalse: string | null;
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
@@ -83,6 +86,11 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
       }
       return response.json();
     },
+  });
+
+  // Fetch currencies for dropdown
+  const { data: currencies = [] } = useQuery<Currency[]>({
+    queryKey: ["/api/currencies"],
   });
 
   const updateSettingMutation = useMutation({
@@ -248,6 +256,10 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     setPendingLockedSetting(null);
   };
 
+  const handleCurrencyChange = (setting: CompanySettingWithMaster, currencyCode: string) => {
+    updateSettingMutation.mutate({ id: setting.id, newValue: currencyCode });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -280,6 +292,8 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
           const isHighlighted = setting.id === highlightedSettingId;
           const isLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE";
           const isFalseOnly = isOnlyFalseAllowed(setting.settingValues);
+          const isCurrencyList = setting.specialValueSet === "Currency list";
+          
           return (
             <div 
               key={setting.id} 
@@ -291,7 +305,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
               data-testid={`setting-${setting.id}`}
             >
               <div className="flex-1 space-y-1">
-                <Label htmlFor={`toggle-${setting.id}`} className="text-base font-medium">
+                <Label htmlFor={isCurrencyList ? `currency-${setting.id}` : `toggle-${setting.id}`} className="text-base font-medium">
                   {setting.settingName}
                 </Label>
                 {setting.settingDescription && (
@@ -300,13 +314,37 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
                   </p>
                 )}
               </div>
-              <Switch
-                id={`toggle-${setting.id}`}
-                checked={isFalseOnly ? false : setting.settingValue === "TRUE"}
-                onCheckedChange={(checked) => handleToggleChange(setting, checked)}
-                disabled={updateSettingMutation.isPending || isLocked || isFalseOnly}
-                data-testid={`switch-${setting.id}`}
-              />
+              
+              {isCurrencyList ? (
+                <Select
+                  value={setting.settingValue || undefined}
+                  onValueChange={(value) => handleCurrencyChange(setting, value)}
+                  disabled={updateSettingMutation.isPending}
+                >
+                  <SelectTrigger className="w-[300px]" id={`currency-${setting.id}`} data-testid={`select-currency-${setting.id}`}>
+                    <SelectValue placeholder="Select a currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem 
+                        key={currency.currencyISOCode} 
+                        value={currency.currencyISOCode}
+                        data-testid={`option-currency-${currency.currencyISOCode}`}
+                      >
+                        {currency.currencyISOCode} - {currency.currencyName} - {currency.currencyLocaleName || currency.currencyName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Switch
+                  id={`toggle-${setting.id}`}
+                  checked={isFalseOnly ? false : setting.settingValue === "TRUE"}
+                  onCheckedChange={(checked) => handleToggleChange(setting, checked)}
+                  disabled={updateSettingMutation.isPending || isLocked || isFalseOnly}
+                  data-testid={`switch-${setting.id}`}
+                />
+              )}
             </div>
           );
         })}

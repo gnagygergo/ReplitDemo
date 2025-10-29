@@ -883,6 +883,7 @@ export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+export type Currency = typeof currencies.$inferSelect;
 export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Language = typeof languages.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;

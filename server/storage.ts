@@ -27,6 +27,7 @@ import {
   type Product,
   type InsertProduct,
   type ProductWithUom,
+  type Currency,
   type Language,
   type InsertLanguage,
   type Translation,
@@ -67,6 +68,7 @@ import {
   releases,
   unitOfMeasures,
   products,
+  currencies,
   languages,
   translations,
   quotes,
@@ -108,6 +110,7 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  specialValueSet: string | null;
   cantBeTrueIfTheFollowingIsFalse: string | null;
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
@@ -1221,6 +1224,14 @@ export class DatabaseStorage implements IStorage {
     return this.productStorage.deleteProduct(id, companyContext);
   }
 
+  // Currency methods (Global - no company context filtering)
+  async getCurrencies(): Promise<Currency[]> {
+    return await db
+      .select()
+      .from(currencies)
+      .orderBy(currencies.currencyName);
+  }
+
   // Language methods (Global - no company context filtering)
   async getLanguages(): Promise<Language[]> {
     return await db
@@ -1993,6 +2004,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2047,6 +2059,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2099,6 +2112,7 @@ export class DatabaseStorage implements IStorage {
       settingDescription: settingMaster.settingDescription,
       settingValues: settingMaster.settingValues,
       defaultValue: settingMaster.defaultValue,
+      specialValueSet: settingMaster.specialValueSet,
       cantBeTrueIfTheFollowingIsFalse: settingMaster.cantBeTrueIfTheFollowingIsFalse,
       settingOrderWithinFunctionality: settingMaster.settingOrderWithinFunctionality,
       settingShowsInLevel: settingMaster.settingShowsInLevel,
@@ -2126,6 +2140,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2230,6 +2245,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,

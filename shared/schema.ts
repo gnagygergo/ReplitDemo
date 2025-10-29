@@ -32,6 +32,19 @@ export const companies = pgTable("companies", {
   logoUrl: text("logo_url"),
 });
 
+export const currencies = pgTable("currencies", {
+  currencyISOCode: text("currency_iso_code").notNull()
+    .primaryKey(),
+  currencyName: text("currency_name").notNull(),
+  currencyCulture: text("currency_culture"),
+  currencyLocaleName: text("currency_locale_name"),
+  currencySymbol: text("currency_symbol").notNull(),
+  currencySymbolPosition: text("currency_symbol_position").notNull(),
+  currencyDecimalPlaces: integer("currency_decimal_places"),
+  currencyThousandsSeparator: text("currency_thousands_separator"),
+  currencyDecimalSeparator: text("currency_decimal_separator")
+});
+
 export const accounts = pgTable("accounts", {
   id: varchar("id")
     .primaryKey()
@@ -385,6 +398,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
+  specialValueSet: text("special_value_set"),
   cantBeTrueIfTheFollowingIsFalse: text("cant_be_true_if_the_following_is_false"),
   articleCode: text("article_code"),
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),

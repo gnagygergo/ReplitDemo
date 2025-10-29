@@ -592,7 +592,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
           control={control}
           name={`lines.${index}.quotedQuantity`}
           render={({ field: f }) => (
-            <FormItem className="md:col-span-2">
+            <FormItem className="md:col-start-8 md:col-span-2">
               <FormLabel>Quantity</FormLabel>
               <FormControl>
                 <Input

@@ -293,6 +293,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
           const isLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE";
           const isFalseOnly = isOnlyFalseAllowed(setting.settingValues);
           const isCurrencyList = setting.specialValueSet === "Currency list";
+          const isCurrencyLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue !== null && setting.settingValue !== "";
           
           return (
             <div 
@@ -319,7 +320,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
                 <Select
                   value={setting.settingValue || undefined}
                   onValueChange={(value) => handleCurrencyChange(setting, value)}
-                  disabled={updateSettingMutation.isPending}
+                  disabled={updateSettingMutation.isPending || isCurrencyLocked}
                 >
                   <SelectTrigger className="w-[300px]" id={`currency-${setting.id}`} data-testid={`select-currency-${setting.id}`}>
                     <SelectValue placeholder="Select a currency" />

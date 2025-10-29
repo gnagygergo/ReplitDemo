@@ -1017,16 +1017,13 @@ export default function CompanySettingMasterAdmin() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Special Value Set</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <Select onValueChange={field.onChange} value={field.value || undefined}>
                       <FormControl>
                         <SelectTrigger data-testid="select-special-value-set">
-                          <SelectValue placeholder="Select a value set" />
+                          <SelectValue placeholder="None (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="" data-testid="option-special-value-set-none">
-                          None
-                        </SelectItem>
                         <SelectItem value="Currency list" data-testid="option-special-value-set-currency">
                           Currency list
                         </SelectItem>

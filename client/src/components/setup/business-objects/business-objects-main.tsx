@@ -53,6 +53,7 @@ type CompanyAdminCheckResponse = {
 import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
 import QuoteManagement from "@/components/setup/business-objects/quotes/quote-settings";
+import PricingMethods from "@/components/setup/business-objects/quotes/pricing-methods";
 import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
 
 // Type for child menu items with component
@@ -131,6 +132,12 @@ const setupMenuItems: MenuItem[] = [
         label: "Quote Settings",
         description: "The fundamentals",
         component: QuoteManagement,
+      },
+      {
+        id: "pricing-settings",
+        label: "Pricing Methods",
+        description: "Tell us how you price products",
+        component: PricingMethods,
       },
       
     ],

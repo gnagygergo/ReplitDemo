@@ -277,6 +277,7 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Quote | undefined>;
   deleteQuote(id: string, companyContext?: string): Promise<boolean>;
+  updateQuoteTotals(quoteId: string, companyContext?: string): Promise<Quote | undefined>;
 
   // Quote Line methods
   getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined>;
@@ -1333,6 +1334,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuote(id: string, companyContext?: string): Promise<boolean> {
     return this.quoteStorage.deleteQuote(id, companyContext);
+  }
+
+  async updateQuoteTotals(quoteId: string, companyContext?: string): Promise<Quote | undefined> {
+    return this.quoteStorage.updateQuoteTotals(quoteId, companyContext);
   }
 
   // Quote Line methods - Delegated to QuoteLineStorage

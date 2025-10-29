@@ -186,11 +186,12 @@ export class QuoteStorage {
       .where(eq(quoteLines.quoteId, quoteId));
 
     // Persist the aggregated totals back to the quotes table (scoped by company)
+    // Convert to string since decimal fields expect string type
     const [updated] = await db
       .update(quotes)
       .set({
-        netGrandTotal: Number(agg.netGrandTotal ?? 0),
-        grossGrandTotal: Number(agg.grossGrandTotal ?? 0),
+        netGrandTotal: String(agg.netGrandTotal ?? 0),
+        grossGrandTotal: String(agg.grossGrandTotal ?? 0),
       })
       .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)))
       .returning();

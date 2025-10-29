@@ -183,6 +183,14 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
         if (quoteLines.length === 0 && processedLines.length > 0) {
           return res.status(404).json({ message: "Quote not found or does not belong to your company" });
         }
+
+        // Recalculate quote totals after updating quote lines
+        // Ignore failures - totals may be stale but line operations succeeded
+        try {
+          await storage.updateQuoteTotals(quoteId, companyContext || undefined);
+        } catch (error) {
+          console.warn("Failed to update quote totals after line update:", error);
+        }
         
         res.status(200).json(quoteLines);
       } catch (error) {
@@ -200,6 +208,7 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
     async (req, res) => {
       try {
         const companyContext = await storage.GetCompanyContext(req);
+        const { quoteId } = req.params;
         const ids = req.body.ids;
 
         if (!Array.isArray(ids)) {
@@ -217,6 +226,14 @@ export function registerQuoteLineRoutes(app: Express, storage: IStorage) {
           return res.status(404).json({
             message: "Quote lines not found or do not belong to your company",
           });
+        }
+
+        // Recalculate quote totals after deleting quote lines
+        // Ignore failures - totals may be stale but delete operations succeeded
+        try {
+          await storage.updateQuoteTotals(quoteId, companyContext || undefined);
+        } catch (error) {
+          console.warn("Failed to update quote totals after line deletion:", error);
         }
         
         res.status(200).json({ deletedCount });

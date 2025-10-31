@@ -71,7 +71,7 @@ export default function SmartAccountManagementDetailCard({
           <Form {...form}>
             <form className="space-y-6">
               {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
-              {showAccountNature && (
+              {showAccountNature && !(account?.isShippingAddress || account?.isCompanyContact) && (
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
                 <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                   Account Nature
@@ -96,6 +96,7 @@ export default function SmartAccountManagementDetailCard({
                                     form.setValue("isShippingAddress", false);
                                   }
                                 }}
+                                disabled={!!account?.isPersonAccount}
                                 data-testid="checkbox-is-person-account"
                               />
                             </FormControl>
@@ -137,8 +138,9 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Company Contact checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_companyContact_enabled") || form.watch("isCompanyContact")) &&
+                  {/* Company Contact checkbox - Show only when creating (not editing) */}
+                  {!account &&
+                    (isSettingEnabled("smart_account_management_accountType_companyContact_enabled") || form.watch("isCompanyContact")) &&
                     !form.watch("isLegalEntity") &&
                     !form.watch("isShippingAddress") && (
                       <FormField
@@ -199,8 +201,9 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Shipping Address checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_shipping_enabled") || form.watch("isShippingAddress")) &&
+                  {/* Shipping Address checkbox - Show only when creating (not editing) */}
+                  {!account &&
+                    (isSettingEnabled("smart_account_management_accountType_shipping_enabled") || form.watch("isShippingAddress")) &&
                     !form.watch("isPersonAccount") &&
                     !form.watch("isSelfEmployed") &&
                     !form.watch("isCompanyContact") && (

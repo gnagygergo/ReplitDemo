@@ -290,6 +290,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
 
   // Subcomponent to fetch & render knowledge article for a setting (collapsible, default collapsed)
   function SettingArticle({ articleCode, testIdPrefix }: { articleCode?: string | null; testIdPrefix: string }) {
+    const [isOpen, setIsOpen] = useState(false);
     const shouldFetch = !!articleCode;
     const { data: article, isLoading: isLoadingArticle, error: articleError } = useQuery<KnowledgeArticle>({
       enabled: shouldFetch,
@@ -337,19 +338,20 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     if (!article) return null;
 
     return (
-      <div className="mt-3 w-full">
-        <Collapsible open={false}>
+      <div className="mt-3 w-full border-t pt-3">
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <button
-              className="text-sm text-muted-foreground hover:underline"
+              className="flex items-center justify-between w-full text-left text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
               data-testid={`${testIdPrefix}-button-toggle-article`}
             >
-              {article.articleTitle || "Show article"}
+              <span>{article.articleTitle || "Show article"}</span>
+              <span className="text-xs text-muted-foreground ml-2">{isOpen ? "▼" : "▶"}</span>
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">
             <div
-              className="rounded-lg border p-3 prose prose-sm max-w-none dark:prose-invert bg-background"
+              className="rounded-lg border p-4 prose prose-sm max-w-none dark:prose-invert bg-background"
               dangerouslySetInnerHTML={{ __html: sanitizedContent }}
               data-testid={`${testIdPrefix}-content-article`}
             />

@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Currency } from "@shared/schema";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import DOMPurify from "isomorphic-dompurify";
 
 type CompanySettingWithMaster = {
   id: string;
@@ -32,6 +34,32 @@ type CompanySettingWithMaster = {
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
   settingOnceEnabledCannotBeDisabled: boolean | null;
+  // Optional: article code on the master setting that references a knowledge article
+  articleCode?: string | null;
+};
+
+type KnowledgeArticle = {
+  id: string;
+  articleTitle: string;
+  articleCode: string | null;
+  articleContent: string;
+  functionalDomainId: string | null;
+  functionalityId: string | null;
+  languageCode: string | null;
+  articleFunctionalDomain: string | null;
+  articleFunctionalityName: string | null;
+  articleTags: string | null;
+  articleKeywords: string | null;
+  isPublished: boolean;
+  isInternal: boolean;
+  authorId: string;
+  createdDate: Date;
+  author: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 };
 
 interface SetupToggleListerProps {
@@ -47,7 +75,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
   const [dependentSettings, setDependentSettings] = useState<CompanySettingWithMaster[]>([]);
   const [highlightedSettingId, setHighlightedSettingId] = useState<string | null>(null);
   const { toast } = useToast();
-  
+
   // Auto-clear highlight after 5 seconds
   useEffect(() => {
     if (highlightedSettingId) {
@@ -57,7 +85,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
       return () => clearTimeout(timer);
     }
   }, [highlightedSettingId]);
-  
+
   // Helper function to get indentation class based on settingShowsInLevel
   const getIndentationClass = (level: number | null | undefined): string => {
     if (!level || level === 1) return "ml-0";
@@ -109,21 +137,21 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     onError: (error: any) => {
       // Check if this is a dependency error
       const isDependencyError = error.message && error.message.includes("To turn this setting on");
-      
+
       if (isDependencyError && settings) {
         // Parse parent setting name from error message
         // Format: "To turn this setting on, please turn the following setting on first: [Setting Name] "
         const match = error.message.match(/first:\s*(.+?)(?:\s*$)/);
         if (match && match[1]) {
           const parentSettingName = match[1].trim();
-          
+
           // Find the parent setting in the settings array
           const parentSetting = settings.find(s => s.settingName === parentSettingName);
           if (parentSetting) {
             setHighlightedSettingId(parentSetting.id);
           }
         }
-        
+
         // Show warning toast instead of error
         toast({
           title: "Parent Setting Required",
@@ -168,7 +196,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
   // Auto-correct FALSE-only settings that have TRUE values
   useEffect(() => {
     if (!settings) return;
-    
+
     const settingsToCorrect = settings.filter(setting => 
       isOnlyFalseAllowed(setting.settingValues) && setting.settingValue === "TRUE"
     );
@@ -212,13 +240,13 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
       const response = await fetch(`/api/business-objects/company-settings/${setting.id}/dependents`, {
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to check dependencies");
       }
-      
+
       const dependents: CompanySettingWithMaster[] = await response.json();
-      
+
       if (dependents.length > 0) {
         // Show confirmation dialog with dependent settings
         setParentSetting(setting);
@@ -260,6 +288,77 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     updateSettingMutation.mutate({ id: setting.id, newValue: currencyCode });
   };
 
+  // Subcomponent to fetch & render knowledge article for a setting (collapsible, default collapsed)
+  function SettingArticle({ articleCode, testIdPrefix }: { articleCode?: string | null; testIdPrefix: string }) {
+    const shouldFetch = !!articleCode;
+    const { data: article, isLoading: isLoadingArticle, error: articleError } = useQuery<KnowledgeArticle>({
+      enabled: shouldFetch,
+      queryKey: ["/api/knowledge-articles/by-code", articleCode],
+      queryFn: async () => {
+        if (!articleCode) throw new Error("No article code provided");
+        const response = await fetch(`/api/knowledge-articles/by-code/${articleCode}`, {
+          credentials: "include",
+        });
+        if (!response.ok) {
+          const errText = await response.text();
+          throw new Error(errText || "Failed to fetch knowledge article");
+        }
+        return response.json();
+      },
+    });
+
+    const sanitizedContent = useMemo(() => {
+      if (!article?.articleContent) return "";
+      return DOMPurify.sanitize(article.articleContent);
+    }, [article?.articleContent]);
+
+    if (!shouldFetch) return null;
+
+    if (isLoadingArticle) {
+      return (
+        <div className="mt-3 space-y-2">
+          <Skeleton className="h-3 w-1/3" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+      );
+    }
+
+    if (articleError) {
+      return (
+        <div className="mt-3">
+          <Alert variant="destructive" data-testid={`${testIdPrefix}-alert-article-error`}>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Failed to load article.</AlertDescription>
+          </Alert>
+        </div>
+      );
+    }
+
+    if (!article) return null;
+
+    return (
+      <div className="mt-3 w-full">
+        <Collapsible open={false}>
+          <CollapsibleTrigger asChild>
+            <button
+              className="text-sm text-muted-foreground hover:underline"
+              data-testid={`${testIdPrefix}-button-toggle-article`}
+            >
+              {article.articleTitle || "Show article"}
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div
+              className="rounded-lg border p-3 prose prose-sm max-w-none dark:prose-invert bg-background"
+              dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              data-testid={`${testIdPrefix}-content-article`}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -293,59 +392,63 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
           const isLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue === "TRUE";
           const isFalseOnly = isOnlyFalseAllowed(setting.settingValues);
           const isCurrencyList = setting.specialValueSet === "Currency list";
-          const isCurrencyLocked = setting.settingOnceEnabledCannotBeDisabled === true && setting.settingValue !== null && setting.settingValue !== "";
-          
+
           return (
             <div 
               key={setting.id} 
-              className={`flex items-center justify-between space-x-4 rounded-lg border p-4 transition-all ${getIndentationClass(setting.settingShowsInLevel)} ${
+              className={`flex flex-col space-y-3 rounded-lg border p-4 transition-all ${getIndentationClass(setting.settingShowsInLevel)} ${
                 isHighlighted 
                   ? "border-amber-500 bg-amber-50 dark:bg-amber-950/30 shadow-lg shadow-amber-500/20 animate-pulse" 
                   : ""
               }`}
               data-testid={`setting-${setting.id}`}
             >
-              <div className="flex-1 space-y-1">
-                <Label htmlFor={isCurrencyList ? `currency-${setting.id}` : `toggle-${setting.id}`} className="text-base font-medium">
-                  {setting.settingName}
-                </Label>
-                {setting.settingDescription && (
-                  <p className="text-sm text-muted-foreground">
-                    {setting.settingDescription}
-                  </p>
+              <div className="flex items-center justify-between space-x-4">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor={isCurrencyList ? `currency-${setting.id}` : `toggle-${setting.id}`} className="text-base font-medium">
+                    {setting.settingName}
+                  </Label>
+                  {setting.settingDescription && (
+                    <p className="text-sm text-muted-foreground">
+                      {setting.settingDescription}
+                    </p>
+                  )}
+                </div>
+
+                {isCurrencyList ? (
+                  <Select
+                    value={setting.settingValue || undefined}
+                    onValueChange={(value) => handleCurrencyChange(setting, value)}
+                    disabled={updateSettingMutation.isPending}
+                  >
+                    <SelectTrigger className="w-[300px]" id={`currency-${setting.id}`} data-testid={`select-currency-${setting.id}`}>
+                      <SelectValue placeholder="Select a currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {currencies.map((currency) => (
+                        <SelectItem 
+                          key={currency.currencyISOCode} 
+                          value={currency.currencyISOCode}
+                          data-testid={`option-currency-${currency.currencyISOCode}`}
+                        >
+                          {currency.currencyISOCode} - {currency.currencyName} - {currency.currencyLocaleName || currency.currencyName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Switch
+                    id={`toggle-${setting.id}`}
+                    checked={isFalseOnly ? false : setting.settingValue === "TRUE"}
+                    onCheckedChange={(checked) => handleToggleChange(setting, checked)}
+                    disabled={updateSettingMutation.isPending || isLocked || isFalseOnly}
+                    data-testid={`switch-${setting.id}`}
+                  />
                 )}
               </div>
-              
-              {isCurrencyList ? (
-                <Select
-                  value={setting.settingValue || undefined}
-                  onValueChange={(value) => handleCurrencyChange(setting, value)}
-                  disabled={updateSettingMutation.isPending || isCurrencyLocked}
-                >
-                  <SelectTrigger className="w-[300px]" id={`currency-${setting.id}`} data-testid={`select-currency-${setting.id}`}>
-                    <SelectValue placeholder="Select a currency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {currencies.map((currency) => (
-                      <SelectItem 
-                        key={currency.currencyISOCode} 
-                        value={currency.currencyISOCode}
-                        data-testid={`option-currency-${currency.currencyISOCode}`}
-                      >
-                        {currency.currencyISOCode} - {currency.currencyName} - {currency.currencyLocaleName || currency.currencyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Switch
-                  id={`toggle-${setting.id}`}
-                  checked={isFalseOnly ? false : setting.settingValue === "TRUE"}
-                  onCheckedChange={(checked) => handleToggleChange(setting, checked)}
-                  disabled={updateSettingMutation.isPending || isLocked || isFalseOnly}
-                  data-testid={`switch-${setting.id}`}
-                />
-              )}
+
+              {/* Knowledge article collapsible area - appears below the setting info and inside the setting "card" */}
+              <SettingArticle articleCode={setting.articleCode ?? null} testIdPrefix={`setting-${setting.id}`} />
             </div>
           );
         })}
@@ -358,9 +461,9 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              You tried to turn off <strong>{parentSetting?.settingName}</strong>. There are settings that are dependent on this and must be turned off if you want to turn off "{parentSetting?.settingName}":
+              You tried to turn off <strong>{parentSetting?.settingName}</strong>. There are settings that are dependent on this and must be turned off if you want to turn off "{parentSetting?.settingName}".
             </p>
-            
+
             <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
               {/* Parent Setting */}
               {parentSetting && (
@@ -375,7 +478,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
                   />
                 </div>
               )}
-              
+
               {/* Dependent Settings */}
               {dependentSettings.length > 0 && (
                 <>

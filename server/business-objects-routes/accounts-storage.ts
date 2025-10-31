@@ -152,7 +152,7 @@ export class AccountStorage {
     if (accountType === 'contact') {
       whereConditions = and(whereConditions, eq(accounts.isCompanyContact, true)) as any;
     } else if (accountType === 'shipping') {
-      whereConditions = and(whereConditions, eq(accounts.isShippingAddress, true)) as any;
+      whereConditions = and(whereConditions, eq(accounts.isShippingAddress, true), eq(accounts.isLegalEntity, false)) as any;
     } else if (accountType === 'legal_entity') {
       whereConditions = and(whereConditions, eq(accounts.isLegalEntity, true)) as any;
     }

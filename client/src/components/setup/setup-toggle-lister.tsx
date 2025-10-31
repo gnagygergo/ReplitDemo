@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -342,11 +342,15 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CollapsibleTrigger asChild>
             <button
-              className="flex items-center justify-between w-full text-left text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+              className="flex items-center justify-between w-full text-left text-sm font-medium"
               data-testid={`${testIdPrefix}-button-toggle-article`}
             >
               <span>{article.articleTitle || "Show article"}</span>
-              <span className="text-xs text-muted-foreground ml-2">{isOpen ? "▼" : "▶"}</span>
+              <ChevronDown
+                className={`h-4 w-4 flex-shrink-0 transition-transform ${
+                  isOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">

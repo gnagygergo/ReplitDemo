@@ -75,7 +75,7 @@ export default function AccountSubAccountsListCard({
       isPersonAccount: false,
       isSelfEmployed: false,
       isCompanyContact: false,
-      isShippingAddress: false,
+      isShippingAddress: true,
       parentAccountId: accountId,
       ownerId: ownerId,
     },
@@ -94,7 +94,7 @@ export default function AccountSubAccountsListCard({
       isPersonAccount: false,
       isSelfEmployed: false,
       isCompanyContact: false,
-      isShippingAddress: false,
+      isShippingAddress: true,
       parentAccountId: accountId,
       ownerId: ownerId,
     });

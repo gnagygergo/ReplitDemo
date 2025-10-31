@@ -2141,6 +2141,7 @@ export class DatabaseStorage implements IStorage {
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
         specialValueSet: companySettingsMaster.specialValueSet,
+        articleCode: companySettingsMaster.articleCode,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,

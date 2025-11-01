@@ -12,7 +12,6 @@ import Accounts from "@/components/accounts/accounts";
 import Quotes from "@/components/quotes/quotes";
 import Opportunities from "@/components/opportunities/opportunities";
 import Products from "@/components/products/products";
-import Cases from "@/components/cases/cases";
 import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
@@ -40,7 +39,6 @@ function AuthenticatedRouter() {
         <Route path="/opportunities" component={Opportunities} />
         <Route path="/products/:id" component={ProductDetail} />
         <Route path="/products" component={Products} />
-        <Route path="/cases" component={Cases} />
         <Route path="/setup" component={Setup} />
         <Route path="setup/business-objects" component={BusinessObjectsManager} />
         <Route component={NotFound} />

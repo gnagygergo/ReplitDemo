@@ -50,7 +50,6 @@ export default function Header() {
     { path: "/quotes", label: "Quotes", icon: FileSpreadsheet },
     { path: "/opportunities", label: "Opportunities", icon: Target },
     { path: "/products", label: "Products", icon: Package },
-    { path: "/cases", label: "Cases", icon: FileText },
   ];
 
   return (

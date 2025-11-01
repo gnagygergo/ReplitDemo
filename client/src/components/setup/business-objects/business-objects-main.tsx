@@ -174,7 +174,7 @@ const setupMenuItems: MenuItem[] = [
     label: "Unit of Measures",
     icon: Ruler,
     description: "Count and measure products",
-    globalAdminOnly: false,
+    globalAdminOnly: true,
     category: "business-objects",
     component: UnitOfMeasuresManagement,
   },

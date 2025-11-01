@@ -55,6 +55,7 @@ import AccountManagementModels from "@/components/setup/business-objects/account
 import QuoteManagement from "@/components/setup/business-objects/quotes/quote-settings";
 import PricingMethods from "@/components/setup/business-objects/quotes/pricing-methods";
 import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
+import CompanyDefaultSettings from "@/components/setup/business-objects/company-defaults/company-defaults";
 
 // Type for child menu items with component
 type ChildMenuItem = {
@@ -82,6 +83,15 @@ type MenuItem = {
 // 1. Import the component at the top
 // 2. Add the menu item here with component reference
 const setupMenuItems: MenuItem[] = [
+  {
+    id: "companyDefaults",
+    label: "Company General Settings",
+    icon: FileCheck,
+    description: "Currency, Language, etc.",
+    globalAdminOnly: false,
+    category: "business-objects",
+    component: CompanyDefaultSettings,
+  },
   {
     id: "accounts",
     label: "Account management",

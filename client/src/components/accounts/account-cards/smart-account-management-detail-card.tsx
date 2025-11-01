@@ -71,7 +71,7 @@ export default function SmartAccountManagementDetailCard({
           <Form {...form}>
             <form className="space-y-6">
               {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
-              {showAccountNature && (
+              {showAccountNature && !(account?.isShippingAddress || account?.isCompanyContact) && (
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
                 <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                   Account Nature
@@ -96,6 +96,7 @@ export default function SmartAccountManagementDetailCard({
                                     form.setValue("isShippingAddress", false);
                                   }
                                 }}
+                                disabled={!!account?.isPersonAccount}
                                 data-testid="checkbox-is-person-account"
                               />
                             </FormControl>
@@ -137,36 +138,6 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Company Contact checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_companyContact_enabled") || form.watch("isCompanyContact")) &&
-                    !form.watch("isLegalEntity") &&
-                    !form.watch("isShippingAddress") && (
-                      <FormField
-                        control={form.control}
-                        name="isCompanyContact"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={!!field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked);
-                                  if (checked) {
-                                    form.setValue("isLegalEntity", false);
-                                    form.setValue("isShippingAddress", false);
-                                  }
-                                }}
-                                data-testid="checkbox-is-company-contact"
-                              />
-                            </FormControl>
-                            <FormLabel className="!mt-0 cursor-pointer">
-                              Company Contact
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    )}
-
                   {/* Legal Entity checkbox - Show if setting enabled OR currently checked */}
                   {(isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") || form.watch("isLegalEntity")) &&
                     !form.watch("isPersonAccount") &&
@@ -199,37 +170,6 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Shipping Address checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_shipping_enabled") || form.watch("isShippingAddress")) &&
-                    !form.watch("isPersonAccount") &&
-                    !form.watch("isSelfEmployed") &&
-                    !form.watch("isCompanyContact") && (
-                      <FormField
-                        control={form.control}
-                        name="isShippingAddress"
-                        render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2 space-y-0">
-                            <FormControl>
-                              <Checkbox
-                                checked={!!field.value}
-                                onCheckedChange={(checked) => {
-                                  field.onChange(checked);
-                                  if (checked) {
-                                    form.setValue("isPersonAccount", false);
-                                    form.setValue("isSelfEmployed", false);
-                                    form.setValue("isCompanyContact", false);
-                                  }
-                                }}
-                                data-testid="checkbox-is-shipping-address"
-                              />
-                            </FormControl>
-                            <FormLabel className="!mt-0 cursor-pointer">
-                              Shipping Address
-                            </FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                    )}
                 </div>
               </div>
               )}

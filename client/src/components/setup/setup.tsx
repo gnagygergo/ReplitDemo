@@ -72,6 +72,7 @@ const setupMenuItems = [
     label: "Company Roles (in dev)",
     icon: Shield,
     description: "Manage reporting hierarchy",
+    globalAdminOnly: true,
     category: "my-company",
   },
   {
@@ -79,6 +80,7 @@ const setupMenuItems = [
     label: "Release Plan",
     icon: Rocket,
     description: "Manage release planning and tracking",
+    globalAdminOnly: true,
     category: "my-company",
   },
   {
@@ -141,12 +143,11 @@ const setupMenuItems = [
     id: "company-setting-master-admin",
     label: "Company Settings Master Admin",
     icon: FileCheck,
-    description: "Manage functional domains, functionalities, and settings master data",
+    description:
+      "Manage functional domains, functionalities, and settings master data",
     globalAdminOnly: true,
     category: "my-company",
   },
-  
-  
 ];
 
 import UserManagement from "@/components/setup/user-management";
@@ -209,7 +210,9 @@ export default function Setup() {
   const [selectedItem, setSelectedItem] = useState("companies");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
-  const [selectedTab, setSelectedTab] = useState<"my-company" | "business-objects">("my-company");
+  const [selectedTab, setSelectedTab] = useState<
+    "my-company" | "business-objects"
+  >("my-company");
   const { toast } = useToast();
 
   // Auto-select menu item based on URL path
@@ -303,7 +306,7 @@ export default function Setup() {
   const filteredMenuItems = availableMenuItems.filter(
     (item) =>
       (item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        item.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
       (item as any).category === selectedTab,
   );
 
@@ -319,7 +322,9 @@ export default function Setup() {
   // Reset selectedItem when switching tabs or if current item is not in filtered list
   useEffect(() => {
     if (filteredMenuItems.length > 0) {
-      const isCurrentItemInFiltered = filteredMenuItems.some(item => item.id === selectedItem);
+      const isCurrentItemInFiltered = filteredMenuItems.some(
+        (item) => item.id === selectedItem,
+      );
       if (!isCurrentItemInFiltered) {
         setSelectedItem(filteredMenuItems[0].id);
       }
@@ -384,50 +389,63 @@ export default function Setup() {
                 Configure your application settings
               </p>
             </div>*/}
-            
+
             {/* Category Tabs */}
-            <Tabs value={selectedTab} onValueChange={(value) => setSelectedTab(value as "my-company" | "business-objects")}>
+            <Tabs
+              value={selectedTab}
+              onValueChange={(value) =>
+                setSelectedTab(value as "my-company" | "business-objects")
+              }
+            >
               <TabsList>
-                <TabsTrigger 
-                  value="my-company" 
+                <TabsTrigger
+                  value="my-company"
                   data-testid="tab-my-company"
-                  onClick={() => setLocation('/setup')}
+                  onClick={() => setLocation("/setup")}
                 >
                   My Company
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="business-objects" 
+                <TabsTrigger
+                  value="business-objects"
                   data-testid="tab-business-objects"
-                  onClick={() => setLocation('/setup/business-objects')}
+                  onClick={() => setLocation("/setup/business-objects")}
                 >
                   Business objects manager
                 </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
-          
+
           {/* Company Context Switcher - Only for Global Admins */}
           {adminCheck?.isGlobalAdmin && (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Company Context:</span>
+                <span className="text-sm text-muted-foreground">
+                  Company Context:
+                </span>
                 <Select
                   value={selectedCompanyId}
                   onValueChange={setSelectedCompanyId}
                 >
-                  <SelectTrigger className="w-[250px]" data-testid="select-company-context">
-                    <SelectValue 
-                      placeholder={currentCompanyData?.companyName || "Select a company"}
+                  <SelectTrigger
+                    className="w-[250px]"
+                    data-testid="select-company-context"
+                  >
+                    <SelectValue
+                      placeholder={
+                        currentCompanyData?.companyName || "Select a company"
+                      }
                     >
-                      {selectedCompanyId 
-                        ? companies?.find(c => c.id === selectedCompanyId)?.companyOfficialName 
+                      {selectedCompanyId
+                        ? companies?.find((c) => c.id === selectedCompanyId)
+                            ?.companyOfficialName
                         : currentCompanyData?.companyName}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {companies?.map((company) => (
-                      <SelectItem 
-                        key={company.id} 
+                      <SelectItem
+                        key={company.id}
                         value={company.id}
                         data-testid={`select-company-${company.id}`}
                       >

@@ -106,6 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         licenceAgreementId: licenceAgreement.id,
       });
 
+      // Update seat counts after user creation
+      await storage.actualizeLicenceAgreementSeatsUsed(licenceAgreement.id);
+
       res.status(201).json({
         message: "Registration successful",
         user: {

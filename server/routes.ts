@@ -89,7 +89,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyRegistrationId: validatedData.companyRegistrationId,
       });
 
-      // Create user with isAdmin = true and link to company
+      // Create automated license agreement for the new company
+      const licenceAgreement = await storage.createLicenceAgreementAutomated(
+        activeTemplate.id,
+        company.id,
+      );
+
+      // Create user with isAdmin = true and link to company and licence agreement
       const user = await storage.createUser({
         email: validatedData.email,
         firstName: validatedData.firstName,
@@ -97,13 +103,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         password: validatedData.password,
         isAdmin: true, // First user of new company is admin
         companyId: company.id,
+        licenceAgreementId: licenceAgreement.id,
       });
-
-      // Create automated license agreement for the new company
-      await storage.createLicenceAgreementAutomated(
-        activeTemplate.id,
-        company.id,
-      );
 
       res.status(201).json({
         message: "Registration successful",

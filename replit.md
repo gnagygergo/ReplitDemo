@@ -51,6 +51,9 @@ Preferred communication style: Simple, everyday language.
 ### Database Services
 - **Neon Database**: Serverless PostgreSQL database with connection pooling
 - **Drizzle ORM**: Type-safe database toolkit with PostgreSQL dialect
+- **Database Connection**: Uses Replit-provided DATABASE_URL environment variable for both development and production
+  - DO NOT use APP_DB_USER or APP_DB_PASSWORD secrets - they override correct credentials and cause authentication failures
+  - DATABASE_URL contains all necessary credentials automatically managed by Replit
 
 ### Authentication & Security
 - **Replit Auth**: Multi-provider authentication (Google, GitHub, X, Apple, email/password)

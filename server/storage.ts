@@ -7,10 +7,6 @@ import {
   type InsertOpportunity,
   type OpportunityWithAccount,
   type OpportunityWithAccountAndOwner,
-  type Case,
-  type InsertCase,
-  type CaseWithAccount,
-  type CaseWithAccountAndOwner,
   type AccountWithOwner,
   type User,
   type UpsertUser,
@@ -61,7 +57,6 @@ import {
   companySettings,
   accounts,
   opportunities,
-  cases,
   users,
   companyRoles,
   userRoleAssignments,
@@ -88,7 +83,6 @@ import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { QuoteLineStorage } from "./business-objects-routes/quote-line-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
-import { CaseStorage } from "./business-objects-routes/case-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -177,16 +171,6 @@ export interface IStorage {
     opportunity: Partial<InsertOpportunity>,
   ): Promise<Opportunity | undefined>;
   deleteOpportunity(id: string): Promise<boolean>;
-
-  // Case methods
-  getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]>;
-  getCase(id: string): Promise<CaseWithAccountAndOwner | undefined>;
-  createCase(caseData: InsertCase): Promise<Case>;
-  updateCase(
-    id: string,
-    caseData: Partial<InsertCase>,
-  ): Promise<Case | undefined>;
-  deleteCase(id: string): Promise<boolean>;
 
   // Company Role methods
   getCompanyRoles(): Promise<CompanyRoleWithParent[]>;
@@ -406,7 +390,6 @@ export class DatabaseStorage implements IStorage {
   private quoteLineStorage: QuoteLineStorage;
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
-  private caseStorage: CaseStorage;
   private productStorage: ProductStorage;
 
   constructor() {
@@ -418,10 +401,6 @@ export class DatabaseStorage implements IStorage {
     this.quoteLineStorage = new QuoteLineStorage();
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
     this.opportunityStorage = new OpportunityStorage(
-      this.getAccount.bind(this),
-      this.getUser.bind(this)
-    );
-    this.caseStorage = new CaseStorage(
       this.getAccount.bind(this),
       this.getUser.bind(this)
     );
@@ -584,7 +563,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    // Check if user owns any accounts, opportunities, or cases
+    // Check if user owns any accounts, opportunities
     const ownedAccounts = await db
       .select()
       .from(accounts)
@@ -593,15 +572,10 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(opportunities)
       .where(eq(opportunities.ownerId, id));
-    const ownedCases = await db
-      .select()
-      .from(cases)
-      .where(eq(cases.ownerId, id));
 
     if (
       ownedAccounts.length > 0 ||
-      ownedOpportunities.length > 0 ||
-      ownedCases.length > 0
+      ownedOpportunities.length > 0
     ) {
       return false; // Cannot delete user who owns records
     }
@@ -775,29 +749,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOpportunity(id: string): Promise<boolean> {
     return this.opportunityStorage.deleteOpportunity(id);
-  }
-
-  async getCases(sortBy?: string, sortOrder?: string): Promise<CaseWithAccountAndOwner[]> {
-    return this.caseStorage.getCases(sortBy, sortOrder);
-  }
-
-  async getCase(id: string): Promise<CaseWithAccountAndOwner | undefined> {
-    return this.caseStorage.getCase(id);
-  }
-
-  async createCase(insertCase: InsertCase): Promise<Case> {
-    return this.caseStorage.createCase(insertCase);
-  }
-
-  async updateCase(
-    id: string,
-    updates: Partial<InsertCase>,
-  ): Promise<Case | undefined> {
-    return this.caseStorage.updateCase(id, updates);
-  }
-
-  async deleteCase(id: string): Promise<boolean> {
-    return this.caseStorage.deleteCase(id);
   }
 
   // Company Role methods

@@ -395,13 +395,13 @@ export default function CompanyDetail() {
                           className="py-3 px-4"
                           data-testid={`text-seats-${agreement.id}`}
                         >
-                          {agreement.licenceSeatsRemaining ?? "N/A"}
+                          {agreement.licenceSeatsUsed || "N/A"}
                         </td>
                         <td
                           className="py-3 px-4"
                           data-testid={`text-seats-${agreement.id}`}
                         >
-                          {agreement.licenceSeatsUsed || "N/A"}
+                          {agreement.licenceSeatsRemaining ?? "N/A"}
                         </td>
                       </tr>
                     ))}

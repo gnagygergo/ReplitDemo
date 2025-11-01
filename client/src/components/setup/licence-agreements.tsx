@@ -115,8 +115,8 @@ function TemplateLookupDialog({
                 )}
                 <div className="text-xs text-muted-foreground mt-1">
                   {template.price} {template.currency} |{" "}
-                  {template.validFrom || "No start"} -{" "}
-                  {template.validTo || "No end"}
+                  {template.ValidFrom || "No start"} -{" "}
+                  {template.ValidTo || "No end"}
                 </div>
               </button>
             ))
@@ -220,7 +220,7 @@ function AgreementDialog({
       companyId: agreement?.companyId || "",
       validFrom: agreement?.validFrom || "",
       validTo: agreement?.validTo || "",
-      price: agreement?.price ? parseFloat(agreement.price) : undefined,
+      price: agreement?.price ? String(agreement.price) : "",
       currency: agreement?.currency || "",
       licenceSeats: agreement?.licenceSeats || undefined,
     },
@@ -233,11 +233,11 @@ function AgreementDialog({
 
   const handleTemplateSelect = (template: LicenceAgreementTemplate) => {
     form.setValue("licenceAgreementTemplateId", template.id);
-    form.setValue("validFrom", template.validFrom || "");
-    form.setValue("validTo", template.validTo || "");
+    form.setValue("validFrom", template.ValidFrom || "");
+    form.setValue("validTo", template.ValidTo || "");
     form.setValue(
       "price",
-      template.price ? parseFloat(template.price) : undefined,
+      template.price ? String(template.price) : undefined,
     );
     form.setValue("currency", template.currency || "");
   };

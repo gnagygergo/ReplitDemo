@@ -37,17 +37,31 @@ interface AccountDetailCategorizationCardProps {
   isEditing: boolean;
   form: UseFormReturn<InsertAccount>;
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
-  getIndustryLabel: (industry: string) => string;
-  getIndustryBadgeClass: (industry: string) => string;
 }
+
+const getIndustryLabel = (industry: string) => {
+  const labels = {
+    tech: "Technology",
+    construction: "Construction",
+    services: "Services",
+  };
+  return labels[industry as keyof typeof labels] || industry;
+};
+
+const getIndustryBadgeClass = (industry: string) => {
+  const variants = {
+    tech: "bg-blue-100 text-blue-800",
+    construction: "bg-orange-100 text-orange-800",
+    services: "bg-green-100 text-green-800",
+  };
+  return variants[industry as keyof typeof variants] || "";
+};
 
 export default function AccountDetailCategorizationCard({
   account,
   isEditing,
   form,
   updateMutation,
-  getIndustryLabel,
-  getIndustryBadgeClass
 }: AccountDetailCategorizationCardProps) {
   return (
     <Card>

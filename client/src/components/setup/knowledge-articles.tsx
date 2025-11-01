@@ -107,6 +107,25 @@ function KnowledgeArticleView({
   onEdit: () => void;
   onClose: () => void;
 }) {
+  // Fetch functional domains and functionalities to look up names by ID
+  const { data: functionalDomains = [] } = useQuery<CompanySettingMasterDomain[]>({
+    queryKey: ["/api/company-setting-master-domains"],
+  });
+
+  const { data: functionalities = [] } = useQuery<CompanySettingMasterFunctionality[]>({
+    queryKey: ["/api/company-setting-master-functionalities"],
+  });
+
+  // Look up the functional domain name by ID
+  const functionalDomainName = article.functionalDomainId
+    ? functionalDomains.find(d => d.id === article.functionalDomainId)?.name || "Not specified"
+    : "Not specified";
+
+  // Look up the functionality name by ID
+  const functionalityName = article.functionalityId
+    ? functionalities.find(f => f.id === article.functionalityId)?.name || "Not specified"
+    : "Not specified";
+
   return (
     <div className="space-y-6">
       {/* Header with action buttons */}
@@ -169,7 +188,7 @@ function KnowledgeArticleView({
                 Functional Domain
               </label>
               <p className="text-sm mt-1">
-                {article.articleFunctionalDomain || "Not specified"}
+                {functionalDomainName}
               </p>
             </div>
             <div>
@@ -177,7 +196,7 @@ function KnowledgeArticleView({
                 Functionality Name
               </label>
               <p className="text-sm mt-1">
-                {article.articleFunctionalityName || "Not specified"}
+                {functionalityName}
               </p>
             </div>
           </div>
@@ -528,7 +547,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Language</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-language">
@@ -631,7 +650,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Functional Domain</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-functional-domain">
@@ -663,7 +682,7 @@ function KnowledgeArticleEdit({
                       <FormLabel>Functionality</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value || ""}
+                        value={field.value || undefined}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-functionality">
@@ -911,12 +930,33 @@ export default function KnowledgeArticlesManagement() {
     queryKey: ["/api/knowledge-articles"],
   });
 
+  // Fetch functional domains and functionalities for name lookups
+  const { data: functionalDomains = [] } = useQuery<CompanySettingMasterDomain[]>({
+    queryKey: ["/api/company-setting-master-domains"],
+  });
+
+  const { data: functionalities = [] } = useQuery<CompanySettingMasterFunctionality[]>({
+    queryKey: ["/api/company-setting-master-functionalities"],
+  });
+
   // Fetch complete article when selected (includes content for editing/viewing)
   const { data: selectedArticle, isLoading: isLoadingArticle } =
     useQuery<KnowledgeArticleWithAuthor>({
       queryKey: ["/api/knowledge-articles", selectedArticleId],
       enabled: !!selectedArticleId && selectedArticleId !== "new",
     });
+
+  // Helper to look up domain name by ID
+  const getDomainName = (domainId: string | null | undefined) => {
+    if (!domainId) return null;
+    return functionalDomains.find(d => d.id === domainId)?.name || null;
+  };
+
+  // Helper to look up functionality name by ID
+  const getFunctionalityName = (functionalityId: string | null | undefined) => {
+    if (!functionalityId) return null;
+    return functionalities.find(f => f.id === functionalityId)?.name || null;
+  };
 
   // Delete article mutation with optimistic UI update
   const deleteArticleMutation = useMutation({
@@ -944,11 +984,14 @@ export default function KnowledgeArticlesManagement() {
   // Filter articles based on search query (searches across multiple fields)
   const filteredArticles = articles.filter((article) => {
     const query = searchQuery.toLowerCase();
+    const domainName = getDomainName(article.functionalDomainId);
+    const functionalityName = getFunctionalityName(article.functionalityId);
+    
     return (
       article.articleTitle?.toLowerCase().includes(query) ||
       article.articleKeywords?.toLowerCase().includes(query) ||
-      article.articleFunctionalDomain?.toLowerCase().includes(query) ||
-      article.articleFunctionalityName?.toLowerCase().includes(query) ||
+      domainName?.toLowerCase().includes(query) ||
+      functionalityName?.toLowerCase().includes(query) ||
       article.author?.firstName?.toLowerCase().includes(query) ||
       article.author?.lastName?.toLowerCase().includes(query)
     );
@@ -1065,11 +1108,11 @@ export default function KnowledgeArticlesManagement() {
                                   <div data-testid={`text-title-${article.id}`}>
                                     {article.articleTitle}
                                   </div>
-                                  {article.articleFunctionalDomain && (
+                                  {(getDomainName(article.functionalDomainId) || getFunctionalityName(article.functionalityId)) && (
                                     <div className="text-xs text-muted-foreground">
-                                      {article.articleFunctionalDomain}
-                                      {article.articleFunctionalityName &&
-                                        ` / ${article.articleFunctionalityName}`}
+                                      {getDomainName(article.functionalDomainId) || ''}
+                                      {getDomainName(article.functionalDomainId) && getFunctionalityName(article.functionalityId) && ' / '}
+                                      {getFunctionalityName(article.functionalityId) || ''}
                                     </div>
                                   )}
                                 </div>

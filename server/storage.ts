@@ -27,6 +27,7 @@ import {
   type Product,
   type InsertProduct,
   type ProductWithUom,
+  type Currency,
   type Language,
   type InsertLanguage,
   type Translation,
@@ -67,6 +68,7 @@ import {
   releases,
   unitOfMeasures,
   products,
+  currencies,
   languages,
   translations,
   quotes,
@@ -108,6 +110,7 @@ export type CompanySettingWithMaster = {
   settingDescription: string | null;
   settingValues: string | null;
   defaultValue: string | null;
+  specialValueSet: string | null;
   cantBeTrueIfTheFollowingIsFalse: string | null;
   settingOrderWithinFunctionality: number | null;
   settingShowsInLevel: number | null;
@@ -140,7 +143,14 @@ export interface IStorage {
 
   // Account methods
   getAccounts(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<AccountWithOwner[]>;
+  searchAccounts(companyContext: string | undefined, filters: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  }): Promise<AccountWithOwner[]>;
   getAccount(id: string): Promise<AccountWithOwner | undefined>;
+  getChildAccounts(parentAccountId: string, accountType?: string): Promise<AccountWithOwner[]>;
+  getParentAccounts(childAccountId: string): Promise<AccountWithOwner[]>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(
     id: string,
@@ -270,6 +280,7 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Quote | undefined>;
   deleteQuote(id: string, companyContext?: string): Promise<boolean>;
+  updateQuoteTotals(quoteId: string, companyContext?: string): Promise<Quote | undefined>;
 
   // Quote Line methods
   getQuoteLine(id: string, companyContext?: string): Promise<QuoteLine | undefined>;
@@ -693,8 +704,24 @@ export class DatabaseStorage implements IStorage {
     return this.accountStorage.getAccounts(companyContext, sortBy, sortOrder);
   }
 
+  async searchAccounts(companyContext: string | undefined, filters: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  }): Promise<AccountWithOwner[]> {
+    return this.accountStorage.searchAccounts(companyContext, filters);
+  }
+
   async getAccount(id: string): Promise<AccountWithOwner | undefined> {
     return this.accountStorage.getAccount(id);
+  }
+
+  async getChildAccounts(parentAccountId: string, accountType?: string): Promise<AccountWithOwner[]> {
+    return this.accountStorage.getChildAccounts(parentAccountId, accountType);
+  }
+
+  async getParentAccounts(childAccountId: string): Promise<AccountWithOwner[]> {
+    return this.accountStorage.getParentAccounts(childAccountId);
   }
 
   async createAccount(insertAccount: InsertAccount): Promise<Account> {
@@ -1197,6 +1224,14 @@ export class DatabaseStorage implements IStorage {
     return this.productStorage.deleteProduct(id, companyContext);
   }
 
+  // Currency methods (Global - no company context filtering)
+  async getCurrencies(): Promise<Currency[]> {
+    return await db
+      .select()
+      .from(currencies)
+      .orderBy(currencies.currencyName);
+  }
+
   // Language methods (Global - no company context filtering)
   async getLanguages(): Promise<Language[]> {
     return await db
@@ -1310,6 +1345,10 @@ export class DatabaseStorage implements IStorage {
 
   async deleteQuote(id: string, companyContext?: string): Promise<boolean> {
     return this.quoteStorage.deleteQuote(id, companyContext);
+  }
+
+  async updateQuoteTotals(quoteId: string, companyContext?: string): Promise<Quote | undefined> {
+    return this.quoteStorage.updateQuoteTotals(quoteId, companyContext);
   }
 
   // Quote Line methods - Delegated to QuoteLineStorage
@@ -1965,6 +2004,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2019,6 +2059,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2071,6 +2112,7 @@ export class DatabaseStorage implements IStorage {
       settingDescription: settingMaster.settingDescription,
       settingValues: settingMaster.settingValues,
       defaultValue: settingMaster.defaultValue,
+      specialValueSet: settingMaster.specialValueSet,
       cantBeTrueIfTheFollowingIsFalse: settingMaster.cantBeTrueIfTheFollowingIsFalse,
       settingOrderWithinFunctionality: settingMaster.settingOrderWithinFunctionality,
       settingShowsInLevel: settingMaster.settingShowsInLevel,
@@ -2098,6 +2140,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
@@ -2202,6 +2245,7 @@ export class DatabaseStorage implements IStorage {
         settingDescription: companySettingsMaster.settingDescription,
         settingValues: companySettingsMaster.settingValues,
         defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
         cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
         settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
         settingShowsInLevel: companySettingsMaster.settingShowsInLevel,

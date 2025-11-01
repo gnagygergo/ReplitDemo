@@ -32,6 +32,19 @@ export const companies = pgTable("companies", {
   logoUrl: text("logo_url"),
 });
 
+export const currencies = pgTable("currencies", {
+  currencyISOCode: text("currency_iso_code").notNull()
+    .primaryKey(),
+  currencyName: text("currency_name").notNull(),
+  currencyCulture: text("currency_culture"),
+  currencyLocaleName: text("currency_locale_name"),
+  currencySymbol: text("currency_symbol").notNull(),
+  currencySymbolPosition: text("currency_symbol_position").notNull(),
+  currencyDecimalPlaces: integer("currency_decimal_places"),
+  currencyThousandsSeparator: text("currency_thousands_separator"),
+  currencyDecimalSeparator: text("currency_decimal_separator")
+});
+
 export const accounts = pgTable("accounts", {
   id: varchar("id")
     .primaryKey()
@@ -50,10 +63,12 @@ export const accounts = pgTable("accounts", {
   companyRegistrationId: text("company_registration_id"),
   taxId: text("tax_id"),
   address: text("address"),
-  industry: text("industry").notNull(),
+  industry: text("industry"),
   ownerId: varchar("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
+  parentAccountId: varchar("parent_account_id")
+    .references((): AnyPgColumn => accounts.id, { onDelete: "cascade" }),
   companyId: varchar("company_id"),
 });
 
@@ -238,11 +253,16 @@ export const quotes = pgTable("quotes", {
   sellerName: text("seller_name"),
   sellerAddress: text("seller_address"),
   sellerBankAccount: text("seller_bank_account"),
+  sellerUserId: varchar("seller_user_id").references(() => users.id, {
+    onDelete: "restrict",
+  }),
   sellerEmail: text("seller_email"),
   sellerPhone: text("seller_phone"),
   quoteExpirationDate: date("quote_expiration_date"),
   createdBy: varchar("created_by"),
   createdDate: timestamp("created_date").defaultNow(),
+  netGrandTotal: decimal("net_grand_total", { precision: 12, scale: 3 }),
+  grossGrandTotal: decimal("gross_grand_total", { precision: 12, scale: 3 })
 });
 
 export const quoteLines = pgTable("quote_lines", {
@@ -272,32 +292,18 @@ export const quoteLines = pgTable("quote_lines", {
     precision: 12,
     scale: 3,
   }),
-  finalUnitPrice: decimal("final_unit_price", {
-    precision: 12,
-    scale: 3,
-  }),
+  finalUnitPrice: decimal("final_unit_price", {precision: 12,scale: 3,}),
   salesUom: text("sales_uom"),
   quotedQuantity: decimal("quoted_quantity", { precision: 12, scale: 3 }),
-  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {
-    precision: 12,
-    scale: 3,
-  }),
-  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
-  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
-  finalSubtotal: decimal("final_subtotal", {
-    precision: 12,
-    scale: 3,
-  }),
+  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {precision: 12,scale: 3,}),
+  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {precision: 12,scale: 3,}),
+  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {precision: 12,scale: 3,}),
+  finalSubtotal: decimal("final_subtotal", {precision: 12, scale: 3,}),
   vatPercent: decimal("vat_percent", { precision: 12, scale: 3 }),
   vatUnitAmount: decimal("vat_unit_amount", { precision: 12, scale: 3 }),
   vatOnSubtotal: decimal("vat_on_subtotal", { precision: 12, scale: 3 }),
-  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 }),
+  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 })
+  
 });
 
 export const devPatterns = pgTable("dev_patterns", {
@@ -392,6 +398,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
+  specialValueSet: text("special_value_set"),
   cantBeTrueIfTheFollowingIsFalse: text("cant_be_true_if_the_following_is_false"),
   articleCode: text("article_code"),
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
@@ -417,7 +424,7 @@ export const companySettings = pgTable("company_settings", {
     onDelete: "restrict",
   }),
 }, (table) => ({
-  uniqueCompanyMaster: unique().on(table.companyId, table.companySettingsMasterId),
+  uniqueCompanyMaster: unique("company_settings_company_id_company_settings_master_id_unique").on(table.companyId, table.companySettingsMasterId),
 }));
 //Knowledge Base tables
 export const knowledgeArticles = pgTable("knowledge_articles", {
@@ -615,8 +622,9 @@ export const insertAccountSchema = createInsertSchema(accounts)
     id: true,
   })
   .extend({
-    industry: z.enum(["tech", "construction", "services"]),
+    industry: z.enum(["tech", "construction", "services"]).optional(),
     ownerId: z.string().min(1, "Owner is required"),
+    parentAccountId: z.string().optional().transform(val => val === "" ? null : val),
   });
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)
@@ -736,9 +744,9 @@ export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles
   .extend({
     articleTitle: z.string().min(1, "Article title is required"),
     authorId: z.string().min(1, "Author is required"),
-    articleCode: z.string().optional(),
-    functionalDomainId: z.string().optional(),
-    functionalityId: z.string().optional(),
+    articleCode: z.string().transform(val => val === "" ? null : val).nullable().optional(),
+    functionalDomainId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
+    functionalityId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
@@ -851,6 +859,7 @@ export const insertCompanySettingsMasterSchema = createInsertSchema(companySetti
     settingDescription: z.string().optional(),
     settingValues: z.string().optional(),
     defaultValue: z.string().optional(),
+    specialValueSet: z.string().optional(),
     articleCode: z.string().optional(),
   });
 
@@ -874,6 +883,7 @@ export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
+export type Currency = typeof currencies.$inferSelect;
 export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Language = typeof languages.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;

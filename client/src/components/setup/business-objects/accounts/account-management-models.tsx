@@ -3,8 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, ChevronDown } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState, useMemo } from "react";
 import { queryClient } from "@/lib/queryClient";
@@ -88,36 +86,7 @@ export default function AccountManagementModels() {
     },
   });
 
-  const updateSettingMutation = useMutation({
-    mutationFn: async (newValue: string) => {
-      if (!setting?.id) throw new Error("Setting ID not found");
-      const response = await fetch(`/api/business-objects/company-settings/${setting.id}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settingValue: newValue }),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to update setting");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-code", "Smart_account_management_activated"] });
-      toast({
-        title: "Success",
-        description: "Smart Account Management has been activated",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update setting",
-        variant: "destructive",
-      });
-    },
-  });
+  
 
   // Sanitize HTML content from knowledge article
   const sanitizedContent = useMemo(() => {

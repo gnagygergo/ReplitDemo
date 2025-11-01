@@ -39,9 +39,27 @@ interface AccountDetailOwnershipCardProps {
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
   selectedOwner: User | null;
   setShowUserLookup: (show: boolean) => void;
-  getUserInitials: (user: User) => string;
-  getUserDisplayName: (user: User) => string;
 }
+
+const getUserDisplayName = (user: User) => {
+  if (user.firstName || user.lastName) {
+    return `${user.firstName || ""} ${user.lastName || ""}`.trim();
+  }
+  return user.email || "Unknown User";
+};
+
+const getUserInitials = (user: User) => {
+  if (user.firstName && user.lastName) {
+    return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+  }
+  if (user.firstName) {
+    return user.firstName[0].toUpperCase();
+  }
+  if (user.email) {
+    return user.email[0].toUpperCase();
+  }
+  return "?";
+};
 
 export default function AccountDetailOwnershipCard({
   account,
@@ -50,8 +68,6 @@ export default function AccountDetailOwnershipCard({
   updateMutation,
   selectedOwner,
   setShowUserLookup,
-  getUserInitials,
-  getUserDisplayName,
 }: AccountDetailOwnershipCardProps) {
   return (
     <Card>

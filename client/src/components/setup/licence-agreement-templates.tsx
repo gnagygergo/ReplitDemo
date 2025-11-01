@@ -136,8 +136,9 @@ function TemplateDialog({
       licenceId: template?.licenceId || "",
       validFrom: template?.ValidFrom || "",
       validTo: template?.ValidTo || "",
-      price: template?.price ? parseFloat(template.price) : 0,
+      price: template?.price || "",
       currency: template?.currency || "USD",
+      agreementBaseDurationMonths: template?.agreementBaseDurationMonths || undefined,
     },
   });
 
@@ -267,7 +268,7 @@ function TemplateDialog({
                 name="validFrom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valid From</FormLabel>
+                    <FormLabel>Ageement Offer Valid From</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -285,7 +286,7 @@ function TemplateDialog({
                 name="validTo"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valid To</FormLabel>
+                    <FormLabel>Agreement Offer Valid To</FormLabel>
                     <FormControl>
                       <Input
                         type="date"
@@ -311,7 +312,6 @@ function TemplateDialog({
                         type="number"
                         step="0.01"
                         {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
                         data-testid="input-template-price"
                       />
                     </FormControl>
@@ -330,6 +330,26 @@ function TemplateDialog({
                         {...field}
                         placeholder="e.g., USD, EUR, GBP"
                         data-testid="input-template-currency"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="agreementBaseDurationMonths"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration (months)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="1"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                        data-testid="input-template-duration"
                       />
                     </FormControl>
                     <FormMessage />
@@ -614,11 +634,11 @@ export default function LicenceAgreementTemplatesManagement() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Valid From</h4>
+                      <h4 className="text-sm font-medium mb-1">Agreement Offer Valid From</h4>
                       <p className="text-sm text-muted-foreground">{selectedTemplate.ValidFrom || "N/A"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium mb-1">Valid To</h4>
+                      <h4 className="text-sm font-medium mb-1">Agreement Offer Valid To</h4>
                       <p className="text-sm text-muted-foreground">{selectedTemplate.ValidTo || "N/A"}</p>
                     </div>
                   </div>
@@ -630,6 +650,10 @@ export default function LicenceAgreementTemplatesManagement() {
                     <div>
                       <h4 className="text-sm font-medium mb-1">Currency</h4>
                       <p className="text-sm text-muted-foreground">{selectedTemplate.currency}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">Duration (months)</h4>
+                      <p className="text-sm text-muted-foreground">{selectedTemplate.agreementBaseDurationMonths}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

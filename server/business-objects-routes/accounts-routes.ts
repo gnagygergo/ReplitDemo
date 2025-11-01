@@ -17,8 +17,32 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
     }
   });
 
+  // Search accounts with filters
+  app.get("/api/accounts/search", async (req, res) => {
+    try {
+      const companyContext = await storage.GetCompanyContext(req);
+      const filters = {
+        isLegalEntity: req.query.isLegalEntity === "true",
+        isPersonAccount: req.query.isPersonAccount === "true",
+        isSelfEmployed: req.query.isSelfEmployed === "true",
+      };
+      
+      const accounts = await storage.searchAccounts(companyContext || undefined, filters);
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search accounts" });
+    }
+  });
+
   app.post("/api/accounts", async (req, res) => {
     try {
+      console.log("[DEBUG] POST /api/accounts received data:", {
+        name: req.body.name,
+        parentAccountId: req.body.parentAccountId,
+        ownerId: req.body.ownerId,
+        isShippingAddress: req.body.isShippingAddress,
+        isCompanyContact: req.body.isCompanyContact,
+      });
       const validatedData = insertAccountSchema.parse(req.body);
       const account = await storage.createAccount(validatedData);
       res.status(201).json(account);
@@ -109,6 +133,32 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       res
         .status(500)
         .json({ message: "Failed to fetch quotes for account" });
+    }
+  });
+
+  app.get("/api/accounts/:accountId/children", async (req, res) => {
+    try {
+      const accountType = req.query.type as string | undefined;
+      const childAccounts = await storage.getChildAccounts(
+        req.params.accountId,
+        accountType,
+      );
+      res.json(childAccounts);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed to fetch child accounts" });
+    }
+  });
+
+  app.get("/api/accounts/:accountId/parents", async (req, res) => {
+    try {
+      const parentAccounts = await storage.getParentAccounts(req.params.accountId);
+      res.json(parentAccounts);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Failed to fetch parent accounts" });
     }
   });
 }

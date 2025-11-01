@@ -8,8 +8,6 @@ import {
   type InsertAccount,
   insertAccountSchema,
   type User,
-  type OpportunityWithAccountAndOwner,
-  type Quote,
   type CompanySettingWithMaster,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -48,19 +46,23 @@ import {
   Save,
   X,
   Users,
-  TrendingUp,
-  FileSpreadsheet,
-  Plus,
   User as UserIcon,
 } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import SmartAccountManagementDetailCard from "@/components/accounts/account-cards/smart-account-management-detail-card";
 import AccountDetailOwnershipCard from "@/components/accounts/account-cards/account-ownership-detail-card";
 import AccountDetailCategorizationCard from "@/components/accounts/account-cards/account-categorization-detail-card";
+import AccountOpportunitiesListCard from "@/components/accounts/account-cards/account-opportunities-list-card";
+import AccountQuoteListCard from "@/components/accounts/account-cards/account-quote-list-card";
+import AccountCompanyContactsListCard from "@/components/accounts/account-cards/smart-account-company-contacts-list-card";
+import AccountShippingAddressesListCard from "@/components/accounts/account-cards/smart-account-shipping-addresses-list-card";
+import AccountSubAccountsListCard from "@/components/accounts/account-cards/smart-account-sub-accounts-list-card";
+import AccountParentAccountsListCard from "@/components/accounts/account-cards/smart-account-parent-accounts-list-card";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -78,19 +80,6 @@ export default function AccountDetail() {
       queryKey: ["/api/accounts", params?.id],
       enabled: !!params?.id && !isCreating,
     });
-
-  // Fetch opportunities for this account (skip when creating new account)
-  const { data: opportunities = [], isLoading: isLoadingOpportunities } =
-    useQuery<OpportunityWithAccountAndOwner[]>({
-      queryKey: ["/api/accounts", params?.id, "opportunities"],
-      enabled: !!params?.id && !isCreating,
-    });
-
-  // Fetch quotes for this account (skip when creating new account)
-  const { data: quotes = [], isLoading: isLoadingQuotes } = useQuery<Quote[]>({
-    queryKey: ["/api/accounts", params?.id, "quotes"],
-    enabled: !!params?.id && !isCreating,
-  });
 
   // Fetch company settings for smart account management
   const { data: companySettings = [] } = useQuery<CompanySettingWithMaster[]>({
@@ -134,6 +123,8 @@ export default function AccountDetail() {
       toast({
         title: "Account created successfully",
       });
+      // Switch to view mode before navigating
+      setIsEditing(false);
       // Navigate to the new account's detail page
       setLocation(`/accounts/${newAccount.id}`);
     },
@@ -211,88 +202,6 @@ export default function AccountDetail() {
     setSelectedOwner(user);
     form.setValue("ownerId", user.id);
     setShowUserLookup(false);
-  };
-
-  const getUserDisplayName = (user: User) => {
-    if (user.firstName || user.lastName) {
-      return `${user.firstName || ""} ${user.lastName || ""}`.trim();
-    }
-    return user.email || "Unknown User";
-  };
-
-  const getUserInitials = (user: User) => {
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    if (user.firstName) {
-      return user.firstName[0].toUpperCase();
-    }
-    if (user.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "U";
-  };
-
-  const getIndustryLabel = (industry: string) => {
-    const labels = {
-      tech: "Technology",
-      construction: "Construction",
-      services: "Services",
-    };
-    return labels[industry as keyof typeof labels] || industry;
-  };
-
-  const getIndustryBadgeClass = (industry: string) => {
-    const variants = {
-      tech: "bg-blue-100 text-blue-800",
-      construction: "bg-orange-100 text-orange-800",
-      services: "bg-green-100 text-green-800",
-    };
-    return (
-      variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"
-    );
-  };
-
-  const formatCurrency = (amount: string | number) => {
-    const num = typeof amount === "string" ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(num);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Helper function to determine which icon to display based on account type
-  const getAccountIcon = (account: AccountWithOwner) => {
-    const isPerson =
-      account.isPersonAccount ||
-      account.isCompanyContact ||
-      account.isSelfEmployed;
-    const isEntity = account.isLegalEntity || account.isShippingAddress;
-
-    if (isPerson) {
-      return UserIcon;
-    }
-    if (isEntity) {
-      return Building;
-    }
-    return Building; // Default to Building
-  };
-
-  // Helper function to generate dynamic title text from boolean fields
-  const getAccountTypeLabel = (account: AccountWithOwner) => {
-    const labels: string[] = [];
-
-    if (account.isPersonAccount) labels.push("Person Account");
-    if (account.isCompanyContact) labels.push("Company Contact");
-    if (account.isSelfEmployed) labels.push("Self Employed");
-    if (account.isLegalEntity) labels.push("Legal Entity");
-    if (account.isShippingAddress) labels.push("Shipping Address");
-
-    return labels.length > 0 ? labels.join(" | ") : "Account Details";
   };
 
   // Initialize form when account data is loaded
@@ -433,8 +342,6 @@ export default function AccountDetail() {
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
-              getUserInitials={getUserInitials}
-              getUserDisplayName={getUserDisplayName}
               isSettingEnabled={isSettingEnabled}
             />
 
@@ -445,8 +352,6 @@ export default function AccountDetail() {
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
-              getUserInitials={getUserInitials}
-              getUserDisplayName={getUserDisplayName}
             />
 
             <AccountDetailCategorizationCard
@@ -454,165 +359,77 @@ export default function AccountDetail() {
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-              getIndustryLabel={getIndustryLabel}
-              getIndustryBadgeClass={getIndustryBadgeClass}
             />
           </div>
         </Panel>
 
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Pane - Opportunities and Quotes (Vertically Stacked) */}
+        {/* Right Pane - Opportunities, Quotes, and Hierarchical Accounts (Vertically Stacked) */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
-            {/* Opportunities Card */}
-            <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="w-5 h-5" />
-                    <span>Opportunities</span>
-                    <Badge variant="secondary" className="ml-2">
-                      {opportunities.length}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingOpportunities ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <div className="animate-pulse">
-                        Loading opportunities...
-                      </div>
-                    </div>
-                  ) : opportunities.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <TrendingUp className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      <p>No opportunities found for this account</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Opportunity Name</TableHead>
-                            <TableHead>Close Date</TableHead>
-                            <TableHead className="text-right">
-                              Total Revenue
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {opportunities.map((opportunity) => (
-                            <TableRow
-                              key={opportunity.id}
-                              data-testid={`row-opportunity-${opportunity.id}`}
-                            >
-                              <TableCell
-                                className="font-medium"
-                                data-testid={`text-opportunity-name-${opportunity.id}`}
-                              >
-                                {opportunity.name}
-                              </TableCell>
-                              <TableCell
-                                data-testid={`text-opportunity-close-date-${opportunity.id}`}
-                              >
-                                {formatDate(opportunity.closeDate)}
-                              </TableCell>
-                              <TableCell
-                                className="text-right font-medium"
-                                data-testid={`text-opportunity-revenue-${opportunity.id}`}
-                              >
-                                {formatCurrency(opportunity.totalRevenue)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+            {!isCreating && params?.id && (
+              <>
+                {(isSettingEnabled("opportunity_management_activated") && 
+                <AccountOpportunitiesListCard
+                  accountId={params.id}
+                  isEditing={isEditing}
+                />
+                )}
+                <AccountQuoteListCard
+                  accountId={params.id}
+                  accountName={account?.name || ""}
+                  isEditing={isEditing}
+                />
+                
+                {/* Company Contacts - Show if smart account management and company contact type are enabled, and account is Legal Entity or Shipping Address */}
+                {(account?.isLegalEntity || account?.isShippingAddress) &&
+                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_accountType_companyContact_enabled") && (
+                    <AccountCompanyContactsListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
+                    />
                   )}
-                </CardContent>
-              </Card>
-
-            {/* Quotes Card */}
-            <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center space-x-2">
-                      <FileSpreadsheet className="w-5 h-5" />
-                      <span>Quotes</span>
-                      <Badge variant="secondary" className="ml-2">
-                        {quotes.length}
-                      </Badge>
-                    </CardTitle>
-                    <Link
-                      href={`/quotes/new?customerId=${params?.id}&accountName=${encodeURIComponent(account?.name || "")}`}
-                    >
-                      <Button
-                        size="sm"
-                        className="flex items-center space-x-1"
-                        data-testid="button-new-quote-from-account"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>New Quote</span>
-                      </Button>
-                    </Link>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingQuotes ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <div className="animate-pulse">Loading quotes...</div>
-                    </div>
-                  ) : quotes.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileSpreadsheet className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      <p>No quotes found for this account</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Quote Name</TableHead>
-                            <TableHead>Customer Name</TableHead>
-                            <TableHead>Expiration Date</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {quotes.map((quote) => (
-                            <TableRow
-                              key={quote.id}
-                              data-testid={`row-quote-${quote.id}`}
-                            >
-                              <TableCell
-                                className="font-medium"
-                                data-testid={`text-quote-name-${quote.id}`}
-                              >
-                                <Link href={`/quotes/${quote.id}`}>
-                                  <span className="hover:text-primary cursor-pointer">
-                                    {quote.quoteName || "N/A"}
-                                  </span>
-                                </Link>
-                              </TableCell>
-                              <TableCell
-                                data-testid={`text-quote-customer-name-${quote.id}`}
-                              >
-                                {quote.customerName || "N/A"}
-                              </TableCell>
-                              <TableCell
-                                data-testid={`text-quote-expiration-${quote.id}`}
-                              >
-                                {quote.quoteExpirationDate
-                                  ? formatDate(quote.quoteExpirationDate)
-                                  : "N/A"}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                
+                {/* Shipping Addresses - Show if smart account management and shipping address type are enabled, and account is Legal Entity */}
+                {account?.isLegalEntity &&
+                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_accountType_shipping_enabled") && (
+                    <AccountShippingAddressesListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
+                    />
                   )}
-                </CardContent>
-              </Card>
+                
+                {/* Sub-Accounts - Show if smart account management and legal entity type are enabled, and account is Legal Entity */}
+                {account?.isLegalEntity &&
+                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") && (
+                    <AccountSubAccountsListCard
+                      accountId={params.id}
+                      accountName={account?.name || ""}
+                      isEditing={isEditing}
+                      isSettingEnabled={isSettingEnabled}
+                      ownerId={account?.ownerId || ""}
+                    />
+                  )}
+                
+                {/* Parent Accounts - Show if smart account management is enabled, and account is Legal Entity, Shipping Address, or Company Contact */}
+                {(account?.isLegalEntity || account?.isShippingAddress || account?.isCompanyContact) &&
+                  isSettingEnabled("Smart_account_management_activated") && (
+                    <AccountParentAccountsListCard
+                      accountId={params.id}
+                    />
+                  )}
+              </>
+            )}
           </div>
         </Panel>
       </PanelGroup>

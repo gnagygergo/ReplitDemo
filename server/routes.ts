@@ -215,6 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: user.phone,
           profileImageUrl: user.profileImageUrl,
           isAdmin: user.isAdmin,
           companyId: user.companyId,
@@ -234,6 +235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
+          phone: user.phone,
           profileImageUrl: user.profileImageUrl,
           isAdmin: user.isAdmin,
           companyId: user.companyId,
@@ -1175,6 +1177,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting unit of measure:", error);
       res.status(500).json({ message: "Failed to delete unit of measure" });
+    }
+  });
+
+  // Currency routes (Global - no company context, read-only for all authenticated users)
+  app.get("/api/currencies", isAuthenticated, async (req, res) => {
+    try {
+      const currencies = await storage.getCurrencies();
+      res.json(currencies);
+    } catch (error) {
+      console.error("Error fetching currencies:", error);
+      res.status(500).json({ message: "Failed to fetch currencies" });
     }
   });
 

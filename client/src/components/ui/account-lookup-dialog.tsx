@@ -2,33 +2,85 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Building } from "lucide-react";
 import { type AccountWithOwner } from "@shared/schema";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 
 interface AccountLookupDialogProps {
   open: boolean;
   onClose: () => void;
   onSelect: (account: AccountWithOwner) => void;
   selectedAccountId?: string;
+  filters?: {
+    isLegalEntity?: boolean;
+    isPersonAccount?: boolean;
+    isSelfEmployed?: boolean;
+  };
 }
 
-export default function AccountLookupDialog({ 
-  open, 
-  onClose, 
-  onSelect, 
-  selectedAccountId 
+export default function AccountLookupDialog({
+  open,
+  onClose,
+  onSelect,
+  selectedAccountId,
+  filters,
 }: AccountLookupDialogProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedId, setSelectedId] = useState<string>(selectedAccountId || "");
 
+  // Build query key and params based on filters
+  const hasFilters =
+    filters &&
+    (filters.isLegalEntity ||
+      filters.isPersonAccount ||
+      filters.isSelfEmployed);
+
+  // Build the query URL with proper query parameters
+  const buildQueryUrl = () => {
+    if (!hasFilters) {
+      return "/api/accounts";
+    }
+
+    const params = new URLSearchParams();
+    if (filters?.isLegalEntity) params.append("isLegalEntity", "true");
+    if (filters?.isPersonAccount) params.append("isPersonAccount", "true");
+    if (filters?.isSelfEmployed) params.append("isSelfEmployed", "true");
+
+    return `/api/accounts/search?${params.toString()}`;
+  };
+
+  const queryKey = hasFilters
+    ? ["/api/accounts/search", filters]
+    : ["/api/accounts"];
+
   const { data: accounts = [], isLoading } = useQuery<AccountWithOwner[]>({
-    queryKey: ["/api/accounts"],
+    queryKey,
+    queryFn: async () => {
+      const response = await fetch(buildQueryUrl());
+      if (!response.ok) {
+        throw new Error("Failed to fetch accounts");
+      }
+      return response.json();
+    },
     enabled: open,
   });
 
@@ -44,13 +96,16 @@ export default function AccountLookupDialog({
     }
   }, [open]);
 
-  const filteredAccounts = accounts.filter((account) =>
-    account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (account.address || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAccounts = accounts.filter(
+    (account) =>
+      account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (account.address || "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleSelect = () => {
-    const selectedAccount = accounts.find(account => account.id === selectedId);
+    const selectedAccount = accounts.find(
+      (account) => account.id === selectedId,
+    );
     if (selectedAccount) {
       onSelect(selectedAccount);
       onClose();
@@ -72,15 +127,20 @@ export default function AccountLookupDialog({
       construction: "bg-orange-100 text-orange-800",
       services: "bg-green-100 text-green-800",
     };
-    
+
     const labels = {
       tech: "Technology",
-      construction: "Construction", 
+      construction: "Construction",
       services: "Services",
     };
 
     return (
-      <Badge className={variants[industry as keyof typeof variants] || "bg-gray-100 text-gray-800"}>
+      <Badge
+        className={
+          variants[industry as keyof typeof variants] ||
+          "bg-gray-100 text-gray-800"
+        }
+      >
         {labels[industry as keyof typeof labels] || industry}
       </Badge>
     );
@@ -120,7 +180,6 @@ export default function AccountLookupDialog({
                   <TableHead className="w-12"></TableHead>
                   <TableHead className="w-12"></TableHead>
                   <TableHead>Account Name</TableHead>
-                  <TableHead>Industry</TableHead>
                   <TableHead>Address</TableHead>
                 </TableRow>
               </TableHeader>
@@ -148,34 +207,44 @@ export default function AccountLookupDialog({
                   ))
                 ) : filteredAccounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       <Building className="mx-auto h-12 w-12 mb-4 opacity-50" />
-                      {searchTerm ? `No accounts found matching "${searchTerm}"` : "No accounts available"}
+                      {searchTerm
+                        ? `No accounts found matching "${searchTerm}"`
+                        : "No accounts available"}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredAccounts.map((account) => (
                     <TableRow
                       key={account.id}
-                      className={`cursor-pointer hover:bg-muted/50 ${selectedId === account.id ? 'bg-muted/30' : ''}`}
+                      className={`cursor-pointer hover:bg-muted/50 ${selectedId === account.id ? "bg-muted/30" : ""}`}
                       onClick={() => handleRowClick(account.id)}
                       data-testid={`row-account-${account.id}`}
                     >
                       <TableCell>
-                        <RadioGroupItem 
-                          value={account.id} 
+                        <RadioGroupItem
+                          value={account.id}
                           id={account.id}
                           data-testid={`radio-account-${account.id}`}
                         />
                       </TableCell>
                       <TableCell>
                         <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Building className="w-4 h-4 text-primary" />
+                          {(() => {
+                            const IconComponent = getAccountIcon(account);
+                            return (
+                              <IconComponent className="w-5 h-5 text-primary" />
+                            );
+                          })()}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Label 
-                          htmlFor={account.id} 
+                        <Label
+                          htmlFor={account.id}
                           className="font-medium cursor-pointer"
                           data-testid={`text-account-name-${account.id}`}
                         >
@@ -183,19 +252,11 @@ export default function AccountLookupDialog({
                         </Label>
                       </TableCell>
                       <TableCell>
-                        <Label 
-                          htmlFor={account.id} 
-                          className="cursor-pointer"
-                        >
-                          {getIndustryBadge(account.industry)}
-                        </Label>
-                      </TableCell>
-                      <TableCell>
-                        <Label 
-                          htmlFor={account.id} 
+                        <Label
+                          htmlFor={account.id}
                           className="cursor-pointer text-muted-foreground"
                         >
-                          {account.address || 'No address'}
+                          {account.address || "No address"}
                         </Label>
                       </TableCell>
                     </TableRow>
@@ -208,15 +269,15 @@ export default function AccountLookupDialog({
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-3 pt-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={handleClose}
             data-testid="button-cancel-lookup"
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleSelect} 
+          <Button
+            onClick={handleSelect}
             disabled={!selectedId || isLoading}
             data-testid="button-select-account"
           >

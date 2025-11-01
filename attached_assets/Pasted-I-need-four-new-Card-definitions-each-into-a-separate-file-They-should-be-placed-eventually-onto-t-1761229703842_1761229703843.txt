@@ -1,0 +1,33 @@
+I need four new Card definitions, each into a separate file. They should be placed eventually onto the account-details.tsx page, over the account-quote-list-card.tsx view. The way these four new Cards are to be embedded into account-detail.tsx, should follow the patterns of how account-quote-list-card.tsx is embedded. 
+
+Details of these four new Cards:
+
+Label: Contacts
+account-company-contacts-list-card.tsx
+Shows children accounts that are CompanyContact TRUE
+Columns: Account Name, Email, Phone
+Available action on the card: New. This should show a popup form (with Save and Cancel buttons) that shows the smart-account-management-detail-card.tsx embedded, preselected the checkbox Company Contact.
+
+Label: Shipping Addresses
+account-shipping-adresses-list-card.tsx
+Shows children accounts that are ShippingAddress TRUE
+Columns: Account Name, Address
+Available action on the card: New. This should show a popup form (with Save and Cancel buttons) that shows the smart-account-management-detail-card.tsx embedded, preselected the checkbox Shipping Address.
+
+Label: Sub Legal Entities
+account-sub-accounts-list-card.tsx
+Shows children accounts that are LegalEntity TRUE
+Columns: Account Name, Address
+Available action on the card: New. This should show a popup form (with Save and Cancel buttons) that shows the smart-account-management-detail-card.tsx embedded, preselected the checkbox Legal Entity.
+
+Label: Parent Accounts
+account-parent-accounts-list-card.tsx
+Shows all Parent Accounts
+Columns: Account Name, Address
+
+All of these 4 cards should be visible when the given Account record is LegalEntity TRUE or ShippingAddress TRUE.
+This visibility rule should be part of the card definition files.
+
+As for the New button that should be placed to 3 out of the 4 cards, here are my thoughts:
+- the popup form that I mentioned should preselect a checkbox of the Account Nature section (explained earlier)
+- despite the preselection, the "Account Nature" section should be HIDDEN in the popup form. And I think this makes it necessary to modify the smart-account-management-detail-card.tsx file: it should have a new parameter: showAccountNature.  showAccountNature should be FALSE when calling it by the New buttons on these four new cards, but showAccountNature should be TRUE when calling by the account-detail.tsx

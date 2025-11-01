@@ -734,7 +734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!deleted) {
         return res.status(400).json({
           message:
-            "Cannot delete user who owns accounts, opportunities, or cases",
+            "Cannot delete user who owns accounts, opportunities",
         });
       }
       res.json({ message: "User deleted successfully" });
@@ -2873,9 +2873,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Opportunity routes (Company-scoped) - Delegated to business-objects-routes
   registerOpportunityRoutes(app, storage);
-
-  // Case routes - Delegated to business-objects-routes
-  registerCaseRoutes(app, storage);
 
   // Product routes (Company-scoped) - Delegated to business-objects-routes
   registerProductRoutes(app, storage);

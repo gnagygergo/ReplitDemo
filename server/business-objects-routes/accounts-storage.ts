@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { accounts, users, opportunities, cases } from "@shared/schema";
+import { accounts, users, opportunities } from "@shared/schema";
 import type { Account, InsertAccount, AccountWithOwner } from "@shared/schema";
 import { eq, asc, desc, and, isNull, or } from "drizzle-orm";
 

@@ -354,14 +354,14 @@ export default function AccountDetail() {
               setShowUserLookup={setShowUserLookup}
             />
 
-            <AccountDetailCategorizationCard
+            {/*<AccountDetailCategorizationCard
               account={account || null}
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-            />
+            />*/}
           </div>
-        </Panel>
+        </Panel> 
 
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
@@ -384,7 +384,7 @@ export default function AccountDetail() {
                 
                 {/* Company Contacts - Show if smart account management and company contact type are enabled, and account is Legal Entity or Shipping Address */}
                 {(account?.isLegalEntity || account?.isShippingAddress) &&
-                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_activated") &&
                   isSettingEnabled("smart_account_management_accountType_companyContact_enabled") && (
                     <AccountCompanyContactsListCard
                       accountId={params.id}
@@ -397,7 +397,7 @@ export default function AccountDetail() {
                 
                 {/* Shipping Addresses - Show if smart account management and shipping address type are enabled, and account is Legal Entity */}
                 {account?.isLegalEntity &&
-                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_activated") &&
                   isSettingEnabled("smart_account_management_accountType_shipping_enabled") && (
                     <AccountShippingAddressesListCard
                       accountId={params.id}
@@ -410,7 +410,7 @@ export default function AccountDetail() {
                 
                 {/* Sub-Accounts - Show if smart account management and legal entity type are enabled, and account is Legal Entity */}
                 {account?.isLegalEntity &&
-                  isSettingEnabled("Smart_account_management_activated") &&
+                  isSettingEnabled("smart_account_management_activated") &&
                   isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") && (
                     <AccountSubAccountsListCard
                       accountId={params.id}
@@ -423,7 +423,7 @@ export default function AccountDetail() {
                 
                 {/* Parent Accounts - Show if smart account management is enabled, and account is Legal Entity, Shipping Address, or Company Contact */}
                 {(account?.isLegalEntity || account?.isShippingAddress || account?.isCompanyContact) &&
-                  isSettingEnabled("Smart_account_management_activated") && (
+                  isSettingEnabled("smart_account_management_activated") && (
                     <AccountParentAccountsListCard
                       accountId={params.id}
                     />

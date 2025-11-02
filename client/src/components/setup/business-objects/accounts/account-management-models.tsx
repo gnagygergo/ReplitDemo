@@ -111,47 +111,8 @@ export default function AccountManagementModels() {
         </CardHeader>
         <CardContent className="space-y-6">
           <SetupToggleLister 
-            settingPrefix="Smart_account_management_activated"
+            settingPrefix="smart_account_management_"
             title=""
-          />
-
-          {isLoadingArticle ? (
-            <div className="space-y-3">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
-          ) : articleError ? (
-            <Alert variant="destructive" data-testid="alert-article-error">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to load article content.
-              </AlertDescription>
-            </Alert>
-          ) : article ? (
-            <Collapsible open={isArticleOpen} onOpenChange={setIsArticleOpen}>
-              <CollapsibleTrigger asChild>
-                <button 
-                  className="flex w-full items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-                  data-testid="button-toggle-article"
-                >
-                  <span className="text-sm font-medium">{article.articleTitle}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isArticleOpen ? 'rotate-180' : ''}`} />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-2">
-                <div 
-                  className="rounded-lg border p-4 prose prose-sm max-w-none dark:prose-invert"
-                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
-                  data-testid="content-article"
-                />
-              </CollapsibleContent>
-            </Collapsible>
-          ) : null}
-
-          <SetupToggleLister 
-            settingPrefix="smart_account_management_accountType_"
-            title="Account Types - tell us who are your clients"
           />
         </CardContent>
       </Card>

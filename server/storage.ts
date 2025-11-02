@@ -2533,9 +2533,9 @@ export class DatabaseStorage implements IStorage {
               settingOrderWithinFunctionality: s.settingOrderWithinFunctionality,
               settingShowsInLevel: s.settingShowsInLevel,
               settingOnceEnabledCannotBeDisabled: s.settingOnceEnabledCannotBeDisabled,
-            };
+            } as InsertCompanySettingsMaster;
           })
-          .filter((s): s is InsertCompanySettingsMaster => s !== null);
+          .filter(s => s !== null) as InsertCompanySettingsMaster[];
         
         if (settingsWithProdFunctionalityIds.length > 0) {
           const inserted = await db

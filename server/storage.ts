@@ -87,6 +87,8 @@ import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 
 // Type for company settings with master data
 export type CompanySettingWithMaster = {
@@ -373,6 +375,7 @@ export interface IStorage {
   bulkUpdateSettings(updates: Array<{ id: string; settingValue: string }>, userId: string, companyId: string): Promise<any[]>;
   serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }>;
   serializeCompanySettingsForCompany(companyId: string, userId: string): Promise<{ created: number; skipped: number }>;
+  pullSettingsFromDevDatabase(devDbConfig: { host: string; port: string; database: string; username: string; password: string }): Promise<{ domains: { inserted: number; skipped: number }; functionalities: { inserted: number; skipped: number }; settings: { inserted: number; skipped: number } }>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -2393,6 +2396,178 @@ export class DatabaseStorage implements IStorage {
     });
     
     return result;
+  }
+
+  async pullSettingsFromDevDatabase(devDbConfig: { 
+    host: string; 
+    port: string; 
+    database: string; 
+    username: string; 
+    password: string 
+  }): Promise<{ 
+    domains: { inserted: number; skipped: number }; 
+    functionalities: { inserted: number; skipped: number }; 
+    settings: { inserted: number; skipped: number } 
+  }> {
+    const { host, port, database, username, password } = devDbConfig;
+    
+    // Build connection string for dev database
+    const connectionString = `postgresql://${username}:${password}@${host}:${port}/${database}?sslmode=require`;
+    
+    let devSql;
+    let devDb;
+    
+    try {
+      // Connect to dev database
+      devSql = neon(connectionString);
+      devDb = drizzle(devSql);
+      
+      console.log('Connected to dev database successfully');
+      
+      // Sync domains first
+      const devDomains = await devDb.select().from(companySettingMasterDomains);
+      const prodDomains = await db.select({ code: companySettingMasterDomains.code }).from(companySettingMasterDomains);
+      const prodDomainCodes = new Set(prodDomains.map(d => d.code));
+      
+      const domainsToInsert = devDomains.filter(d => !prodDomainCodes.has(d.code));
+      let domainsInserted = 0;
+      
+      if (domainsToInsert.length > 0) {
+        const inserted = await db
+          .insert(companySettingMasterDomains)
+          .values(domainsToInsert.map(d => ({
+            code: d.code,
+            name: d.name,
+          })))
+          .onConflictDoNothing({ target: [companySettingMasterDomains.code] })
+          .returning({ id: companySettingMasterDomains.id });
+        
+        domainsInserted = inserted.length;
+      }
+      
+      console.log(`Domains: ${domainsInserted} inserted, ${devDomains.length - domainsInserted} skipped`);
+      
+      // Refresh production domains to get IDs for functionality sync
+      const updatedProdDomains = await db.select().from(companySettingMasterDomains);
+      const domainCodeToIdMap = new Map(updatedProdDomains.map(d => [d.code, d.id]));
+      
+      // Sync functionalities second
+      const devFunctionalities = await devDb.select().from(companySettingMasterFunctionalities);
+      const prodFunctionalities = await db.select({ code: companySettingMasterFunctionalities.code }).from(companySettingMasterFunctionalities);
+      const prodFunctionalityCodes = new Set(prodFunctionalities.map(f => f.code));
+      
+      const functionalitiesFiltered = devFunctionalities.filter(f => !prodFunctionalityCodes.has(f.code));
+      let functionalitiesInserted = 0;
+      
+      if (functionalitiesFiltered.length > 0) {
+        // Get domain info for each functionality
+        const devDomainsById = new Map(devDomains.map(d => [d.id, d]));
+        
+        const functionalitiesWithProdDomainIds = functionalitiesFiltered
+          .map(f => {
+            const devDomain = devDomainsById.get(f.domainId);
+            if (!devDomain) return null;
+            const prodDomainId = domainCodeToIdMap.get(devDomain.code);
+            if (!prodDomainId) return null;
+            
+            return {
+              code: f.code,
+              name: f.name,
+              domainId: prodDomainId,
+            };
+          })
+          .filter((f): f is { code: string; name: string; domainId: string } => f !== null);
+        
+        if (functionalitiesWithProdDomainIds.length > 0) {
+          const inserted = await db
+            .insert(companySettingMasterFunctionalities)
+            .values(functionalitiesWithProdDomainIds)
+            .onConflictDoNothing({ target: [companySettingMasterFunctionalities.code] })
+            .returning({ id: companySettingMasterFunctionalities.id });
+          
+          functionalitiesInserted = inserted.length;
+        }
+      }
+      
+      console.log(`Functionalities: ${functionalitiesInserted} inserted, ${devFunctionalities.length - functionalitiesInserted} skipped`);
+      
+      // Refresh production functionalities to get IDs for settings sync
+      const updatedProdFunctionalities = await db.select().from(companySettingMasterFunctionalities);
+      const functionalityCodeToIdMap = new Map(updatedProdFunctionalities.map(f => [f.code, f.id]));
+      
+      // Sync settings master last
+      const devSettings = await devDb.select().from(companySettingsMaster);
+      const prodSettings = await db.select({ settingCode: companySettingsMaster.settingCode }).from(companySettingsMaster);
+      const prodSettingCodes = new Set(prodSettings.map(s => s.settingCode).filter(Boolean));
+      
+      const settingsFiltered = devSettings.filter(s => s.settingCode && !prodSettingCodes.has(s.settingCode));
+      let settingsInserted = 0;
+      
+      if (settingsFiltered.length > 0) {
+        const devFunctionalitiesById = new Map(devFunctionalities.map(f => [f.id, f]));
+        
+        const settingsWithProdFunctionalityIds = settingsFiltered
+          .map(s => {
+            if (!s.functionalityId) return null;
+            
+            const devFunctionality = devFunctionalitiesById.get(s.functionalityId);
+            if (!devFunctionality) return null;
+            
+            const prodFunctionalityId = functionalityCodeToIdMap.get(devFunctionality.code);
+            if (!prodFunctionalityId) return null;
+            
+            return {
+              functionalityId: prodFunctionalityId,
+              settingFunctionalDomainCode: s.settingFunctionalDomainCode,
+              settingFunctionalDomainName: s.settingFunctionalDomainName,
+              settingFunctionalityName: s.settingFunctionalityName,
+              settingFunctionalityCode: s.settingFunctionalityCode,
+              settingCode: s.settingCode,
+              settingName: s.settingName,
+              settingDescription: s.settingDescription,
+              settingValues: s.settingValues,
+              defaultValue: s.defaultValue,
+              specialValueSet: s.specialValueSet,
+              cantBeTrueIfTheFollowingIsFalse: s.cantBeTrueIfTheFollowingIsFalse,
+              articleCode: s.articleCode,
+              settingOrderWithinFunctionality: s.settingOrderWithinFunctionality,
+              settingShowsInLevel: s.settingShowsInLevel,
+              settingOnceEnabledCannotBeDisabled: s.settingOnceEnabledCannotBeDisabled,
+            };
+          })
+          .filter((s): s is InsertCompanySettingsMaster => s !== null);
+        
+        if (settingsWithProdFunctionalityIds.length > 0) {
+          const inserted = await db
+            .insert(companySettingsMaster)
+            .values(settingsWithProdFunctionalityIds)
+            .onConflictDoNothing()
+            .returning({ id: companySettingsMaster.id });
+          
+          settingsInserted = inserted.length;
+        }
+      }
+      
+      console.log(`Settings: ${settingsInserted} inserted, ${devSettings.length - settingsInserted} skipped`);
+      
+      return {
+        domains: {
+          inserted: domainsInserted,
+          skipped: devDomains.length - domainsInserted,
+        },
+        functionalities: {
+          inserted: functionalitiesInserted,
+          skipped: devFunctionalities.length - functionalitiesInserted,
+        },
+        settings: {
+          inserted: settingsInserted,
+          skipped: devSettings.length - settingsInserted,
+        },
+      };
+    } catch (error) {
+      console.error('Error pulling settings from dev database:', error);
+      throw new Error(`Failed to sync from dev database: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   // Row Level Security context methods

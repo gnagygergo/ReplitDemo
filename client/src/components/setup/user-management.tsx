@@ -66,7 +66,7 @@ const userUpdateSchema = z.object({
 });
 
 const userCreateSchema = z.object({
-  licenceAgreementId: z.string().optional(),
+  licenceAgreementId: z.string().min(1, "License agreement is required"),
   email: z.string().email("Please enter a valid email address"),
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
@@ -378,7 +378,7 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
             name="licenceAgreementId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Licence Agreement</FormLabel>
+                <FormLabel>Licence Agreement *</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="select-create-user-licence-agreement">
@@ -398,6 +398,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
                   </SelectContent>
                 </Select>
                 <FormMessage />
+                {availableLicenceAgreements.length === 0 && (
+                  <p className="text-sm text-amber-600 dark:text-amber-500" data-testid="warning-no-licence-agreements">
+                    You've used all available seats in your license agreements.
+                  </p>
+                )}
               </FormItem>
             )}
           />

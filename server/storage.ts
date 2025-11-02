@@ -372,6 +372,7 @@ export interface IStorage {
   getDependentSettings(settingCode: string, companyId: string): Promise<CompanySettingWithMaster[]>;
   bulkUpdateSettings(updates: Array<{ id: string; settingValue: string }>, userId: string, companyId: string): Promise<any[]>;
   serializeCompanySettings(userId: string): Promise<{ created: number; skipped: number; totalCompanies: number; totalMasterSettings: number }>;
+  serializeCompanySettingsForCompany(companyId: string, userId: string): Promise<{ created: number; skipped: number }>;
 
   // Row Level Security context methods
   setCompanyContext(companyId: string): Promise<void>;
@@ -2330,6 +2331,64 @@ export class DatabaseStorage implements IStorage {
         skipped: skippedCount,
         totalCompanies: allCompanies.length,
         totalMasterSettings: allMasterSettings.length,
+      };
+    });
+    
+    return result;
+  }
+
+  async serializeCompanySettingsForCompany(companyId: string, userId: string): Promise<{ created: number; skipped: number }> {
+    // Use a transaction to ensure all-or-nothing operation
+    const result = await db.transaction(async (tx) => {
+      // Get all company settings master records
+      const allMasterSettings = await tx.select().from(companySettingsMaster);
+      
+      // Get existing settings for this specific company
+      const existingRecords = await tx
+        .select({
+          masterId: companySettings.companySettingsMasterId,
+        })
+        .from(companySettings)
+        .where(eq(companySettings.companyId, companyId));
+      
+      const existingSet = new Set(
+        existingRecords.map(r => r.masterId)
+      );
+      
+      // Prepare bulk insert values for this company only
+      const valuesToInsert = [];
+      for (const masterSetting of allMasterSettings) {
+        if (!existingSet.has(masterSetting.id)) {
+          valuesToInsert.push({
+            companySettingsMasterId: masterSetting.id,
+            settingCode: masterSetting.settingCode,
+            settingName: masterSetting.settingName,
+            settingValue: masterSetting.defaultValue || 'FALSE',
+            companyId: companyId,
+            lastUpdatedBy: userId,
+          });
+        }
+      }
+      
+      // Bulk insert with ON CONFLICT DO NOTHING to handle race conditions
+      let createdCount = 0;
+      if (valuesToInsert.length > 0) {
+        const inserted = await tx
+          .insert(companySettings)
+          .values(valuesToInsert)
+          .onConflictDoNothing({
+            target: [companySettings.companyId, companySettings.companySettingsMasterId]
+          })
+          .returning({ id: companySettings.id });
+        
+        createdCount = inserted.length;
+      }
+      
+      const skippedCount = allMasterSettings.length - createdCount;
+      
+      return {
+        created: createdCount,
+        skipped: skippedCount,
       };
     });
     

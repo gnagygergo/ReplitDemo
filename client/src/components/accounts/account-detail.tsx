@@ -376,11 +376,13 @@ export default function AccountDetail() {
                   isEditing={isEditing}
                 />
                 )}
+                {(isSettingEnabled("general_quote_setting_quote_management_activated") && 
                 <AccountQuoteListCard
                   accountId={params.id}
                   accountName={account?.name || ""}
                   isEditing={isEditing}
                 />
+                )}
                 
                 {/* Company Contacts - Show if smart account management and company contact type are enabled, and account is Legal Entity or Shipping Address */}
                 {(account?.isLegalEntity || account?.isShippingAddress) &&

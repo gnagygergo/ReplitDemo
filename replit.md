@@ -115,11 +115,22 @@ The registration process includes automatic license agreement provisioning:
    - Sets initial license seat allocation
    - Returns licence agreement with ID to be used in user creation
 
-4. **User Creation**: Final step
+4. **User Creation**: Creates first admin user
    - Creates first admin user linked to the company AND licence agreement
    - Requires licenceAgreementId from step 3
    - User is created with isAdmin = true for first company user
 
+5. **License Seat Actualization**: Updates seat counts
+   - Calls `actualizeLicenceAgreementSeatsUsed()` to calculate and update used seats
+   - Ensures accurate seat tracking from the start
+
+6. **Company Settings Serialization**: Initializes settings with defaults
+   - Calls `serializeCompanySettingsForCompany()` to create company settings records
+   - Generates settings for all master settings with default values
+   - Ensures new company has all settings configured immediately
+
 ### Storage Methods
 - `getActiveOnlineRegistrationTemplate()`: Finds valid template for current date with "Online_Registration_Free" licence code
 - `createLicenceAgreementAutomated()`: Creates agreement with automated date calculation and pricing from template
+- `actualizeLicenceAgreementSeatsUsed()`: Recalculates and updates used seat count for a license agreement
+- `serializeCompanySettingsForCompany()`: Creates company settings records for a specific company based on all master settings

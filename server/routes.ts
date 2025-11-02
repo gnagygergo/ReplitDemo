@@ -108,9 +108,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update seat counts after user creation
       await storage.actualizeLicenceAgreementSeatsUsed(licenceAgreement.id);
 
-      // Serialize company settings for the new company
-      await storage.serializeCompanySettingsForCompany(company.id, user.id);
-
       res.status(201).json({
         message: "Registration successful",
         user: {
@@ -599,25 +596,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req: any, res) => {
+  app.post("/api/users", isAuthenticated, async (req: any, res) => {
     try {
-      // Security: Remove isAdmin from client schema - only admins can set this
-      const userCreateSchema = z.object({
-        licenceAgreementId: z.string().optional(),
-        email: z.string().email("Please enter a valid email address"),
-        firstName: z.string().min(1, "First name is required").optional(),
-        lastName: z.string().min(1, "Last name is required").optional(),
-        profileImageUrl: z
-          .string()
-          .url("Please enter a valid URL")
-          .optional()
-          .or(z.literal("")),
-        password: z.string().min(6, "Password must be at least 6 characters"),
-      });
-
-      const validatedData = userCreateSchema.parse(req.body);
-
-      // Get current logged-in user's company_id to assign to new user
+      // Security: Only admins can create users
       const sessionUser = (req.session as any).user;
       let currentUserId;
 
@@ -642,12 +623,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check if current user is admin or global admin
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      const isCompanyAdmin = currentUser.isAdmin;
+
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Only administrators can create users",
+        });
+      }
+
+      // Schema accepts isAdmin field
+      const userCreateSchema = z.object({
+        licenceAgreementId: z.string().optional(),
+        email: z.string().email("Please enter a valid email address"),
+        firstName: z.string().min(1, "First name is required").optional(),
+        lastName: z.string().min(1, "Last name is required").optional(),
+        profileImageUrl: z
+          .string()
+          .url("Please enter a valid URL")
+          .optional()
+          .or(z.literal("")),
+        password: z.string().min(6, "Password must be at least 6 characters"),
+        isAdmin: z.boolean().optional(),
+      });
+
+      const validatedData = userCreateSchema.parse(req.body);
+
+      // Security: Only allow setting isAdmin if creator is admin AND checkbox is checked
+      const canSetAdmin = isCompanyAdmin || isGlobalAdmin;
+      const shouldBeAdmin = canSetAdmin && validatedData.isAdmin === true;
+
       // Add current user's company_id to the new user data
-      // Security: isAdmin defaults to false and cannot be set by regular users
       const userDataWithCompany = {
         ...validatedData,
         companyId: currentUser.companyId,
-        isAdmin: false, // Security: Force to false, only admin endpoints should set this
+        isAdmin: shouldBeAdmin, // Only true if creator is admin AND checkbox is checked
       };
 
       const user = await storage.createUser(userDataWithCompany);

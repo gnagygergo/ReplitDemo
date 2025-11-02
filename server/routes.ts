@@ -1809,6 +1809,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Pull Settings from Dev DB - syncs master settings from development database to production
+  app.post("/api/company-settings-masters/pull-from-dev", isAuthenticated, async (req: any, res) => {
+    try {
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isGlobalAdmin) {
+        return res.status(403).json({ message: "Only global admins can pull settings from dev database" });
+      }
+
+      const { host, port, database, username, password } = req.body;
+      
+      if (!host || !database || !username || !password) {
+        return res.status(400).json({ message: "Missing required database connection parameters" });
+      }
+
+      const devDbConfig = {
+        host,
+        port: port || "5432",
+        database,
+        username,
+        password,
+      };
+
+      const stats = await storage.pullSettingsFromDevDatabase(devDbConfig);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error pulling settings from dev database:", error);
+      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to pull settings from dev database" });
+    }
+  });
+
   // Business Objects Manager - Company Settings by Domain (Company-scoped)
   app.get("/api/business-objects/company-settings/:domain", isAuthenticated, async (req, res) => {
     try {

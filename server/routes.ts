@@ -633,9 +633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Schema accepts isAdmin field
+      // Schema accepts isAdmin field and requires licenceAgreementId
       const userCreateSchema = z.object({
-        licenceAgreementId: z.string().optional(),
+        licenceAgreementId: z.string().min(1, "License agreement is required"),
         email: z.string().email("Please enter a valid email address"),
         firstName: z.string().min(1, "First name is required").optional(),
         lastName: z.string().min(1, "Last name is required").optional(),
@@ -663,12 +663,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const user = await storage.createUser(userDataWithCompany);
 
-      // Update licence agreement seat counts if licenceAgreementId is provided
-      if (validatedData.licenceAgreementId) {
-        await storage.actualizeLicenceAgreementSeatsUsed(
-          validatedData.licenceAgreementId,
-        );
-      }
+      // Update licence agreement seat counts (now always required)
+      await storage.actualizeLicenceAgreementSeatsUsed(
+        validatedData.licenceAgreementId,
+      );
 
       res.status(201).json(user);
     } catch (error) {

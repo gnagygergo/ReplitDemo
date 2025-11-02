@@ -281,7 +281,7 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Is Admin</FormLabel>
+                  <FormLabel>Make this user Company Admin</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -490,7 +490,7 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Is Admin</FormLabel>
+                  <FormLabel>Create this user as Company Admin</FormLabel>
                 </div>
               </FormItem>
             )}

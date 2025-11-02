@@ -45,7 +45,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, Plus, X, Database } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Database, ArrowUp } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import {
@@ -84,6 +84,14 @@ export default function CompanySettingMasterAdmin() {
   const [selectedDomainFilter, setSelectedDomainFilter] = useState<string>("");
   const [selectedFunctionalityFilter, setSelectedFunctionalityFilter] = useState<string>("");
   const [serializeDialogOpen, setSerializeDialogOpen] = useState(false);
+  const [pullFromDevDialogOpen, setPullFromDevDialogOpen] = useState(false);
+  const [devDbConfig, setDevDbConfig] = useState({
+    host: "",
+    port: "5432",
+    database: "",
+    username: "",
+    password: "",
+  });
 
   // Domains Query
   const { data: domains = [], isLoading: domainsLoading } = useQuery<CompanySettingMasterDomain[]>({
@@ -288,6 +296,36 @@ export default function CompanySettingMasterAdmin() {
     onError: (error: any) => {
       toast({ 
         title: "Error serializing company settings", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Pull from Dev DB Mutation
+  const pullFromDevMutation = useMutation({
+    mutationFn: async (config: typeof devDbConfig) =>
+      await apiRequest("POST", "/api/company-settings-masters/pull-from-dev", config),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-domains"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/company-setting-master-functionalities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/company-settings-masters"] });
+      toast({ 
+        title: "Sync complete", 
+        description: `Domains: ${data.domains.inserted} inserted, ${data.domains.skipped} skipped. Functionalities: ${data.functionalities.inserted} inserted, ${data.functionalities.skipped} skipped. Settings: ${data.settings.inserted} inserted, ${data.settings.skipped} skipped.`,
+      });
+      setPullFromDevDialogOpen(false);
+      setDevDbConfig({
+        host: "",
+        port: "5432",
+        database: "",
+        username: "",
+        password: "",
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error pulling from dev database", 
         description: error.message, 
         variant: "destructive" 
       });
@@ -554,6 +592,15 @@ export default function CompanySettingMasterAdmin() {
                   <CardDescription>Manage master settings for companies</CardDescription>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setPullFromDevDialogOpen(true)}
+                    className="bg-amber-700 hover:bg-amber-800 text-white border-amber-700"
+                    data-testid="button-pull-from-dev"
+                  >
+                    <ArrowUp className="h-4 w-4 mr-2" />
+                    Pull Settings from Dev DB
+                  </Button>
                   <Button
                     variant="outline"
                     onClick={() => setSerializeDialogOpen(true)}
@@ -1177,6 +1224,84 @@ export default function CompanySettingMasterAdmin() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Pull from Dev DB Dialog */}
+      <Dialog open={pullFromDevDialogOpen} onOpenChange={setPullFromDevDialogOpen}>
+        <DialogContent data-testid="dialog-pull-from-dev">
+          <DialogHeader>
+            <DialogTitle>Pull Settings from Development Database</DialogTitle>
+            <DialogDescription>
+              Connect to the development database to sync master settings. Only new records will be added to production.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Host</label>
+              <Input
+                value={devDbConfig.host}
+                onChange={(e) => setDevDbConfig({ ...devDbConfig, host: e.target.value })}
+                placeholder="e.g., localhost or db.dev.example.com"
+                data-testid="input-dev-db-host"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Port</label>
+              <Input
+                value={devDbConfig.port}
+                onChange={(e) => setDevDbConfig({ ...devDbConfig, port: e.target.value })}
+                placeholder="5432"
+                data-testid="input-dev-db-port"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Database</label>
+              <Input
+                value={devDbConfig.database}
+                onChange={(e) => setDevDbConfig({ ...devDbConfig, database: e.target.value })}
+                placeholder="Database name"
+                data-testid="input-dev-db-database"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Username</label>
+              <Input
+                value={devDbConfig.username}
+                onChange={(e) => setDevDbConfig({ ...devDbConfig, username: e.target.value })}
+                placeholder="Database username"
+                data-testid="input-dev-db-username"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Password</label>
+              <Input
+                type="password"
+                value={devDbConfig.password}
+                onChange={(e) => setDevDbConfig({ ...devDbConfig, password: e.target.value })}
+                placeholder="Database password"
+                data-testid="input-dev-db-password"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPullFromDevDialogOpen(false)}
+              data-testid="button-cancel-pull-from-dev"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => pullFromDevMutation.mutate(devDbConfig)}
+              disabled={pullFromDevMutation.isPending || !devDbConfig.host || !devDbConfig.database || !devDbConfig.username}
+              className="bg-amber-700 hover:bg-amber-800"
+              data-testid="button-confirm-pull-from-dev"
+            >
+              {pullFromDevMutation.isPending ? "Syncing..." : "Pull Settings"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

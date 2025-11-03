@@ -63,7 +63,7 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
   };
 
   return (
-    <Card data-testid="card-find-account-data">
+    <Card className="border-purple-600 border-[3px]" data-testid="card-find-account-data">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">AI Account Data Finder</CardTitle>

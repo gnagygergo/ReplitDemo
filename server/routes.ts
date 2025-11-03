@@ -107,8 +107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update seat counts after user creation
       await storage.actualizeLicenceAgreementSeatsUsed(licenceAgreement.id);
+
       // Serialize company settings for the new company
-      await storage.serializeCompanySettings(user.id, company.id);
+      await storage.serializeCompanySettingsForCompany(company.id, user.id);
       
       res.status(201).json({
         message: "Registration successful",

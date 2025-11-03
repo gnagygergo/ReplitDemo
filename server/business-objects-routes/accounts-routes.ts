@@ -164,7 +164,7 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
     }
   });
 
-  // Find registration ID using Tavily web search + OpenAI
+  // Find company data (registration ID and address) using Tavily web search + OpenAI
   app.post("/api/accounts/:id/find-registration-id", async (req, res) => {
     try {
       // Get the account
@@ -198,14 +198,14 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         });
       }
 
-      // Build search query for Tavily
+      // Build search query for Tavily - broader search to find both registration and address
       const companyInfo = [
         `Company: ${account.name}`,
         account.companyOfficialName ? `Official Name: ${account.companyOfficialName}` : null,
-        account.address ? `Address: ${account.address}` : null,
+        account.address ? `Current Address: ${account.address}` : null,
       ].filter(Boolean).join(", ");
 
-      const searchQuery = `${account.name} company registration number`;
+      const searchQuery = `${account.name} company registration number address contact information`;
 
       // Use Tavily to search the web
       const tvly = tavily({ apiKey: company.tavilyApiKey });
@@ -218,12 +218,13 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       if (!searchResults.results || searchResults.results.length === 0) {
         return res.json({ 
           registrationId: "Not found",
+          address: "Not found",
           accountId: account.id,
           accountName: account.name
         });
       }
 
-      // Use OpenAI to extract registration ID from search results
+      // Use OpenAI to extract both registration ID and address from search results
       const openai = new OpenAI({
         apiKey: company.openaiApiKey,
         organization: company.openaiOrganizationId || undefined,
@@ -241,33 +242,56 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that extracts company registration numbers from web search results. Look for official registration numbers, company IDs, business numbers, VAT numbers, or tax IDs. Return ONLY the registration number if found, otherwise return 'Not found'. Be concise."
+            content: `You are a helpful assistant that extracts company information from web search results. Extract two pieces of information:
+1. Company registration number/ID (look for official registration numbers, company IDs, business numbers, VAT numbers, or tax IDs)
+2. Company address (the official business address)
+
+Return your response in this exact JSON format:
+{
+  "registrationId": "the registration number or 'Not found'",
+  "address": "the full address or 'Not found'"
+}
+
+Be concise and only include information that is clearly stated in the search results.`
           },
           {
             role: "user",
-            content: `Company Information: ${companyInfo}\n\nWeb Search Results:\n${searchContext}\n\nExtract the official company registration number/ID for ${account.name}. Return only the number, or "Not found" if not present in the results.`
+            content: `Company Information: ${companyInfo}\n\nWeb Search Results:\n${searchContext}\n\nExtract the official company registration number/ID and business address for ${account.name}. Return the data in JSON format as specified.`
           }
         ],
-        max_tokens: 150,
+        max_tokens: 300,
         temperature: 0.2,
       });
 
-      const result = completion.choices[0]?.message?.content || "Not found";
+      const resultText = completion.choices[0]?.message?.content || "{}";
+      
+      // Parse the JSON response from OpenAI
+      let extractedData = { registrationId: "Not found", address: "Not found" };
+      try {
+        const parsed = JSON.parse(resultText);
+        extractedData = {
+          registrationId: parsed.registrationId || "Not found",
+          address: parsed.address || "Not found"
+        };
+      } catch (parseError) {
+        console.error("Failed to parse OpenAI response as JSON:", resultText);
+      }
 
       res.json({ 
-        registrationId: result,
+        registrationId: extractedData.registrationId,
+        address: extractedData.address,
         accountId: account.id,
         accountName: account.name
       });
     } catch (error) {
-      console.error("Error finding registration ID:", error);
+      console.error("Error finding company data:", error);
       if (error instanceof Error) {
         return res.status(500).json({ 
-          message: "Failed to search for registration ID", 
+          message: "Failed to search for company data", 
           error: error.message 
         });
       }
-      res.status(500).json({ message: "Failed to search for registration ID" });
+      res.status(500).json({ message: "Failed to search for company data" });
     }
   });
 }

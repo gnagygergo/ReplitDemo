@@ -11,6 +11,8 @@ import {
   Package,
   FileSpreadsheet,
   GraduationCap,
+  Lamp,
+  PersonStanding,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -119,6 +121,90 @@ export default function Header() {
                 </Link>
               </>
             )}
+
+            {/* AI Assistant Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="relative h-8 w-8 rounded-full p-0 bg-gradient-to-br from-purple-500 to-pink-500"
+                  data-testid="button-ai-assistant-menu"
+                >
+                  <div className="flex items-center justify-center h-full w-full rounded-full bg-background m-[2px]">
+                    <Lamp className="h-4 w-4 text-purple-600" />
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuItem asChild>
+                  <Link href="/digital-office">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start cursor-pointer"
+                      data-testid="button-visit-digital-office"
+                    >
+                      <PersonStanding className="mr-2 h-4 w-4 text-yellow-500" />
+                      Visit Digital Office
+                    </Button>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                    data-testid="button-data-steward"
+                  >
+                    <PersonStanding className="mr-2 h-4 w-4 text-green-500" />
+                    Data Steward
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                    data-testid="button-data-analyst"
+                  >
+                    <PersonStanding className="mr-2 h-4 w-4 text-amber-500" />
+                    Data Analyst
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                    data-testid="button-sales-assistant"
+                  >
+                    <PersonStanding className="mr-2 h-4 w-4 text-purple-800" />
+                    Sales Assistant
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                    data-testid="button-sales-coach"
+                  >
+                    <PersonStanding className="mr-2 h-4 w-4 text-blue-800" />
+                    Sales Coach
+                  </Button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start cursor-pointer"
+                    data-testid="button-proposal-ninja"
+                  >
+                    <PersonStanding className="mr-2 h-4 w-4 text-amber-800" />
+                    The Proposal Ninja
+                  </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* User Menu */}
             <DropdownMenu>

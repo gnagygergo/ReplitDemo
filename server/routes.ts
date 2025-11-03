@@ -324,6 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         openaiApiKey: req.body.openaiApiKey,
         openaiOrganizationId: req.body.openaiOrganizationId,
         openaiPreferredModel: req.body.openaiPreferredModel,
+        tavilyApiKey: req.body.tavilyApiKey,
       };
 
       const company = await storage.updateCompany(

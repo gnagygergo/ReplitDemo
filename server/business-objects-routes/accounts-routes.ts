@@ -3,6 +3,7 @@ import { z } from "zod";
 import { insertAccountSchema } from "@shared/schema";
 import type { IStorage } from "../storage";
 import OpenAI from "openai";
+import { tavily } from "@tavily/core";
 
 export function registerAccountRoutes(app: Express, storage: IStorage) {
   // Account routes getter - user's company context queried and handed over to method
@@ -163,7 +164,7 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
     }
   });
 
-  // Find registration ID using OpenAI
+  // Find registration ID using Tavily web search + OpenAI
   app.post("/api/accounts/:id/find-registration-id", async (req, res) => {
     try {
       // Get the account
@@ -172,7 +173,7 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         return res.status(404).json({ message: "Account not found" });
       }
 
-      // Get the user's company to access OpenAI settings
+      // Get the user's company to access AI settings
       const companyContext = await storage.GetCompanyContext(req);
       if (!companyContext) {
         return res.status(400).json({ message: "Company context not found" });
@@ -183,51 +184,72 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         return res.status(404).json({ message: "Company not found" });
       }
 
-      // Check if OpenAI is configured
-      if (!company.openaiApiKey) {
+      // Check if Tavily is configured
+      if (!company.tavilyApiKey) {
         return res.status(400).json({ 
-          message: "OpenAI is not configured for your company. Please configure it in AI Services settings." 
+          message: "Tavily API is not configured. Please add your Tavily API key in AI Services settings." 
         });
       }
 
-      // Initialize OpenAI client with company's API key
+      // Check if OpenAI is configured
+      if (!company.openaiApiKey) {
+        return res.status(400).json({ 
+          message: "OpenAI is not configured. Please configure it in AI Services settings." 
+        });
+      }
+
+      // Build search query for Tavily
+      const companyInfo = [
+        `Company: ${account.name}`,
+        account.companyOfficialName ? `Official Name: ${account.companyOfficialName}` : null,
+        account.address ? `Address: ${account.address}` : null,
+      ].filter(Boolean).join(", ");
+
+      const searchQuery = `${account.name} company registration number`;
+
+      // Use Tavily to search the web
+      const tvly = tavily({ apiKey: company.tavilyApiKey });
+      const searchResults = await tvly.search(searchQuery, {
+        maxResults: 5,
+        searchDepth: "advanced",
+      });
+
+      // If no results found
+      if (!searchResults.results || searchResults.results.length === 0) {
+        return res.json({ 
+          registrationId: "Not found",
+          accountId: account.id,
+          accountName: account.name
+        });
+      }
+
+      // Use OpenAI to extract registration ID from search results
       const openai = new OpenAI({
         apiKey: company.openaiApiKey,
         organization: company.openaiOrganizationId || undefined,
       });
 
-      // Prepare the search query
-      const searchQuery = `Find the company registration number/ID for the following company:
-Company Name: ${account.name}
-${account.companyOfficialName ? `Official Name: ${account.companyOfficialName}` : ""}
-${account.address ? `Address: ${account.address}` : ""}
-${account.industry ? `Industry: ${account.industry}` : ""}
+      // Prepare context from search results
+      const searchContext = searchResults.results
+        .map((result: any, idx: number) => 
+          `[Result ${idx + 1}]\nTitle: ${result.title}\nContent: ${result.content}\n`
+        )
+        .join("\n");
 
-Please search the web for this company's official registration number or company ID. This could be called:
-- Company Registration Number
-- Business Registration Number
-- Tax ID
-- VAT Number
-- Incorporation Number
-- Or similar official identification
-
-Return ONLY the registration number/ID if found, or "Not found" if you cannot find it. Do not include any explanation.`;
-
-      // Call OpenAI with web search capability
       const completion = await openai.chat.completions.create({
         model: company.openaiPreferredModel || "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that searches for company registration information. Be concise and only return the registration number if found, otherwise return 'Not found'."
+            content: "You are a helpful assistant that extracts company registration numbers from web search results. Look for official registration numbers, company IDs, business numbers, VAT numbers, or tax IDs. Return ONLY the registration number if found, otherwise return 'Not found'. Be concise."
           },
           {
             role: "user",
-            content: searchQuery
+            content: `Company Information: ${companyInfo}\n\nWeb Search Results:\n${searchContext}\n\nExtract the official company registration number/ID for ${account.name}. Return only the number, or "Not found" if not present in the results.`
           }
         ],
         max_tokens: 150,
-        temperature: 0.3,
+        temperature: 0.2,
       });
 
       const result = completion.choices[0]?.message?.content || "Not found";

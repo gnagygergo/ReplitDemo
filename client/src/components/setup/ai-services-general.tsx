@@ -31,6 +31,7 @@ const aiServicesSchema = insertCompanySchema.partial().pick({
   openaiApiKey: true,
   openaiOrganizationId: true,
   openaiPreferredModel: true,
+  tavilyApiKey: true,
 });
 
 type AIServicesFormData = z.infer<typeof aiServicesSchema>;
@@ -38,6 +39,7 @@ type AIServicesFormData = z.infer<typeof aiServicesSchema>;
 export default function AIServicesGeneral() {
   const [isEditing, setIsEditing] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showTavilyKey, setShowTavilyKey] = useState(false);
   const { toast } = useToast();
 
   const { data: company, isLoading } = useQuery<Company>({
@@ -50,6 +52,7 @@ export default function AIServicesGeneral() {
       openaiApiKey: "",
       openaiOrganizationId: "",
       openaiPreferredModel: "gpt-4o",
+      tavilyApiKey: "",
     },
   });
 
@@ -81,6 +84,7 @@ export default function AIServicesGeneral() {
         openaiApiKey: company.openaiApiKey || "",
         openaiOrganizationId: company.openaiOrganizationId || "",
         openaiPreferredModel: company.openaiPreferredModel || "gpt-4o",
+        tavilyApiKey: company.tavilyApiKey || "",
       });
       setIsEditing(true);
     }
@@ -89,6 +93,7 @@ export default function AIServicesGeneral() {
   const handleCancel = () => {
     setIsEditing(false);
     setShowApiKey(false);
+    setShowTavilyKey(false);
     form.reset();
   };
 
@@ -234,6 +239,45 @@ export default function AIServicesGeneral() {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="tavilyApiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tavily API Key (Required for Web Search)</FormLabel>
+                      <FormDescription>
+                        Your Tavily API key for web search functionality. Get one at tavily.com (free tier available)
+                      </FormDescription>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type={showTavilyKey ? "text" : "password"}
+                            placeholder="tvly-..."
+                            data-testid="input-tavily-api-key"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full"
+                            onClick={() => setShowTavilyKey(!showTavilyKey)}
+                            data-testid="button-toggle-tavily-key-visibility"
+                          >
+                            {showTavilyKey ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="flex gap-2">
                   <Button
                     type="submit"
@@ -284,6 +328,17 @@ export default function AIServicesGeneral() {
                 </h3>
                 <p className="text-sm" data-testid="text-preferred-model">
                   {company?.openaiPreferredModel || "gpt-4o"}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Tavily API Key (Web Search)
+                </h3>
+                <p className="text-sm" data-testid="text-tavily-key-status">
+                  {company?.tavilyApiKey
+                    ? "••••••••••••••••••••••••"
+                    : "Not configured"}
                 </p>
               </div>
             </div>

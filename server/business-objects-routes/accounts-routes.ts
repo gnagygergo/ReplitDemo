@@ -266,9 +266,18 @@ Be concise and only include information that is clearly stated in the search res
       const resultText = completion.choices[0]?.message?.content || "{}";
       
       // Parse the JSON response from OpenAI
+      // Strip markdown code blocks if present (```json ... ```)
       let extractedData = { registrationId: "Not found", address: "Not found" };
       try {
-        const parsed = JSON.parse(resultText);
+        let cleanedText = resultText.trim();
+        // Remove markdown code block syntax
+        if (cleanedText.startsWith("```json")) {
+          cleanedText = cleanedText.replace(/^```json\s*/, "").replace(/```\s*$/, "");
+        } else if (cleanedText.startsWith("```")) {
+          cleanedText = cleanedText.replace(/^```\s*/, "").replace(/```\s*$/, "");
+        }
+        
+        const parsed = JSON.parse(cleanedText);
         extractedData = {
           registrationId: parsed.registrationId || "Not found",
           address: parsed.address || "Not found"

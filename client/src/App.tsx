@@ -18,6 +18,7 @@ import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
 import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
+import DigitalOffice from "@/pages/digital-office";
 
 function AuthenticatedRouter() {
   return (
@@ -41,6 +42,7 @@ function AuthenticatedRouter() {
         <Route path="/products" component={Products} />
         <Route path="/setup" component={Setup} />
         <Route path="setup/business-objects" component={BusinessObjectsManager} />
+        <Route path="/digital-office" component={DigitalOffice} />
         <Route component={NotFound} />
       </Switch>
     </>

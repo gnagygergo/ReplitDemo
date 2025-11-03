@@ -33,6 +33,7 @@ export const companies = pgTable("companies", {
   openaiApiKey: text("openai_api_key"),
   openaiOrganizationId: text("openai_organization_id"),
   openaiPreferredModel: text("openai_preferred_model").default("gpt-4o"),
+  tavilyApiKey: text("tavily_api_key"),
 });
 
 export const currencies = pgTable("currencies", {

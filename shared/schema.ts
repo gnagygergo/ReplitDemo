@@ -30,6 +30,9 @@ export const companies = pgTable("companies", {
     () => countries.countryCode,
   ),
   logoUrl: text("logo_url"),
+  openaiApiKey: text("openai_api_key"),
+  openaiOrganizationId: text("openai_organization_id"),
+  openaiPreferredModel: text("openai_preferred_model").default("gpt-4o"),
 });
 
 export const currencies = pgTable("currencies", {

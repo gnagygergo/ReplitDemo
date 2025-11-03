@@ -1,0 +1,321 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { type Company, insertCompanySchema } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Bot, Edit, Save, X, Eye, EyeOff } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const aiServicesSchema = insertCompanySchema.partial().pick({
+  openaiApiKey: true,
+  openaiOrganizationId: true,
+  openaiPreferredModel: true,
+});
+
+type AIServicesFormData = z.infer<typeof aiServicesSchema>;
+
+export default function AIServicesGeneral() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const { toast } = useToast();
+
+  const { data: company, isLoading } = useQuery<Company>({
+    queryKey: ["/api/auth/my-company"],
+  });
+
+  const form = useForm<AIServicesFormData>({
+    resolver: zodResolver(aiServicesSchema),
+    defaultValues: {
+      openaiApiKey: "",
+      openaiOrganizationId: "",
+      openaiPreferredModel: "gpt-4o",
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: AIServicesFormData) => {
+      const response = await apiRequest("PATCH", `/api/auth/my-company`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/my-company"] });
+      toast({
+        title: "Success",
+        description: "AI services configuration updated successfully",
+      });
+      setIsEditing(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update AI services configuration",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleEdit = () => {
+    if (company) {
+      form.reset({
+        openaiApiKey: company.openaiApiKey || "",
+        openaiOrganizationId: company.openaiOrganizationId || "",
+        openaiPreferredModel: company.openaiPreferredModel || "gpt-4o",
+      });
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setShowApiKey(false);
+    form.reset();
+  };
+
+  const onSubmit = (data: AIServicesFormData) => {
+    updateMutation.mutate(data);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <p className="text-muted-foreground">Loading AI services configuration...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <Bot className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-3xl font-bold">AI Services</h1>
+          <p className="text-muted-foreground">
+            Configure your company's OpenAI integration settings
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>OpenAI Configuration</CardTitle>
+              <CardDescription>
+                Connect your company's OpenAI subscription to enable AI-powered features
+              </CardDescription>
+            </div>
+            {!isEditing && (
+              <Button
+                onClick={handleEdit}
+                variant="outline"
+                size="sm"
+                data-testid="button-edit-ai-services"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isEditing ? (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="openaiApiKey"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>API Key</FormLabel>
+                      <FormDescription>
+                        Your OpenAI API key (starts with sk-). Keep this secure.
+                      </FormDescription>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            type={showApiKey ? "text" : "password"}
+                            placeholder="sk-..."
+                            data-testid="input-openai-api-key"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-0 top-0 h-full"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            data-testid="button-toggle-api-key-visibility"
+                          >
+                            {showApiKey ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="openaiOrganizationId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Organization ID (Optional)</FormLabel>
+                      <FormDescription>
+                        Required if your API key belongs to multiple organizations
+                      </FormDescription>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="org-..."
+                          data-testid="input-openai-org-id"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="openaiPreferredModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preferred Model</FormLabel>
+                      <FormDescription>
+                        The default GPT model to use for AI features
+                      </FormDescription>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "gpt-4o"}
+                        data-testid="select-openai-model"
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a model" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="gpt-4o">GPT-4o (Recommended)</SelectItem>
+                          <SelectItem value="gpt-4-turbo">GPT-4 Turbo</SelectItem>
+                          <SelectItem value="gpt-4">GPT-4</SelectItem>
+                          <SelectItem value="gpt-3.5-turbo">GPT-3.5 Turbo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={updateMutation.isPending}
+                    data-testid="button-save-ai-services"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={updateMutation.isPending}
+                    data-testid="button-cancel-ai-services"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  API Key
+                </h3>
+                <p className="text-sm" data-testid="text-api-key-status">
+                  {company?.openaiApiKey
+                    ? "••••••••••••••••••••••••"
+                    : "Not configured"}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Organization ID
+                </h3>
+                <p className="text-sm" data-testid="text-org-id">
+                  {company?.openaiOrganizationId || "Not set"}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Preferred Model
+                </h3>
+                <p className="text-sm" data-testid="text-preferred-model">
+                  {company?.openaiPreferredModel || "gpt-4o"}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>About OpenAI Integration</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            This integration allows your company to use AI-powered features throughout the
+            application using your own OpenAI subscription.
+          </p>
+          <p>
+            <strong>Current Features:</strong>
+          </p>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Account Data Finder: Automatically search for company registration IDs</li>
+          </ul>
+          <p className="mt-4">
+            <strong>To get started:</strong>
+          </p>
+          <ol className="list-decimal list-inside space-y-1 ml-2">
+            <li>Sign up for an OpenAI account at platform.openai.com</li>
+            <li>Generate an API key from your account settings</li>
+            <li>Enter the API key above to enable AI features</li>
+          </ol>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

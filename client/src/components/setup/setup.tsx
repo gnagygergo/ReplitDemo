@@ -14,6 +14,7 @@ import {
   FileCheck,
   Building,
   BookOpen,
+  Bot,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,14 @@ const setupMenuItems = [
     label: "Users",
     icon: Users,
     description: "Manage user accounts and permissions",
+    category: "my-company",
+  },
+  {
+    id: "ai-services",
+    label: "AI Services",
+    icon: Bot,
+    description: "Configure AI integrations and settings",
+    companyAdminOnly: true,
     category: "my-company",
   },
   {
@@ -164,6 +173,7 @@ import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
 import CompanyDetail from "@/components/setup/company-detail";
 import KnowledgeArticlesManagement from "@/components/setup/knowledge-articles";
 import CompanySettingMasterAdmin from "@/components/setup/company-setting-master-admin";
+import AIServicesGeneral from "@/components/setup/ai-services-general";
 
 // Companies management component
 function CompaniesSetup() {
@@ -203,6 +213,11 @@ function TranslationsSetup() {
 // Dev Patterns management component
 function DevPatternsSetup() {
   return <DevPatternsManagement />;
+}
+
+// AI Services management component
+function AIServicesSetup() {
+  return <AIServicesGeneral />;
 }
 
 export default function Setup() {
@@ -368,6 +383,8 @@ export default function Setup() {
         return <LicenceAgreementsManagement />;
       case "my-company":
         return <CompanyDetail />;
+      case "ai-services":
+        return <AIServicesSetup />;
       default:
         return (
           <div className="flex items-center justify-center h-full text-muted-foreground">

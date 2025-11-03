@@ -63,6 +63,7 @@ import AccountCompanyContactsListCard from "@/components/accounts/account-cards/
 import AccountShippingAddressesListCard from "@/components/accounts/account-cards/smart-account-shipping-addresses-list-card";
 import AccountSubAccountsListCard from "@/components/accounts/account-cards/smart-account-sub-accounts-list-card";
 import AccountParentAccountsListCard from "@/components/accounts/account-cards/smart-account-parent-accounts-list-card";
+import FindAccountData from "@/components/accounts/account-cards/find-account-data";
 
 export default function AccountDetail() {
   const [match, params] = useRoute("/accounts/:id");
@@ -370,6 +371,12 @@ export default function AccountDetail() {
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {!isCreating && params?.id && (
               <>
+                {/* AI Account Data Finder */}
+                <FindAccountData 
+                  accountId={params.id}
+                  accountName={account?.name || ""}
+                />
+
                 {(isSettingEnabled("opportunity_management_activated") && 
                 <AccountOpportunitiesListCard
                   accountId={params.id}

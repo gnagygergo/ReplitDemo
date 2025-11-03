@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { z } from "zod";
 import { insertAccountSchema } from "@shared/schema";
 import type { IStorage } from "../storage";
+import OpenAI from "openai";
 
 export function registerAccountRoutes(app: Express, storage: IStorage) {
   // Account routes getter - user's company context queried and handed over to method
@@ -159,6 +160,92 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       res
         .status(500)
         .json({ message: "Failed to fetch parent accounts" });
+    }
+  });
+
+  // Find registration ID using OpenAI
+  app.post("/api/accounts/:id/find-registration-id", async (req, res) => {
+    try {
+      // Get the account
+      const account = await storage.getAccount(req.params.id);
+      if (!account) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      // Get the user's company to access OpenAI settings
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({ message: "Company context not found" });
+      }
+
+      const company = await storage.getCompany(companyContext);
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+
+      // Check if OpenAI is configured
+      if (!company.openaiApiKey) {
+        return res.status(400).json({ 
+          message: "OpenAI is not configured for your company. Please configure it in AI Services settings." 
+        });
+      }
+
+      // Initialize OpenAI client with company's API key
+      const openai = new OpenAI({
+        apiKey: company.openaiApiKey,
+        organization: company.openaiOrganizationId || undefined,
+      });
+
+      // Prepare the search query
+      const searchQuery = `Find the company registration number/ID for the following company:
+Company Name: ${account.name}
+${account.companyOfficialName ? `Official Name: ${account.companyOfficialName}` : ""}
+${account.address ? `Address: ${account.address}` : ""}
+${account.industry ? `Industry: ${account.industry}` : ""}
+
+Please search the web for this company's official registration number or company ID. This could be called:
+- Company Registration Number
+- Business Registration Number
+- Tax ID
+- VAT Number
+- Incorporation Number
+- Or similar official identification
+
+Return ONLY the registration number/ID if found, or "Not found" if you cannot find it. Do not include any explanation.`;
+
+      // Call OpenAI with web search capability
+      const completion = await openai.chat.completions.create({
+        model: company.openaiPreferredModel || "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that searches for company registration information. Be concise and only return the registration number if found, otherwise return 'Not found'."
+          },
+          {
+            role: "user",
+            content: searchQuery
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.3,
+      });
+
+      const result = completion.choices[0]?.message?.content || "Not found";
+
+      res.json({ 
+        registrationId: result,
+        accountId: account.id,
+        accountName: account.name
+      });
+    } catch (error) {
+      console.error("Error finding registration ID:", error);
+      if (error instanceof Error) {
+        return res.status(500).json({ 
+          message: "Failed to search for registration ID", 
+          error: error.message 
+        });
+      }
+      res.status(500).json({ message: "Failed to search for registration ID" });
     }
   });
 }

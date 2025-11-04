@@ -371,6 +371,7 @@ export const companySettingMasterDomains = pgTable("company_setting_master_domai
     .default(sql`gen_random_uuid()`),
   code: text("code").notNull(),
   name: text("name").notNull(),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const companySettingMasterFunctionalities = pgTable("company_setting_master_functionalities", {
@@ -382,6 +383,7 @@ export const companySettingMasterFunctionalities = pgTable("company_setting_mast
   domainId: varchar("domain_id")
     .notNull()
     .references(() => companySettingMasterDomains.id, { onDelete: "restrict" }),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const companySettingsMaster = pgTable("company_settings_master", {
@@ -405,6 +407,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
   settingShowsInLevel: integer("setting_shows_in_level"),
   settingOnceEnabledCannotBeDisabled: boolean("setting_once_enabled_cannot_be_disabled"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const companySettings = pgTable("company_settings", {

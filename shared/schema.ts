@@ -372,7 +372,7 @@ export const companySettingMasterDomains = pgTable("company_setting_master_domai
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  code: text("code").notNull(),
+  code: text("code").notNull().unique(),
   name: text("name").notNull(),
   createdDate: timestamp("created_date").defaultNow(),
 });
@@ -381,7 +381,7 @@ export const companySettingMasterFunctionalities = pgTable("company_setting_mast
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  code: text("code").notNull(),
+  code: text("code").notNull().unique(),
   name: text("name").notNull(),
   domainId: varchar("domain_id")
     .notNull()
@@ -399,7 +399,7 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingFunctionalDomainName: text("setting_functional_domain_name"),
   settingFunctionalityName: text("setting_functionality_name"),
   settingFunctionalityCode: text("setting_functionality_code"),
-  settingCode: text("setting_code"),
+  settingCode: text("setting_code").unique(),
   settingName: text("setting_name"),
   settingDescription: text("setting_description"),
   settingValues: text("setting_values"),

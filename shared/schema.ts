@@ -34,6 +34,7 @@ export const companies = pgTable("companies", {
   openaiOrganizationId: text("openai_organization_id"),
   openaiPreferredModel: text("openai_preferred_model").default("gpt-4o"),
   tavilyApiKey: text("tavily_api_key"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const currencies = pgTable("currencies", {
@@ -79,6 +80,7 @@ export const accounts = pgTable("accounts", {
   parentAccountId: varchar("parent_account_id")
     .references((): AnyPgColumn => accounts.id, { onDelete: "cascade" }),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const opportunities = pgTable("opportunities", {
@@ -95,6 +97,7 @@ export const opportunities = pgTable("opportunities", {
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const countries = pgTable("countries", {
@@ -114,6 +117,7 @@ export const companyRoles = pgTable("company_roles", {
     { onDelete: "restrict" },
   ),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const userRoleAssignments = pgTable(
@@ -128,6 +132,7 @@ export const userRoleAssignments = pgTable(
     companyRoleId: varchar("company_role_id")
       .notNull()
       .references(() => companyRoles.id, { onDelete: "cascade" }),
+    createdDate: timestamp("created_date").defaultNow(),
   },
   (table) => ({
     uniqueUserRole: unique().on(table.userId, table.companyRoleId),
@@ -193,6 +198,7 @@ export const unitOfMeasures = pgTable("unit_of_measures", {
   uomName: text("uom_name").notNull(),
   baseToType: boolean("base_to_type").notNull().default(false),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const products = pgTable("products", {
@@ -211,6 +217,7 @@ export const products = pgTable("products", {
   salesUnitPriceCurrency: text("sales_unit_price_currency").notNull(),
   vatPercent: decimal("vat_percent", { precision: 5, scale: 3 }).notNull(),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const languages = pgTable("languages", {
@@ -230,6 +237,7 @@ export const translations = pgTable("translations", {
   languageCode: text("language_code")
     .notNull()
     .references(() => languages.languageCode, { onDelete: "restrict" }),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const quotes = pgTable("quotes", {

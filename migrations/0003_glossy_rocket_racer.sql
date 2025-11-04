@@ -1,0 +1,3 @@
+ALTER TABLE "company_setting_master_domains" ADD CONSTRAINT "company_setting_master_domains_code_unique" UNIQUE("code");--> statement-breakpoint
+ALTER TABLE "company_setting_master_functionalities" ADD CONSTRAINT "company_setting_master_functionalities_code_unique" UNIQUE("code");--> statement-breakpoint
+ALTER TABLE "company_settings_master" ADD CONSTRAINT "company_settings_master_setting_code_unique" UNIQUE("setting_code");

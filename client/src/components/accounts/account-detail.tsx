@@ -83,9 +83,17 @@ export default function AccountDetail() {
     });
 
   // Fetch company settings for smart account management
-  const { data: companySettings = [] } = useQuery<CompanySettingWithMaster[]>({
+  const { data: accountManagementSettings = [] } = useQuery<CompanySettingWithMaster[]>({
     queryKey: ["/api/business-objects/company-settings/account_management"],
   });
+
+  // Fetch platform settings (includes Google Maps API key)
+  const { data: platformSettings = [] } = useQuery<CompanySettingWithMaster[]>({
+    queryKey: ["/api/business-objects/company-settings/platform_business_objects"],
+  });
+
+  // Merge both settings arrays
+  const companySettings = [...accountManagementSettings, ...platformSettings];
 
   // Helper function to check if a company setting is enabled
   const isSettingEnabled = (settingCode: string): boolean => {

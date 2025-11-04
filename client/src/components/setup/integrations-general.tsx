@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bot, Edit, Save, X, Eye, EyeOff, Map } from "lucide-react";
+import { Bot, Edit, Save, X, Eye, EyeOff, Map, Workflow } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -36,12 +36,8 @@ const aiServicesSchema = insertCompanySchema.partial().pick({
 
 type AIServicesFormData = z.infer<typeof aiServicesSchema>;
 
-// Schema for Google Maps API Key
-const googleMapsSchema = z.object({
-  settingValue: z.string().optional(),
-});
 
-type GoogleMapsFormData = z.infer<typeof googleMapsSchema>;
+
 
 // Type for company setting
 type CompanySetting = {
@@ -54,27 +50,15 @@ type CompanySetting = {
 
 export default function IntegrationsGeneral() {
   const [isEditingAI, setIsEditingAI] = useState(false);
-  const [isEditingGoogleMaps, setIsEditingGoogleMaps] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showTavilyKey, setShowTavilyKey] = useState(false);
-  const [showGoogleMapsKey, setShowGoogleMapsKey] = useState(false);
   const { toast } = useToast();
 
   const { data: company, isLoading } = useQuery<Company>({
     queryKey: ["/api/auth/my-company"],
   });
 
-  // Query for Google Maps API key setting
-  const { data: googleMapsSetting, isLoading: isLoadingGoogleMaps } = useQuery<CompanySetting>({
-    queryKey: ["/api/business-objects/company-settings/by-code", "google_maps_api_key"],
-    queryFn: async () => {
-      const response = await fetch("/api/business-objects/company-settings/by-code/google_maps_api_key");
-      if (!response.ok) {
-        throw new Error("Failed to fetch Google Maps setting");
-      }
-      return response.json();
-    },
-  });
+  
 
   const aiForm = useForm<AIServicesFormData>({
     resolver: zodResolver(aiServicesSchema),
@@ -86,12 +70,6 @@ export default function IntegrationsGeneral() {
     },
   });
 
-  const googleMapsForm = useForm<GoogleMapsFormData>({
-    resolver: zodResolver(googleMapsSchema),
-    defaultValues: {
-      settingValue: "",
-    },
-  });
 
   const updateAIMutation = useMutation({
     mutationFn: async (data: AIServicesFormData) => {
@@ -115,30 +93,7 @@ export default function IntegrationsGeneral() {
     },
   });
 
-  const updateGoogleMapsMutation = useMutation({
-    mutationFn: async (data: GoogleMapsFormData) => {
-      if (!googleMapsSetting?.id) {
-        throw new Error("Google Maps setting not found");
-      }
-      const response = await apiRequest("PATCH", `/api/business-objects/company-settings/${googleMapsSetting.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-code", "google_maps_api_key"] });
-      toast({
-        title: "Success",
-        description: "Google Maps API key updated successfully",
-      });
-      setIsEditingGoogleMaps(false);
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update Google Maps API key",
-        variant: "destructive",
-      });
-    },
-  });
+
 
   const handleEditAI = () => {
     if (company) {
@@ -152,14 +107,6 @@ export default function IntegrationsGeneral() {
     }
   };
 
-  const handleEditGoogleMaps = () => {
-    if (googleMapsSetting) {
-      googleMapsForm.reset({
-        settingValue: googleMapsSetting.settingValue || "",
-      });
-      setIsEditingGoogleMaps(true);
-    }
-  };
 
   const handleCancelAI = () => {
     setIsEditingAI(false);
@@ -168,21 +115,12 @@ export default function IntegrationsGeneral() {
     aiForm.reset();
   };
 
-  const handleCancelGoogleMaps = () => {
-    setIsEditingGoogleMaps(false);
-    setShowGoogleMapsKey(false);
-    googleMapsForm.reset();
-  };
-
   const onSubmitAI = (data: AIServicesFormData) => {
     updateAIMutation.mutate(data);
   };
 
-  const onSubmitGoogleMaps = (data: GoogleMapsFormData) => {
-    updateGoogleMapsMutation.mutate(data);
-  };
 
-  if (isLoading || isLoadingGoogleMaps) {
+  if (isLoading ) {
     return (
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <p className="text-muted-foreground">Loading configuration...</p>
@@ -193,11 +131,11 @@ export default function IntegrationsGeneral() {
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center gap-3 mb-6">
-        <Bot className="h-8 w-8 text-primary" />
+        <Workflow className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-3xl font-bold">External Systems Connection</h1>
           <p className="text-muted-foreground">
-            Configure your company's external API integrations
+            Configure your company's integrations to other systems and services.
           </p>
         </div>
       </div>
@@ -454,118 +392,19 @@ export default function IntegrationsGeneral() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Map className="h-5 w-5" />
-                Google Maps Integration
-              </CardTitle>
-              <CardDescription>
-                Connect your Google Maps API key to enable address autocomplete and mapping features
-              </CardDescription>
-            </div>
-            {!isEditingGoogleMaps && (
-              <Button
-                onClick={handleEditGoogleMaps}
-                variant="outline"
-                size="sm"
-                data-testid="button-edit-google-maps"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isEditingGoogleMaps ? (
-            <Form {...googleMapsForm}>
-              <form onSubmit={googleMapsForm.handleSubmit(onSubmitGoogleMaps)} className="space-y-6">
-                <FormField
-                  control={googleMapsForm.control}
-                  name="settingValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Google Maps API Key</FormLabel>
-                      <FormDescription>
-                        Your Google Maps JavaScript API key. Get one from Google Cloud Console.
-                      </FormDescription>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            {...field}
-                            value={field.value || ""}
-                            type={showGoogleMapsKey ? "text" : "password"}
-                            placeholder="AIza..."
-                            data-testid="input-google-maps-api-key"
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full"
-                            onClick={() => setShowGoogleMapsKey(!showGoogleMapsKey)}
-                            data-testid="button-toggle-google-maps-key-visibility"
-                          >
-                            {showGoogleMapsKey ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex gap-2">
-                  <Button
-                    type="submit"
-                    disabled={updateGoogleMapsMutation.isPending}
-                    data-testid="button-save-google-maps"
-                  >
-                    <Save className="h-4 w-4 mr-2" />
-                    {updateGoogleMapsMutation.isPending ? "Saving..." : "Save Changes"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={handleCancelGoogleMaps}
-                    disabled={updateGoogleMapsMutation.isPending}
-                    data-testid="button-cancel-google-maps"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : (
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">
-                  API Key
-                </h3>
-                <p className="text-sm" data-testid="text-google-maps-key-status">
-                  {googleMapsSetting?.settingValue
-                    ? "••••••••••••••••••••••••"
-                    : "Not configured"}
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>About Google Maps Integration</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Map className="h-5 w-5" />
+            Google Maps Integration
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            Google Maps is automatically integrated, allowing you to search for your clients’ addresses and display them on the map. There are no additional settings required.
+          </p>
           <p>
             This integration enables Google Maps features in your account management system.
           </p>
@@ -576,16 +415,7 @@ export default function IntegrationsGeneral() {
             <li>Address Autocomplete: Search and select addresses with structured fields</li>
             <li>Google Maps Links: Click addresses to view them on Google Maps</li>
           </ul>
-          <p className="mt-4">
-            <strong>To get started:</strong>
-          </p>
-          <ol className="list-decimal list-inside space-y-1 ml-2">
-            <li>Go to Google Cloud Console (console.cloud.google.com)</li>
-            <li>Create a new project or select an existing one</li>
-            <li>Enable the "Maps JavaScript API" and "Places API"</li>
-            <li>Create an API key in the Credentials section</li>
-            <li>Enter the API key above to enable mapping features</li>
-          </ol>
+          
         </CardContent>
       </Card>
     </div>

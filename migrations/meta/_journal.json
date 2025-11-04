@@ -15,6 +15,13 @@
       "when": 1762262629916,
       "tag": "0001_flaky_skin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762293884562,
+      "tag": "0002_faithful_impossible_man",
+      "breakpoints": true
     }
   ]
 }

@@ -33,35 +33,33 @@ export function GooglePlacesAutocomplete({
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
-  const onPlaceSelectedRef = useRef(onPlaceSelected);
+  const callbackRef = useRef(onPlaceSelected);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(false);
 
-  // Update the ref when the callback changes
+  // Keep callback ref updated
   useEffect(() => {
-    onPlaceSelectedRef.current = onPlaceSelected;
-  }, [onPlaceSelected]);
+    callbackRef.current = onPlaceSelected;
+  });
 
+  // Load Google Maps script
   useEffect(() => {
-    // Check if API key is provided
     if (!apiKey || apiKey.trim() === "") {
       setError("Google Maps API key is not configured. Please add it in Account Management settings.");
       return;
     }
 
-    // Check if Google Maps is already loaded
     if (window.google && window.google.maps && window.google.maps.places) {
       setIsLoaded(true);
       return;
     }
 
-    // Load Google Maps JavaScript API
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGoogleMaps`;
     script.async = true;
     script.defer = true;
 
-    // Set up callback for when the script loads
     window.initGoogleMaps = () => {
       setIsLoaded(true);
     };
@@ -73,7 +71,6 @@ export function GooglePlacesAutocomplete({
     document.head.appendChild(script);
 
     return () => {
-      // Clean up
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }
@@ -81,14 +78,16 @@ export function GooglePlacesAutocomplete({
     };
   }, [apiKey]);
 
+  // Initialize autocomplete only once
   useEffect(() => {
-    if (!isLoaded || !inputRef.current || autocompleteRef.current) {
+    if (!isLoaded || !inputRef.current || mountedRef.current) {
       return;
     }
 
-    // Initialize the autocomplete
+    mountedRef.current = true;
+
     try {
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+      const autocomplete = new window.google.maps.places.Autocomplete(
         inputRef.current,
         {
           fields: ["address_components"],
@@ -96,15 +95,15 @@ export function GooglePlacesAutocomplete({
         }
       );
 
-      // Add listener for place selection
-      autocompleteRef.current.addListener("place_changed", () => {
-        const place = autocompleteRef.current.getPlace();
+      autocompleteRef.current = autocomplete;
+
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
         
         if (!place.address_components) {
           return;
         }
 
-        // Parse address components
         const addressComponents: AddressComponents = {
           streetAddress: "",
           city: "",
@@ -134,7 +133,6 @@ export function GooglePlacesAutocomplete({
           }
         });
 
-        // Combine street number and route
         if (streetNumber && route) {
           addressComponents.streetAddress = `${streetNumber} ${route}`;
         } else if (route) {
@@ -143,10 +141,8 @@ export function GooglePlacesAutocomplete({
           addressComponents.streetAddress = streetNumber;
         }
 
-        // Call the callback with parsed address using the ref
-        onPlaceSelectedRef.current(addressComponents);
+        callbackRef.current(addressComponents);
 
-        // Clear the input after selection
         if (inputRef.current) {
           inputRef.current.value = "";
         }
@@ -155,6 +151,12 @@ export function GooglePlacesAutocomplete({
       setError("Failed to initialize address autocomplete.");
       console.error("Google Places Autocomplete error:", err);
     }
+
+    return () => {
+      if (autocompleteRef.current) {
+        window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+      }
+    };
   }, [isLoaded]);
 
   if (error) {
@@ -184,12 +186,14 @@ export function GooglePlacesAutocomplete({
   return (
     <div className="space-y-2">
       <Label htmlFor="google-autocomplete">{label}</Label>
-      <Input
+      <input
         ref={inputRef}
         id="google-autocomplete"
         type="text"
         placeholder={placeholder}
         data-testid="input-address-autocomplete"
+        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        autoComplete="off"
       />
       <p className="text-sm text-muted-foreground">
         Select an address from the dropdown to auto-fill the fields below.

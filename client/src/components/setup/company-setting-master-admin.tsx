@@ -68,6 +68,7 @@ import type {
   CompanySettingMasterFunctionality,
   CompanySettingsMaster,
 } from "@shared/schema";
+import { format } from "date-fns";
 
 type DomainFormData = z.infer<typeof insertCompanySettingMasterDomainSchema>;
 type FunctionalityFormData = z.infer<typeof insertCompanySettingMasterFunctionalitySchema>;
@@ -711,7 +712,8 @@ export default function CompanySettingMasterAdmin() {
                       <TableHead className="max-w-[200px]">Setting Code</TableHead>
                       <TableHead>Functionality</TableHead>
                       <TableHead>Domain</TableHead>
-                      <TableHead>Order in funct.</TableHead>
+                      <TableHead>Order</TableHead>
+                      <TableHead>Created at</TableHead>
                       <TableHead className="w-[100px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -723,6 +725,9 @@ export default function CompanySettingMasterAdmin() {
                         <TableCell data-testid={`text-settings-functionality-${settingsMaster.id}`}>{settingsMaster.settingFunctionalityName}</TableCell>
                         <TableCell data-testid={`text-settings-domain-${settingsMaster.id}`}>{settingsMaster.settingFunctionalDomainName}</TableCell>
                         <TableCell data-testid={`text-settings-order-${settingsMaster.id}`}>{settingsMaster.settingOrderWithinFunctionality}</TableCell>
+                        <TableCell data-testid={`text-settings-createddate-${settingsMaster.id}`}>
+                          {settingsMaster.createdDate ? format(new Date(settingsMaster.createdDate), 'MMM dd, yyyy HH:mm') : '-'}
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button

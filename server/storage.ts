@@ -2541,7 +2541,7 @@ export class DatabaseStorage implements IStorage {
           const inserted = await db
             .insert(companySettingsMaster)
             .values(settingsWithProdFunctionalityIds)
-            .onConflictDoNothing()
+            .onConflictDoNothing({ target: [companySettingsMaster.settingCode] })
             .returning({ id: companySettingsMaster.id });
           
           settingsInserted = inserted.length;

@@ -63,9 +63,9 @@ const setupMenuItems = [
   },
   {
     id: "ai-services",
-    label: "AI Services",
+    label: "External Systems Connection",
     icon: Bot,
-    description: "Configure AI integrations and settings",
+    description: "Configure external API integrations",
     companyAdminOnly: true,
     category: "my-company",
   },
@@ -173,7 +173,7 @@ import LicenceAgreementsManagement from "@/components/setup/licence-agreements";
 import CompanyDetail from "@/components/setup/company-detail";
 import KnowledgeArticlesManagement from "@/components/setup/knowledge-articles";
 import CompanySettingMasterAdmin from "@/components/setup/company-setting-master-admin";
-import AIServicesGeneral from "@/components/setup/ai-services-general";
+import IntegrationsGeneral from "@/components/setup/integrations-general";
 
 // Companies management component
 function CompaniesSetup() {
@@ -215,9 +215,9 @@ function DevPatternsSetup() {
   return <DevPatternsManagement />;
 }
 
-// AI Services management component
+// External Systems Connection management component
 function AIServicesSetup() {
-  return <AIServicesGeneral />;
+  return <IntegrationsGeneral />;
 }
 
 export default function Setup() {

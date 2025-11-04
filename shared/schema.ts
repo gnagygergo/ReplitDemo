@@ -303,8 +303,8 @@ export const quoteLines = pgTable("quote_lines", {
   vatPercent: decimal("vat_percent", { precision: 12, scale: 3 }),
   vatUnitAmount: decimal("vat_unit_amount", { precision: 12, scale: 3 }),
   vatOnSubtotal: decimal("vat_on_subtotal", { precision: 12, scale: 3 }),
-  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 })
-  
+  grossSubtotal: decimal("gross_subtotal", { precision: 12, scale: 3 }),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const devPatterns = pgTable("dev_patterns", {
@@ -323,6 +323,7 @@ export const licences = pgTable("licences", {
   code: text("code").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const licenceAgreementTemplates = pgTable(
@@ -342,6 +343,7 @@ export const licenceAgreementTemplates = pgTable(
     agreementBaseDurationMonths: integer("agreement_base_duration_months"),
     price: decimal("price", { precision: 12, scale: 2 }).notNull(),
     currency: text("currency").notNull(),
+    createdDate: timestamp("created_date").defaultNow(),
   },
 );
 
@@ -362,6 +364,7 @@ export const licenceAgreements = pgTable("licence_agreements", {
   licenceSeats: integer("licence_seat"),
   licenceSeatsRemaining: integer("licence_seats_remaining"),
   licenceSeatsUsed: integer("licence_seats_used"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 // Company Settings tables

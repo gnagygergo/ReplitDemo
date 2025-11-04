@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -25,7 +25,7 @@ declare global {
   }
 }
 
-export function GooglePlacesAutocomplete({
+function GooglePlacesAutocompleteComponent({
   apiKey,
   onPlaceSelected,
   placeholder = "Start typing an address...",
@@ -201,3 +201,6 @@ export function GooglePlacesAutocomplete({
     </div>
   );
 }
+
+// Memoize the component to prevent re-renders when parent re-renders
+export const GooglePlacesAutocomplete = memo(GooglePlacesAutocompleteComponent);

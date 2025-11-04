@@ -103,6 +103,11 @@ export default function AccountDetail() {
       mobilePhone: "",
       companyRegistrationId: "",
       address: "",
+      streetAddress: "",
+      city: "",
+      stateProvince: "",
+      zipCode: "",
+      country: "",
       industry: "tech",
       ownerId: "",
       isPersonAccount: false,
@@ -344,6 +349,7 @@ export default function AccountDetail() {
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
               isSettingEnabled={isSettingEnabled}
+              companySettings={companySettings}
             />
 
             <AccountDetailOwnershipCard
@@ -357,7 +363,7 @@ export default function AccountDetail() {
             
             {/* AI Account Data Finder */}
             <FindAccountData 
-              accountId={params.id}
+              accountId={params?.id || ""}
               accountName={account?.name || ""}
             />
             {/*<AccountDetailCategorizationCard

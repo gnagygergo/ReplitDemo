@@ -5,6 +5,17 @@ import type { IStorage } from "../storage";
 import OpenAI from "openai";
 import { tavily } from "@tavily/core";
 
+// Helper function to auto-populate the address field from structured address fields
+function buildAddressFromFields(data: any): string {
+  const parts = [];
+  if (data.streetAddress) parts.push(data.streetAddress);
+  if (data.city) parts.push(data.city);
+  if (data.stateProvince) parts.push(data.stateProvince);
+  if (data.zipCode) parts.push(data.zipCode);
+  if (data.country) parts.push(data.country);
+  return parts.join(", ");
+}
+
 export function registerAccountRoutes(app: Express, storage: IStorage) {
   // Account routes getter - user's company context queried and handed over to method
   app.get("/api/accounts", async (req, res) => {
@@ -46,6 +57,12 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
         isCompanyContact: req.body.isCompanyContact,
       });
       const validatedData = insertAccountSchema.parse(req.body);
+      
+      // Auto-populate address from structured fields if any are present
+      if (validatedData.streetAddress || validatedData.city || validatedData.stateProvince || validatedData.zipCode || validatedData.country) {
+        validatedData.address = buildAddressFromFields(validatedData);
+      }
+      
       const account = await storage.createAccount(validatedData);
       res.status(201).json(account);
     } catch (error) {
@@ -76,6 +93,12 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
   app.patch("/api/accounts/:id", async (req, res) => {
     try {
       const validatedData = insertAccountSchema.partial().parse(req.body);
+      
+      // Auto-populate address from structured fields if any are present
+      if (validatedData.streetAddress || validatedData.city || validatedData.stateProvince || validatedData.zipCode || validatedData.country) {
+        validatedData.address = buildAddressFromFields(validatedData);
+      }
+      
       const account = await storage.updateAccount(req.params.id, validatedData);
       if (!account) {
         return res.status(404).json({ message: "Account not found" });

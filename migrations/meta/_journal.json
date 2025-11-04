@@ -8,6 +8,13 @@
       "when": 1762183949236,
       "tag": "0000_mushy_misty_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1762262629916,
+      "tag": "0001_flaky_skin",
+      "breakpoints": true
     }
   ]
 }

@@ -28,7 +28,10 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful endpoints with standardized error handling and logging
 
 ### Data Model
-- **Accounts**: Companies with name, address, and industry classification (tech, construction, services)
+- **Accounts**: Companies with structured address fields (street, city, state/province, ZIP, country) plus legacy address field for display
+  - Includes Google Maps integration for address autocomplete and mapping
+  - Address fields: streetAddress, city, stateProvince, zipCode, country
+  - Legacy address field auto-populated from structured fields for display in view mode
 - **Opportunities**: Sales opportunities linked to accounts with revenue tracking and close dates
 - **Relationships**: One-to-many relationship between accounts and opportunities
 - **Validation**: Zod schemas for runtime validation and TypeScript integration
@@ -65,6 +68,7 @@ Preferred communication style: Simple, everyday language.
 - **Radix UI**: Unstyled, accessible UI primitives for core components
 - **Tailwind CSS**: Utility-first CSS framework for responsive design
 - **Lucide React**: Icon library for consistent iconography
+- **Google Maps JavaScript API**: Places Autocomplete for address entry and Google Maps integration for viewing locations
 
 ### Development Tools
 - **Vite**: Build tool with plugins for React, TypeScript, and development features

@@ -1,12 +1,14 @@
 // This Card is used on the Account Detail View.
 // It is used when Smart Account Management is activated.
 
+import { useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
 import {
   type AccountWithOwner,
   type InsertAccount,
   type User,
+  type CompanySettingWithMaster,
 } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +33,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
+import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;
@@ -40,6 +43,7 @@ interface SmartAccountManagementDetailCardProps {
   selectedOwner: User | null;
   setShowUserLookup: (show: boolean) => void;
   isSettingEnabled: (settingCode: string) => boolean;
+  companySettings?: CompanySettingWithMaster[];
   showAccountNature?: boolean;
 }
 
@@ -51,6 +55,7 @@ export default function SmartAccountManagementDetailCard({
   selectedOwner,
   setShowUserLookup,
   isSettingEnabled,
+  companySettings = [],
   showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {
   // Check if any account nature checkbox is selected
@@ -60,6 +65,11 @@ export default function SmartAccountManagementDetailCard({
     form.watch("isCompanyContact") ||
     form.watch("isLegalEntity") ||
     form.watch("isShippingAddress");
+  
+  // Get Google Maps API key from company settings
+  const googleMapsApiKey = companySettings.find(
+    (s) => s.settingCode === "google_maps_api_key"
+  )?.settingValue || "";
 
   return (
     <Card>
@@ -329,27 +339,125 @@ export default function SmartAccountManagementDetailCard({
                     </div>
                   )}
 
-                  {/* Row 5: Address (full width) */}
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            value={field.value || ""}
-                            rows={3}
-                            placeholder="Enter full address"
-                            className="resize-none"
-                            data-testid="input-edit-address"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Row 5: Address Section with Google Maps Integration */}
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                    <h3 className="font-semibold text-sm">Address Information</h3>
+                    
+                    {/* Google Places Autocomplete */}
+                    <GooglePlacesAutocomplete
+                      apiKey={googleMapsApiKey}
+                      onPlaceSelected={(addressComponents) => {
+                        form.setValue("streetAddress", addressComponents.streetAddress);
+                        form.setValue("city", addressComponents.city);
+                        form.setValue("stateProvince", addressComponents.stateProvince);
+                        form.setValue("zipCode", addressComponents.zipCode);
+                        form.setValue("country", addressComponents.country);
+                      }}
+                    />
+
+                    {/* Street Address */}
+                    <FormField
+                      control={form.control}
+                      name="streetAddress"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Street Address</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter street address"
+                              data-testid="input-edit-street-address"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* City, State/Province, ZIP Code in a grid */}
+                    <div className="grid grid-cols-3 gap-4">
+                      {/* City */}
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter city"
+                                data-testid="input-edit-city"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* State/Province */}
+                      <FormField
+                        control={form.control}
+                        name="stateProvince"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>State/Province</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter state/province"
+                                data-testid="input-edit-state-province"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* ZIP Code */}
+                      <FormField
+                        control={form.control}
+                        name="zipCode"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>ZIP Code</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                value={field.value || ""}
+                                placeholder="Enter ZIP code"
+                                data-testid="input-edit-zip-code"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Country */}
+                    <FormField
+                      control={form.control}
+                      name="country"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Country</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="Enter country"
+                              data-testid="input-edit-country"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               )}
               </form>
@@ -459,7 +567,19 @@ export default function SmartAccountManagementDetailCard({
                     className="mt-1 text-foreground whitespace-pre-wrap"
                     data-testid="text-account-address-value"
                   >
-                    {account.address || "No address provided"}
+                    {account.address ? (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(account.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                        data-testid="link-view-address-on-map"
+                      >
+                        {account.address}
+                      </a>
+                    ) : (
+                      "No address provided"
+                    )}
                   </div>
                 </div>
               </div>

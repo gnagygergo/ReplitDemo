@@ -33,8 +33,14 @@ export function GooglePlacesAutocomplete({
 }: GooglePlacesAutocompleteProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<any>(null);
+  const onPlaceSelectedRef = useRef(onPlaceSelected);
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Update the ref when the callback changes
+  useEffect(() => {
+    onPlaceSelectedRef.current = onPlaceSelected;
+  }, [onPlaceSelected]);
 
   useEffect(() => {
     // Check if API key is provided
@@ -137,8 +143,8 @@ export function GooglePlacesAutocomplete({
           addressComponents.streetAddress = streetNumber;
         }
 
-        // Call the callback with parsed address
-        onPlaceSelected(addressComponents);
+        // Call the callback with parsed address using the ref
+        onPlaceSelectedRef.current(addressComponents);
 
         // Clear the input after selection
         if (inputRef.current) {
@@ -149,7 +155,7 @@ export function GooglePlacesAutocomplete({
       setError("Failed to initialize address autocomplete.");
       console.error("Google Places Autocomplete error:", err);
     }
-  }, [isLoaded, onPlaceSelected]);
+  }, [isLoaded]);
 
   if (error) {
     return (

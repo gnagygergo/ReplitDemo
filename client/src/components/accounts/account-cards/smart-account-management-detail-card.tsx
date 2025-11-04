@@ -1,7 +1,7 @@
 // This Card is used on the Account Detail View.
 // It is used when Smart Account Management is activated.
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
 import {
@@ -70,6 +70,21 @@ export default function SmartAccountManagementDetailCard({
   const googleMapsApiKey = companySettings.find(
     (s) => s.settingCode === "google_maps_api_key"
   )?.settingValue || "";
+
+  // Memoize the address selection callback to prevent unnecessary re-renders
+  const handlePlaceSelected = useCallback((addressComponents: {
+    streetAddress: string;
+    city: string;
+    stateProvince: string;
+    zipCode: string;
+    country: string;
+  }) => {
+    form.setValue("streetAddress", addressComponents.streetAddress);
+    form.setValue("city", addressComponents.city);
+    form.setValue("stateProvince", addressComponents.stateProvince);
+    form.setValue("zipCode", addressComponents.zipCode);
+    form.setValue("country", addressComponents.country);
+  }, [form]);
 
   return (
     <Card>
@@ -346,13 +361,7 @@ export default function SmartAccountManagementDetailCard({
                     {/* Google Places Autocomplete */}
                     <GooglePlacesAutocomplete
                       apiKey={googleMapsApiKey}
-                      onPlaceSelected={(addressComponents) => {
-                        form.setValue("streetAddress", addressComponents.streetAddress);
-                        form.setValue("city", addressComponents.city);
-                        form.setValue("stateProvince", addressComponents.stateProvince);
-                        form.setValue("zipCode", addressComponents.zipCode);
-                        form.setValue("country", addressComponents.country);
-                      }}
+                      onPlaceSelected={handlePlaceSelected}
                     />
 
                     {/* Street Address */}

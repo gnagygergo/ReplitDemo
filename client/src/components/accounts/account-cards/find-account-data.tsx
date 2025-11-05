@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Loader2, CheckCircle, XCircle, Save } from "lucide-react";
+import { Search, Loader2, CheckCircle, XCircle, Save, PersonStanding } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,6 +20,7 @@ interface FindRegistrationIdResponse {
 
 export default function FindAccountData({ accountId, accountName }: FindAccountDataProps) {
   const [result, setResult] = useState<FindRegistrationIdResponse | null>(null);
+  const [isUpdated, setIsUpdated] = useState(false);
   const { toast } = useToast();
 
   const findRegistrationMutation = useMutation({
@@ -63,11 +64,19 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
   });
 
   const updateAccountMutation = useMutation({
-    mutationFn: async (data: { companyRegistrationId?: string; address?: string }) => {
+    mutationFn: async (data: { 
+      companyRegistrationId?: string; 
+      streetAddress?: string;
+      city?: string;
+      stateProvince?: string;
+      zipCode?: string;
+      country?: string;
+    }) => {
       const response = await apiRequest("PATCH", `/api/accounts/${accountId}`, data);
       return response.json();
     },
     onSuccess: () => {
+      setIsUpdated(true);
       toast({
         title: "Success",
         description: "Account updated successfully!",
@@ -86,20 +95,88 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
 
   const handleSearch = () => {
     setResult(null);
+    setIsUpdated(false);
     findRegistrationMutation.mutate();
+  };
+
+  const parseAddress = (address: string) => {
+    const parts = address.split(',').map(p => p.trim()).filter(p => p);
+    
+    if (parts.length === 0) {
+      return { streetAddress: '', city: '', stateProvince: '', zipCode: '', country: '' };
+    }
+    
+    let streetAddress = '';
+    let city = '';
+    let stateProvince = '';
+    let zipCode = '';
+    let country = '';
+    
+    const hasLeadingNumber = (str: string) => /^\d/.test(str);
+    const extractStateZip = (str: string) => {
+      const match = str.match(/^(.+?)\s+(\d{4,})$/);
+      return match ? { state: match[1], zip: match[2] } : null;
+    };
+    
+    if (parts.length >= 4 && hasLeadingNumber(parts[0])) {
+      streetAddress = parts.slice(0, parts.length - 3).join(', ');
+      city = parts[parts.length - 3];
+      const stateZipPart = parts[parts.length - 2];
+      country = parts[parts.length - 1];
+      
+      const extracted = extractStateZip(stateZipPart);
+      if (extracted) {
+        stateProvince = extracted.state;
+        zipCode = extracted.zip;
+      } else {
+        stateProvince = stateZipPart;
+      }
+    } else if (parts.length === 3 && hasLeadingNumber(parts[0])) {
+      streetAddress = parts[0];
+      city = parts[1];
+      const lastPart = parts[2];
+      const extracted = extractStateZip(lastPart);
+      if (extracted) {
+        stateProvince = extracted.state;
+        zipCode = extracted.zip;
+      } else if (/^[A-Z]{2}$/.test(lastPart)) {
+        stateProvince = lastPart;
+      } else {
+        country = lastPart;
+      }
+    } else if (parts.length === 2 && hasLeadingNumber(parts[0])) {
+      streetAddress = parts[0];
+      city = parts[1];
+    } else {
+      streetAddress = address;
+    }
+    
+    return { streetAddress, city, stateProvince, zipCode, country };
   };
 
   const handleUpdate = () => {
     if (!result) return;
 
-    const updateData: { companyRegistrationId?: string; address?: string } = {};
+    const updateData: { 
+      companyRegistrationId?: string;
+      streetAddress?: string;
+      city?: string;
+      stateProvince?: string;
+      zipCode?: string;
+      country?: string;
+    } = {};
     
     if (result.registrationId && result.registrationId !== "Not found") {
       updateData.companyRegistrationId = result.registrationId;
     }
     
     if (result.address && result.address !== "Not found") {
-      updateData.address = result.address;
+      const parsedAddress = parseAddress(result.address);
+      if (parsedAddress.streetAddress) updateData.streetAddress = parsedAddress.streetAddress;
+      if (parsedAddress.city) updateData.city = parsedAddress.city;
+      if (parsedAddress.stateProvince) updateData.stateProvince = parsedAddress.stateProvince;
+      if (parsedAddress.zipCode) updateData.zipCode = parsedAddress.zipCode;
+      if (parsedAddress.country) updateData.country = parsedAddress.country;
     }
 
     if (Object.keys(updateData).length === 0) {
@@ -115,10 +192,20 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
   };
 
   return (
-    <Card className="border-purple-600 border-[3px]" data-testid="card-find-account-data">
+    <Card 
+      className="bg-purple-50 dark:bg-purple-950/20" 
+      style={{
+        border: '2px solid',
+        borderImage: 'repeating-linear-gradient(45deg, #e9d5ff, #e9d5ff 10px, white 10px, white 20px) 1'
+      }}
+      data-testid="card-find-account-data"
+    >
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">AI Account Data Finder</CardTitle>
+          <div className="flex items-center gap-2">
+            <PersonStanding className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-lg">AI Account Data Finder</CardTitle>
+          </div>
           <Button
             onClick={handleSearch}
             disabled={findRegistrationMutation.isPending}
@@ -179,7 +266,7 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
               </div>
             </div>
 
-            {(result.registrationId !== "Not found" || result.address !== "Not found") && (
+            {!isUpdated && (result.registrationId !== "Not found" || result.address !== "Not found") && (
               <Button
                 onClick={handleUpdate}
                 disabled={updateAccountMutation.isPending}

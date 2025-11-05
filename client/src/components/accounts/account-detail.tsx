@@ -380,10 +380,13 @@ export default function AccountDetail() {
             />
             
             {/* AI Account Data Finder */}
-            <FindAccountData 
+            
+            {(isSettingEnabled("account_data_web_search") && 
+              <FindAccountData 
               accountId={params?.id || ""}
               accountName={account?.name || ""}
             />
+              )}
             {/*<AccountDetailCategorizationCard
               account={account || null}
               isEditing={isEditing}

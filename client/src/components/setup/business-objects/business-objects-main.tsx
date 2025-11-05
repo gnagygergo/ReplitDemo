@@ -188,7 +188,7 @@ const setupMenuItems: MenuItem[] = [
         id: "custom-ai-agents",
         label: "Your custom agents",
         description: "The sky is the limit",
-        component: OpportunityManagement,
+        component: StandardAIServicesSettings,
       },
 
     ],

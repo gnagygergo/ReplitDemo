@@ -56,6 +56,7 @@ import QuoteManagement from "@/components/setup/business-objects/quotes/quote-se
 import PricingMethods from "@/components/setup/business-objects/quotes/pricing-methods";
 import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
 import CompanyDefaultSettings from "@/components/setup/business-objects/company-defaults/company-defaults";
+import StandardAIServicesSettings from "@/components/setup/business-objects/ai-services/standard-ai-services"; 
 
 // Type for child menu items with component
 type ChildMenuItem = {
@@ -164,6 +165,29 @@ const setupMenuItems: MenuItem[] = [
         id: "opportunity-settings",
         label: "Opportunity Settings",
         description: "The fundamentals",
+        component: OpportunityManagement,
+      },
+
+    ],
+  },
+  {
+    id: "ai-services",
+    label: "AI Services",
+    icon: Ruler,
+    description: "You agents' training center",
+    globalAdminOnly: true,
+    category: "business-objects",
+    children: [
+      {
+        id: "standard-ai-services",
+        label: "Built-in Agent Services",
+        description: "The training center",
+        component: StandardAIServicesSettings,
+      },
+      {
+        id: "custom-ai-agents",
+        label: "Your custom agents",
+        description: "The sky is the limit",
         component: OpportunityManagement,
       },
 

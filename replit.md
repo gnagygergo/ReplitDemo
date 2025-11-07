@@ -33,7 +33,12 @@ Preferred communication style: Simple, everyday language.
   - Address fields: streetAddress, city, stateProvince, zipCode, country
   - Legacy address field auto-populated from structured fields for display in view mode
 - **Opportunities**: Sales opportunities linked to accounts with revenue tracking and close dates
-- **Relationships**: One-to-many relationship between accounts and opportunities
+- **Assets**: Equipment and assets tracked with serial numbers, purchase dates, warranty information, and status
+  - Fields: serialNumber (required), name, description, quantity, purchaseDate, warrantyExpiryDate, installationDate, status (active/inactive/retired/in_repair), location, notes
+  - Links to accounts (which company/contact owns the asset) and products (what product the asset represents)
+  - Full CRUD operations with search, sorting, and filtering capabilities
+  - Company-scoped access with strict multi-tenant isolation
+- **Relationships**: One-to-many relationships between accounts and opportunities/assets
 - **Validation**: Zod schemas for runtime validation and TypeScript integration
 
 ### Development Environment
@@ -94,15 +99,22 @@ Preferred communication style: Simple, everyday language.
   - Session fixation prevention with ID regeneration on login/logout
   - Secure session cookies with `httpOnly`, `secure`, and `sameSite` protection
   - 7-day session TTL with proper cleanup
-- **API Protection**: All CRM endpoints require authentication (`/api/accounts`, `/api/opportunities`, `/api/cases`, `/api/send-email`)
+- **API Protection**: All CRM endpoints require authentication (`/api/accounts`, `/api/opportunities`, `/api/assets`, `/api/cases`, `/api/send-email`)
 - **CSRF Protection**: Implemented via `sameSite: 'lax'` session cookie configuration
 - **Token Refresh**: Automatic refresh with session persistence for seamless user experience
+- **Multi-Tenant Isolation**: Strict company context filtering on all data access operations
+  - All CRUD operations filter by company ID to prevent cross-tenant data access
+  - Asset operations require company context and return 401 Unauthorized if missing
+  - Schema prevents client-side manipulation of company assignments
+  - Update operations explicitly strip company ID to prevent reassignment
 
 ### Security Architecture Notes
 - Session middleware enforces `sameSite: 'lax'` on every request to prevent CSRF attacks
 - PostgreSQL session store with graceful fallback to MemoryStore for development
 - Session regeneration on login/logout prevents session fixation vulnerabilities
 - Explicit session cookie clearing on logout ensures complete session cleanup
+- Company context enforced at route level (returns 401 if missing) and storage level (filters by both ID and company ID)
+- Insert/update schemas omit server-managed fields (id, companyId, createdDate) to prevent client spoofing
 
 ## Registration Flow & License Management
 

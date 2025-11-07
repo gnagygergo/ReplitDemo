@@ -12,11 +12,13 @@ import Registration from "@/pages/registration";
 import Accounts from "@/components/accounts/accounts";
 import Quotes from "@/components/quotes/quotes";
 import Opportunities from "@/components/opportunities/opportunities";
+import Assets from "@/components/assets/assets";
 import Products from "@/components/products/products";
 import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
+import AssetDetail from "@/components/assets/asset-detail";
 import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
 import DigitalOffice from "@/pages/digital-office";
@@ -36,6 +38,8 @@ function AuthenticatedRouter() {
         />
         <Route path="/accounts/:id" component={AccountDetail} />
         <Route path="/accounts" component={Accounts} />
+        <Route path="/assets/:id" component={AssetDetail} />
+        <Route path="/assets" component={Assets} />
         <Route path="/quotes/:id" component={QuoteDetail} />
         <Route path="/quotes" component={Quotes} />
         <Route path="/opportunities" component={Opportunities} />

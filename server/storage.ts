@@ -8,6 +8,9 @@ import {
   type OpportunityWithAccount,
   type OpportunityWithAccountAndOwner,
   type AccountWithOwner,
+  type Asset,
+  type InsertAsset,
+  type AssetWithRelations,
   type User,
   type UpsertUser,
   type CompanyRole,
@@ -57,6 +60,7 @@ import {
   companySettings,
   accounts,
   opportunities,
+  assets,
   users,
   companyRoles,
   userRoleAssignments,
@@ -83,6 +87,7 @@ import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { QuoteLineStorage } from "./business-objects-routes/quote-line-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
+import { AssetStorage } from "./business-objects-routes/asset-storage";
 import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -395,6 +400,7 @@ export class DatabaseStorage implements IStorage {
   private quoteLineStorage: QuoteLineStorage;
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
+  private assetStorage: AssetStorage;
   private productStorage: ProductStorage;
 
   constructor() {
@@ -409,6 +415,7 @@ export class DatabaseStorage implements IStorage {
       this.getAccount.bind(this),
       this.getUser.bind(this)
     );
+    this.assetStorage = new AssetStorage();
     this.productStorage = new ProductStorage();
   }
 
@@ -754,6 +761,49 @@ export class DatabaseStorage implements IStorage {
 
   async deleteOpportunity(id: string): Promise<boolean> {
     return this.opportunityStorage.deleteOpportunity(id);
+  }
+
+  // Asset methods
+  async getAssets(
+    companyContext?: string,
+    sortBy?: string,
+    sortOrder?: string,
+  ): Promise<AssetWithRelations[]> {
+    return this.assetStorage.getAssets(companyContext, sortBy, sortOrder);
+  }
+
+  async searchAssets(
+    companyContext: string | undefined,
+    searchTerm?: string,
+  ): Promise<AssetWithRelations[]> {
+    return this.assetStorage.searchAssets(companyContext, searchTerm);
+  }
+
+  async getAsset(id: string, companyContext: string): Promise<AssetWithRelations | undefined> {
+    return this.assetStorage.getAsset(id, companyContext);
+  }
+
+  async getAssetsByAccount(
+    accountId: string,
+    companyContext?: string,
+  ): Promise<AssetWithRelations[]> {
+    return this.assetStorage.getAssetsByAccount(accountId, companyContext);
+  }
+
+  async createAsset(insertAsset: InsertAsset, companyId: string): Promise<Asset> {
+    return this.assetStorage.createAsset(insertAsset, companyId);
+  }
+
+  async updateAsset(
+    id: string,
+    updates: Partial<InsertAsset>,
+    companyContext: string,
+  ): Promise<Asset | undefined> {
+    return this.assetStorage.updateAsset(id, updates, companyContext);
+  }
+
+  async deleteAsset(id: string, companyContext: string): Promise<boolean> {
+    return this.assetStorage.deleteAsset(id, companyContext);
   }
 
   // Company Role methods

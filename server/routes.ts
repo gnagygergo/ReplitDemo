@@ -5,6 +5,7 @@ import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
 import { registerOpportunityRoutes } from "./business-objects-routes/opportunity-routes";
+import { registerAssetRoutes } from "./business-objects-routes/asset-routes";
 import { registerProductRoutes } from "./business-objects-routes/product-routes";
 import {
   insertCompanySchema,
@@ -493,6 +494,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       "/api/companies",
       "/api/accounts",
       "/api/opportunities",
+      "/api/assets",
       "/api/users",
       "/api/company-roles",
       "/api/user-role-assignments",
@@ -2945,6 +2947,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Opportunity routes (Company-scoped) - Delegated to business-objects-routes
   registerOpportunityRoutes(app, storage);
+
+  // Asset routes (Company-scoped) - Delegated to business-objects-routes
+  registerAssetRoutes(app, storage);
 
   // Product routes (Company-scoped) - Delegated to business-objects-routes
   registerProductRoutes(app, storage);

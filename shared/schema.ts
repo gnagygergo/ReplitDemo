@@ -115,11 +115,17 @@ export const assets = pgTable("assets", {
   name: text("name"),
   description: text("description"),
   quantity: decimal("quantity", { precision: 12 }),
-  serialNumber: text("serial_number"),
+  serialNumber: text("serial_number").notNull(),
   installationDate: date("installation_date"),
+  purchaseDate: date("purchase_date"),
+  warrantyExpiryDate: date("warranty_expiry_date"),
+  status: text("status").notNull().default("active"),
+  location: text("location"),
+  notes: text("notes"),
   productId: varchar("product_id").references(() => products.id),
   accountId: varchar("account_id").references(() => accounts.id),
   companyId: varchar("company_id"),
+  createdDate: timestamp("created_date").defaultNow(),
 });
 
 export const companyRoles = pgTable("company_roles", {
@@ -716,6 +722,17 @@ export const insertReleaseSchema = createInsertSchema(releases)
     status: z.enum(["Planned", "In Progress", "Completed", "Dropped"]),
   });
 
+export const insertAssetSchema = createInsertSchema(assets)
+  .omit({
+    id: true,
+    companyId: true,
+    createdDate: true,
+  })
+  .extend({
+    serialNumber: z.string().min(1, "Serial number is required"),
+    status: z.enum(["active", "inactive", "retired", "in_repair"]),
+  });
+
 export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)
   .omit({
     id: true,
@@ -929,6 +946,8 @@ export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Account = typeof accounts.$inferSelect;
 export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
 export type Opportunity = typeof opportunities.$inferSelect;
+export type InsertAsset = z.infer<typeof insertAssetSchema>;
+export type Asset = typeof assets.$inferSelect;
 export type InsertCompanyRole = z.infer<typeof insertCompanyRoleSchema>;
 export type CompanyRole = typeof companyRoles.$inferSelect;
 export type InsertUserRoleAssignment = z.infer<
@@ -1017,6 +1036,13 @@ export type OpportunityWithAccountAndOwner = Opportunity & {
   account: Account;
   owner: User;
 };
+
+export type AssetWithRelations = Asset & {
+  account: Account | null;
+  product: Product | null;
+};
+
+export type AssetWithDetails = AssetWithRelations;
 
 export type CompanyRoleWithParent = CompanyRole & {
   parentCompanyRole?: CompanyRole | null;

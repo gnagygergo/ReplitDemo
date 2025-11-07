@@ -117,11 +117,6 @@ export const assets = pgTable("assets", {
   quantity: decimal("quantity", { precision: 12 }),
   serialNumber: text("serial_number").notNull(),
   installationDate: date("installation_date"),
-  purchaseDate: date("purchase_date"),
-  warrantyExpiryDate: date("warranty_expiry_date"),
-  status: text("status").notNull().default("active"),
-  location: text("location"),
-  notes: text("notes"),
   productId: varchar("product_id").references(() => products.id),
   accountId: varchar("account_id").references(() => accounts.id),
   companyId: varchar("company_id"),
@@ -730,7 +725,6 @@ export const insertAssetSchema = createInsertSchema(assets)
   })
   .extend({
     serialNumber: z.string().min(1, "Serial number is required"),
-    status: z.enum(["active", "inactive", "retired", "in_repair"]),
   });
 
 export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)

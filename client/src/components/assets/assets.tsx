@@ -149,17 +149,18 @@ export default function Assets() {
                       >
                         Serial Number {getSortIcon('serialNumber')}
                       </TableHead>
+                      <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Account</TableHead>
                       <TableHead>Product</TableHead>
+                      <TableHead>Quantity</TableHead>
                       <TableHead 
                         className="cursor-pointer select-none"
-                        onClick={() => handleSort('purchaseDate')}
-                        data-testid="header-purchase-date"
+                        onClick={() => handleSort('installationDate')}
+                        data-testid="header-installation-date"
                       >
-                        Purchase Date {getSortIcon('purchaseDate')}
+                        Installation Date {getSortIcon('installationDate')}
                       </TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -173,6 +174,7 @@ export default function Assets() {
                             </span>
                           </Link>
                         </TableCell>
+                        <TableCell>{asset.name || '-'}</TableCell>
                         <TableCell>{asset.description || '-'}</TableCell>
                         <TableCell>
                           {asset.account ? (
@@ -188,15 +190,11 @@ export default function Assets() {
                             <span>{asset.product.productName}</span>
                           ) : '-'}
                         </TableCell>
+                        <TableCell>{asset.quantity || '-'}</TableCell>
                         <TableCell>
-                          {asset.purchaseDate 
-                            ? format(new Date(asset.purchaseDate), 'MMM d, yyyy')
+                          {asset.installationDate 
+                            ? format(new Date(asset.installationDate), 'MMM d, yyyy')
                             : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={asset.status === 'active' ? 'default' : 'secondary'}>
-                            {asset.status}
-                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

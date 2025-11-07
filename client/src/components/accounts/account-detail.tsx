@@ -359,7 +359,6 @@ export default function AccountDetail() {
               selectedOwner={selectedOwner}
               setShowUserLookup={setShowUserLookup}
               isSettingEnabled={isSettingEnabled}
-              companySettings={companySettings}
             />
 
             <AccountDetailOwnershipCard

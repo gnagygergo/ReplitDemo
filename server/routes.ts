@@ -1846,6 +1846,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get ALL company settings for current user's company (Company-scoped, read-only for all authenticated users)
+  app.get("/api/company-settings", isAuthenticated, async (req, res) => {
+    try {
+      // Get user's company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      // Fetch all company settings for the user's company
+      const settings = await storage.GetAllCompanySettings(companyContext);
+
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching company settings:", error);
+      res.status(500).json({
+        message: "Failed to fetch company settings",
+      });
+    }
+  });
+
   // Business Objects Manager - Company Settings by Domain (Company-scoped)
   app.get("/api/business-objects/company-settings/:domain", isAuthenticated, async (req, res) => {
     try {

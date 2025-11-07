@@ -367,6 +367,7 @@ export interface IStorage {
   deleteCompanySettingsMaster(id: string): Promise<boolean>;
 
   // Company Settings methods (Company-scoped)
+  GetAllCompanySettings(companyId: string): Promise<CompanySettingWithMaster[]>;
   GetCompanySettingsByFunctionalDomain(domain: string, companyId: string): Promise<CompanySettingWithMaster[]>;
   getOrCreateCompanySettingByCode(settingCode: string, companyId: string, userId: string): Promise<CompanySettingWithMaster>;
   getCompanySettingsByCodePrefix(prefix: string, companyId: string): Promise<CompanySettingWithMaster[]>;
@@ -1937,6 +1938,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Company Settings methods (Company-scoped)
+  async GetAllCompanySettings(companyId: string): Promise<CompanySettingWithMaster[]> {
+    const results = await db
+      .select({
+        id: companySettings.id,
+        companySettingsMasterId: companySettings.companySettingsMasterId,
+        settingCode: companySettings.settingCode,
+        settingName: companySettings.settingName,
+        settingValue: companySettings.settingValue,
+        companyId: companySettings.companyId,
+        createdDate: companySettings.createdDate,
+        lastUpdatedDate: companySettings.lastUpdatedDate,
+        lastUpdatedBy: companySettings.lastUpdatedBy,
+        settingFunctionalDomainCode: companySettingsMaster.settingFunctionalDomainCode,
+        settingFunctionalDomainName: companySettingsMaster.settingFunctionalDomainName,
+        settingFunctionalityName: companySettingsMaster.settingFunctionalityName,
+        settingFunctionalityCode: companySettingsMaster.settingFunctionalityCode,
+        settingDescription: companySettingsMaster.settingDescription,
+        settingValues: companySettingsMaster.settingValues,
+        defaultValue: companySettingsMaster.defaultValue,
+        specialValueSet: companySettingsMaster.specialValueSet,
+        cantBeTrueIfTheFollowingIsFalse: companySettingsMaster.cantBeTrueIfTheFollowingIsFalse,
+        settingOrderWithinFunctionality: companySettingsMaster.settingOrderWithinFunctionality,
+        settingShowsInLevel: companySettingsMaster.settingShowsInLevel,
+        settingOnceEnabledCannotBeDisabled: companySettingsMaster.settingOnceEnabledCannotBeDisabled,
+      })
+      .from(companySettings)
+      .innerJoin(
+        companySettingsMaster,
+        eq(companySettings.companySettingsMasterId, companySettingsMaster.id)
+      )
+      .where(eq(companySettings.companyId, companyId));
+
+    return results as CompanySettingWithMaster[];
+  }
+
   async GetCompanySettingsByFunctionalDomain(
     settingFunctionalDomain: string,
     companyId: string

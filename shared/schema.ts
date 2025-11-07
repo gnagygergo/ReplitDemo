@@ -38,8 +38,7 @@ export const companies = pgTable("companies", {
 });
 
 export const currencies = pgTable("currencies", {
-  currencyISOCode: text("currency_iso_code").notNull()
-    .primaryKey(),
+  currencyISOCode: text("currency_iso_code").notNull().primaryKey(),
   currencyName: text("currency_name").notNull(),
   currencyCulture: text("currency_culture"),
   currencyLocaleName: text("currency_locale_name"),
@@ -47,7 +46,7 @@ export const currencies = pgTable("currencies", {
   currencySymbolPosition: text("currency_symbol_position").notNull(),
   currencyDecimalPlaces: integer("currency_decimal_places"),
   currencyThousandsSeparator: text("currency_thousands_separator"),
-  currencyDecimalSeparator: text("currency_decimal_separator")
+  currencyDecimalSeparator: text("currency_decimal_separator"),
 });
 
 export const accounts = pgTable("accounts", {
@@ -77,8 +76,10 @@ export const accounts = pgTable("accounts", {
   ownerId: varchar("owner_id")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
-  parentAccountId: varchar("parent_account_id")
-    .references((): AnyPgColumn => accounts.id, { onDelete: "cascade" }),
+  parentAccountId: varchar("parent_account_id").references(
+    (): AnyPgColumn => accounts.id,
+    { onDelete: "cascade" },
+  ),
   companyId: varchar("company_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });
@@ -105,6 +106,20 @@ export const countries = pgTable("countries", {
   countryName: text("country_name"),
   countryNameLocaleName: text("country_name_locale_name"),
   countryPhonePrefix: text("country_phone_prefix"),
+});
+
+export const assets = pgTable("assets", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name"),
+  description: text("description"),
+  quantity: decimal("quantity", { precision: 12 }),
+  serialNumber: text("serial_number"),
+  installationDate: date("installation_date"),
+  productId: varchar("product_id").references(() => products.id),
+  accountId: varchar("account_id").references(() => accounts.id),
+  companyId: varchar("company_id"),
 });
 
 export const companyRoles = pgTable("company_roles", {
@@ -263,7 +278,7 @@ export const quotes = pgTable("quotes", {
   createdBy: varchar("created_by"),
   createdDate: timestamp("created_date").defaultNow(),
   netGrandTotal: decimal("net_grand_total", { precision: 12, scale: 3 }),
-  grossGrandTotal: decimal("gross_grand_total", { precision: 12, scale: 3 })
+  grossGrandTotal: decimal("gross_grand_total", { precision: 12, scale: 3 }),
 });
 
 export const quoteLines = pgTable("quote_lines", {
@@ -293,13 +308,22 @@ export const quoteLines = pgTable("quote_lines", {
     precision: 12,
     scale: 3,
   }),
-  finalUnitPrice: decimal("final_unit_price", {precision: 12,scale: 3,}),
+  finalUnitPrice: decimal("final_unit_price", { precision: 12, scale: 3 }),
   salesUom: text("sales_uom"),
   quotedQuantity: decimal("quoted_quantity", { precision: 12, scale: 3 }),
-  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {precision: 12,scale: 3,}),
-  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {precision: 12,scale: 3,}),
-  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {precision: 12,scale: 3,}),
-  finalSubtotal: decimal("final_subtotal", {precision: 12, scale: 3,}),
+  subtotalBeforeRowDiscounts: decimal("subtotal_before_row_discounts", {
+    precision: 12,
+    scale: 3,
+  }),
+  discountPercentOnSubtotal: decimal("discount_percent_on_subtotal", {
+    precision: 12,
+    scale: 3,
+  }),
+  discountAmountOnSubtotal: decimal("discount_amount_on_subtotal", {
+    precision: 12,
+    scale: 3,
+  }),
+  finalSubtotal: decimal("final_subtotal", { precision: 12, scale: 3 }),
   vatPercent: decimal("vat_percent", { precision: 12, scale: 3 }),
   vatUnitAmount: decimal("vat_unit_amount", { precision: 12, scale: 3 }),
   vatOnSubtotal: decimal("vat_on_subtotal", { precision: 12, scale: 3 }),
@@ -368,33 +392,43 @@ export const licenceAgreements = pgTable("licence_agreements", {
 });
 
 // Company Settings tables
-export const companySettingMasterDomains = pgTable("company_setting_master_domains", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  code: text("code").notNull().unique(),
-  name: text("name").notNull(),
-  createdDate: timestamp("created_date").defaultNow(),
-});
+export const companySettingMasterDomains = pgTable(
+  "company_setting_master_domains",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    createdDate: timestamp("created_date").defaultNow(),
+  },
+);
 
-export const companySettingMasterFunctionalities = pgTable("company_setting_master_functionalities", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  code: text("code").notNull().unique(),
-  name: text("name").notNull(),
-  domainId: varchar("domain_id")
-    .notNull()
-    .references(() => companySettingMasterDomains.id, { onDelete: "restrict" }),
-  createdDate: timestamp("created_date").defaultNow(),
-});
+export const companySettingMasterFunctionalities = pgTable(
+  "company_setting_master_functionalities",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    domainId: varchar("domain_id")
+      .notNull()
+      .references(() => companySettingMasterDomains.id, {
+        onDelete: "restrict",
+      }),
+    createdDate: timestamp("created_date").defaultNow(),
+  },
+);
 
 export const companySettingsMaster = pgTable("company_settings_master", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  functionalityId: varchar("functionality_id")
-    .references(() => companySettingMasterFunctionalities.id, { onDelete: "restrict" }),
+  functionalityId: varchar("functionality_id").references(
+    () => companySettingMasterFunctionalities.id,
+    { onDelete: "restrict" },
+  ),
   settingFunctionalDomainCode: text("setting_functional_domain_code"),
   settingFunctionalDomainName: text("setting_functional_domain_name"),
   settingFunctionalityName: text("setting_functionality_name"),
@@ -405,34 +439,47 @@ export const companySettingsMaster = pgTable("company_settings_master", {
   settingValues: text("setting_values"),
   defaultValue: text("default_value"),
   specialValueSet: text("special_value_set"),
-  cantBeTrueIfTheFollowingIsFalse: text("cant_be_true_if_the_following_is_false"),
+  cantBeTrueIfTheFollowingIsFalse: text(
+    "cant_be_true_if_the_following_is_false",
+  ),
   articleCode: text("article_code"),
-  settingOrderWithinFunctionality: integer("setting_order_within_functionality"),
+  settingOrderWithinFunctionality: integer(
+    "setting_order_within_functionality",
+  ),
   settingShowsInLevel: integer("setting_shows_in_level"),
-  settingOnceEnabledCannotBeDisabled: boolean("setting_once_enabled_cannot_be_disabled"),
+  settingOnceEnabledCannotBeDisabled: boolean(
+    "setting_once_enabled_cannot_be_disabled",
+  ),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
-export const companySettings = pgTable("company_settings", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  companySettingsMasterId: varchar("company_settings_master_id")
-    .notNull()
-    .references(() => companySettingsMaster.id, { onDelete: "restrict" }),
-  settingCode: text("setting_code"),
-  settingName: text("setting_name"),
-  settingValue: text("setting_value"),
-  companyId: varchar("company_id")
-    .references(() => companies.id, { onDelete: "restrict" }),
-  createdDate: timestamp("created_date").defaultNow(),
-  lastUpdatedDate: timestamp("last_updated_date").defaultNow(),
-  lastUpdatedBy: varchar("last_updated_by").references(() => users.id, {
-    onDelete: "restrict",
+export const companySettings = pgTable(
+  "company_settings",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    companySettingsMasterId: varchar("company_settings_master_id")
+      .notNull()
+      .references(() => companySettingsMaster.id, { onDelete: "restrict" }),
+    settingCode: text("setting_code"),
+    settingName: text("setting_name"),
+    settingValue: text("setting_value"),
+    companyId: varchar("company_id").references(() => companies.id, {
+      onDelete: "restrict",
+    }),
+    createdDate: timestamp("created_date").defaultNow(),
+    lastUpdatedDate: timestamp("last_updated_date").defaultNow(),
+    lastUpdatedBy: varchar("last_updated_by").references(() => users.id, {
+      onDelete: "restrict",
+    }),
+  },
+  (table) => ({
+    uniqueCompanyMaster: unique(
+      "company_settings_company_id_company_settings_master_id_unique",
+    ).on(table.companyId, table.companySettingsMasterId),
   }),
-}, (table) => ({
-  uniqueCompanyMaster: unique("company_settings_company_id_company_settings_master_id_unique").on(table.companyId, table.companySettingsMasterId),
-}));
+);
 //Knowledge Base tables
 export const knowledgeArticles = pgTable("knowledge_articles", {
   id: varchar("id")
@@ -441,10 +488,14 @@ export const knowledgeArticles = pgTable("knowledge_articles", {
   articleTitle: text("article_title"),
   articleContent: text("article_content"),
   articleCode: text("article_code"),
-  functionalDomainId: varchar("functional_domain_id")
-    .references(() => companySettingMasterDomains.id, { onDelete: "set null" }),
-  functionalityId: varchar("functionality_id")
-    .references(() => companySettingMasterFunctionalities.id, { onDelete: "set null" }),
+  functionalDomainId: varchar("functional_domain_id").references(
+    () => companySettingMasterDomains.id,
+    { onDelete: "set null" },
+  ),
+  functionalityId: varchar("functionality_id").references(
+    () => companySettingMasterFunctionalities.id,
+    { onDelete: "set null" },
+  ),
   articleFunctionalDomain: text("article_functional_domain"),
   articleFunctionalityName: text("article_functionality_name"),
   articleTags: text("article_tags"),
@@ -619,7 +670,10 @@ export const insertAccountSchema = createInsertSchema(accounts)
   .extend({
     industry: z.enum(["tech", "construction", "services"]).optional(),
     ownerId: z.string().min(1, "Owner is required"),
-    parentAccountId: z.string().optional().transform(val => val === "" ? null : val),
+    parentAccountId: z
+      .string()
+      .optional()
+      .transform((val) => (val === "" ? null : val)),
   });
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)
@@ -722,7 +776,9 @@ export const insertQuoteLineSchema = createInsertSchema(quoteLines)
     quoteId: z.string().min(1, "Quote ID is required"),
   });
 
-export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles)
+export const insertKnowledgeArticleSchema = createInsertSchema(
+  knowledgeArticles,
+)
   .omit({
     id: true,
     createdDate: true,
@@ -730,9 +786,21 @@ export const insertKnowledgeArticleSchema = createInsertSchema(knowledgeArticles
   .extend({
     articleTitle: z.string().min(1, "Article title is required"),
     authorId: z.string().min(1, "Author is required"),
-    articleCode: z.string().transform(val => val === "" ? null : val).nullable().optional(),
-    functionalDomainId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
-    functionalityId: z.string().transform(val => val === "" ? null : val).nullable().optional(),
+    articleCode: z
+      .string()
+      .transform((val) => (val === "" ? null : val))
+      .nullable()
+      .optional(),
+    functionalDomainId: z
+      .string()
+      .transform((val) => (val === "" ? null : val))
+      .nullable()
+      .optional(),
+    functionalityId: z
+      .string()
+      .transform((val) => (val === "" ? null : val))
+      .nullable()
+      .optional(),
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
@@ -815,7 +883,9 @@ export const insertEmailSchema = createInsertSchema(emails)
     createdBy: z.string().min(1, "Created by is required"),
   });
 
-export const insertCompanySettingMasterDomainSchema = createInsertSchema(companySettingMasterDomains)
+export const insertCompanySettingMasterDomainSchema = createInsertSchema(
+  companySettingMasterDomains,
+)
   .omit({
     id: true,
   })
@@ -824,7 +894,9 @@ export const insertCompanySettingMasterDomainSchema = createInsertSchema(company
     name: z.string().min(1, "Name is required"),
   });
 
-export const insertCompanySettingMasterFunctionalitySchema = createInsertSchema(companySettingMasterFunctionalities)
+export const insertCompanySettingMasterFunctionalitySchema = createInsertSchema(
+  companySettingMasterFunctionalities,
+)
   .omit({
     id: true,
   })
@@ -834,7 +906,9 @@ export const insertCompanySettingMasterFunctionalitySchema = createInsertSchema(
     domainId: z.string().min(1, "Domain is required"),
   });
 
-export const insertCompanySettingsMasterSchema = createInsertSchema(companySettingsMaster)
+export const insertCompanySettingsMasterSchema = createInsertSchema(
+  companySettingsMaster,
+)
   .omit({
     id: true,
   })
@@ -891,11 +965,19 @@ export type InsertLicenceAgreement = z.infer<
 export type LicenceAgreement = typeof licenceAgreements.$inferSelect;
 export type InsertEmail = z.infer<typeof insertEmailSchema>;
 export type Email = typeof emails.$inferSelect;
-export type InsertCompanySettingMasterDomain = z.infer<typeof insertCompanySettingMasterDomainSchema>;
-export type CompanySettingMasterDomain = typeof companySettingMasterDomains.$inferSelect;
-export type InsertCompanySettingMasterFunctionality = z.infer<typeof insertCompanySettingMasterFunctionalitySchema>;
-export type CompanySettingMasterFunctionality = typeof companySettingMasterFunctionalities.$inferSelect;
-export type InsertCompanySettingsMaster = z.infer<typeof insertCompanySettingsMasterSchema>;
+export type InsertCompanySettingMasterDomain = z.infer<
+  typeof insertCompanySettingMasterDomainSchema
+>;
+export type CompanySettingMasterDomain =
+  typeof companySettingMasterDomains.$inferSelect;
+export type InsertCompanySettingMasterFunctionality = z.infer<
+  typeof insertCompanySettingMasterFunctionalitySchema
+>;
+export type CompanySettingMasterFunctionality =
+  typeof companySettingMasterFunctionalities.$inferSelect;
+export type InsertCompanySettingsMaster = z.infer<
+  typeof insertCompanySettingsMasterSchema
+>;
 export type CompanySettingsMaster = typeof companySettingsMaster.$inferSelect;
 export type CompanySetting = typeof companySettings.$inferSelect;
 
@@ -958,7 +1040,9 @@ export type LicenceAgreementWithDetails = LicenceAgreement & {
   company: Company;
 };
 
-export type InsertKnowledgeArticle = z.infer<typeof insertKnowledgeArticleSchema>;
+export type InsertKnowledgeArticle = z.infer<
+  typeof insertKnowledgeArticleSchema
+>;
 export type KnowledgeArticle = typeof knowledgeArticles.$inferSelect;
 
 export type KnowledgeArticleWithAuthor = KnowledgeArticle & {

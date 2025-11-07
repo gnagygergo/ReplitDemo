@@ -48,6 +48,11 @@ Preferred communication style: Simple, everyday language.
 - **Component Library**: shadcn/ui for consistent design system and accessibility
 - **Database Strategy**: Drizzle ORM chosen for type safety and PostgreSQL compatibility
 - **State Management**: TanStack Query for server state over client state solutions like Redux
+- **Centralized Company Settings**: React Context Provider pattern with TanStack Query for global settings management
+  - All company settings loaded once at login via `/api/company-settings` endpoint
+  - Settings cached with `staleTime: Infinity` - only refetched on browser refresh
+  - `useCompanySettings()` hook provides `isSettingEnabled()` and `getSetting()` helper methods
+  - Eliminates redundant per-page setting queries throughout the application
 
 ## External Dependencies
 

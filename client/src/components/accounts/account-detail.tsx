@@ -51,6 +51,7 @@ import {
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -74,6 +75,7 @@ export default function AccountDetail() {
   const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user: currentUser } = useAuth();
 
   // Fetch account data (skip when creating new account)
   const { data: account, isLoading: isLoadingAccount } =
@@ -250,6 +252,14 @@ export default function AccountDetail() {
       setSelectedOwner(account.owner);
     }
   }, [account, form]);
+
+  // Initialize owner with current user when creating new account
+  useEffect(() => {
+    if (isCreating && currentUser && !selectedOwner) {
+      setSelectedOwner(currentUser);
+      form.setValue("ownerId", currentUser.id);
+    }
+  }, [isCreating, currentUser, selectedOwner, form]);
 
   // Skip loading and not found states when creating new account
   if (!isCreating) {
@@ -476,6 +486,7 @@ export default function AccountDetail() {
         onClose={() => setShowUserLookup(false)}
         onSelect={handleUserSelect}
         selectedUserId={selectedOwner?.id}
+        autoSelectCurrentUser={isCreating}
       />
     </div>
   );

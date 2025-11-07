@@ -10,22 +10,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserLookupDialogProps {
   open: boolean;
   onClose: () => void;
   onSelect: (user: User) => void;
   selectedUserId?: string;
+  autoSelectCurrentUser?: boolean;
 }
 
 export default function UserLookupDialog({ 
   open, 
   onClose, 
   onSelect, 
-  selectedUserId 
+  selectedUserId,
+  autoSelectCurrentUser = false
 }: UserLookupDialogProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedId, setSelectedId] = useState<string>(selectedUserId || "");
+  const { user: currentUser } = useAuth();
 
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
@@ -36,6 +40,13 @@ export default function UserLookupDialog({
   useEffect(() => {
     setSelectedId(selectedUserId || "");
   }, [selectedUserId]);
+
+  // Auto-select current user when dialog opens if enabled and no user is already selected
+  useEffect(() => {
+    if (open && autoSelectCurrentUser && currentUser && !selectedUserId) {
+      setSelectedId(currentUser.id);
+    }
+  }, [open, autoSelectCurrentUser, currentUser, selectedUserId]);
 
   // Reset search when dialog opens
   useEffect(() => {

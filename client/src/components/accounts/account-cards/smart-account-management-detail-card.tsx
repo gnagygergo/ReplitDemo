@@ -8,7 +8,6 @@ import {
   type AccountWithOwner,
   type InsertAccount,
   type User,
-  type CompanySettingWithMaster,
 } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
+import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;
@@ -43,7 +43,6 @@ interface SmartAccountManagementDetailCardProps {
   selectedOwner: User | null;
   setShowUserLookup: (show: boolean) => void;
   isSettingEnabled: (settingCode: string) => boolean;
-  companySettings?: CompanySettingWithMaster[];
   showAccountNature?: boolean;
 }
 
@@ -55,9 +54,10 @@ export default function SmartAccountManagementDetailCard({
   selectedOwner,
   setShowUserLookup,
   isSettingEnabled,
-  companySettings = [],
   showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {
+  const { getSetting } = useCompanySettings();
+  
   // Check if any account nature checkbox is selected
   const hasAnyAccountNature =
     form.watch("isPersonAccount") ||
@@ -67,9 +67,7 @@ export default function SmartAccountManagementDetailCard({
     form.watch("isShippingAddress");
   
   // Get Google Maps API key from company settings
-  const googleMapsApiKey = companySettings.find(
-    (s) => s.settingCode === "google_maps_api_key"
-  )?.settingValue || "";
+  const googleMapsApiKey = getSetting("google_maps_api_key")?.settingValue || "";
 
   // Memoize the address selection callback to prevent unnecessary re-renders
   const handlePlaceSelected = useCallback((addressComponents: {

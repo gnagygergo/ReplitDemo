@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="">
+    <customObject>false</customObject>
+    <iconFamily>Lucide</iconFamily>
+    <icon>Building</icon>
+    <label>Opportunities</label>
+    <page>components/opportunities/opportunities</page>
+</CustomTab>

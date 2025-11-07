@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomTab xmlns="">
+    <customObject>false</customObject>
+    <iconFamily>Lucide</iconFamily>
+    <icon>Building</icon>
+    <label>Quotes</label>
+    <page>components/quotes/quotes</page>
+</CustomTab>

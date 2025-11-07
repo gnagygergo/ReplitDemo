@@ -68,11 +68,6 @@ export default function AssetDetail() {
       accountId: "",
       productId: "",
       installationDate: "",
-      purchaseDate: "",
-      warrantyExpiryDate: "",
-      status: "active",
-      location: "",
-      notes: "",
     },
   });
 
@@ -87,11 +82,6 @@ export default function AssetDetail() {
         accountId: asset.accountId || "",
         productId: asset.productId || "",
         installationDate: asset.installationDate || "",
-        purchaseDate: asset.purchaseDate || "",
-        warrantyExpiryDate: asset.warrantyExpiryDate || "",
-        status: (asset.status as "active" | "inactive" | "retired" | "in_repair") || "active",
-        location: asset.location || "",
-        notes: asset.notes || "",
       });
       
       if (asset.account) {
@@ -171,11 +161,6 @@ export default function AssetDetail() {
           accountId: asset.accountId || "",
           productId: asset.productId || "",
           installationDate: asset.installationDate || "",
-          purchaseDate: asset.purchaseDate || "",
-          warrantyExpiryDate: asset.warrantyExpiryDate || "",
-          status: (asset.status as "active" | "inactive" | "retired" | "in_repair") || "active",
-          location: asset.location || "",
-          notes: asset.notes || "",
         });
         if (asset.account) {
           setSelectedAccount(asset.account);
@@ -279,6 +264,32 @@ export default function AssetDetail() {
                         )}
                       />
 
+                      {/* Name */}
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Name</FormLabel>
+                            <FormControl>
+                              {isEditing ? (
+                                <Input 
+                                  {...field}
+                                  value={field.value || ""}
+                                  placeholder="Enter name"
+                                  data-testid="input-name"
+                                />
+                              ) : (
+                                <div className="text-sm py-2" data-testid="text-name">
+                                  {field.value || '-'}
+                                </div>
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       {/* Description */}
                       <FormField
                         control={form.control}
@@ -297,6 +308,61 @@ export default function AssetDetail() {
                               ) : (
                                 <div className="text-sm py-2" data-testid="text-description">
                                   {field.value || '-'}
+                                </div>
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Quantity */}
+                      <FormField
+                        control={form.control}
+                        name="quantity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantity</FormLabel>
+                            <FormControl>
+                              {isEditing ? (
+                                <Input 
+                                  {...field}
+                                  value={field.value || ""}
+                                  type="number"
+                                  placeholder="Enter quantity"
+                                  data-testid="input-quantity"
+                                />
+                              ) : (
+                                <div className="text-sm py-2" data-testid="text-quantity">
+                                  {field.value || '-'}
+                                </div>
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Installation Date */}
+                      <FormField
+                        control={form.control}
+                        name="installationDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Installation Date</FormLabel>
+                            <FormControl>
+                              {isEditing ? (
+                                <Input 
+                                  {...field}
+                                  value={field.value || ""}
+                                  type="date"
+                                  data-testid="input-installation-date"
+                                />
+                              ) : (
+                                <div className="text-sm py-2" data-testid="text-installation-date">
+                                  {field.value 
+                                    ? format(new Date(field.value), 'MMM d, yyyy')
+                                    : '-'}
                                 </div>
                               )}
                             </FormControl>
@@ -395,150 +461,6 @@ export default function AssetDetail() {
                               ) : (
                                 <div className="text-sm py-2" data-testid="text-product">
                                   {selectedProduct ? selectedProduct.productName : '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Purchase Date */}
-                      <FormField
-                        control={form.control}
-                        name="purchaseDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Purchase Date</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value || ""}
-                                  type="date"
-                                  data-testid="input-purchase-date"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-purchase-date">
-                                  {field.value 
-                                    ? format(new Date(field.value), 'MMM d, yyyy')
-                                    : '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Warranty Expiry Date */}
-                      <FormField
-                        control={form.control}
-                        name="warrantyExpiryDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Warranty Expiry Date</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value || ""}
-                                  type="date"
-                                  data-testid="input-warranty-expiry-date"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-warranty-expiry-date">
-                                  {field.value 
-                                    ? format(new Date(field.value), 'MMM d, yyyy')
-                                    : '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Status */}
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status *</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Select
-                                  onValueChange={field.onChange}
-                                  value={field.value}
-                                >
-                                  <SelectTrigger data-testid="select-status">
-                                    <SelectValue placeholder="Select status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                    <SelectItem value="retired">Retired</SelectItem>
-                                    <SelectItem value="in_repair">In Repair</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-status">
-                                  <Badge variant={field.value === 'active' ? 'default' : 'secondary'}>
-                                    {field.value}
-                                  </Badge>
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Location */}
-                      <FormField
-                        control={form.control}
-                        name="location"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Location</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value || ""}
-                                  placeholder="Enter location"
-                                  data-testid="input-location"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-location">
-                                  {field.value || '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Notes */}
-                      <FormField
-                        control={form.control}
-                        name="notes"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Notes</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Textarea 
-                                  {...field}
-                                  value={field.value || ""}
-                                  placeholder="Enter notes"
-                                  data-testid="input-notes"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-notes">
-                                  {field.value || '-'}
                                 </div>
                               )}
                             </FormControl>

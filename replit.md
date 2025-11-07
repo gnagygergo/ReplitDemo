@@ -33,8 +33,8 @@ Preferred communication style: Simple, everyday language.
   - Address fields: streetAddress, city, stateProvince, zipCode, country
   - Legacy address field auto-populated from structured fields for display in view mode
 - **Opportunities**: Sales opportunities linked to accounts with revenue tracking and close dates
-- **Assets**: Equipment and assets tracked with serial numbers, purchase dates, warranty information, and status
-  - Fields: serialNumber (required), name, description, quantity, purchaseDate, warrantyExpiryDate, installationDate, status (active/inactive/retired/in_repair), location, notes
+- **Assets**: Equipment and assets tracked with serial numbers and installation information
+  - Fields: serialNumber (required), name, description, quantity, installationDate
   - Links to accounts (which company/contact owns the asset) and products (what product the asset represents)
   - Full CRUD operations with search, sorting, and filtering capabilities
   - Company-scoped access with strict multi-tenant isolation

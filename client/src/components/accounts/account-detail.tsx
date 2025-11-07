@@ -8,7 +8,6 @@ import {
   type InsertAccount,
   insertAccountSchema,
   type User,
-  type CompanySettingWithMaster,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,6 +51,7 @@ import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -76,6 +76,7 @@ export default function AccountDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
+  const { isSettingEnabled } = useCompanySettings();
 
   // Fetch account data (skip when creating new account)
   const { data: account, isLoading: isLoadingAccount } =
@@ -83,25 +84,6 @@ export default function AccountDetail() {
       queryKey: ["/api/accounts", params?.id],
       enabled: !!params?.id && !isCreating,
     });
-
-  // Fetch company settings for smart account management
-  const { data: accountManagementSettings = [] } = useQuery<CompanySettingWithMaster[]>({
-    queryKey: ["/api/business-objects/company-settings/account_management"],
-  });
-
-  // Fetch platform settings (includes Google Maps API key)
-  const { data: platformSettings = [] } = useQuery<CompanySettingWithMaster[]>({
-    queryKey: ["/api/business-objects/company-settings/platform_business_objects"],
-  });
-
-  // Merge both settings arrays
-  const companySettings = [...accountManagementSettings, ...platformSettings];
-
-  // Helper function to check if a company setting is enabled
-  const isSettingEnabled = (settingCode: string): boolean => {
-    const setting = companySettings.find((s) => s.settingCode === settingCode);
-    return setting?.settingValue?.toLowerCase() === "true";
-  };
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),

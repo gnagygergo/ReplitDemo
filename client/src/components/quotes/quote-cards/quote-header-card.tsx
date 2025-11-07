@@ -10,7 +10,6 @@ import {
   type AccountWithOwner,
   type User,
   type Company,
-  type CompanySetting,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +31,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
+import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 
 // TypeScript interface, it defines the shape of the props (inputs) that the QuoteHeaderCard React component expects from its parent
 interface QuoteHeaderCardProps {
@@ -64,6 +64,7 @@ export default function QuoteHeaderCard({
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { isSettingEnabled } = useCompanySettings();
 
   const { data: customerAccount } = useQuery<AccountWithOwner>({
     queryKey: ["/api/accounts", quote?.customerId],
@@ -88,12 +89,7 @@ export default function QuoteHeaderCard({
     enabled: !!quote?.sellerUserId && !isNewQuote && !isEditing,
   });
 
-  // Fetch company setting for quote customer requirement
-  const { data: quoteCustomerSettings = [] } = useQuery<CompanySetting[]>({
-    queryKey: ["/api/business-objects/company-settings/by-prefix/general_quote_setting_allow_quote_creation_without_customerKey"],
-  });
-
-  const allowQuoteWithoutCustomer = quoteCustomerSettings[0]?.settingValue === "TRUE";
+  const allowQuoteWithoutCustomer = isSettingEnabled("general_quote_setting_allow_quote_creation_without_customerKey");
 
   const form = useForm<InsertQuote>({
     resolver: zodResolver(insertQuoteSchema),

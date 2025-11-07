@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Trash2, Search } from "lucide-react";
-import { type Product, type UnitOfMeasure, type CompanySettingWithMaster } from "@shared/schema";
+import { type Product, type UnitOfMeasure } from "@shared/schema";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
 import {
   Select,
@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 
 interface QuoteLineItemProps {
   control: Control<any>;
@@ -36,6 +37,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
   const isInitialSubtotalLoad = useRef(true);
   const isInitializing = useRef(false);
   const isInitializingSubtotal = useRef(false);
+  const { getSetting } = useCompanySettings();
 
   const productUnitPrice = useWatch({
     control,
@@ -133,22 +135,10 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
     enabled: !!productId,
   });
 
-  // Fetch discount settings
-  const { data: discountSettings = [] } = useQuery<CompanySettingWithMaster[]>({
-    queryKey: ["/api/business-objects/company-settings/by-prefix/discount_setting"],
-  });
-
-  // Extract setting values (uppercase TRUE/FALSE)
+  // Extract discount setting values (uppercase TRUE/FALSE)
   // Default to true if setting not found to preserve existing behavior
-  const unitPriceDiscountSetting = discountSettings.find(
-    s => s.settingCode === "discount_setting_show_unit_price_discount"
-  );
-  const showUnitPriceDiscount = unitPriceDiscountSetting?.settingValue !== "FALSE";
-
-  const rowDiscountSetting = discountSettings.find(
-    s => s.settingCode === "discount_setting_show_row_discount"
-  );
-  const showRowDiscount = rowDiscountSetting?.settingValue !== "FALSE";
+  const showUnitPriceDiscount = getSetting("discount_setting_show_unit_price_discount")?.settingValue !== "FALSE";
+  const showRowDiscount = getSetting("discount_setting_show_row_discount")?.settingValue !== "FALSE";
 
   // Get the type of the selected product's sales UoM
   const productUomType = selectedProduct?.salesUomId

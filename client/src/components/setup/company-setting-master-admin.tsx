@@ -1132,7 +1132,7 @@ export default function CompanySettingMasterAdmin() {
                         {...field} 
                         type="number"
                         value={field.value ?? ""} 
-                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                         data-testid="input-setting-order-within-functionality" 
                       />
                     </FormControl>
@@ -1151,7 +1151,7 @@ export default function CompanySettingMasterAdmin() {
                         {...field} 
                         type="number"
                         value={field.value ?? ""} 
-                        onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseInt(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                         data-testid="input-setting-shows-in-level" 
                       />
                     </FormControl>

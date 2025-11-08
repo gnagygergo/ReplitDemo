@@ -43,6 +43,14 @@ const optionalTimestamp = z
   })
   .nullable();
 
+const optionalForeignKey = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    return val;
+  })
+  .nullable();
+
 export const companies = pgTable("companies", {
   id: varchar("id")
     .primaryKey()
@@ -755,6 +763,8 @@ export const insertAssetSchema = createInsertSchema(assets)
     serialNumber: z.string().min(1, "Serial number is required"),
     quantity: optionalNumeric,
     installationDate: optionalDate,
+    productId: optionalForeignKey,
+    accountId: optionalForeignKey,
   });
 
 export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)

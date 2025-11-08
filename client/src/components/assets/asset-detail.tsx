@@ -64,10 +64,10 @@ export default function AssetDetail() {
       name: "",
       serialNumber: "",
       description: "",
-      quantity: "",
+      quantity: null,
       accountId: "",
       productId: "",
-      installationDate: "",
+      installationDate: null,
     },
   });
 
@@ -78,10 +78,10 @@ export default function AssetDetail() {
         name: asset.name || "",
         serialNumber: asset.serialNumber || "",
         description: asset.description || "",
-        quantity: asset.quantity || "",
+        quantity: asset.quantity != null ? parseFloat(asset.quantity) : null,
         accountId: asset.accountId || "",
         productId: asset.productId || "",
-        installationDate: asset.installationDate || "",
+        installationDate: asset.installationDate || null,
       });
       
       if (asset.account) {
@@ -157,10 +157,10 @@ export default function AssetDetail() {
           name: asset.name || "",
           serialNumber: asset.serialNumber || "",
           description: asset.description || "",
-          quantity: asset.quantity || "",
+          quantity: asset.quantity != null ? parseFloat(asset.quantity) : null,
           accountId: asset.accountId || "",
           productId: asset.productId || "",
-          installationDate: asset.installationDate || "",
+          installationDate: asset.installationDate || null,
         });
         if (asset.account) {
           setSelectedAccount(asset.account);
@@ -381,14 +381,14 @@ export default function AssetDetail() {
                               {isEditing ? (
                                 <Input 
                                   {...field}
-                                  value={field.value || ""}
+                                  value={field.value ?? ""}
                                   type="number"
                                   placeholder="Enter quantity"
                                   data-testid="input-quantity"
                                 />
                               ) : (
                                 <div className="text-sm py-2" data-testid="text-quantity">
-                                  {field.value || '-'}
+                                  {field.value ?? '-'}
                                 </div>
                               )}
                             </FormControl>
@@ -408,7 +408,9 @@ export default function AssetDetail() {
                               {isEditing ? (
                                 <Input 
                                   {...field}
-                                  value={field.value || ""}
+                                  value={field.value instanceof Date 
+                                    ? field.value.toISOString().split('T')[0] 
+                                    : field.value || ""}
                                   type="date"
                                   data-testid="input-installation-date"
                                 />

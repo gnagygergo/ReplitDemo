@@ -17,6 +17,32 @@ import { createInsertSchema } from "drizzle-zod";
 import { IdCard } from "lucide-react";
 import { z } from "zod";
 
+// Helper schemas to convert empty strings to null for optional fields
+const optionalNumeric = z
+  .union([z.string(), z.number(), z.null(), z.undefined()])
+  .transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? null : num;
+  })
+  .nullable();
+
+const optionalDate = z
+  .union([z.string(), z.date(), z.null(), z.undefined()])
+  .transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    return val;
+  })
+  .nullable();
+
+const optionalTimestamp = z
+  .union([z.string(), z.date(), z.null(), z.undefined()])
+  .transform(val => {
+    if (val === "" || val === null || val === undefined) return null;
+    return val;
+  })
+  .nullable();
+
 export const companies = pgTable("companies", {
   id: varchar("id")
     .primaryKey()
@@ -683,7 +709,9 @@ export const insertOpportunitySchema = createInsertSchema(opportunities)
   })
   .extend({
     totalRevenue: z.number().min(0.01, "Total revenue must be greater than 0"),
-    closeDate: z.string().min(1, "Close date is required"),
+    closeDate: optionalDate.refine((val) => val !== null, {
+      message: "Close date is required",
+    }),
     ownerId: z.string().min(1, "Owner is required"),
   });
 
@@ -725,6 +753,8 @@ export const insertAssetSchema = createInsertSchema(assets)
   })
   .extend({
     serialNumber: z.string().min(1, "Serial number is required"),
+    quantity: optionalNumeric,
+    installationDate: optionalDate,
   });
 
 export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)
@@ -745,9 +775,13 @@ export const insertProductSchema = createInsertSchema(products)
     salesCategory: z.enum(["Saleable", "Quoting only"]),
     productName: z.string().min(1, "Product name is required"),
     salesUomId: z.string().min(1, "Sales UoM is required"),
-    salesUnitPrice: z.number().min(0, "Sales unit price must be 0 or greater"),
+    salesUnitPrice: optionalNumeric.refine((val) => val === null || val >= 0, {
+      message: "Sales unit price must be 0 or greater",
+    }),
     salesUnitPriceCurrency: z.string().min(1, "Currency is required"),
-    vatPercent: z.number().min(0).max(100, "VAT % must be between 0 and 100"),
+    vatPercent: optionalNumeric.refine((val) => val === null || (val >= 0 && val <= 100), {
+      message: "VAT % must be between 0 and 100",
+    }),
   });
 
 export const insertLanguageSchema = createInsertSchema(languages)
@@ -777,6 +811,9 @@ export const insertQuoteSchema = createInsertSchema(quotes)
   .extend({
     customerName: z.string().min(0),
     createdBy: z.string().min(1, "Created by is required"),
+    quoteExpirationDate: optionalDate,
+    netGrandTotal: optionalNumeric,
+    grossGrandTotal: optionalNumeric,
   });
 
 export const insertQuoteLineSchema = createInsertSchema(quoteLines)
@@ -785,6 +822,21 @@ export const insertQuoteLineSchema = createInsertSchema(quoteLines)
   })
   .extend({
     quoteId: z.string().min(1, "Quote ID is required"),
+    productUnitPrice: optionalNumeric,
+    productUnitPriceOverride: optionalNumeric,
+    quoteUnitPrice: optionalNumeric,
+    unitPriceDiscountPercent: optionalNumeric,
+    unitPriceDiscountAmount: optionalNumeric,
+    finalUnitPrice: optionalNumeric,
+    quotedQuantity: optionalNumeric,
+    subtotalBeforeRowDiscounts: optionalNumeric,
+    discountPercentOnSubtotal: optionalNumeric,
+    discountAmountOnSubtotal: optionalNumeric,
+    finalSubtotal: optionalNumeric,
+    vatPercent: optionalNumeric,
+    vatUnitAmount: optionalNumeric,
+    vatOnSubtotal: optionalNumeric,
+    grossSubtotal: optionalNumeric,
   });
 
 export const insertKnowledgeArticleSchema = createInsertSchema(
@@ -843,10 +895,13 @@ export const insertLicenceAgreementTemplateSchema = createInsertSchema(
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
     licenceId: z.string().min(1, "Licence is required"),
-    validFrom: z.string().optional(),
-    validTo: z.string().optional(),
-    price: z.string().min(1, "Price is required"),
+    ValidFrom: optionalDate,
+    ValidTo: optionalDate,
+    price: optionalNumeric.refine((val) => val !== null && val > 0, {
+      message: "Price is required and must be greater than 0",
+    }),
     currency: z.string().min(1, "Currency is required"),
+    agreementBaseDurationMonths: optionalNumeric,
   });
 
 export const insertLicenceAgreementSchema = createInsertSchema(
@@ -860,11 +915,13 @@ export const insertLicenceAgreementSchema = createInsertSchema(
       .string()
       .min(1, "Licence agreement template is required"),
     companyId: z.string().min(1, "Company is required"),
-    validFrom: z.string().optional(),
-    validTo: z.string().optional(),
-    price: z.string().optional(),
+    validFrom: optionalDate,
+    validTo: optionalDate,
+    price: optionalNumeric,
     currency: z.string().optional(),
-    licenceSeats: z.number().int().optional(),
+    licenceSeats: optionalNumeric,
+    licenceSeatsRemaining: optionalNumeric,
+    licenceSeatsUsed: optionalNumeric,
   });
 
 export const insertEmailSchema = createInsertSchema(emails)

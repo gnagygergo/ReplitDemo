@@ -122,7 +122,7 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       const deleted = await storage.deleteAccount(req.params.id);
       if (!deleted) {
         return res.status(400).json({
-          message: "Cannot delete account with active opportunities or cases",
+          message: "Cannot delete account with active opportunities",
         });
       }
       res.status(204).send();

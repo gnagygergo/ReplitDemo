@@ -189,18 +189,14 @@ export class AccountStorage {
   }
 
   async deleteAccount(id: string): Promise<boolean> {
-    // Check if account has opportunities or cases
+    // Check if account has opportunities
     const existingOpportunities = await db
       .select()
       .from(opportunities)
       .where(eq(opportunities.accountId, id));
-    const existingCases = await db
-      .select()
-      .from(cases)
-      .where(eq(cases.accountId, id));
 
-    if (existingOpportunities.length > 0 || existingCases.length > 0) {
-      return false; // Cannot delete account with opportunities or cases
+    if (existingOpportunities.length > 0) {
+      return false; // Cannot delete account with opportunities
     }
 
     const result = await db.delete(accounts).where(eq(accounts.id, id));

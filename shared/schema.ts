@@ -696,6 +696,7 @@ export const insertCompanySchema = createInsertSchema(companies)
   })
   .extend({
     companyOfficialName: z.string().min(1, "Company official name is required"),
+    taxResidencyCountry: optionalForeignKey,
   });
 
 export const insertAccountSchema = createInsertSchema(accounts)
@@ -705,10 +706,7 @@ export const insertAccountSchema = createInsertSchema(accounts)
   .extend({
     industry: z.enum(["tech", "construction", "services"]).optional(),
     ownerId: z.string().min(1, "Owner is required"),
-    parentAccountId: z
-      .string()
-      .optional()
-      .transform((val) => (val === "" ? null : val)),
+    parentAccountId: optionalForeignKey,
   });
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)
@@ -729,6 +727,7 @@ export const insertCompanyRoleSchema = createInsertSchema(companyRoles)
   })
   .extend({
     name: z.string().min(1, "Role name is required"),
+    parentCompanyRoleId: optionalForeignKey,
   });
 
 export const insertUserRoleAssignmentSchema = createInsertSchema(
@@ -824,6 +823,8 @@ export const insertQuoteSchema = createInsertSchema(quotes)
     quoteExpirationDate: optionalDate,
     netGrandTotal: optionalNumeric,
     grossGrandTotal: optionalNumeric,
+    customerId: optionalForeignKey,
+    sellerUserId: optionalForeignKey,
   });
 
 export const insertQuoteLineSchema = createInsertSchema(quoteLines)
@@ -832,6 +833,7 @@ export const insertQuoteLineSchema = createInsertSchema(quoteLines)
   })
   .extend({
     quoteId: z.string().min(1, "Quote ID is required"),
+    productId: optionalForeignKey,
     productUnitPrice: optionalNumeric,
     productUnitPriceOverride: optionalNumeric,
     quoteUnitPrice: optionalNumeric,
@@ -859,21 +861,9 @@ export const insertKnowledgeArticleSchema = createInsertSchema(
   .extend({
     articleTitle: z.string().min(1, "Article title is required"),
     authorId: z.string().min(1, "Author is required"),
-    articleCode: z
-      .string()
-      .transform((val) => (val === "" ? null : val))
-      .nullable()
-      .optional(),
-    functionalDomainId: z
-      .string()
-      .transform((val) => (val === "" ? null : val))
-      .nullable()
-      .optional(),
-    functionalityId: z
-      .string()
-      .transform((val) => (val === "" ? null : val))
-      .nullable()
-      .optional(),
+    functionalDomainId: optionalForeignKey,
+    functionalityId: optionalForeignKey,
+    languageCode: optionalForeignKey,
   });
 
 export const insertDevPatternSchema = createInsertSchema(devPatterns)
@@ -991,7 +981,7 @@ export const insertCompanySettingsMasterSchema = createInsertSchema(
     id: true,
   })
   .extend({
-    functionalityId: z.string().optional(),
+    functionalityId: optionalForeignKey,
     settingName: z.string().min(1, "Setting name is required"),
     settingCode: z.string().optional(),
     settingDescription: z.string().optional(),

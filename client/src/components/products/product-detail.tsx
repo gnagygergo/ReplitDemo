@@ -306,6 +306,7 @@ export default function ProductDetail() {
                           <FormControl>
                             <Input
                               {...field}
+                              value={field.value ?? ""}
                               type="number"
                               step="0.01"
                               placeholder="0.00"
@@ -349,6 +350,7 @@ export default function ProductDetail() {
                           <FormControl>
                             <Input
                               {...field}
+                              value={field.value ?? ""}
                               type="number"
                               step="0.01"
                               min="0"

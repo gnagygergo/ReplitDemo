@@ -565,7 +565,7 @@ export default function QuoteHeaderCard({
                           <FormControl>
                             <Input
                               {...field}
-                              value={field.value || ""}
+                              value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ""}
                               type="date"
                               data-testid="input-edit-expiration-date"
                             />

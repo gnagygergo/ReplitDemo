@@ -239,7 +239,8 @@ export default function OpportunityForm({ open, onClose, opportunity }: Opportun
                   </FormLabel>
                   <FormControl>
                     <Input 
-                      {...field} 
+                      {...field}
+                      value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value || ""}
                       type="date"
                       data-testid="input-close-date"
                     />

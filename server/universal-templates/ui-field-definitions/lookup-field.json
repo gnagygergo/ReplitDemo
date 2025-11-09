@@ -1,0 +1,204 @@
+{
+  "componentName": "LookupField",
+  "componentPath": "client/src/components/ui/lookup-field.tsx",
+  "description": "A reusable component for displaying and selecting related entities (accounts, products, etc.) across edit, view, and table modes with consistent UI patterns.",
+  "designPrinciples": [
+    "Single component handles all three rendering modes (edit, view, table)",
+    "Edit mode shows a unified button UI that opens lookup dialogs",
+    "View mode shows clickable links to related entity detail pages",
+    "Table mode shows compact inline links for data tables",
+    "Optional clear functionality for removable associations",
+    "Consistent test ID patterns for automation"
+  ],
+  "props": {
+    "mode": {
+      "type": "\"edit\" | \"view\" | \"table\"",
+      "required": true,
+      "description": "Rendering mode: 'edit' shows button to open lookup dialog, 'view' shows link to entity, 'table' shows compact link"
+    },
+    "value": {
+      "type": "{ id: string; name: string } | null",
+      "required": true,
+      "description": "The selected entity with id and display name, or null if nothing selected"
+    },
+    "onOpenLookup": {
+      "type": "() => void",
+      "required": true,
+      "description": "Callback to open the lookup dialog when button is clicked in edit mode"
+    },
+    "onClear": {
+      "type": "() => void",
+      "required": false,
+      "description": "Optional callback to clear the selection. When provided, shows an X button in edit mode when value exists"
+    },
+    "placeholder": {
+      "type": "string",
+      "required": false,
+      "default": "\"Select item\"",
+      "description": "Text to display when no value is selected in edit mode"
+    },
+    "icon": {
+      "type": "ReactNode",
+      "required": false,
+      "description": "Icon to display (e.g., <Building /> for accounts, <Package /> for products)"
+    },
+    "linkPath": {
+      "type": "string",
+      "required": false,
+      "default": "\"/\"",
+      "description": "Base path for entity detail pages (e.g., '/accounts'). Value ID is appended in view/table modes"
+    },
+    "testId": {
+      "type": "string",
+      "required": false,
+      "description": "Base test ID for the interactive element. In edit mode: button test ID. In view mode: container test ID"
+    },
+    "valueTestIdPrefix": {
+      "type": "string",
+      "required": false,
+      "description": "Prefix for selected value test ID. Generates 'text-{valueTestIdPrefix}-{value.id}' for the value span"
+    },
+    "className": {
+      "type": "string",
+      "required": false,
+      "default": "\"\"",
+      "description": "Additional CSS classes to apply to the root element"
+    },
+    "ariaLabel": {
+      "type": "string",
+      "required": false,
+      "description": "Accessible label for the button in edit mode"
+    }
+  },
+  "usagePatterns": {
+    "requiredLookup": {
+      "description": "For required foreign key fields (e.g., Quote customer)",
+      "example": {
+        "code": "LookupField",
+        "props": {
+          "mode": "isEditing ? 'edit' : 'view'",
+          "value": "selectedCustomer ? { id: selectedCustomer.id, name: selectedCustomer.name } : null",
+          "onOpenLookup": "() => setShowAccountLookup(true)",
+          "placeholder": "'Select customer'",
+          "icon": "<Building className=\"w-4 h-4\" />",
+          "linkPath": "'/accounts'",
+          "testId": "isEditing ? 'button-customer-lookup' : 'text-customer'",
+          "valueTestIdPrefix": "'customer'",
+          "ariaLabel": "'Open customer lookup dialog'"
+        },
+        "notes": [
+          "No onClear prop - users must select a customer (cannot clear)",
+          "Mode switches between edit and view based on form state"
+        ]
+      }
+    },
+    "optionalLookup": {
+      "description": "For optional foreign key fields (e.g., Asset account)",
+      "example": {
+        "code": "LookupField",
+        "props": {
+          "mode": "isEditing ? 'edit' : 'view'",
+          "value": "selectedAccount ? { id: selectedAccount.id, name: selectedAccount.name } : null",
+          "onOpenLookup": "() => setShowAccountLookup(true)",
+          "onClear": "isEditing ? () => { setSelectedAccount(null); form.setValue('accountId', ''); } : undefined",
+          "placeholder": "'Select account'",
+          "icon": "<Building className=\"w-4 h-4\" />",
+          "linkPath": "'/accounts'",
+          "testId": "isEditing ? 'button-select-account' : 'text-account'",
+          "valueTestIdPrefix": "'account'",
+          "ariaLabel": "'Open account lookup dialog'"
+        },
+        "notes": [
+          "Includes onClear handler that resets both state and form value",
+          "onClear only provided in edit mode (undefined in view mode)",
+          "X button appears automatically when value exists and onClear is provided"
+        ]
+      }
+    },
+    "tableMode": {
+      "description": "For inline links in data tables",
+      "example": {
+        "code": "LookupField",
+        "props": {
+          "mode": "'table'",
+          "value": "{ id: account.id, name: account.name }",
+          "onOpenLookup": "() => {}",
+          "linkPath": "'/accounts'",
+          "testId": "`text-account-${account.id}`"
+        },
+        "notes": [
+          "onOpenLookup required but not used in table mode",
+          "Shows compact link without icon or placeholder",
+          "Use unique testId per row with dynamic ID"
+        ]
+      }
+    }
+  },
+  "testIdConventions": {
+    "editMode": {
+      "button": "data-testid passed via testId prop (e.g., 'button-customer-lookup')",
+      "selectedValue": "data-testid='text-{valueTestIdPrefix}-{value.id}' (e.g., 'text-customer-123')",
+      "clearButton": "data-testid='{testId}-clear' (e.g., 'button-customer-lookup-clear')"
+    },
+    "viewMode": {
+      "container": "data-testid passed via testId prop (e.g., 'text-customer')",
+      "value": "No separate testId - clickable span inside container"
+    },
+    "tableMode": {
+      "container": "data-testid passed via testId prop (e.g., 'text-account-123')"
+    }
+  },
+  "integrationRequirements": {
+    "lookupDialog": "Must have corresponding lookup dialog component (e.g., AccountLookupDialog, ProductLookupDialog)",
+    "state": "Parent component maintains selected entity state",
+    "formIntegration": "Parent component syncs selection to form field value",
+    "dialogState": "Parent component controls dialog visibility",
+    "clearHandler": "Parent component implements clear logic (reset state + form value)"
+  },
+  "visualBehavior": {
+    "editModeWithValue": {
+      "appearance": "Button with icon circle, entity name, and optional clear X",
+      "interaction": "Click button opens lookup dialog, click X clears selection"
+    },
+    "editModeWithoutValue": {
+      "appearance": "Button with icon and placeholder text in muted color",
+      "interaction": "Click button opens lookup dialog"
+    },
+    "viewMode": {
+      "appearance": "Entity name as blue underlined link",
+      "interaction": "Click navigates to entity detail page",
+      "fallback": "Shows '-' when no value"
+    },
+    "tableMode": {
+      "appearance": "Entity name as compact blue underlined link",
+      "interaction": "Click navigates to entity detail page",
+      "fallback": "Shows '-' when no value"
+    }
+  },
+  "commonPitfalls": [
+    "Forgetting to provide valueTestIdPrefix results in no test ID on selected value span",
+    "Providing onClear in view mode is unnecessary - should be conditional on edit mode",
+    "Confusing static vs dynamic test IDs: testId should be static for the field/button (e.g., 'button-customer-lookup'), but valueTestIdPrefix generates dynamic IDs for values (e.g., 'text-customer-{id}'). In table mode, testId should be dynamic per row (e.g., `text-account-${row.id}`)",
+    "Not wrapping in FormControl when used inside Form components",
+    "Missing onOpenLookup handler even in table mode (required prop)",
+    "Creating separate LookupField instances for edit and view modes instead of one instance with conditional mode prop"
+  ],
+  "relatedComponents": [
+    "AccountLookupDialog",
+    "ProductLookupDialog"
+  ],
+  "migrationGuide": {
+    "from": "Separate edit/view UI blocks",
+    "to": "Single LookupField component with conditional mode",
+    "steps": [
+      "1. Import LookupField component",
+      "2. Determine if field is required (no onClear) or optional (with onClear)",
+      "3. Replace both edit AND view mode UI blocks with a SINGLE LookupField instance",
+      "4. Use conditional mode prop: mode={isEditing ? 'edit' : 'view'}",
+      "5. Provide testId for button (edit mode) or container (view mode) - use conditional if IDs differ",
+      "6. Provide valueTestIdPrefix for the selected value span test ID",
+      "7. For optional fields, add onClear handler (conditional on edit mode) that resets state and form value",
+      "8. Verify test IDs match original implementation for automation compatibility"
+    ]
+  }
+}

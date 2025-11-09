@@ -16,12 +16,16 @@ Preferred communication style: Simple, everyday language.
   - Optional clear functionality via `onClear` prop for removable associations
   - Consistent visual design: icon circle, entity name, optional X button
   - Flexible test ID system: separate `testId` for button/container and `valueTestIdPrefix` for value span
-- **Refactored Quote form** to use LookupField for customer selection (no clear button - required field)
+- **Refactored Quote form** to use LookupField for customer selection
+  - Customer Link field is now **conditionally mandatory** based on company setting `general_quote_setting_allow_quote_creation_without_customerKey`
+  - When setting enabled: Clear button (X) appears → customer is optional
+  - When setting disabled: No clear button → customer is required
+  - UI dynamically reflects business rules through conditional `onClear` prop
 - **Refactored Asset form** to use LookupField for account selection (with clear button - optional field)
 - **Created comprehensive metadata definition** at `server/universal-templates/ui-field-definitions/lookup-field.json`
   - Documents all props, usage patterns, test ID conventions, integration requirements
   - Includes migration guide and common pitfalls for future developers
-- **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance
+- **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance, business rules reflected in UI
 
 ## System Architecture
 

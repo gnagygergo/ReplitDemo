@@ -39,14 +39,17 @@ Preferred communication style: Simple, everyday language.
   - Documents all props, usage patterns, test ID conventions, integration requirements
   - Includes migration guide and common pitfalls for future developers
 - **Standardized form label styling** (`client/src/components/ui/label.tsx`)
-  - Added explicit `text-foreground` color to `labelVariants` for consistent label colors across all forms
-  - Previously labels inherited color from parent context, causing inconsistent appearance
-  - Now all FormLabel instances (edit mode, view mode, all forms) have consistent theme-aware color
-  - Light mode: dark text (hsl(222, 84%, 5%)) for readability
-  - Dark mode: light text (hsl(210, 40%, 98%)) for readability
+  - Added explicit `text-muted-foreground` color to `labelVariants` for consistent label colors across all forms
+  - All field labels now use medium grey color `hsl(215, 16%, 47%)` in both edit and view modes
+  - Previously labels used different colors in edit vs view modes, causing visual inconsistency
+  - Now all FormLabel instances (edit mode, view mode, all forms) have consistent theme-aware medium grey color
+  - Light mode: medium grey (hsl(215, 16%, 47%)) for subtle, readable labels
+  - Dark mode: adjusted medium grey (hsl(215, 20%, 65%)) for optimal contrast
   - Preserves error state styling (text-destructive) when validation fails
+  - Fixed one hardcoded label in `quotes.tsx` search section to match the standardized color
   - Height adjusted in LookupField from `h-auto` to `h-10` (40px) to match standard input fields
   - Icon size reduced from 32px to 24px circle for better fit within 40px container
+  - Design principle: Labels use subtle grey to reduce visual weight, allowing data values to stand out
 - **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance, business rules reflected in UI and enforced through validation, uniform label styling and field heights
 
 ## System Architecture

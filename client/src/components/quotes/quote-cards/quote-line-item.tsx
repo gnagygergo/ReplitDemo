@@ -10,9 +10,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, Package } from "lucide-react";
 import { type Product, type UnitOfMeasure } from "@shared/schema";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
+import { LookupField } from "@/components/ui/lookup-field";
 import {
   Select,
   SelectContent,
@@ -37,7 +38,7 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
   const isInitialSubtotalLoad = useRef(true);
   const isInitializing = useRef(false);
   const isInitializingSubtotal = useRef(false);
-  const { getSetting } = useCompanySettings();
+  const { getSetting, isSettingEnabled } = useCompanySettings();
 
   const productUnitPrice = useWatch({
     control,
@@ -139,6 +140,9 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
   // Default to true if setting not found to preserve existing behavior
   const showUnitPriceDiscount = getSetting("discount_setting_show_unit_price_discount")?.settingValue !== "FALSE";
   const showRowDiscount = getSetting("discount_setting_show_row_discount")?.settingValue !== "FALSE";
+  
+  // Check if products are optional on quote lines
+  const allowQuoteWithoutProduct = isSettingEnabled("general_quote_setting_allow_quote_creation_without_productKey");
 
   // Get the type of the selected product's sales UoM
   const productUomType = selectedProduct?.salesUomId
@@ -365,48 +369,32 @@ export function QuoteLineItem({ control, index, onRemove, setValue }: QuoteLineI
         </Button>
       </div>
 
-      {/* Hidden Product ID field */}
-      <FormField
-        control={control}
-        name={`lines.${index}.productId`}
-        render={({ field: f }) => (
-          <FormItem className="hidden">
-            <FormControl>
-              <Input {...f} value={f.value || ""} />
-            </FormControl>
-          </FormItem>
-        )}
-      />
-
-      {/* Row 1: Magnifier, Product Name, Unit Price, Currency, Price Override */}
+      {/* Row 1: Product Lookup, Unit Price, Currency, Price Override */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <FormItem className="md:col-span-1 flex items-end">
-          <FormLabel className="sr-only">Product Lookup</FormLabel>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-10 w-10"
-            onClick={() => setShowProductLookup(true)}
-            data-testid={`button-product-lookup-${index}`}
-          >
-            <Search className="w-4 h-4" />
-          </Button>
-        </FormItem>
-
         <FormField
           control={control}
-          name={`lines.${index}.productName`}
-          render={({ field: f }) => (
-            <FormItem className="md:col-span-6">
-              <FormLabel>Product Name</FormLabel>
+          name={`lines.${index}.productId`}
+          render={({ field }) => (
+            <FormItem className="md:col-span-7">
+              <FormLabel>Product</FormLabel>
               <FormControl>
-                <Input
-                  {...f}
-                  value={f.value || ""}
-                  placeholder="Product name"
-                  onClick={(e) => e.currentTarget.select()}
-                  data-testid={`input-line-${index}-product-name`}
+                <LookupField
+                  mode="edit"
+                  value={selectedProduct ? { id: selectedProduct.id, name: selectedProduct.productName } : null}
+                  onOpenLookup={() => setShowProductLookup(true)}
+                  onClear={allowQuoteWithoutProduct ? () => {
+                    setValue(`lines.${index}.productId`, '', { shouldDirty: true });
+                    setValue(`lines.${index}.productName`, '', { shouldDirty: true });
+                    setValue(`lines.${index}.productUnitPrice`, null, { shouldDirty: true });
+                    setValue(`lines.${index}.unitPriceCurrency`, '', { shouldDirty: true });
+                    setValue(`lines.${index}.vatPercent`, null, { shouldDirty: true });
+                  } : undefined}
+                  placeholder="Select product"
+                  icon={<Package className="w-4 h-4" />}
+                  linkPath="/products"
+                  testId={`button-product-lookup-${index}`}
+                  valueTestIdPrefix={`line-${index}-product`}
+                  ariaLabel="Open product lookup dialog"
                 />
               </FormControl>
               <FormMessage />

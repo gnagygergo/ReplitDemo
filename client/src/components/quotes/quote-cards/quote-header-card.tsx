@@ -32,6 +32,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
+import { LookupField } from "@/components/ui/lookup-field";
 
 // TypeScript interface, it defines the shape of the props (inputs) that the QuoteHeaderCard React component expects from its parent
 interface QuoteHeaderCardProps {
@@ -464,35 +465,17 @@ export default function QuoteHeaderCard({
                         <FormItem>
                           <FormLabel>Customer Link</FormLabel>
                           <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="w-full justify-start h-auto p-3"
-                              onClick={handleOpenAccountLookup}
-                              data-testid="button-customer-lookup"
-                            >
-                              {selectedCustomer ? (
-                                <div className="flex items-center space-x-3">
-                                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                                    <Building className="w-4 h-4 text-primary" />
-                                  </div>
-                                  <div className="flex flex-col items-start">
-                                    <span
-                                      className="font-medium"
-                                      data-testid={`text-customer-${selectedCustomer.id}`}
-                                    >
-                                      {selectedCustomer.name}
-                                    </span>
-
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-center space-x-2 text-muted-foreground">
-                                  <Building className="h-4 w-4" />
-                                  <span>Select customer</span>
-                                </div>
-                              )}
-                            </Button>
+                            <LookupField
+                              mode="edit"
+                              value={selectedCustomer ? { id: selectedCustomer.id, name: selectedCustomer.name } : null}
+                              onOpenLookup={handleOpenAccountLookup}
+                              placeholder="Select customer"
+                              icon={<Building className="w-4 h-4" />}
+                              linkPath="/accounts"
+                              testId="button-customer-lookup"
+                              valueTestIdPrefix="customer"
+                              ariaLabel="Open customer lookup dialog"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -767,28 +750,20 @@ export default function QuoteHeaderCard({
                 <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Customer Link
                 </label>
-                <div
-                  className="mt-1 text-foreground"
-                  data-testid="text-customer-value"
-                >
-                  {customerAccount ? (
-                    <Link
-                      href={`/accounts/${customerAccount.id}`}
-                      className="text-primary hover:underline"
-                    >
-                      {customerAccount.name}
-                    </Link>
-                  ) : quote?.customerId ? (
-                    <Link
-                      href={`/accounts/${quote.customerId}`}
-                      className="text-primary hover:underline"
-                    >
-                      {quote.customerName || "View Account"}
-                    </Link>
-                  ) : (
-                    "N/A"
-                  )}
-                </div>
+                <LookupField
+                  mode="view"
+                  value={
+                    customerAccount 
+                      ? { id: customerAccount.id, name: customerAccount.name } 
+                      : quote?.customerId 
+                        ? { id: quote.customerId, name: quote.customerName || "View Account" } 
+                        : null
+                  }
+                  onOpenLookup={() => {}}
+                  linkPath="/accounts"
+                  testId="text-customer-value"
+                  className="mt-1"
+                />
 
                 <label className="text-sm font-medium text-muted-foreground mt-4 block">
                   Customer Name

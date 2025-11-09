@@ -10,6 +10,7 @@ export interface LookupFieldProps {
   icon?: ReactNode;
   linkPath?: string;
   testId?: string;
+  valueTestIdPrefix?: string;
   className?: string;
   ariaLabel?: string;
 }
@@ -22,6 +23,7 @@ export function LookupField({
   icon,
   linkPath = "/",
   testId,
+  valueTestIdPrefix,
   className = "",
   ariaLabel,
 }: LookupFieldProps) {
@@ -45,7 +47,7 @@ export function LookupField({
               </div>
             )}
             <div className="flex flex-col items-start">
-              <span className="font-medium" data-testid={testId ? `text-${testId}-${value.id}` : undefined}>
+              <span className="font-medium" data-testid={valueTestIdPrefix ? `text-${valueTestIdPrefix}-${value.id}` : undefined}>
                 {value.name}
               </span>
             </div>

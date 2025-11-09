@@ -22,6 +22,13 @@ Preferred communication style: Simple, everyday language.
   - When setting disabled: No clear button → customer is required
   - UI dynamically reflects business rules through conditional `onClear` prop
 - **Refactored Asset form** to use LookupField for account selection (with clear button - optional field)
+- **Refactored Quote Line Item** (`quote-line-item.tsx`) Product lookup to use LookupField
+  - Replaced separate search button + product name input with single LookupField component
+  - Product is **conditionally mandatory** based on company setting `general_quote_setting_allow_quote_creation_without_productKey`
+  - When setting enabled: Clear button (X) appears → products are optional
+  - When setting disabled: No clear button → products are required
+  - Clear handler resets productId, productName, productUnitPrice, unitPriceCurrency, and vatPercent
+  - Grid layout maintained at 7 columns total (previously 1 for button + 6 for input)
 - **Created comprehensive metadata definition** at `server/universal-templates/ui-field-definitions/lookup-field.json`
   - Documents all props, usage patterns, test ID conventions, integration requirements
   - Includes migration guide and common pitfalls for future developers

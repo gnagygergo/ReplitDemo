@@ -21,6 +21,7 @@ Preferred communication style: Simple, everyday language.
   - When setting enabled: Clear button (X) appears → customer is optional
   - When setting disabled: No clear button → customer is required
   - UI dynamically reflects business rules through conditional `onClear` prop
+  - **Validation enforcement**: Form submission validates customerId in `onSubmit` handler using `form.setError()` when setting requires customer
 - **Refactored Asset form** to use LookupField for account selection (with clear button - optional field)
 - **Refactored Quote Line Item** (`quote-line-item.tsx`) Product lookup to use LookupField
   - Replaced separate search button + product name input with single LookupField component
@@ -29,10 +30,15 @@ Preferred communication style: Simple, everyday language.
   - When setting disabled: No clear button → products are required
   - Clear handler resets productId, productName, productUnitPrice, unitPriceCurrency, and vatPercent
   - Grid layout maintained at 7 columns total (previously 1 for button + 6 for input)
+  - **Validation enforcement**: Quote line save validates each line's productId in `onSubmitLines` handler (`quote-lines-card.tsx`) when setting requires products
+    - Loops through all quote lines checking for empty productId
+    - Sets field-level errors using `linesForm.setError()` on specific line items
+    - Shows toast notification and prevents submission if validation fails
+    - Pattern matches customerId validation in quote-header-card.tsx
 - **Created comprehensive metadata definition** at `server/universal-templates/ui-field-definitions/lookup-field.json`
   - Documents all props, usage patterns, test ID conventions, integration requirements
   - Includes migration guide and common pitfalls for future developers
-- **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance, business rules reflected in UI
+- **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance, business rules reflected in UI and enforced through validation
 
 ## System Architecture
 

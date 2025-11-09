@@ -36,25 +36,23 @@ export function LookupField({
         <Button
           type="button"
           variant="outline"
-          className={`w-full justify-start h-auto p-3 ${onClear && value ? 'pr-10' : ''} ${className}`}
+          className={`w-full justify-start h-10 px-3 py-2 ${onClear && value ? 'pr-10' : ''} ${className}`}
           onClick={onOpenLookup}
           data-testid={testId}
           aria-label={ariaLabel}
         >
           {value ? (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               {icon && (
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                   <div className="w-4 h-4 text-primary flex items-center justify-center">
                     {icon}
                   </div>
                 </div>
               )}
-              <div className="flex flex-col items-start">
-                <span className="font-medium" data-testid={valueTestIdPrefix ? `text-${valueTestIdPrefix}-${value.id}` : undefined}>
-                  {value.name}
-                </span>
-              </div>
+              <span className="font-medium truncate" data-testid={valueTestIdPrefix ? `text-${valueTestIdPrefix}-${value.id}` : undefined}>
+                {value.name}
+              </span>
             </div>
           ) : (
             <div className="flex items-center space-x-2 text-muted-foreground">

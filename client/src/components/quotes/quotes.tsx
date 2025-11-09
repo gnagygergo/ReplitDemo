@@ -95,7 +95,7 @@ export default function Quotes() {
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-foreground mb-2">Search Quotes</label>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">Search Quotes</label>
             <div className="relative">
               <Input
                 type="text"

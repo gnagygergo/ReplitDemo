@@ -39,6 +39,7 @@ export default function QuoteLinesCard({
   const [isEditingLines, setIsEditingLines] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { isSettingEnabled } = useCompanySettings();
 
   const linesForm = useForm<QuoteLinesFormData>({
     resolver: zodResolver(quoteLinesFormSchema),
@@ -84,6 +85,32 @@ export default function QuoteLinesCard({
   });
 
   const onSubmitLines = (data: QuoteLinesFormData) => {
+    // Conditional validation: if products cannot be optional on quote lines, validate productId
+    const allowQuoteWithoutProduct = isSettingEnabled("general_quote_setting_allow_quote_creation_without_productKey");
+    
+    if (!allowQuoteWithoutProduct) {
+      // Check each line for missing productId
+      let hasError = false;
+      data.lines.forEach((line, index) => {
+        if (!line.productId || line.productId.trim() === '') {
+          linesForm.setError(`lines.${index}.productId`, {
+            type: "manual",
+            message: "Product is required",
+          });
+          hasError = true;
+        }
+      });
+      
+      if (hasError) {
+        toast({
+          title: "Validation Error",
+          description: "All quote lines must have a product selected",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     batchSaveLinesMutation.mutate(data);
   };
 

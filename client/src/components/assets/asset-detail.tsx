@@ -510,7 +510,7 @@ export default function AssetDetail() {
           </Panel>
 
           {/* Resize Handle */}
-          <PanelResizeHandle className="w-2 bg-border hover:bg-primary/20 transition-colors" />
+        <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
           {/* Right Pane - Additional Information (Future Use) */}
           <Panel defaultSize={50} minSize={30} maxSize={70}>

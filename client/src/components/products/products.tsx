@@ -80,7 +80,6 @@ export default function Products() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Products</h2>
-            <p className="text-muted-foreground mt-1">Manage your products and pricing</p>
           </div>
           <Button 
             onClick={() => setShowForm(true)}

@@ -96,9 +96,11 @@ export default function Assets() {
 
         {/* Search Bar */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex gap-2">
+          <CardContent className="p-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">Search Assets</label>
               <div className="relative flex-1">
+                
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search by serial number or description..."

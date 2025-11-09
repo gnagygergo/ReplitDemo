@@ -469,6 +469,10 @@ export default function QuoteHeaderCard({
                               mode="edit"
                               value={selectedCustomer ? { id: selectedCustomer.id, name: selectedCustomer.name } : null}
                               onOpenLookup={handleOpenAccountLookup}
+                              onClear={allowQuoteWithoutCustomer ? () => {
+                                setSelectedCustomer(null);
+                                form.setValue('customerId', '');
+                              } : undefined}
                               placeholder="Select customer"
                               icon={<Building className="w-4 h-4" />}
                               linkPath="/accounts"

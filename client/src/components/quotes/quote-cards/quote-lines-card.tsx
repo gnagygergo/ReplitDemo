@@ -11,6 +11,7 @@ import { apiRequest, queryClient as globalQueryClient } from "@/lib/queryClient"
 import { useToast } from "@/hooks/use-toast";
 import { QuoteLineItem } from "@/components/quotes/quote-cards/quote-line-item";
 import { z } from "zod";
+import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 
 const quoteLinesFormSchema = z.object({
   lines: z.array(

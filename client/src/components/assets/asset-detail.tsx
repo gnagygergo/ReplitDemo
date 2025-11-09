@@ -30,12 +30,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Package, Edit, Save, X } from "lucide-react";
+import { Package, Edit, Save, X, Building } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
+import { LookupField } from "@/components/ui/lookup-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
 
@@ -435,44 +436,21 @@ export default function AssetDetail() {
                           <FormItem>
                             <FormLabel>Account</FormLabel>
                             <FormControl>
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  {selectedAccount && (
-                                    <div className="flex items-center justify-between p-2 border rounded">
-                                      <span className="text-sm">{selectedAccount.name}</span>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedAccount(null);
-                                          form.setValue('accountId', '');
-                                        }}
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowAccountLookup(true)}
-                                    data-testid="button-select-account"
-                                  >
-                                    {selectedAccount ? "Change Account" : "Select Account"}
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-account">
-                                  {selectedAccount ? (
-                                    <Link href={`/accounts/${selectedAccount.id}`}>
-                                      <span className="text-primary hover:underline cursor-pointer">
-                                        {selectedAccount.name}
-                                      </span>
-                                    </Link>
-                                  ) : '-'}
-                                </div>
-                              )}
+                              <LookupField
+                                mode={isEditing ? "edit" : "view"}
+                                value={selectedAccount ? { id: selectedAccount.id, name: selectedAccount.name } : null}
+                                onOpenLookup={() => setShowAccountLookup(true)}
+                                onClear={isEditing ? () => {
+                                  setSelectedAccount(null);
+                                  form.setValue('accountId', '');
+                                } : undefined}
+                                placeholder="Select account"
+                                icon={<Building className="w-4 h-4" />}
+                                linkPath="/accounts"
+                                testId={isEditing ? "button-select-account" : "text-account"}
+                                valueTestIdPrefix="account"
+                                ariaLabel="Open account lookup dialog"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

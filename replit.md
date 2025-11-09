@@ -8,6 +8,21 @@ OpportunityTracker is a modern, full-stack CRM application designed for sales op
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### November 9, 2025 - Standardized Lookup Field UI Component
+- **Created reusable LookupField component** (`client/src/components/ui/lookup-field.tsx`)
+  - Supports three rendering modes: edit (button with dialog), view (clickable link), table (compact link)
+  - Optional clear functionality via `onClear` prop for removable associations
+  - Consistent visual design: icon circle, entity name, optional X button
+  - Flexible test ID system: separate `testId` for button/container and `valueTestIdPrefix` for value span
+- **Refactored Quote form** to use LookupField for customer selection (no clear button - required field)
+- **Refactored Asset form** to use LookupField for account selection (with clear button - optional field)
+- **Created comprehensive metadata definition** at `server/universal-templates/ui-field-definitions/lookup-field.json`
+  - Documents all props, usage patterns, test ID conventions, integration requirements
+  - Includes migration guide and common pitfalls for future developers
+- **Benefits**: Consistent UX across all lookup fields, reduced code duplication, easier maintenance
+
 ## System Architecture
 
 ### Frontend Architecture

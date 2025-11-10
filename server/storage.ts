@@ -26,7 +26,6 @@ import {
   type Product,
   type InsertProduct,
   type ProductWithUom,
-  type Currency,
   type Language,
   type InsertLanguage,
   type Translation,
@@ -67,7 +66,6 @@ import {
   releases,
   unitOfMeasures,
   products,
-  currencies,
   languages,
   translations,
   quotes,
@@ -1228,14 +1226,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: string, companyContext?: string): Promise<boolean> {
     return this.productStorage.deleteProduct(id, companyContext);
-  }
-
-  // Currency methods (Global - no company context filtering)
-  async getCurrencies(): Promise<Currency[]> {
-    return await db
-      .select()
-      .from(currencies)
-      .orderBy(currencies.currencyName);
   }
 
   // Language methods (Global - no company context filtering)

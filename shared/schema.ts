@@ -71,18 +71,6 @@ export const companies = pgTable("companies", {
   createdDate: timestamp("created_date").defaultNow(),
 });
 
-export const currencies = pgTable("currencies", {
-  currencyISOCode: text("currency_iso_code").notNull().primaryKey(),
-  currencyName: text("currency_name").notNull(),
-  currencyCulture: text("currency_culture"),
-  currencyLocaleName: text("currency_locale_name"),
-  currencySymbol: text("currency_symbol").notNull(),
-  currencySymbolPosition: text("currency_symbol_position").notNull(),
-  currencyDecimalPlaces: integer("currency_decimal_places"),
-  currencyThousandsSeparator: text("currency_thousands_separator"),
-  currencyDecimalSeparator: text("currency_decimal_separator"),
-});
-
 export const accounts = pgTable("accounts", {
   id: varchar("id")
     .primaryKey()
@@ -1011,7 +999,6 @@ export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
-export type Currency = typeof currencies.$inferSelect;
 export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
 export type Language = typeof languages.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;

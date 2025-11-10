@@ -15,7 +15,10 @@ Preferred communication style: Simple, everyday language.
 - **Routing**: Wouter.
 - **Forms**: React Hook Form with Zod validation.
 - **Build Tool**: Vite.
-- **UI Components**: Reusable `LookupField` component for consistent lookup functionality across forms, dynamically adapting to business rules (e.g., conditional mandatory fields).
+- **UI Components**: 
+  - `LookupField` - Reusable component for consistent lookup functionality across forms, supporting edit/view/table modes with dialog-based selection
+  - `TextField` - Standardized text input component with edit/view/table modes, optional copy-to-clipboard, truncation, and consistent styling
+  - `NumberField` - Standardized numeric input component with edit/view/table modes, automatic formatting with thousands separators, and percentage display support
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 
 ### Backend Architecture

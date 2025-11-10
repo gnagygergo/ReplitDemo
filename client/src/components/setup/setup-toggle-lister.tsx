@@ -118,7 +118,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
 
   // Fetch currencies for dropdown
   const { data: currencies = [] } = useQuery<Currency[]>({
-    queryKey: ["/api/currencies"],
+    queryKey: ["/api/universal/currencies"],
   });
 
   const updateSettingMutation = useMutation({

@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { universalCurrencies } from "./index";
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
@@ -1203,11 +1204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Currency routes (Global - no company context, read-only for all authenticated users)
-  app.get("/api/currencies", isAuthenticated, async (req, res) => {
+  // Universal metadata routes (loaded from XML at startup)
+  app.get("/api/universal/currencies", isAuthenticated, async (req, res) => {
     try {
-      const currencies = await storage.getCurrencies();
-      res.json(currencies);
+      res.json(universalCurrencies);
     } catch (error) {
       console.error("Error fetching currencies:", error);
       res.status(500).json({ message: "Failed to fetch currencies" });

@@ -1,9 +1,9 @@
 <currencies>
   <currency>
     <currencyISOCode>USD</currencyISOCode>
-    <currencyName>United States Dollar</currencyName>
+    <currencyName>US Dollar</currencyName>
     <currencyCulture>en-US</currencyCulture>
-    <currencyLocaleName>English (United States)</currencyLocaleName>
+    <currencyLocaleName>US Dollar</currencyLocaleName>
     <currencySymbol>$</currencySymbol>
     <currencySymbolPosition>before</currencySymbolPosition>
     <currencyDecimalPlaces>2</currencyDecimalPlaces>
@@ -14,7 +14,7 @@
     <currencyISOCode>HUF</currencyISOCode>
     <currencyName>Hungarian Forint</currencyName>
     <currencyCulture>hu-HU</currencyCulture>
-    <currencyLocaleName>Hungarian (Hungary)</currencyLocaleName>
+    <currencyLocaleName>Forint</currencyLocaleName>
     <currencySymbol>Ft</currencySymbol>
     <currencySymbolPosition>after</currencySymbolPosition>
     <currencyDecimalPlaces>0</currencyDecimalPlaces>
@@ -25,7 +25,7 @@
     <currencyISOCode>EUR</currencyISOCode>
     <currencyName>Euro</currencyName>
     <currencyCulture>de-DE</currencyCulture>
-    <currencyLocaleName>German (Germany)</currencyLocaleName>
+    <currencyLocaleName>Euro</currencyLocaleName>
     <currencySymbol>€</currencySymbol>
     <currencySymbolPosition>after</currencySymbolPosition>
     <currencyDecimalPlaces>2</currencyDecimalPlaces>

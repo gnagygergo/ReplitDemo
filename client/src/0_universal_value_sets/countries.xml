@@ -1,0 +1,28 @@
+<countries>
+  <CountryCode2Digits code="HU">
+    <CountryCode3Digits>HUN</CountryCode3Digits>
+    <CountryName>Hungary</CountryName>
+    <Region>Europe</Region>
+    <SubRegion>Eastern Europe</SubRegion>
+    <IntermediateRegion></IntermediateRegion>
+    <PhoneCountryCode>36</PhoneCountryCode>
+  </CountryCode2Digits>
+  
+  <CountryCode2Digits code="US">
+    <CountryCode3Digits>USA</CountryCode3Digits>
+    <CountryName>United States of America</CountryName>
+    <Region>Americas</Region>
+    <SubRegion>Northern America</SubRegion>
+    <IntermediateRegion></IntermediateRegion>
+    <PhoneCountryCode>1</PhoneCountryCode>
+  </CountryCode2Digits>
+  
+  <CountryCode2Digits code="DE">
+    <CountryCode3Digits>DEU</CountryCode3Digits>
+    <CountryName>Germany</CountryName>
+    <Region>Europe</Region>
+    <SubRegion>Western Europe</SubRegion>
+    <IntermediateRegion></IntermediateRegion>
+    <PhoneCountryCode>49</PhoneCountryCode>
+  </CountryCode2Digits>
+</countries>

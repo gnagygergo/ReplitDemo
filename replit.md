@@ -24,7 +24,7 @@ Preferred communication style: Simple, everyday language.
 - **Database**: Drizzle ORM with PostgreSQL (Neon serverless).
 - **Schema**: Shared schema definitions between frontend and backend using Drizzle-Zod.
 - **API Design**: RESTful endpoints with standardized error handling.
-- **Universal Metadata System**: XML-based metadata loading for universal value sets (e.g., currencies), eliminating database dependencies for static reference data and providing a dedicated API endpoint (`/api/universal/currencies`).
+- **Universal Metadata System**: XML-based metadata loading for universal value sets (e.g., currencies, countries), eliminating database dependencies for static reference data and providing dedicated API endpoints (`/api/universal/currencies`, `/api/universal/countries`).
 
 ### Data Model
 - **Entities**: Accounts, Opportunities, Assets, with comprehensive CRUD operations, search, sorting, and filtering.
@@ -32,6 +32,7 @@ Preferred communication style: Simple, everyday language.
 - **Validation**: Zod schemas for runtime validation.
 - **Accounts**: Includes structured address fields with Google Maps integration.
 - **Assets**: Linked to accounts and products, with serial numbers and installation details.
+- **Companies**: Includes tax residency country field (stores country code, references XML metadata for display).
 
 ### Architecture Decisions
 - **Monorepo Structure**: Client, server, and shared code in a single repository.

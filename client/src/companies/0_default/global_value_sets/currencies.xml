@@ -1,0 +1,35 @@
+<currencies>
+  <currency>
+    <currencyISOCode>USD</currencyISOCode>
+    <currencyName>United States Dollar</currencyName>
+    <currencyCulture>en-US</currencyCulture>
+    <currencyLocaleName>English (United States)</currencyLocaleName>
+    <currencySymbol>$</currencySymbol>
+    <currencySymbolPosition>before</currencySymbolPosition>
+    <currencyDecimalPlaces>2</currencyDecimalPlaces>
+    <currencyThousandsSeparator>,</currencyThousandsSeparator>
+    <currencyDecimalSeparator>.</currencyDecimalSeparator>
+  </currency>
+  <currency>
+    <currencyISOCode>HUF</currencyISOCode>
+    <currencyName>Hungarian Forint</currencyName>
+    <currencyCulture>hu-HU</currencyCulture>
+    <currencyLocaleName>Hungarian (Hungary)</currencyLocaleName>
+    <currencySymbol>Ft</currencySymbol>
+    <currencySymbolPosition>after</currencySymbolPosition>
+    <currencyDecimalPlaces>0</currencyDecimalPlaces>
+    <currencyThousandsSeparator> </currencyThousandsSeparator>
+    <currencyDecimalSeparator>,</currencyDecimalSeparator>
+  </currency>
+  <currency>
+    <currencyISOCode>EUR</currencyISOCode>
+    <currencyName>Euro</currencyName>
+    <currencyCulture>de-DE</currencyCulture>
+    <currencyLocaleName>German (Germany)</currencyLocaleName>
+    <currencySymbol>€</currencySymbol>
+    <currencySymbolPosition>after</currencySymbolPosition>
+    <currencyDecimalPlaces>2</currencyDecimalPlaces>
+    <currencyThousandsSeparator>.</currencyThousandsSeparator>
+    <currencyDecimalSeparator>,</currencyDecimalSeparator>
+  </currency>
+</currencies>

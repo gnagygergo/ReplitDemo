@@ -38,6 +38,7 @@ import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
 import { LookupField } from "@/components/ui/lookup-field";
 import { NumberField } from "@/components/ui/number-field";
+import { TextField } from "@/components/ui/text-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
 
@@ -301,19 +302,15 @@ export default function AssetDetail() {
                         name="serialNumber"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Serial Number *</FormLabel>
+                            <FormLabel className="text-muted-foreground">Serial Number *</FormLabel>
                             <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field} 
-                                  placeholder="Enter serial number"
-                                  data-testid="input-serial-number"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-serial-number">
-                                  {field.value || '-'}
-                                </div>
-                              )}
+                              <TextField
+                                mode={isEditing ? "edit" : "view"}
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="Enter serial number"
+                                testId={isEditing ? "input-serial-number" : "text-serial-number"}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -326,20 +323,15 @@ export default function AssetDetail() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel className="text-muted-foreground">Name</FormLabel>
                             <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value || ""}
-                                  placeholder="Enter name"
-                                  data-testid="input-name"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-name">
-                                  {field.value || '-'}
-                                </div>
-                              )}
+                              <TextField
+                                mode={isEditing ? "edit" : "view"}
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                placeholder="Enter name"
+                                testId={isEditing ? "input-name" : "text-name"}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

@@ -17,6 +17,21 @@ import { createInsertSchema } from "drizzle-zod";
 import { IdCard } from "lucide-react";
 import { z } from "zod";
 
+// Culture Code interface for XML-based language metadata
+export interface CultureCode {
+  cultureCode: string;
+  cultureName: string;
+  cultureNameEnglish: string;
+  numberThousandsSeparator: string;
+  numberDecimalSeparator: string;
+  dateFormat: string;
+  timeFormat: string;
+  dateTimeFormat: string;
+  defaultTimePresentation: string;
+  nameOrder: string;
+  fallBackCultureLanguage: string;
+}
+
 // Helper schemas to convert empty strings to null for optional fields
 const optionalNumeric = z
   .union([z.string(), z.number(), z.null(), z.undefined()])

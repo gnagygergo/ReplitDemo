@@ -73,7 +73,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type {
   KnowledgeArticleWithAuthor,
   User,
-  Language,
+  CultureCode,
   CompanySettingMasterDomain,
   CompanySettingMasterFunctionality,
 } from "@shared/schema";
@@ -317,9 +317,9 @@ function KnowledgeArticleEdit({
 
   const isNewArticle = article === "new";
 
-  // Fetch languages for the language selector dropdown
-  const { data: languages = [] } = useQuery<Language[]>({
-    queryKey: ["/api/languages"],
+  // Fetch culture codes for the language selector dropdown
+  const { data: cultureCodes = [] } = useQuery<CultureCode[]>({
+    queryKey: ["/api/universal/culture-codes"],
   });
 
   // Fetch functional domains for the dropdown
@@ -555,13 +555,13 @@ function KnowledgeArticleEdit({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {languages.map((language) => (
+                          {cultureCodes.map((culture) => (
                             <SelectItem
-                              key={language.id}
-                              value={language.languageCode}
-                              data-testid={`option-language-${language.languageCode}`}
+                              key={culture.cultureCode}
+                              value={culture.cultureCode}
+                              data-testid={`option-language-${culture.cultureCode}`}
                             >
-                              {language.languageCode} - {language.languageName}
+                              {culture.cultureCode} - {culture.cultureNameEnglish}
                             </SelectItem>
                           ))}
                         </SelectContent>

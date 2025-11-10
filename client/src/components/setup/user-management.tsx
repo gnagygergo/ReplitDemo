@@ -53,7 +53,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User as UserType, Language, LicenceAgreementWithDetails } from "@shared/schema";
+import type { User as UserType, CultureCode, LicenceAgreementWithDetails } from "@shared/schema";
 
 const userUpdateSchema = z.object({
   licenceAgreementId: z.string().optional(),
@@ -82,8 +82,8 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: languages = [] } = useQuery<Language[]>({
-    queryKey: ["/api/languages"],
+  const { data: cultureCodes = [] } = useQuery<CultureCode[]>({
+    queryKey: ["/api/universal/culture-codes"],
   });
 
   const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
@@ -238,13 +238,13 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {languages.map((language) => (
+                    {cultureCodes.map((culture) => (
                       <SelectItem
-                        key={language.id}
-                        value={language.languageCode}
-                        data-testid={`option-language-${language.languageCode}`}
+                        key={culture.cultureCode}
+                        value={culture.cultureCode}
+                        data-testid={`option-language-${culture.cultureCode}`}
                       >
-                        {language.languageCode} - {language.languageName}
+                        {culture.cultureCode} - {culture.cultureNameEnglish}
                       </SelectItem>
                     ))}
                   </SelectContent>

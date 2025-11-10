@@ -49,7 +49,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Translation, InsertTranslation, Language } from "@shared/schema";
+import type { Translation, InsertTranslation, CultureCode } from "@shared/schema";
 import { insertTranslationSchema } from "@shared/schema";
 
 type TranslationForm = z.infer<typeof insertTranslationSchema>;
@@ -64,8 +64,8 @@ function TranslationEditDialog({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: languages = [] } = useQuery<Language[]>({
-    queryKey: ["/api/languages"],
+  const { data: cultureCodes = [] } = useQuery<CultureCode[]>({
+    queryKey: ["/api/universal/culture-codes"],
   });
 
   const form = useForm<TranslationForm>({
@@ -156,13 +156,13 @@ function TranslationEditDialog({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {languages.map((language) => (
+                    {cultureCodes.map((culture) => (
                       <SelectItem
-                        key={language.id}
-                        value={language.languageCode}
-                        data-testid={`option-language-${language.languageCode}`}
+                        key={culture.cultureCode}
+                        value={culture.cultureCode}
+                        data-testid={`option-language-${culture.cultureCode}`}
                       >
-                        {language.languageCode} - {language.languageName}
+                        {culture.cultureCode} - {culture.cultureNameEnglish}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -193,8 +193,8 @@ function TranslationCreateDialog({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: languages = [] } = useQuery<Language[]>({
-    queryKey: ["/api/languages"],
+  const { data: cultureCodes = [] } = useQuery<CultureCode[]>({
+    queryKey: ["/api/universal/culture-codes"],
   });
 
   const form = useForm<TranslationForm>({
@@ -285,13 +285,13 @@ function TranslationCreateDialog({ onClose }: { onClose: () => void }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {languages.map((language) => (
+                    {cultureCodes.map((culture) => (
                       <SelectItem
-                        key={language.id}
-                        value={language.languageCode}
-                        data-testid={`option-language-${language.languageCode}`}
+                        key={culture.cultureCode}
+                        value={culture.cultureCode}
+                        data-testid={`option-language-${culture.cultureCode}`}
                       >
-                        {language.languageCode} - {language.languageName}
+                        {culture.cultureCode} - {culture.cultureNameEnglish}
                       </SelectItem>
                     ))}
                   </SelectContent>

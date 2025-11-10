@@ -189,10 +189,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   phone: varchar("phone"),
-  preferredLanguage: text("preferred_language").references(
-    () => languages.languageCode,
-    { onDelete: "set null" },
-  ),
+  preferredLanguage: text("preferred_language"),
   profileImageUrl: varchar("profile_image_url"),
   password: text("password"),
   isAdmin: boolean("is_admin").default(false).notNull(),
@@ -250,23 +247,13 @@ export const products = pgTable("products", {
   createdDate: timestamp("created_date").defaultNow(),
 });
 
-export const languages = pgTable("languages", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  languageCode: text("language_code").notNull().unique(),
-  languageName: text("language_name").notNull(),
-});
-
 export const translations = pgTable("translations", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   labelCode: text("label_code").notNull(),
   labelContent: text("label_content").notNull(),
-  languageCode: text("language_code")
-    .notNull()
-    .references(() => languages.languageCode, { onDelete: "restrict" }),
+  languageCode: text("language_code").notNull(),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
@@ -517,9 +504,7 @@ export const knowledgeArticles = pgTable("knowledge_articles", {
   articleKeywords: text("article_keywords"),
   isPublished: boolean("is_published"),
   isInternal: boolean("is_internal"),
-  languageCode: text("language_code").references(() => languages.languageCode, {
-    onDelete: "restrict",
-  }),
+  languageCode: text("language_code"),
   authorId: varchar("author_id").references(() => users.id, {
     onDelete: "restrict",
   }),
@@ -773,15 +758,6 @@ export const insertProductSchema = createInsertSchema(products)
     }),
   });
 
-export const insertLanguageSchema = createInsertSchema(languages)
-  .omit({
-    id: true,
-  })
-  .extend({
-    languageCode: z.string().min(1, "Language code is required"),
-    languageName: z.string().min(1, "Language name is required"),
-  });
-
 export const insertTranslationSchema = createInsertSchema(translations)
   .omit({
     id: true,
@@ -991,8 +967,6 @@ export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;
 export type UnitOfMeasure = typeof unitOfMeasures.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type Product = typeof products.$inferSelect;
-export type InsertLanguage = z.infer<typeof insertLanguageSchema>;
-export type Language = typeof languages.$inferSelect;
 export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
 export type Translation = typeof translations.$inferSelect;
 export type InsertQuote = z.infer<typeof insertQuoteSchema>;

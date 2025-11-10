@@ -26,8 +26,6 @@ import {
   type Product,
   type InsertProduct,
   type ProductWithUom,
-  type Language,
-  type InsertLanguage,
   type Translation,
   type InsertTranslation,
   type Quote,
@@ -66,7 +64,6 @@ import {
   releases,
   unitOfMeasures,
   products,
-  languages,
   translations,
   quotes,
   quoteLines,
@@ -237,16 +234,6 @@ export interface IStorage {
     companyContext?: string,
   ): Promise<Product | undefined>;
   deleteProduct(id: string, companyContext?: string): Promise<boolean>;
-
-  // Language methods (Global - no company context)
-  getLanguages(): Promise<Language[]>;
-  getLanguage(id: string): Promise<Language | undefined>;
-  createLanguage(language: InsertLanguage): Promise<Language>;
-  updateLanguage(
-    id: string,
-    language: Partial<InsertLanguage>,
-  ): Promise<Language | undefined>;
-  deleteLanguage(id: string): Promise<boolean>;
 
   // Translation methods (Global - no company context)
   getTranslations(): Promise<Translation[]>;
@@ -1226,49 +1213,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: string, companyContext?: string): Promise<boolean> {
     return this.productStorage.deleteProduct(id, companyContext);
-  }
-
-  // Language methods (Global - no company context filtering)
-  async getLanguages(): Promise<Language[]> {
-    return await db
-      .select()
-      .from(languages)
-      .orderBy(languages.languageName);
-  }
-
-  async getLanguage(id: string): Promise<Language | undefined> {
-    const [language] = await db
-      .select()
-      .from(languages)
-      .where(eq(languages.id, id));
-    return language || undefined;
-  }
-
-  async createLanguage(insertLanguage: InsertLanguage): Promise<Language> {
-    const [language] = await db
-      .insert(languages)
-      .values(insertLanguage)
-      .returning();
-    return language;
-  }
-
-  async updateLanguage(
-    id: string,
-    updates: Partial<InsertLanguage>,
-  ): Promise<Language | undefined> {
-    const [language] = await db
-      .update(languages)
-      .set(updates)
-      .where(eq(languages.id, id))
-      .returning();
-    return language || undefined;
-  }
-
-  async deleteLanguage(id: string): Promise<boolean> {
-    const result = await db
-      .delete(languages)
-      .where(eq(languages.id, id));
-    return (result.rowCount ?? 0) > 0;
   }
 
   // Translation methods (Global - no company context filtering)

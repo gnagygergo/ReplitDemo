@@ -1,0 +1,42 @@
+<cultures>
+  <culture>
+    <cultureCode>hu-HU</cultureCode>
+    <cultureName>Magyar (Magyarország)</cultureName>
+    <cultureNameEnglish>Hungarian (Hungary)</cultureNameEnglish>
+    <numberThousandsSeparator> </numberThousandsSeparator>
+    <numberDecimalSeparator>,</numberDecimalSeparator>
+    <dateFormat>yyyy.MM.dd</dateFormat>
+    <timeFormat>HH:mm</timeFormat>
+    <dateTimeFormat>yyyy.MM.dd HH:mm</dateTimeFormat>
+    <defaultTimePresentation>24h</defaultTimePresentation>
+    <NameOrder>LastFirst</NameOrder>
+    <FallBackCultureLanguage>en-US</FallBackCultureLanguage>
+  </culture>
+  <cultures>
+    <culture>
+      <cultureCode>de-DE</cultureCode>
+      <cultureName>Deutsh (Deutschland)</cultureName>
+      <cultureNameEnglish>German (Germany)</cultureNameEnglish>
+      <numberThousandsSeparator> </numberThousandsSeparator>
+      <numberDecimalSeparator>,</numberDecimalSeparator>
+      <dateFormat>yyyy-mm-dd</dateFormat>
+      <timeFormat>HH:mm</timeFormat>
+      <dateTimeFormat>yyyy-mm-dd HH:mm</dateTimeFormat>
+      <defaultTimePresentation>24h</defaultTimePresentation>
+      <NameOrder>LastFirst</NameOrder>
+      <FallBackCultureLanguage>en-US</FallBackCultureLanguage>
+    </culture>
+  <culture>
+    <cultureCode>en-US</cultureCode>
+    <cultureName>English (United States)</cultureName>
+    <cultureNameEnglish>English (United States)</cultureNameEnglish>
+    <numberThousandsSeparator> </numberThousandsSeparator>
+    <numberDecimalSeparator>,</numberDecimalSeparator>
+    <dateFormat>mm-dd-yyyy</dateFormat>
+    <timeFormat>HH:mm</timeFormat>
+    <dateTimeFormat>mm-dd-yyyy HH:mm</dateTimeFormat>
+    <defaultTimePresentation>12h</defaultTimePresentation>
+    <NameOrder>FirstLast</NameOrder>
+    <FallBackCultureLanguage>en-US</FallBackCultureLanguage>
+  </culture>
+</cultures>

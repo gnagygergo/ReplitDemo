@@ -179,7 +179,14 @@ export default function Assets() {
                             testId={`link-asset-${asset.id}`}
                           />
                         </TableCell>
-                        <TableCell>{asset.name || '-'}</TableCell>
+                        <TableCell>
+                          <TextField
+                            mode="table"
+                            value={asset.name}
+                            testId={`link-asset-${asset.id}`}
+                          />
+                        
+                        </TableCell>
                         <TableCell>{asset.description || '-'}</TableCell>
                         <TableCell>
                           {asset.account ? (

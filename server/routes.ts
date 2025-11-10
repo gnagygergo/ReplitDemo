@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { universalCurrencies } from "./index";
+import { universalCurrencies, universalCountries } from "./index";
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
@@ -1211,6 +1211,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching currencies:", error);
       res.status(500).json({ message: "Failed to fetch currencies" });
+    }
+  });
+
+  app.get("/api/universal/countries", isAuthenticated, async (req, res) => {
+    try {
+      res.json(universalCountries);
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      res.status(500).json({ message: "Failed to fetch countries" });
     }
   });
 

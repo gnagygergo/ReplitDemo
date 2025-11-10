@@ -1,9 +1,10 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { loadCurrenciesFromXML, type Currency } from "./utils/xmlParser";
+import { loadCurrenciesFromXML, loadCountriesFromXML, type Currency, type Country } from "./utils/xmlParser";
 
 export let universalCurrencies: Currency[] = [];
+export let universalCountries: Country[] = [];
 
 const app = express();
 app.use(express.json());
@@ -43,8 +44,9 @@ app.use((req, res, next) => {
   // Load universal metadata at startup
   try {
     universalCurrencies = await loadCurrenciesFromXML();
+    universalCountries = await loadCountriesFromXML();
   } catch (error) {
-    console.error('Failed to load currencies from XML:', error);
+    console.error('Failed to load universal metadata from XML:', error);
     process.exit(1);
   }
 

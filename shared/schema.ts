@@ -60,9 +60,7 @@ export const companies = pgTable("companies", {
   companyRegistrationId: text("company_registration_id"),
   bankAccountNumber: text("bank_account_number"),
   address: text("address"),
-  taxResidencyCountry: text("tax_residency_country").references(
-    () => countries.countryCode,
-  ),
+  taxResidencyCountry: text("tax_residency_country"),
   logoUrl: text("logo_url"),
   openaiApiKey: text("openai_api_key"),
   openaiOrganizationId: text("openai_organization_id"),
@@ -123,12 +121,6 @@ export const opportunities = pgTable("opportunities", {
   createdDate: timestamp("created_date").defaultNow(),
 });
 
-export const countries = pgTable("countries", {
-  countryCode: varchar("country_code").primaryKey(),
-  countryName: text("country_name"),
-  countryNameLocaleName: text("country_name_locale_name"),
-  countryPhonePrefix: text("country_phone_prefix"),
-});
 
 export const assets = pgTable("assets", {
   id: varchar("id")
@@ -684,7 +676,7 @@ export const insertCompanySchema = createInsertSchema(companies)
   })
   .extend({
     companyOfficialName: z.string().min(1, "Company official name is required"),
-    taxResidencyCountry: optionalForeignKey,
+    taxResidencyCountry: z.string().optional().nullable(),
   });
 
 export const insertAccountSchema = createInsertSchema(accounts)

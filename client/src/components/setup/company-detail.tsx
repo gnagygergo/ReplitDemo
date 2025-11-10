@@ -24,6 +24,23 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { LogoUpload } from "./logo-upload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface Country {
+  countryCode: string;
+  countryCode3Digits: string;
+  countryName: string;
+  region: string;
+  subRegion: string;
+  intermediateRegion: string;
+  phoneCountryCode: string;
+}
 
 export default function CompanyDetail() {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,18 +58,24 @@ export default function CompanyDetail() {
     queryKey: ["/api/auth/my-company-licence-agreements"],
   });
 
+  const { data: countries = [] } = useQuery<Country[]>({
+    queryKey: ["/api/universal/countries"],
+  });
+
   const form = useForm<Partial<InsertCompany>>({
     resolver: zodResolver(
       insertCompanySchema.partial().pick({
         companyAlias: true,
         bankAccountNumber: true,
         address: true,
+        taxResidencyCountry: true,
       }),
     ),
     defaultValues: {
       companyAlias: "",
       bankAccountNumber: "",
       address: "",
+      taxResidencyCountry: "",
     },
   });
 
@@ -84,6 +107,7 @@ export default function CompanyDetail() {
         companyAlias: company.companyAlias || "",
         bankAccountNumber: company.bankAccountNumber || "",
         address: company.address || "",
+        taxResidencyCountry: company.taxResidencyCountry || "",
       });
       setIsEditing(true);
     }
@@ -195,7 +219,7 @@ export default function CompanyDetail() {
                       name="companyAlias"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Company Alias</FormLabel>
+                          <FormLabel className="text-muted-foreground">Company Alias</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -223,7 +247,7 @@ export default function CompanyDetail() {
                       name="bankAccountNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Bank Account Number</FormLabel>
+                          <FormLabel className="text-muted-foreground">Bank Account Number</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
@@ -237,10 +261,40 @@ export default function CompanyDetail() {
                     />
                     <FormField
                       control={form.control}
+                      name="taxResidencyCountry"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">Tax Residency Country</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-tax-country">
+                                <SelectValue placeholder="Select country" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {countries.map((country) => (
+                                <SelectItem
+                                  key={country.countryCode}
+                                  value={country.countryCode}
+                                >
+                                  {country.countryName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
                       name="address"
                       render={({ field }) => (
                         <FormItem className="md:col-span-2">
-                          <FormLabel>Address</FormLabel>
+                          <FormLabel className="text-muted-foreground">Address</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
@@ -300,6 +354,19 @@ export default function CompanyDetail() {
                     data-testid="text-bank-account"
                   >
                     {company.bankAccountNumber || "N/A"}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Tax Residency Country
+                  </label>
+                  <div
+                    className="mt-2 text-foreground"
+                    data-testid="text-tax-country"
+                  >
+                    {company.taxResidencyCountry
+                      ? countries.find((c) => c.countryCode === company.taxResidencyCountry)?.countryName || company.taxResidencyCountry
+                      : "N/A"}
                   </div>
                 </div>
                 <div className="md:col-span-2">

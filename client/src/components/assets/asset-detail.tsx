@@ -37,6 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
 import { LookupField } from "@/components/ui/lookup-field";
+import { NumberField } from "@/components/ui/number-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
 
@@ -377,21 +378,16 @@ export default function AssetDetail() {
                         name="quantity"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Quantity</FormLabel>
+                            <FormLabel className="text-muted-foreground">Quantity</FormLabel>
                             <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value ?? ""}
-                                  type="number"
-                                  placeholder="Enter quantity"
-                                  data-testid="input-quantity"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-quantity">
-                                  {field.value ?? '-'}
-                                </div>
-                              )}
+                              <NumberField
+                                mode={isEditing ? "edit" : "view"}
+                                value={field.value}
+                                onChange={field.onChange}
+                                placeholder="Enter quantity"
+                                testId={isEditing ? "input-quantity" : "text-quantity"}
+                                decimals={0}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

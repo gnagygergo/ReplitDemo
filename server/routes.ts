@@ -323,6 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         companyAlias: req.body.companyAlias,
         bankAccountNumber: req.body.bankAccountNumber,
         address: req.body.address,
+        taxResidencyCountry: req.body.taxResidencyCountry,
         openaiApiKey: req.body.openaiApiKey,
         openaiOrganizationId: req.body.openaiOrganizationId,
         openaiPreferredModel: req.body.openaiPreferredModel,

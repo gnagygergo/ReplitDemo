@@ -465,38 +465,21 @@ export default function AssetDetail() {
                           <FormItem>
                             <FormLabel>Product</FormLabel>
                             <FormControl>
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  {selectedProduct && (
-                                    <div className="flex items-center justify-between p-2 border rounded">
-                                      <span className="text-sm">{selectedProduct.productName}</span>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                          setSelectedProduct(null);
-                                          form.setValue('productId', '');
-                                        }}
-                                      >
-                                        <X className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setShowProductLookup(true)}
-                                    data-testid="button-select-product"
-                                  >
-                                    {selectedProduct ? "Change Product" : "Select Product"}
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-product">
-                                  {selectedProduct ? selectedProduct.productName : '-'}
-                                </div>
-                              )}
+                              <LookupField
+                                mode={isEditing ? "edit" : "view"}
+                                value={selectedProduct ? { id: selectedProduct.id, name: selectedProduct.productName } : null}
+                                onOpenLookup={() => setShowProductLookup(true)}
+                                onClear={isEditing ? () => {
+                                  setSelectedProduct(null);
+                                  form.setValue('productId', '');
+                                } : undefined}
+                                placeholder="Select Product"
+                                icon={<Building className="w-4 h-4" />}
+                                linkPath="/products"
+                                testId={isEditing ? "button-select-product" : "text-product"}
+                                valueTestIdPrefix="product"
+                                ariaLabel="Open product lookup dialog"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

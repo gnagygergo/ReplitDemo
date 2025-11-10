@@ -1,28 +1,31 @@
 <countries>
-  <CountryCode2Digits code="HU">
-    <CountryCode3Digits>HUN</CountryCode3Digits>
-    <CountryName>Hungary</CountryName>
-    <Region>Europe</Region>
-    <SubRegion>Eastern Europe</SubRegion>
-    <IntermediateRegion></IntermediateRegion>
-    <PhoneCountryCode>36</PhoneCountryCode>
-  </CountryCode2Digits>
+  <country>
+    <countryCode>HU</countryCode>
+    <countryCode3Digits>HUN</countryCode3Digits>
+    <countryName>Hungary</countryName>
+    <region>Europe</region>
+    <subRegion>Eastern Europe</subRegion>
+    <intermediateRegion></intermediateRegion>
+    <phoneCountryCode>36</phoneCountryCode>
+  </country>
   
-  <CountryCode2Digits code="US">
-    <CountryCode3Digits>USA</CountryCode3Digits>
-    <CountryName>United States of America</CountryName>
-    <Region>Americas</Region>
-    <SubRegion>Northern America</SubRegion>
-    <IntermediateRegion></IntermediateRegion>
-    <PhoneCountryCode>1</PhoneCountryCode>
-  </CountryCode2Digits>
+  <country>
+    <countryCode>US</countryCode>
+    <countryCode3Digits>USA</countryCode3Digits>
+    <countryName>United States of America</countryName>
+    <region>Americas</region>
+    <subRegion>Northern America</subRegion>
+    <intermediateRegion></intermediateRegion>
+    <phoneCountryCode>1</phoneCountryCode>
+  </country>
   
-  <CountryCode2Digits code="DE">
-    <CountryCode3Digits>DEU</CountryCode3Digits>
-    <CountryName>Germany</CountryName>
-    <Region>Europe</Region>
-    <SubRegion>Western Europe</SubRegion>
-    <IntermediateRegion></IntermediateRegion>
-    <PhoneCountryCode>49</PhoneCountryCode>
-  </CountryCode2Digits>
+  <country>
+    <countryCode>DE</countryCode>
+    <countryCode3Digits>DEU</countryCode3Digits>
+    <countryName>Germany</countryName>
+    <region>Europe</region>
+    <subRegion>Western Europe</subRegion>
+    <intermediateRegion></intermediateRegion>
+    <phoneCountryCode>49</phoneCountryCode>
+  </country>
 </countries>

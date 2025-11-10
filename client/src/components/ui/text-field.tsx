@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
@@ -14,6 +15,8 @@ export interface TextFieldProps {
   maxLength?: number;
   copyable?: boolean;
   truncate?: boolean;
+  linkPath?: string;
+  recordId?: string;
 }
 
 export function TextField({
@@ -27,6 +30,8 @@ export function TextField({
   maxLength,
   copyable = false,
   truncate = false,
+  linkPath,
+  recordId,
 }: TextFieldProps) {
   const [copied, setCopied] = useState(false);
 
@@ -90,6 +95,22 @@ export function TextField({
       ? `${value.substring(0, 30)}...` 
       : displayValue;
 
+    // If linkPath and recordId are provided, render as clickable link
+    if (linkPath && recordId) {
+      return (
+        <Link href={`${linkPath}/${recordId}`}>
+          <span 
+            className="text-primary hover:underline cursor-pointer"
+            data-testid={testId}
+            title={truncate && value.length > 30 ? value : undefined}
+          >
+            {truncatedValue}
+          </span>
+        </Link>
+      );
+    }
+
+    // Otherwise, render as plain text
     return (
       <span 
         className={className || defaultTableClassName}

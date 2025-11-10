@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TextField } from "@/components/ui/text-field";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -170,11 +171,13 @@ export default function Assets() {
                     {assets.map((asset) => (
                       <TableRow key={asset.id} data-testid={`row-asset-${asset.id}`}>
                         <TableCell className="font-medium">
-                          <Link href={`/assets/${asset.id}`}>
-                            <span className="text-primary hover:underline cursor-pointer" data-testid={`link-asset-${asset.id}`}>
-                              {asset.serialNumber}
-                            </span>
-                          </Link>
+                          <TextField
+                            mode="table"
+                            value={asset.serialNumber}
+                            linkPath="/assets"
+                            recordId={asset.id}
+                            testId={`link-asset-${asset.id}`}
+                          />
                         </TableCell>
                         <TableCell>{asset.name || '-'}</TableCell>
                         <TableCell>{asset.description || '-'}</TableCell>

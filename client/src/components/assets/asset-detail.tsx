@@ -38,6 +38,7 @@ import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
 import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
 import { LookupField } from "@/components/ui/lookup-field";
 import { NumberField } from "@/components/ui/number-field";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
@@ -420,27 +421,14 @@ export default function AssetDetail() {
                         <FormItem>
                           <FormLabel>Installation Date</FormLabel>
                           <FormControl>
-                            {isEditing ? (
-                              <Input
-                                {...field}
-                                value={
-                                  field.value instanceof Date
-                                    ? field.value.toISOString().split("T")[0]
-                                    : field.value || ""
-                                }
-                                type="date"
-                                data-testid="input-installation-date"
-                              />
-                            ) : (
-                              <div
-                                className="text-sm py-2"
-                                data-testid="text-installation-date"
-                              >
-                                {field.value
-                                  ? format(new Date(field.value), "MMM d, yyyy")
-                                  : "-"}
-                              </div>
-                            )}
+                            <DateTimeField
+                              fieldType="Date"  // or "Date" or "Time"
+                              mode={isEditing ? "edit" : "view"}           // or "view" or "table"
+                              value={field.value}   // Date | null
+                              onChange={field.onChange}
+                              placeholder="Select installation date..."
+                              testId="input-install-date"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

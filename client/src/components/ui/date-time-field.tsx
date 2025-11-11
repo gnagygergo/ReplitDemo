@@ -20,40 +20,6 @@ export interface DateTimeFieldProps {
   className?: string;
 }
 
-/**
- * Converts a local date/time to UTC by treating local components as UTC.
- * Example: Input "2024-11-11 15:00 local" -> Output "2024-11-11T15:00:00.000Z"
- * This is used when saving user-selected dates to ensure the wall-clock time is preserved in UTC.
- */
-function toUTC(date: Date): Date {
-  return new Date(Date.UTC(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
-    0,
-    0
-  ));
-}
-
-/**
- * Converts a UTC date to local by extracting UTC components and treating them as local.
- * Example: Input "2024-11-11T15:00:00.000Z" -> Output Date with local time "2024-11-11 15:00"
- * This is used for display to show the stored UTC time as-is without timezone conversion.
- */
-function fromUTC(date: Date): Date {
-  return new Date(
-    date.getUTCFullYear(),
-    date.getUTCMonth(),
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    0,
-    0
-  );
-}
-
 export function DateTimeField({
   fieldType,
   mode,
@@ -170,7 +136,8 @@ export function DateTimeField({
     }
 
     if (fieldType === "Time") {
-      const displayValue = normalizedValue ? fromUTC(normalizedValue) : null;
+      // For Time fields, convert UTC to user timezone for display
+      const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "Time") : null;
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
       
       return (
@@ -178,19 +145,21 @@ export function DateTimeField({
           type="time"
           value={timeValue}
           onChange={(e) => {
-            if (!e.target.value) {
+            if (!e.target.value || !timezone) {
               onChange?.(null);
               return;
             }
             const [hours, minutes] = e.target.value.split(":");
-            const baseDate = normalizedValue ? fromUTC(normalizedValue) : new Date();
+            const baseDate = normalizedValue && timezone ? 
+              utcToUserZoned(normalizedValue, timezone, "Time") : 
+              new Date();
             const newDate = setDate(baseDate, {
               hours: parseInt(hours, 10),
               minutes: parseInt(minutes, 10),
               seconds: 0,
               milliseconds: 0,
             });
-            onChange?.(toUTC(newDate));
+            onChange?.(parseDateInput(newDate, "Time", timezone, browserTimezone));
           }}
           className={className || defaultEditClassName}
           data-testid={testId}
@@ -199,7 +168,8 @@ export function DateTimeField({
     }
 
     if (fieldType === "DateTime") {
-      const displayValue = normalizedValue ? fromUTC(normalizedValue) : null;
+      // For DateTime fields, convert UTC to user timezone for display
+      const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "DateTime") : null;
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
       
       return (
@@ -223,7 +193,7 @@ export function DateTimeField({
                 mode="single"
                 selected={displayValue || undefined}
                 onSelect={(date) => {
-                  if (!date) {
+                  if (!date || !timezone) {
                     onChange?.(null);
                   } else {
                     const existingTime = displayValue || setDate(new Date(), { hours: 0, minutes: 0 });
@@ -233,7 +203,7 @@ export function DateTimeField({
                       seconds: 0,
                       milliseconds: 0,
                     });
-                    onChange?.(toUTC(newDate));
+                    onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
                   }
                   setIsOpen(false);
                 }}
@@ -245,7 +215,7 @@ export function DateTimeField({
             type="time"
             value={timeValue}
             onChange={(e) => {
-              if (!e.target.value) return;
+              if (!e.target.value || !timezone) return;
               const [hours, minutes] = e.target.value.split(":");
               const baseDate = displayValue || new Date();
               const newDate = setDate(baseDate, {
@@ -254,7 +224,7 @@ export function DateTimeField({
                 seconds: 0,
                 milliseconds: 0,
               });
-              onChange?.(toUTC(newDate));
+              onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
             }}
             className="w-32"
             data-testid={testId ? `${testId}-time` : undefined}

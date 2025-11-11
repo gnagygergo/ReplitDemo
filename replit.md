@@ -17,9 +17,11 @@ Preferred communication style: Simple, everyday language.
 - **Build Tool**: Vite.
 - **UI Components**: 
   - `LookupField` - Reusable component for consistent lookup functionality across forms, supporting edit/view/table modes with dialog-based selection
-  - `TextField` - Standardized text input component with edit/view/table modes, optional copy-to-clipboard, truncation, and consistent styling
+  - `TextField` - Standardized text input component with edit/view/table modes, optional copy-to-clipboard, truncation, multi-line support (visibleLinesInEdit/visibleLinesInView), and clickable navigation links
   - `NumberField` - Standardized numeric input component with edit/view/table modes, automatic formatting with thousands separators, and percentage display support
+  - `DateTimeField` - Standardized date/time component supporting Date, Time, and DateTime field types with culture-aware formatting, UTC storage, and local timezone display across edit/view/table modes
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
+- **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

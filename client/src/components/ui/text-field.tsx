@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
 
@@ -17,6 +18,8 @@ export interface TextFieldProps {
   truncate?: boolean;
   linkPath?: string;
   recordId?: string;
+  visibleLinesInEdit?: number;
+  visibleLinesInView?: number;
 }
 
 export function TextField({
@@ -32,6 +35,8 @@ export function TextField({
   truncate = false,
   linkPath,
   recordId,
+  visibleLinesInEdit,
+  visibleLinesInView,
 }: TextFieldProps) {
   const [copied, setCopied] = useState(false);
 
@@ -48,6 +53,22 @@ export function TextField({
   const defaultTableClassName = "text-sm";
 
   if (mode === "edit") {
+    // Use Textarea for multi-line input
+    if (visibleLinesInEdit) {
+      return (
+        <Textarea
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          rows={visibleLinesInEdit}
+          className={className || defaultEditClassName}
+          data-testid={testId}
+        />
+      );
+    }
+
+    // Use Input for single-line input
     return (
       <Input
         type={type}
@@ -64,6 +85,41 @@ export function TextField({
   if (mode === "view") {
     const displayValue = value || "-";
     
+    // Multi-line view mode with preserved line breaks
+    if (visibleLinesInView) {
+      const lineHeight = 1.5; // Tailwind's default line height for text-sm
+      const maxHeight = `${visibleLinesInView * lineHeight}rem`;
+      
+      return (
+        <div className={`flex items-start gap-2 ${className || defaultViewClassName}`}>
+          <div 
+            className="whitespace-pre-wrap overflow-y-auto"
+            style={{ maxHeight }}
+            data-testid={testId}
+          >
+            {displayValue}
+          </div>
+          {copyable && value && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleCopy}
+              className="h-6 w-6 p-0 flex-shrink-0"
+              data-testid={`${testId}-copy`}
+            >
+              {copied ? (
+                <Check className="h-3 w-3 text-green-600" />
+              ) : (
+                <Copy className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+        </div>
+      );
+    }
+    
+    // Single-line view mode (default behavior)
     return (
       <div className={`flex items-center gap-2 ${className || defaultViewClassName}`}>
         <span data-testid={testId}>

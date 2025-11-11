@@ -41,6 +41,14 @@ export interface CultureCode {
   fallBackCultureLanguage: string;
 }
 
+export interface Timezone {
+  timezoneId: string;
+  displayName: string;
+  region: string;
+  utcOffset: string;
+  utcOffsetDST: string;
+}
+
 export async function loadCurrenciesFromXML(): Promise<Currency[]> {
   try {
     const xmlPath = path.join(process.cwd(), 'client/src/0_universal_value_sets/currencies.xml');
@@ -130,6 +138,33 @@ export async function loadCultureCodesFromXML(): Promise<CultureCode[]> {
     return cultureCodes;
   } catch (error) {
     console.error('Error loading culture codes from XML:', error);
+    throw error;
+  }
+}
+
+export async function loadTimezonesFromXML(): Promise<Timezone[]> {
+  try {
+    const xmlPath = path.join(process.cwd(), 'client/src/0_universal_value_sets/timezones.xml');
+    const xmlContent = readFileSync(xmlPath, 'utf-8');
+    
+    const result = await parseXML(xmlContent);
+    
+    if (!result.timezones || !result.timezones.timezone) {
+      throw new Error('Invalid timezones XML structure');
+    }
+    
+    const timezones: Timezone[] = result.timezones.timezone.map((tz: any) => ({
+      timezoneId: tz.timezoneId?.[0] ?? '',
+      displayName: tz.displayName?.[0] ?? '',
+      region: tz.region?.[0] ?? '',
+      utcOffset: tz.utcOffset?.[0] ?? '',
+      utcOffsetDST: tz.utcOffsetDST?.[0] ?? '',
+    }));
+    
+    console.log(`✓ Loaded ${timezones.length} timezones from XML metadata`);
+    return timezones;
+  } catch (error) {
+    console.error('Error loading timezones from XML:', error);
     throw error;
   }
 }

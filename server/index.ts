@@ -1,11 +1,12 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { loadCurrenciesFromXML, loadCountriesFromXML, loadCultureCodesFromXML, type Currency, type Country, type CultureCode } from "./utils/xmlParser";
+import { loadCurrenciesFromXML, loadCountriesFromXML, loadCultureCodesFromXML, loadTimezonesFromXML, type Currency, type Country, type CultureCode, type Timezone } from "./utils/xmlParser";
 
 export let universalCurrencies: Currency[] = [];
 export let universalCountries: Country[] = [];
 export let universalCultureCodes: CultureCode[] = [];
+export let universalTimezones: Timezone[] = [];
 
 const app = express();
 app.use(express.json());
@@ -47,6 +48,7 @@ app.use((req, res, next) => {
     universalCurrencies = await loadCurrenciesFromXML();
     universalCountries = await loadCountriesFromXML();
     universalCultureCodes = await loadCultureCodesFromXML();
+    universalTimezones = await loadTimezonesFromXML();
   } catch (error) {
     console.error('Failed to load universal metadata from XML:', error);
     process.exit(1);

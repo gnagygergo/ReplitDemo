@@ -205,6 +205,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   phone: varchar("phone"),
   preferredLanguage: text("preferred_language"),
+  timezone: text("timezone"), // IANA timezone ID (e.g., "America/New_York", "Europe/London")
   profileImageUrl: varchar("profile_image_url"),
   password: text("password"),
   isAdmin: boolean("is_admin").default(false).notNull(),

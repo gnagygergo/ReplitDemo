@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { universalCurrencies, universalCountries, universalCultureCodes } from "./index";
+import { universalCurrencies, universalCountries, universalCultureCodes, universalTimezones } from "./index";
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
@@ -1229,6 +1229,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching culture codes:", error);
       res.status(500).json({ message: "Failed to fetch culture codes" });
+    }
+  });
+
+  app.get("/api/universal/timezones", isAuthenticated, async (req, res) => {
+    try {
+      res.json(universalTimezones);
+    } catch (error) {
+      console.error("Error fetching timezones:", error);
+      res.status(500).json({ message: "Failed to fetch timezones" });
     }
   });
 

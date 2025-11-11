@@ -38,6 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Accounts**: Includes structured address fields with Google Maps integration.
 - **Assets**: Linked to accounts and products, with serial numbers and installation details.
 - **Companies**: Includes tax residency country field (stores country code, references XML metadata for display).
+- **Users**: Includes timezone preference field (stores IANA timezone ID for timezone-aware date/time display).
 
 ### Architecture Decisions
 - **Monorepo Structure**: Client, server, and shared code in a single repository.

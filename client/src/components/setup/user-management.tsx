@@ -54,6 +54,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { User as UserType, CultureCode, LicenceAgreementWithDetails } from "@shared/schema";
+import { TimezoneSelector } from "@/components/ui/timezone-selector";
 
 const userUpdateSchema = z.object({
   licenceAgreementId: z.string().optional(),
@@ -61,6 +62,7 @@ const userUpdateSchema = z.object({
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
   preferredLanguage: z.string().optional(),
+  timezone: z.string().optional(),
   profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   isAdmin: z.boolean().optional(),
 });
@@ -70,6 +72,7 @@ const userCreateSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
+  timezone: z.string().optional(),
   profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   password: z.string().min(6, "Password must be at least 6 characters"),
   isAdmin: z.boolean().optional(),
@@ -98,6 +101,7 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       preferredLanguage: user.preferredLanguage || "",
+      timezone: user.timezone || "",
       profileImageUrl: user.profileImageUrl || "",
       isAdmin: user.isAdmin || false,
     },
@@ -256,6 +260,25 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
 
           <FormField
             control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-muted-foreground">Timezone</FormLabel>
+                <FormControl>
+                  <TimezoneSelector
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select timezone..."
+                    testId="select-user-timezone"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="profileImageUrl"
             render={({ field }) => (
               <FormItem>
@@ -316,6 +339,7 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
       email: "",
       firstName: "",
       lastName: "",
+      timezone: "",
       profileImageUrl: "",
       password: "",
       isAdmin: false,
@@ -443,6 +467,25 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter last name" {...field} data-testid="input-create-user-last-name" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="timezone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-muted-foreground">Timezone</FormLabel>
+                <FormControl>
+                  <TimezoneSelector
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Select timezone..."
+                    testId="select-create-user-timezone"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

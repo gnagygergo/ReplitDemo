@@ -55,11 +55,12 @@ export default function AssetDetail() {
   const { toast } = useToast();
 
   // Fetch asset data (skip when creating new asset)
-  const { data: asset, isLoading: isLoadingAsset } =
-    useQuery<AssetWithDetails>({
+  const { data: asset, isLoading: isLoadingAsset } = useQuery<AssetWithDetails>(
+    {
       queryKey: ["/api/assets", params?.id],
       enabled: !!params?.id && !isCreating,
-    });
+    },
+  );
 
   const form = useForm<InsertAsset>({
     resolver: zodResolver(insertAssetSchema),
@@ -86,7 +87,7 @@ export default function AssetDetail() {
         productId: asset.productId || "",
         installationDate: asset.installationDate || null,
       });
-      
+
       if (asset.account) {
         setSelectedAccount(asset.account);
       }
@@ -122,7 +123,11 @@ export default function AssetDetail() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertAsset>) => {
-      const response = await apiRequest("PATCH", `/api/assets/${params?.id}`, data);
+      const response = await apiRequest(
+        "PATCH",
+        `/api/assets/${params?.id}`,
+        data,
+      );
       return await response.json();
     },
     onSuccess: () => {
@@ -177,13 +182,13 @@ export default function AssetDetail() {
 
   const handleAccountSelect = (account: Account) => {
     setSelectedAccount(account);
-    form.setValue('accountId', account.id);
+    form.setValue("accountId", account.id);
     setShowAccountLookup(false);
   };
 
   const handleProductSelect = (product: Product) => {
     setSelectedProduct(product);
-    form.setValue('productId', product.id);
+    form.setValue("productId", product.id);
     setShowProductLookup(false);
   };
 
@@ -240,8 +245,13 @@ export default function AssetDetail() {
             >
               {isCreating ? "New Asset" : asset?.serialNumber}
             </h1>
-            <p className="text-muted-foreground" data-testid="text-asset-subtitle">
-              {isCreating ? "Create a new asset" : asset?.name || "Asset Details"}
+            <p
+              className="text-muted-foreground"
+              data-testid="text-asset-subtitle"
+            >
+              {isCreating
+                ? "Create a new asset"
+                : asset?.name || "Asset Details"}
             </p>
           </div>
         </div>
@@ -288,208 +298,257 @@ export default function AssetDetail() {
         {/* Left Pane - Asset Information Cards */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
-              {/* Asset Details Card */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Asset Information</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      {/* Serial Number */}
-                      <FormField
-                        control={form.control}
-                        name="serialNumber"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-muted-foreground">Serial Number *</FormLabel>
-                            <FormControl>
-                              <TextField
-                                mode={isEditing ? "edit" : "view"}
-                                value={field.value}
-                                onChange={field.onChange}
-                                placeholder="Enter serial number"
-                                testId={isEditing ? "input-serial-number" : "text-serial-number"}
+            {/* Asset Details Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Asset Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-4"
+                  >
+                    {/* Serial Number */}
+                    <FormField
+                      control={form.control}
+                      name="serialNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">
+                            Serial Number *
+                          </FormLabel>
+                          <FormControl>
+                            <TextField
+                              mode={isEditing ? "edit" : "view"}
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Enter serial number"
+                              testId={
+                                isEditing
+                                  ? "input-serial-number"
+                                  : "text-serial-number"
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Name */}
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">
+                            Name
+                          </FormLabel>
+                          <FormControl>
+                            <TextField
+                              mode={isEditing ? "edit" : "view"}
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              placeholder="Enter name"
+                              testId={isEditing ? "input-name" : "text-name"}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Description */}
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <TextField
+                              mode={isEditing ? "edit" : "view"}
+                              value={field.value || ""}
+                              onChange={field.onChange}
+                              placeholder=""
+                              testId={
+                                isEditing
+                                  ? "input-description"
+                                  : "text-description"
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Quantity */}
+                    <FormField
+                      control={form.control}
+                      name="quantity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-muted-foreground">
+                            Quantity
+                          </FormLabel>
+                          <FormControl>
+                            <NumberField
+                              mode={isEditing ? "edit" : "view"}
+                              value={field.value}
+                              onChange={field.onChange}
+                              placeholder="Enter quantity"
+                              testId={
+                                isEditing ? "input-quantity" : "text-quantity"
+                              }
+                              decimals={0}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Installation Date */}
+                    <FormField
+                      control={form.control}
+                      name="installationDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Installation Date</FormLabel>
+                          <FormControl>
+                            {isEditing ? (
+                              <Input
+                                {...field}
+                                value={
+                                  field.value instanceof Date
+                                    ? field.value.toISOString().split("T")[0]
+                                    : field.value || ""
+                                }
+                                type="date"
+                                data-testid="input-installation-date"
                               />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            ) : (
+                              <div
+                                className="text-sm py-2"
+                                data-testid="text-installation-date"
+                              >
+                                {field.value
+                                  ? format(new Date(field.value), "MMM d, yyyy")
+                                  : "-"}
+                              </div>
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      {/* Name */}
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-muted-foreground">Name</FormLabel>
-                            <FormControl>
-                              <TextField
-                                mode={isEditing ? "edit" : "view"}
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                placeholder="Enter name"
-                                testId={isEditing ? "input-name" : "text-name"}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    {/* Account */}
+                    <FormField
+                      control={form.control}
+                      name="accountId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Account</FormLabel>
+                          <FormControl>
+                            <LookupField
+                              mode={isEditing ? "edit" : "view"}
+                              value={
+                                selectedAccount
+                                  ? {
+                                      id: selectedAccount.id,
+                                      name: selectedAccount.name,
+                                    }
+                                  : null
+                              }
+                              onOpenLookup={() => setShowAccountLookup(true)}
+                              onClear={
+                                isEditing
+                                  ? () => {
+                                      setSelectedAccount(null);
+                                      form.setValue("accountId", "");
+                                    }
+                                  : undefined
+                              }
+                              placeholder="Select account"
+                              icon={<Building className="w-4 h-4" />}
+                              linkPath="/accounts"
+                              testId={
+                                isEditing
+                                  ? "button-select-account"
+                                  : "text-account"
+                              }
+                              valueTestIdPrefix="account"
+                              ariaLabel="Open account lookup dialog"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      {/* Description */}
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Textarea 
-                                  {...field}
-                                  value={field.value || ""}
-                                  placeholder="Enter description"
-                                  data-testid="input-description"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-description">
-                                  {field.value || '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    {/* Product */}
+                    <FormField
+                      control={form.control}
+                      name="productId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Product</FormLabel>
+                          <FormControl>
+                            <LookupField
+                              mode={isEditing ? "edit" : "view"}
+                              value={
+                                selectedProduct
+                                  ? {
+                                      id: selectedProduct.id,
+                                      name: selectedProduct.productName,
+                                    }
+                                  : null
+                              }
+                              onOpenLookup={() => setShowProductLookup(true)}
+                              onClear={
+                                isEditing
+                                  ? () => {
+                                      setSelectedProduct(null);
+                                      form.setValue("productId", "");
+                                    }
+                                  : undefined
+                              }
+                              placeholder="Select Product"
+                              icon={<Building className="w-4 h-4" />}
+                              linkPath="/products"
+                              testId={
+                                isEditing
+                                  ? "button-select-product"
+                                  : "text-product"
+                              }
+                              valueTestIdPrefix="product"
+                              ariaLabel="Open product lookup dialog"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+        </Panel>
 
-                      {/* Quantity */}
-                      <FormField
-                        control={form.control}
-                        name="quantity"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-muted-foreground">Quantity</FormLabel>
-                            <FormControl>
-                              <NumberField
-                                mode={isEditing ? "edit" : "view"}
-                                value={field.value}
-                                onChange={field.onChange}
-                                placeholder="Enter quantity"
-                                testId={isEditing ? "input-quantity" : "text-quantity"}
-                                decimals={0}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Installation Date */}
-                      <FormField
-                        control={form.control}
-                        name="installationDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Installation Date</FormLabel>
-                            <FormControl>
-                              {isEditing ? (
-                                <Input 
-                                  {...field}
-                                  value={field.value instanceof Date 
-                                    ? field.value.toISOString().split('T')[0] 
-                                    : field.value || ""}
-                                  type="date"
-                                  data-testid="input-installation-date"
-                                />
-                              ) : (
-                                <div className="text-sm py-2" data-testid="text-installation-date">
-                                  {field.value 
-                                    ? format(new Date(field.value), 'MMM d, yyyy')
-                                    : '-'}
-                                </div>
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Account */}
-                      <FormField
-                        control={form.control}
-                        name="accountId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Account</FormLabel>
-                            <FormControl>
-                              <LookupField
-                                mode={isEditing ? "edit" : "view"}
-                                value={selectedAccount ? { id: selectedAccount.id, name: selectedAccount.name } : null}
-                                onOpenLookup={() => setShowAccountLookup(true)}
-                                onClear={isEditing ? () => {
-                                  setSelectedAccount(null);
-                                  form.setValue('accountId', '');
-                                } : undefined}
-                                placeholder="Select account"
-                                icon={<Building className="w-4 h-4" />}
-                                linkPath="/accounts"
-                                testId={isEditing ? "button-select-account" : "text-account"}
-                                valueTestIdPrefix="account"
-                                ariaLabel="Open account lookup dialog"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Product */}
-                      <FormField
-                        control={form.control}
-                        name="productId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Product</FormLabel>
-                            <FormControl>
-                              <LookupField
-                                mode={isEditing ? "edit" : "view"}
-                                value={selectedProduct ? { id: selectedProduct.id, name: selectedProduct.productName } : null}
-                                onOpenLookup={() => setShowProductLookup(true)}
-                                onClear={isEditing ? () => {
-                                  setSelectedProduct(null);
-                                  form.setValue('productId', '');
-                                } : undefined}
-                                placeholder="Select Product"
-                                icon={<Building className="w-4 h-4" />}
-                                linkPath="/products"
-                                testId={isEditing ? "button-select-product" : "text-product"}
-                                valueTestIdPrefix="product"
-                                ariaLabel="Open product lookup dialog"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </div>
-          </Panel>
-
-          {/* Resize Handle */}
+        {/* Resize Handle */}
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-          {/* Right Pane - Additional Information (Future Use) */}
-          <Panel defaultSize={50} minSize={30} maxSize={70}>
-            <div className="flex flex-col gap-6 h-full overflow-auto p-4">
-              {/* Future: Asset history, related items, etc. */}
-            </div>
-          </Panel>
-        </PanelGroup>
+        {/* Right Pane - Additional Information (Future Use) */}
+        <Panel defaultSize={50} minSize={30} maxSize={70}>
+          <div className="flex flex-col gap-6 h-full overflow-auto p-4">
+            {/* Future: Asset history, related items, etc. */}
+          </div>
+        </Panel>
+      </PanelGroup>
 
       {/* Account Lookup Dialog */}
       <AccountLookupDialog

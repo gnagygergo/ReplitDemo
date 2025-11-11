@@ -1,14 +1,32 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Package, Search, Plus, Edit, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  Package,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Building,
+} from "lucide-react";
 import { Link } from "wouter";
 import { type AssetWithDetails } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LookupField } from "@/components/ui/lookup-field";
+import { NumberField } from "@/components/ui/number-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -16,9 +34,9 @@ import { format } from "date-fns";
 
 export default function Assets() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<string>('serialNumber');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
+  const [sortBy, setSortBy] = useState<string>("serialNumber");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -27,12 +45,12 @@ export default function Assets() {
     queryFn: async () => {
       const params = new URLSearchParams({ sortBy, sortOrder });
       if (searchTerm) {
-        params.append('search', searchTerm);
+        params.append("search", searchTerm);
       }
       const res = await fetch(`/api/assets?${params}`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error('Failed to fetch assets');
+      if (!res.ok) throw new Error("Failed to fetch assets");
       return res.json();
     },
   });
@@ -55,25 +73,29 @@ export default function Assets() {
   });
 
   const handleDelete = (asset: AssetWithDetails) => {
-    if (confirm(`Are you sure you want to delete asset "${asset.serialNumber}"?`)) {
+    if (
+      confirm(`Are you sure you want to delete asset "${asset.serialNumber}"?`)
+    ) {
       deleteMutation.mutate(asset.id);
     }
   };
 
   const handleSort = (column: string) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortBy(column);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
   const getSortIcon = (column: string) => {
     if (sortBy !== column) return null;
-    return sortOrder === 'asc' 
-      ? <ArrowUp className="w-4 h-4 ml-1 inline" />
-      : <ArrowDown className="w-4 h-4 ml-1 inline" />;
+    return sortOrder === "asc" ? (
+      <ArrowUp className="w-4 h-4 ml-1 inline" />
+    ) : (
+      <ArrowDown className="w-4 h-4 ml-1 inline" />
+    );
   };
 
   return (
@@ -85,7 +107,7 @@ export default function Assets() {
             <h2 className="text-2xl font-bold text-foreground">Assets</h2>
           </div>
           <Link href="/assets/new">
-            <Button 
+            <Button
               className="flex items-center space-x-2"
               data-testid="button-create-asset"
             >
@@ -99,9 +121,10 @@ export default function Assets() {
         <Card className="mb-6">
           <CardContent className="p-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">Search Assets</label>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Search Assets
+              </label>
               <div className="relative flex-1">
-                
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Search by serial number or description..."
@@ -129,8 +152,8 @@ export default function Assets() {
                 <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No assets found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm 
-                    ? "Try adjusting your search criteria" 
+                  {searchTerm
+                    ? "Try adjusting your search criteria"
                     : "Get started by creating your first asset"}
                 </p>
                 <Link href="/assets/new">
@@ -145,31 +168,34 @@ export default function Assets() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead 
+                      <TableHead
                         className="cursor-pointer select-none"
-                        onClick={() => handleSort('serialNumber')}
+                        onClick={() => handleSort("serialNumber")}
                         data-testid="header-serial-number"
                       >
-                        Serial Number {getSortIcon('serialNumber')}
+                        Serial Number {getSortIcon("serialNumber")}
                       </TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Account</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>Quantity</TableHead>
-                      <TableHead 
+                      <TableHead
                         className="cursor-pointer select-none"
-                        onClick={() => handleSort('installationDate')}
+                        onClick={() => handleSort("installationDate")}
                         data-testid="header-installation-date"
                       >
-                        Installation Date {getSortIcon('installationDate')}
+                        Installation Date {getSortIcon("installationDate")}
                       </TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {assets.map((asset) => (
-                      <TableRow key={asset.id} data-testid={`row-asset-${asset.id}`}>
+                      <TableRow
+                        key={asset.id}
+                        data-testid={`row-asset-${asset.id}`}
+                      >
                         <TableCell className="font-medium">
                           <TextField
                             mode="table"
@@ -182,31 +208,59 @@ export default function Assets() {
                         <TableCell>
                           <TextField
                             mode="table"
-                            value={asset.name}
+                            value={asset.name || "-"}
                             testId={`link-asset-${asset.id}`}
                           />
+                        </TableCell>
+                        <TableCell>{asset.description || "-"}</TableCell>
+                        <TableCell>
+                          <LookupField
+                            mode="table"
+                            value={
+                              asset.account
+                                ? {
+                                    id: asset.account.id,
+                                    name: asset.account.name,
+                                  }
+                                : null
+                            }
+                            onOpenLookup={() => {}} // Not needed in table mode, but required by interface
+                            linkPath="/accounts"
+                            testId={`link-account-${asset.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <LookupField
+                            mode="table"
+                            value={
+                              asset.product
+                                ? {
+                                    id: asset.product.id,
+                                    name: asset.product.productName,
+                                  }
+                                : null
+                            }
+                            onOpenLookup={() => {}} // Not needed in table mode, but required by interface
+                            linkPath="/products"
+                            testId={`link-product-${asset.id}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <NumberField
+                            mode="table"
+                            value={asset.quantity != null ? Number(asset.quantity) : null}
+                            testId={`text-quantity-${asset.id}`}
+                            decimals={0}
+                          />  
                         
                         </TableCell>
-                        <TableCell>{asset.description || '-'}</TableCell>
                         <TableCell>
-                          {asset.account ? (
-                            <Link href={`/accounts/${asset.accountId}`}>
-                              <span className="text-primary hover:underline cursor-pointer">
-                                {asset.account.name}
-                              </span>
-                            </Link>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>
-                          {asset.product ? (
-                            <span>{asset.product.productName}</span>
-                          ) : '-'}
-                        </TableCell>
-                        <TableCell>{asset.quantity || '-'}</TableCell>
-                        <TableCell>
-                          {asset.installationDate 
-                            ? format(new Date(asset.installationDate), 'MMM d, yyyy')
-                            : '-'}
+                          {asset.installationDate
+                            ? format(
+                                new Date(asset.installationDate),
+                                "MMM d, yyyy",
+                              )
+                            : "-"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

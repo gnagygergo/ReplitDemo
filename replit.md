@@ -20,6 +20,7 @@ Preferred communication style: Simple, everyday language.
   - `TextField` - Standardized text input component with edit/view/table modes, optional copy-to-clipboard, truncation, multi-line support (visibleLinesInEdit/visibleLinesInView), and clickable navigation links
   - `NumberField` - Standardized numeric input component with edit/view/table modes, automatic formatting with thousands separators, and percentage display support
   - `DateTimeField` - Standardized date/time component supporting Date, Time, and DateTime field types with culture-aware formatting, UTC storage, and local timezone display across edit/view/table modes
+  - `DropDownListField` - Standardized dropdown component with edit/view/table modes, supporting XML metadata sources (universal and company-specific), optional search functionality via Command component, and configurable value/display extractors
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 
@@ -30,6 +31,7 @@ Preferred communication style: Simple, everyday language.
 - **Schema**: Shared schema definitions between frontend and backend using Drizzle-Zod.
 - **API Design**: RESTful endpoints with standardized error handling.
 - **Universal Metadata System**: XML-based metadata loading for universal value sets (e.g., currencies, countries), eliminating database dependencies for static reference data and providing dedicated API endpoints (`/api/universal/currencies`, `/api/universal/countries`).
+- **Dynamic Metadata API**: `/api/metadata/*` endpoint serves XML files dynamically from both universal (`0_universal_value_sets/`) and company-specific (`companies/[companyId]/`) paths with strict security validation, path whitelisting, and automatic company context interpolation.
 
 ### Data Model
 - **Entities**: Accounts, Opportunities, Assets, with comprehensive CRUD operations, search, sorting, and filtering.

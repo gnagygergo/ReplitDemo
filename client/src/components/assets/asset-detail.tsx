@@ -372,6 +372,8 @@ export default function AssetDetail() {
                               value={field.value || ""}
                               onChange={field.onChange}
                               placeholder=""
+                              visibleLinesInEdit={3}
+                              visibleLinesInView={3}
                               testId={
                                 isEditing
                                   ? "input-description"

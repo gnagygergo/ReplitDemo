@@ -2,12 +2,14 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format as formatDate } from "date-fns";
 import { useAuth } from "./useAuth";
+import { useUserTimezone } from "./useUserTimezone";
 import type { CultureCode } from "@shared/schema";
 
 const DEFAULT_CULTURE_CODE = "en-US";
 
 export function useDateTimeFormat() {
   const { user } = useAuth();
+  const { timezone } = useUserTimezone();
   
   const { data: cultureCodes = [], isLoading } = useQuery<CultureCode[]>({
     queryKey: ["/api/universal/culture-codes"],
@@ -27,37 +29,40 @@ export function useDateTimeFormat() {
 
   const formatDateValue = useMemo(() => {
     return (date: Date | null, fieldType: "Date" | "Time" | "DateTime"): string => {
-      if (!date) return "-";
-      
-      const localDate = new Date(
-        date.getUTCFullYear(),
-        date.getUTCMonth(),
-        date.getUTCDate(),
-        date.getUTCHours(),
-        date.getUTCMinutes(),
-        0,
-        0
-      );
-      
-      if (!culture) return formatDate(localDate, "MM-dd-yyyy HH:mm");
+      if (!date || !timezone) return "-";
       
       try {
-        switch (fieldType) {
-          case "Date":
-            return formatDate(localDate, convertToDateFnsFormat(culture.dateFormat));
-          case "Time":
-            return formatDate(localDate, convertToDateFnsFormat(culture.timeFormat));
-          case "DateTime":
-            return formatDate(localDate, convertToDateFnsFormat(culture.dateTimeFormat));
-          default:
-            return "-";
+        // Use Intl.DateTimeFormat for timezone-aware formatting
+        const options: Intl.DateTimeFormatOptions = {
+          timeZone: timezone,
+        };
+
+        if (fieldType === "Date") {
+          options.year = "numeric";
+          options.month = "2-digit";
+          options.day = "2-digit";
+        } else if (fieldType === "Time") {
+          options.hour = "2-digit";
+          options.minute = "2-digit";
+          options.hour12 = culture?.defaultTimePresentation === "12h";
+        } else {
+          // DateTime
+          options.year = "numeric";
+          options.month = "2-digit";
+          options.day = "2-digit";
+          options.hour = "2-digit";
+          options.minute = "2-digit";
+          options.hour12 = culture?.defaultTimePresentation === "12h";
         }
+
+        const formatter = new Intl.DateTimeFormat(cultureCode, options);
+        return formatter.format(date);
       } catch (error) {
         console.error("Error formatting date:", error);
         return "-";
       }
     };
-  }, [culture]);
+  }, [culture, timezone, cultureCode]);
 
   return {
     culture,

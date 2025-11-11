@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useDateTimeFormat } from "@/hooks/useDateTimeFormat";
+import { useUserTimezone } from "@/hooks/useUserTimezone";
+import { utcToUserZoned, userZonedToUtc, parseDateInput } from "@/utils/timezone-utils";
 
 export interface DateTimeFieldProps {
   fieldType: "Date" | "Time" | "DateTime";
@@ -62,6 +64,8 @@ export function DateTimeField({
   className,
 }: DateTimeFieldProps) {
   const { formatDateValue, defaultTimePresentation } = useDateTimeFormat();
+  const { timezone } = useUserTimezone();
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [isOpen, setIsOpen] = useState(false);
 
   /**
@@ -126,7 +130,8 @@ export function DateTimeField({
 
   if (mode === "edit") {
     if (fieldType === "Date") {
-      const displayValue = normalizedValue ? fromUTC(normalizedValue) : null;
+      // For Date fields, convert UTC to user timezone for display (preserves calendar day)
+      const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "Date") : null;
       
       return (
         <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -149,11 +154,11 @@ export function DateTimeField({
               mode="single"
               selected={displayValue || undefined}
               onSelect={(date) => {
-                if (!date) {
+                if (!date || !timezone) {
                   onChange?.(null);
                 } else {
                   const newDate = setDate(date, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 });
-                  onChange?.(toUTC(newDate));
+                  onChange?.(parseDateInput(newDate, "Date", timezone, browserTimezone));
                 }
                 setIsOpen(false);
               }}

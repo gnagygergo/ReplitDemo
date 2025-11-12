@@ -26,7 +26,7 @@ import { useState } from "react";
 
 export interface DropDownListFieldProps {
   mode: "edit" | "view" | "table";
-  value: string;
+  value?: string;
   onValueChange?: (value: string) => void;
   sourceType: "metadata";
   sourcePath: string;
@@ -90,12 +90,19 @@ export function DropDownListField({
   const extractValue = getValue || defaultGetValue;
 
   // Find the selected item
-  const selectedItem = items.find(
-    (item: any) => extractValue(item) === value
-  );
-  const displayText = selectedItem
+  const selectedItem = value
+    ? items.find((item: any) => extractValue(item) === value)
+    : undefined;
+  
+  // Display text for view/table modes
+  const displayTextForViewMode = selectedItem
     ? extractDisplayValue(selectedItem)
     : value || "-";
+
+  // Display text for Command button in edit mode (shows placeholder if no value)
+  const displayTextForEditMode = selectedItem
+    ? extractDisplayValue(selectedItem)
+    : placeholder;
 
   const defaultEditClassName = "w-full";
   const defaultViewClassName = "text-sm py-2";
@@ -121,12 +128,13 @@ export function DropDownListField({
               aria-expanded={open}
               className={cn(
                 "justify-between font-normal",
+                !value && "text-muted-foreground",
                 className || defaultEditClassName
               )}
               disabled={disabled}
               data-testid={testId}
             >
-              {displayText}
+              {displayTextForEditMode}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -205,7 +213,7 @@ export function DropDownListField({
         className={className || defaultViewClassName}
         data-testid={testId}
       >
-        {displayText}
+        {displayTextForViewMode}
       </div>
     );
   }
@@ -216,7 +224,7 @@ export function DropDownListField({
         className={className || defaultTableClassName}
         data-testid={testId}
       >
-        {displayText}
+        {displayTextForViewMode}
       </div>
     );
   }

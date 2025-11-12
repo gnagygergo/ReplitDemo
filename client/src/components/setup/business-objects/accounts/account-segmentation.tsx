@@ -106,17 +106,7 @@ export default function AccountSegmentationManagement() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Smart Account Management</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <SetupToggleLister 
-            settingPrefix="smart_account_management_"
-            title=""
-          />
-        </CardContent>
-      </Card>
+      
 
       <DropDownListFieldTypeEditor
         sourceType="metadata"

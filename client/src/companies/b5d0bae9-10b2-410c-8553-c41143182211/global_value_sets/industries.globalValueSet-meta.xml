@@ -1,12 +1,17 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<GlobalValueSet xmlns="">
-    <customValue>
-        <label>DEBI</label>
-        <code>DEBI</code>
-        <default>false</default>
-        <iconSet></iconSet>
-        <icon></icon>
-    </customValue>
-    <sorted>false</sorted>
-    <globalValueSetName>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<GlobalValueSet>
+  <customValue>
+    <label>Technology</label>
+    <code>Technology</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+  <customValue>
+    <label>Construction</label>
+    <code>Construction</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
 </GlobalValueSet>

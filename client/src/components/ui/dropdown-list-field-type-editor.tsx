@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMetadata } from "@/hooks/useMetadata";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -24,6 +31,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
 
 export interface DropDownListFieldTypeEditorProps {
   sourceType: "metadata";
@@ -59,23 +67,113 @@ export function DropDownListFieldTypeEditor({
   const [sortDirection, setSortDirection] = useState<SortDirection>("none");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Header-level XML fields
+  const [xmlSorting, setXmlSorting] = useState<string>("no sorting");
+  const [xmlTitle, setXmlTitle] = useState<string>("");
+  
+  // Snapshot of initial state for change detection
+  const initialStateRef = useRef<{
+    sorting: string;
+    title: string;
+    items: any[];
+  } | null>(null);
 
   const { data: metadataResponse, isLoading } = useMetadata({
     sourcePath,
     enabled: sourceType === "metadata",
   });
 
-  useEffect(() => {
-    if (metadataResponse?.[rootKey]?.[itemKey]) {
-      const loadedItems = Array.isArray(metadataResponse[rootKey][itemKey])
-        ? metadataResponse[rootKey][itemKey]
-        : [metadataResponse[rootKey][itemKey]];
+  // Build canonical state for comparison (excludes UI-only fields like _tempId)
+  const buildCanonicalState = (currentItems: CustomValue[], sorting: string, titleValue: string) => {
+    const canonicalItems = currentItems.map(item => {
+      const { _tempId, ...rest } = item;
+      return rest;
+    });
+    
+    return {
+      sorting,
+      title: titleValue,
+      items: canonicalItems,
+    };
+  };
+
+  // Check if current state differs from initial state
+  const recomputeHasChanges = (currentItems: CustomValue[], sorting: string, titleValue: string) => {
+    if (!initialStateRef.current) {
+      setHasChanges(false);
+      return;
+    }
+
+    const currentState = buildCanonicalState(currentItems, sorting, titleValue);
+    const initial = initialStateRef.current;
+
+    // Compare header fields
+    if (currentState.sorting !== initial.sorting || currentState.title !== initial.title) {
+      setHasChanges(true);
+      return;
+    }
+
+    // Compare items (deep comparison)
+    if (currentState.items.length !== initial.items.length) {
+      setHasChanges(true);
+      return;
+    }
+
+    for (let i = 0; i < currentState.items.length; i++) {
+      const current = currentState.items[i];
+      const orig = initial.items[i];
       
-      const itemsWithIds = loadedItems.map((item: any, index: number) => ({
-        ...item,
-        _tempId: `existing-${index}`,
-      }));
-      setItems(itemsWithIds);
+      // Compare each field (use optional chaining for fields that might be missing)
+      if (
+        (current.label?.[0] || "") !== (orig.label?.[0] || "") ||
+        (current.code?.[0] || "") !== (orig.code?.[0] || "") ||
+        (current.default?.[0] || "false") !== (orig.default?.[0] || "false") ||
+        (current.iconSet?.[0] || "") !== (orig.iconSet?.[0] || "") ||
+        (current.icon?.[0] || "") !== (orig.icon?.[0] || "")
+      ) {
+        setHasChanges(true);
+        return;
+      }
+    }
+
+    setHasChanges(false);
+  };
+
+  useEffect(() => {
+    if (metadataResponse?.[rootKey]) {
+      // Load items
+      let loadedItems: any[] = [];
+      if (metadataResponse[rootKey][itemKey]) {
+        loadedItems = Array.isArray(metadataResponse[rootKey][itemKey])
+          ? metadataResponse[rootKey][itemKey]
+          : [metadataResponse[rootKey][itemKey]];
+        
+        const itemsWithIds = loadedItems.map((item: any, index: number) => ({
+          ...item,
+          _tempId: `existing-${index}`,
+        }));
+        setItems(itemsWithIds);
+      }
+      
+      // Load header-level fields (xml2js returns arrays)
+      const sorting = metadataResponse[rootKey].sorting?.[0] || "no sorting";
+      const titleValue = metadataResponse[rootKey].title?.[0] || "";
+      
+      setXmlSorting(sorting);
+      setXmlTitle(titleValue);
+
+      // Snapshot initial state for change detection
+      initialStateRef.current = buildCanonicalState(
+        loadedItems.map((item: any, index: number) => ({
+          ...item,
+          _tempId: `existing-${index}`,
+        })),
+        sorting,
+        titleValue
+      );
+
+      setHasChanges(false);
     }
   }, [metadataResponse, rootKey, itemKey]);
 
@@ -100,7 +198,11 @@ export function DropDownListFieldTypeEditor({
         title: "Success",
         description: "Metadata updated successfully",
       });
+      
+      // Reset initial state to current state after successful save
+      initialStateRef.current = buildCanonicalState(items, xmlSorting, xmlTitle);
       setHasChanges(false);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/metadata", sourcePath] });
     },
     onError: (error: any) => {
@@ -152,33 +254,43 @@ export function DropDownListFieldTypeEditor({
       icon: [""],
       _tempId: `new-${Date.now()}`,
     };
-    setItems([...items, newItem]);
-    setHasChanges(true);
+    const updatedItems = [...items, newItem];
+    setItems(updatedItems);
+    recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
   };
 
   const handleDeleteRow = (tempId: string) => {
-    setItems(items.filter((item) => item._tempId !== tempId));
-    setHasChanges(true);
+    const updatedItems = items.filter((item) => item._tempId !== tempId);
+    setItems(updatedItems);
+    recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
   };
 
   const handleCellEdit = (tempId: string, field: keyof CustomValue, value: string) => {
-    setItems(
-      items.map((item) =>
-        item._tempId === tempId ? { ...item, [field]: [value] } : item
-      )
+    const updatedItems = items.map((item) =>
+      item._tempId === tempId ? { ...item, [field]: [value] } : item
     );
-    setHasChanges(true);
+    setItems(updatedItems);
+    recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
   };
 
   const handleCheckboxChange = (tempId: string, checked: boolean) => {
-    setItems(
-      items.map((item) =>
-        item._tempId === tempId
-          ? { ...item, default: [checked.toString()] }
-          : item
-      )
+    const updatedItems = items.map((item) =>
+      item._tempId === tempId
+        ? { ...item, default: [checked.toString()] }
+        : item
     );
-    setHasChanges(true);
+    setItems(updatedItems);
+    recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
+  };
+
+  const handleSortingChange = (value: string) => {
+    setXmlSorting(value);
+    recomputeHasChanges(items, value, xmlTitle);
+  };
+
+  const handleTitleChange = (value: string) => {
+    setXmlTitle(value);
+    recomputeHasChanges(items, xmlSorting, value);
   };
 
   const handleSave = () => {
@@ -187,12 +299,22 @@ export function DropDownListFieldTypeEditor({
       return rest;
     });
 
-    const updatedXmlStructure = {
+    // Build clean XML structure to avoid carrying over old values
+    const updatedXmlStructure: any = {
       [rootKey]: {
-        ...metadataResponse?.[rootKey],
         [itemKey]: itemsToSave,
       },
     };
+
+    // Add header-level fields (xml2js expects arrays)
+    // Only include if they have values
+    if (xmlTitle.trim()) {
+      updatedXmlStructure[rootKey].title = [xmlTitle.trim()];
+    }
+    
+    if (xmlSorting && xmlSorting !== "no sorting") {
+      updatedXmlStructure[rootKey].sorting = [xmlSorting];
+    }
 
     updateMutation.mutate(updatedXmlStructure);
   };
@@ -257,6 +379,40 @@ export function DropDownListFieldTypeEditor({
         </div>
       </CardHeader>
       <CardContent>
+        {/* Header-level fields */}
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="space-y-2">
+            <Label htmlFor="xml-title" className="text-muted-foreground">
+              Title
+            </Label>
+            <Input
+              id="xml-title"
+              value={xmlTitle}
+              onChange={(e) => handleTitleChange(e.target.value)}
+              placeholder="Enter value set title"
+              data-testid="input-xml-title"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="xml-sorting" className="text-muted-foreground">
+              Sorting
+            </Label>
+            <Select
+              value={xmlSorting}
+              onValueChange={handleSortingChange}
+            >
+              <SelectTrigger id="xml-sorting" data-testid="select-xml-sorting">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no sorting">No Sorting</SelectItem>
+                <SelectItem value="ascending">Ascending</SelectItem>
+                <SelectItem value="descending">Descending</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="border rounded-md overflow-auto">
           <Table>
             <TableHeader>

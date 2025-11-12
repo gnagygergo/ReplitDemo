@@ -14,4 +14,11 @@
     <iconSet/>
     <icon/>
   </customValue>
+  <customValue>
+    <label>Healthcare</label>
+    <code>Healthcare</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
 </GlobalValueSet>

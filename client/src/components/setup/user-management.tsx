@@ -235,6 +235,19 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Preferred Language</FormLabel>
+                <DropDownListField
+                  mode="edit"
+                  value={selectedCountry}
+                  onValueChange={setSelectedCountry}
+                  sourceType="metadata"
+                  sourcePath="countries.xml"
+                  showSearch={true}
+                  rootKey="countries"
+                  itemKey="country"
+                  getValue={(item) => item.countryCode[0]}
+                  getDisplayValue={(item) => item.countryName[0]}
+                  placeholder="Select country"
+                />
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger data-testid="select-user-preferred-language">

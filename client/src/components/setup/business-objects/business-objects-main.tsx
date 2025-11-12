@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AccountSegmentationManagement from "@/components/setup/business-objects/accounts/account-segmentation";
 import {
   Collapsible,
   CollapsibleContent,
@@ -106,6 +107,12 @@ const setupMenuItems: MenuItem[] = [
         label: "Account Types",
         description: "Handle different client types",
         component: AccountManagementModels,
+      },
+      {
+        id: "account-segmentation",
+        label: "Segmentation",
+        description: "Slice your account database",
+        component: AccountSegmentationManagement,
       },
       {
         id: "account-lifecycle",

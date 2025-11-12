@@ -54,7 +54,10 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User as UserType, LicenceAgreementWithDetails } from "@shared/schema";
+import type {
+  User as UserType,
+  LicenceAgreementWithDetails,
+} from "@shared/schema";
 
 const userUpdateSchema = z.object({
   licenceAgreementId: z.string().optional(),
@@ -63,7 +66,11 @@ const userUpdateSchema = z.object({
   lastName: z.string().min(1, "Last name is required").optional(),
   preferredLanguage: z.string().optional(),
   timezone: z.string().optional(),
-  profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  profileImageUrl: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
   isAdmin: z.boolean().optional(),
 });
 
@@ -73,7 +80,11 @@ const userCreateSchema = z.object({
   firstName: z.string().min(1, "First name is required").optional(),
   lastName: z.string().min(1, "Last name is required").optional(),
   timezone: z.string().optional(),
-  profileImageUrl: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  profileImageUrl: z
+    .string()
+    .url("Please enter a valid URL")
+    .optional()
+    .or(z.literal("")),
   password: z.string().min(6, "Password must be at least 6 characters"),
   isAdmin: z.boolean().optional(),
 });
@@ -81,11 +92,19 @@ const userCreateSchema = z.object({
 type UserUpdate = z.infer<typeof userUpdateSchema>;
 type UserCreate = z.infer<typeof userCreateSchema>;
 
-function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void }) {
+function UserEditDialog({
+  user,
+  onClose,
+}: {
+  user: UserType;
+  onClose: () => void;
+}) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
+  const { data: availableLicenceAgreements = [] } = useQuery<
+    LicenceAgreementWithDetails[]
+  >({
     queryKey: ["/api/licence-agreements/available"],
   });
 
@@ -173,7 +192,9 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                         value={agreement.id}
                         data-testid={`option-licence-agreement-${agreement.id}`}
                       >
-                        {agreement.licenceAgreementTemplate?.name || agreement.id} - {agreement.licenceSeatsRemaining} seats remaining
+                        {agreement.licenceAgreementTemplate?.name ||
+                          agreement.id}{" "}
+                        - {agreement.licenceSeatsRemaining} seats remaining
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -190,7 +211,11 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter email address" {...field} data-testid="input-user-email" />
+                  <Input
+                    placeholder="Enter email address"
+                    {...field}
+                    data-testid="input-user-email"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -204,7 +229,11 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter first name" {...field} data-testid="input-user-first-name" />
+                  <Input
+                    placeholder="Enter first name"
+                    {...field}
+                    data-testid="input-user-first-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -218,7 +247,11 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter last name" {...field} data-testid="input-user-last-name" />
+                  <Input
+                    placeholder="Enter last name"
+                    {...field}
+                    data-testid="input-user-last-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -230,19 +263,23 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
             name="preferredLanguage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Preferred Language</FormLabel>
+                <FormLabel className="text-muted-foreground">
+                  Preferred Language
+                </FormLabel>
                 <FormControl>
                   <DropDownListField
                     mode="edit"
                     value={field.value}
                     onValueChange={field.onChange}
                     sourceType="metadata"
-                    sourcePath="culture-codes.xml"
+                    sourcePath="culture_codes.xml"
                     showSearch={true}
-                    rootKey="cultureCodes"
-                    itemKey="cultureCode"
+                    rootKey="cultures"
+                    itemKey="culture"
                     getValue={(item) => item.cultureCode[0]}
-                    getDisplayValue={(item) => `${item.cultureCode[0]} - ${item.cultureNameEnglish[0]}`}
+                    getDisplayValue={(item) =>
+                      `${item.cultureCode[0]} - ${item.cultureNameEnglish[0]}`
+                    }
                     placeholder="Select a language"
                     testId="select-user-preferred-language"
                   />
@@ -257,7 +294,9 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
             name="timezone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-muted-foreground">Timezone</FormLabel>
+                <FormLabel className="text-muted-foreground">
+                  Timezone
+                </FormLabel>
                 <FormControl>
                   <DropDownListField
                     mode="edit"
@@ -269,7 +308,9 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
                     rootKey="timezones"
                     itemKey="timezone"
                     getValue={(item) => item.timezoneId[0]}
-                    getDisplayValue={(item) => `${item.displayName[0]} (${item.utcOffset[0]})`}
+                    getDisplayValue={(item) =>
+                      `${item.displayName[0]} (${item.utcOffset[0]})`
+                    }
                     placeholder="Select timezone..."
                     testId="select-user-timezone"
                   />
@@ -286,7 +327,11 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
               <FormItem>
                 <FormLabel>Profile Image URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter profile image URL (optional)" {...field} data-testid="input-user-profile-image" />
+                  <Input
+                    placeholder="Enter profile image URL (optional)"
+                    {...field}
+                    data-testid="input-user-profile-image"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -316,7 +361,11 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateUserMutation.isPending} data-testid="button-save-user">
+            <Button
+              type="submit"
+              disabled={updateUserMutation.isPending}
+              data-testid="button-save-user"
+            >
               {updateUserMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </div>
@@ -330,7 +379,9 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
+  const { data: availableLicenceAgreements = [] } = useQuery<
+    LicenceAgreementWithDetails[]
+  >({
     queryKey: ["/api/licence-agreements/available"],
   });
 
@@ -418,14 +469,19 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
                         value={agreement.id}
                         data-testid={`option-create-licence-agreement-${agreement.id}`}
                       >
-                        {agreement.licenceAgreementTemplate?.name || agreement.id} - {agreement.licenceSeatsRemaining} seats remaining
+                        {agreement.licenceAgreementTemplate?.name ||
+                          agreement.id}{" "}
+                        - {agreement.licenceSeatsRemaining} seats remaining
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
                 {availableLicenceAgreements.length === 0 && (
-                  <p className="text-sm text-amber-600 dark:text-amber-500" data-testid="warning-no-licence-agreements">
+                  <p
+                    className="text-sm text-amber-600 dark:text-amber-500"
+                    data-testid="warning-no-licence-agreements"
+                  >
                     You've used all available seats in your license agreements.
                   </p>
                 )}
@@ -440,7 +496,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Email *</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter email address" {...field} data-testid="input-create-user-email" />
+                  <Input
+                    placeholder="Enter email address"
+                    {...field}
+                    data-testid="input-create-user-email"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -454,7 +514,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter first name" {...field} data-testid="input-create-user-first-name" />
+                  <Input
+                    placeholder="Enter first name"
+                    {...field}
+                    data-testid="input-create-user-first-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -468,7 +532,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter last name" {...field} data-testid="input-create-user-last-name" />
+                  <Input
+                    placeholder="Enter last name"
+                    {...field}
+                    data-testid="input-create-user-last-name"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -482,7 +550,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Profile Image URL</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter profile image URL (optional)" {...field} data-testid="input-create-user-profile-image" />
+                  <Input
+                    placeholder="Enter profile image URL (optional)"
+                    {...field}
+                    data-testid="input-create-user-profile-image"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -496,7 +568,12 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
               <FormItem>
                 <FormLabel>Password *</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Enter password (min 6 characters)" {...field} data-testid="input-create-user-password" />
+                  <Input
+                    type="password"
+                    placeholder="Enter password (min 6 characters)"
+                    {...field}
+                    data-testid="input-create-user-password"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -526,7 +603,11 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createUserMutation.isPending} data-testid="button-save-create-user">
+            <Button
+              type="submit"
+              disabled={createUserMutation.isPending}
+              data-testid="button-save-create-user"
+            >
               {createUserMutation.isPending ? "Creating..." : "Create User"}
             </Button>
           </div>
@@ -560,7 +641,7 @@ export default function UserManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       toast({
-        title: "Success", 
+        title: "Success",
         description: "User deleted successfully",
       });
     },
@@ -631,7 +712,10 @@ export default function UserManagement() {
             Manage user accounts and access permissions
           </p>
         </div>
-        <Button onClick={() => setIsCreatingUser(true)} data-testid="button-create-user">
+        <Button
+          onClick={() => setIsCreatingUser(true)}
+          data-testid="button-create-user"
+        >
           <Plus className="mr-2 h-4 w-4" />
           Create User
         </Button>
@@ -683,21 +767,33 @@ export default function UserManagement() {
                   <TableRow key={user.id} data-testid={`user-row-${user.id}`}>
                     <TableCell className="flex items-center space-x-3">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.profileImageUrl || ""} alt={getUserDisplayName(user)} />
+                        <AvatarImage
+                          src={user.profileImageUrl || ""}
+                          alt={getUserDisplayName(user)}
+                        />
                         <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="font-medium" data-testid={`user-name-${user.id}`}>
+                        <div
+                          className="font-medium"
+                          data-testid={`user-name-${user.id}`}
+                        >
                           {getUserDisplayName(user)}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell data-testid={`user-email-${user.id}`}>{user.email}</TableCell>
-                    <TableCell>
-                      {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                    <TableCell data-testid={`user-email-${user.id}`}>
+                      {user.email}
                     </TableCell>
                     <TableCell>
-                      {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString() : "N/A"}
+                      {user.createdAt
+                        ? new Date(user.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      {user.updatedAt
+                        ? new Date(user.updatedAt).toLocaleDateString()
+                        : "N/A"}
                     </TableCell>
                     <TableCell data-testid={`text-user-admin-${user.id}`}>
                       {user.isGlobalAdmin ? (
@@ -705,9 +801,7 @@ export default function UserManagement() {
                           Global Admin
                         </span>
                       ) : user.isAdmin ? (
-                        <span className="text-blue-600 font-medium">
-                          Admin
-                        </span>
+                        <span className="text-blue-600 font-medium">Admin</span>
                       ) : (
                         <span className="text-muted-foreground">User</span>
                       )}
@@ -738,7 +832,9 @@ export default function UserManagement() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete User</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete {getUserDisplayName(user)}? This action cannot be undone.
+                                Are you sure you want to delete{" "}
+                                {getUserDisplayName(user)}? This action cannot
+                                be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -764,7 +860,10 @@ export default function UserManagement() {
       </Card>
 
       {/* Edit User Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+      <Dialog
+        open={!!editingUser}
+        onOpenChange={(open) => !open && setEditingUser(null)}
+      >
         {editingUser && (
           <UserEditDialog
             user={editingUser}
@@ -774,11 +873,12 @@ export default function UserManagement() {
       </Dialog>
 
       {/* Create User Dialog */}
-      <Dialog open={isCreatingUser} onOpenChange={(open) => !open && setIsCreatingUser(false)}>
+      <Dialog
+        open={isCreatingUser}
+        onOpenChange={(open) => !open && setIsCreatingUser(false)}
+      >
         {isCreatingUser && (
-          <UserCreateDialog
-            onClose={() => setIsCreatingUser(false)}
-          />
+          <UserCreateDialog onClose={() => setIsCreatingUser(false)} />
         )}
       </Dialog>
     </div>

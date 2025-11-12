@@ -299,8 +299,8 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
   );
 
   return (
-    <div className="border rounded-md overflow-hidden">
-      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm p-2 flex items-center gap-1 flex-wrap">
+    <div className="border rounded-md flex flex-col">
+      <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm p-2 flex items-center gap-1 flex-wrap shrink-0">
         <ToolbarButton
           onClick={() => editor.chain().focus().undo().run()}
           icon={Undo}
@@ -578,7 +578,7 @@ export function TiptapEditor({ content, onChange, placeholder = 'Start typing...
         />
       </div>
       
-      <div data-testid={dataTestId}>
+      <div className="overflow-auto flex-1" data-testid={dataTestId}>
         <EditorContent editor={editor} />
       </div>
       

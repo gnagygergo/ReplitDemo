@@ -21,8 +21,10 @@ Preferred communication style: Simple, everyday language.
   - `NumberField` - Standardized numeric input component with edit/view/table modes, automatic formatting with thousands separators, and percentage display support
   - `DateTimeField` - Standardized date/time component supporting Date, Time, and DateTime field types with culture-aware formatting, UTC storage, and local timezone display across edit/view/table modes
   - `DropDownListField` - Standardized dropdown component with edit/view/table modes, supporting XML metadata sources (universal and company-specific), optional search functionality via Command component, and configurable value/display extractors
+  - `TiptapEditor` - Rich text editor with comprehensive formatting capabilities including underline, highlight, text alignment (left/center/right/justify), links with dialog-based URL input, blockquotes, line spacing control, font sizes, text colors, code blocks, and clear formatting. Features a sticky toolbar that remains visible when scrolling long content
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
+- **Rich Text Editing**: TipTap editor with custom LineHeight extension, multi-color highlighting, and sticky toolbar using CSS position:sticky with backdrop blur for optimal UX on long documents
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

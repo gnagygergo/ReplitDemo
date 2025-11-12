@@ -72,6 +72,10 @@ export function DropDownListFieldTypeEditor({
   const [xmlSorting, setXmlSorting] = useState<string>("no sorting");
   const [xmlTitle, setXmlTitle] = useState<string>("");
   
+  // Header edit mode
+  const [isEditingHeader, setIsEditingHeader] = useState(false);
+  const [headerBackup, setHeaderBackup] = useState<{ sorting: string; title: string } | null>(null);
+  
   // Snapshot of initial state for change detection
   const initialStateRef = useRef<{
     sorting: string;
@@ -293,6 +297,26 @@ export function DropDownListFieldTypeEditor({
     recomputeHasChanges(items, xmlSorting, value);
   };
 
+  const handleEditHeader = () => {
+    setHeaderBackup({ sorting: xmlSorting, title: xmlTitle });
+    setIsEditingHeader(true);
+  };
+
+  const handleSaveHeader = () => {
+    setIsEditingHeader(false);
+    setHeaderBackup(null);
+  };
+
+  const handleCancelHeader = () => {
+    if (headerBackup) {
+      setXmlSorting(headerBackup.sorting);
+      setXmlTitle(headerBackup.title);
+      recomputeHasChanges(items, headerBackup.sorting, headerBackup.title);
+    }
+    setIsEditingHeader(false);
+    setHeaderBackup(null);
+  };
+
   const handleSave = () => {
     const itemsToSave = items.map((item) => {
       const { _tempId, ...rest } = item;
@@ -380,36 +404,73 @@ export function DropDownListFieldTypeEditor({
       </CardHeader>
       <CardContent>
         {/* Header-level fields */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="space-y-2">
-            <Label htmlFor="xml-title" className="text-muted-foreground">
-              Title
-            </Label>
-            <Input
-              id="xml-title"
-              value={xmlTitle}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              placeholder="Enter value set title"
-              data-testid="input-xml-title"
-            />
+        <div className="space-y-4 mb-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium">Header Fields</h3>
+            <div className="flex gap-2">
+              {!isEditingHeader ? (
+                <Button
+                  onClick={handleEditHeader}
+                  size="sm"
+                  variant="outline"
+                  data-testid="button-edit-header"
+                >
+                  Edit
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleSaveHeader}
+                    size="sm"
+                    data-testid="button-save-header"
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    onClick={handleCancelHeader}
+                    size="sm"
+                    variant="outline"
+                    data-testid="button-cancel-header"
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="xml-sorting" className="text-muted-foreground">
-              Sorting
-            </Label>
-            <Select
-              value={xmlSorting}
-              onValueChange={handleSortingChange}
-            >
-              <SelectTrigger id="xml-sorting" data-testid="select-xml-sorting">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="no sorting">No Sorting</SelectItem>
-                <SelectItem value="ascending">Ascending</SelectItem>
-                <SelectItem value="descending">Descending</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="xml-title" className="text-muted-foreground">
+                Title
+              </Label>
+              <Input
+                id="xml-title"
+                value={xmlTitle}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                placeholder="Enter value set title"
+                disabled={!isEditingHeader}
+                data-testid="input-xml-title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="xml-sorting" className="text-muted-foreground">
+                Sorting
+              </Label>
+              <Select
+                value={xmlSorting}
+                onValueChange={handleSortingChange}
+                disabled={!isEditingHeader}
+              >
+                <SelectTrigger id="xml-sorting" data-testid="select-xml-sorting">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no sorting">No Sorting</SelectItem>
+                  <SelectItem value="ascending">Ascending</SelectItem>
+                  <SelectItem value="descending">Descending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 

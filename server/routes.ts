@@ -2,12 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { universalCurrencies, universalCountries, universalCultureCodes, universalTimezones } from "./index";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import path from "path";
-import { parseString } from "xml2js";
+import { parseString, Builder } from "xml2js";
 import { promisify } from "util";
 
 const parseXML = promisify(parseString);
+const xmlBuilder = new Builder();
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
@@ -1266,8 +1267,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Security: Whitelist of allowed path patterns
       const allowedPatterns = [
-        /^[a-zA-Z0-9_-]+\.xml$/, // Simple filenames like "currencies.xml"
-        /^companies\/\[companyId\]\/[a-zA-Z0-9_/-]+\.xml$/, // Company-specific paths
+        /^[a-zA-Z0-9_.-]+\.xml$/, // Simple filenames like "currencies.xml"
+        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths
       ];
 
       const isAllowed = allowedPatterns.some(pattern => pattern.test(requestedPath));
@@ -1315,6 +1316,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error loading metadata:", error);
       res.status(500).json({ message: "Failed to load metadata" });
+    }
+  });
+
+  // Update metadata XML file
+  app.put("/api/metadata/*", isAuthenticated, async (req, res) => {
+    try {
+      // Extract the requested path from the URL (everything after /api/metadata/)
+      const requestedPath = req.params[0];
+      
+      // Security: Reject any path containing directory traversal attempts
+      if (!requestedPath || requestedPath.includes('..') || requestedPath.includes('~')) {
+        return res.status(400).json({ message: "Invalid metadata path" });
+      }
+
+      // Security: Whitelist of allowed path patterns
+      const allowedPatterns = [
+        /^[a-zA-Z0-9_.-]+\.xml$/, // Simple filenames like "currencies.xml"
+        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths
+      ];
+
+      const isAllowed = allowedPatterns.some(pattern => pattern.test(requestedPath));
+      if (!isAllowed) {
+        return res.status(403).json({ message: "Access to this metadata file is not allowed" });
+      }
+
+      // Verify user is company admin or global admin
+      const isCompanyAdmin = await storage.verifyCompanyAdmin(req);
+      const isGlobalAdmin = await storage.verifyGlobalAdmin(req);
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({ message: "Only company or global admins can update metadata" });
+      }
+
+      // Handle [companyId] interpolation for company-specific paths
+      let resolvedPath = requestedPath;
+      if (requestedPath.includes('[companyId]')) {
+        const companyContext = await storage.GetCompanyContext(req);
+        if (!companyContext) {
+          return res.status(403).json({ message: "Company context required for this metadata" });
+        }
+        resolvedPath = requestedPath.replace('[companyId]', companyContext);
+      }
+
+      // Determine base directory based on path type
+      let baseDir: string;
+      if (resolvedPath.startsWith('companies/')) {
+        baseDir = path.join(process.cwd(), 'client/src');
+      } else {
+        baseDir = path.join(process.cwd(), 'client/src/0_universal_value_sets');
+      }
+
+      // Resolve the full file path
+      const fullPath = path.join(baseDir, resolvedPath);
+
+      // Security: Verify the resolved path is still within the allowed directory
+      const normalizedFullPath = path.normalize(fullPath);
+      const normalizedBaseDir = path.normalize(baseDir);
+      if (!normalizedFullPath.startsWith(normalizedBaseDir)) {
+        return res.status(403).json({ message: "Access denied: path outside allowed directory" });
+      }
+
+      // Get the updated data from request body (should be parsed XML structure)
+      const updatedData = req.body;
+      if (!updatedData) {
+        return res.status(400).json({ message: "No data provided for update" });
+      }
+
+      // Convert JSON back to XML
+      const xmlContent = xmlBuilder.buildObject(updatedData);
+
+      // Write the updated XML to file
+      writeFileSync(normalizedFullPath, xmlContent, 'utf-8');
+
+      res.json({ message: "Metadata updated successfully", data: updatedData });
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return res.status(404).json({ message: "Metadata file not found" });
+      }
+      console.error("Error updating metadata:", error);
+      res.status(500).json({ message: "Failed to update metadata" });
     }
   });
 

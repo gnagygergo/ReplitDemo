@@ -9,6 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from "isomorphic-dompurify";
 import SetupToggleLister from "@/components/setup/setup-toggle-lister";
+import { DropDownListFieldTypeEditor } from "@/components/ui/dropdown-list-field-type-editor";
 
 type CompanySettingWithMaster = {
   id: string;
@@ -116,6 +117,15 @@ export default function AccountSegmentationManagement() {
           />
         </CardContent>
       </Card>
+
+      <DropDownListFieldTypeEditor
+        sourceType="metadata"
+        sourcePath="companies/[companyId]/global_value_sets/industries.globalValueSet-meta.xml"
+        title="Industry Types"
+        description="Manage the list of industry types available for account segmentation"
+        rootKey="GlobalValueSet"
+        itemKey="customValue"
+      />
     </div>
   );
 }

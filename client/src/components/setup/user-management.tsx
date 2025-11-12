@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DropDownListField } from "@/components/ui/dropdown-list-field";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -53,8 +54,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { User as UserType, CultureCode, LicenceAgreementWithDetails } from "@shared/schema";
-import { TimezoneSelector } from "@/components/ui/timezone-selector";
+import type { User as UserType, LicenceAgreementWithDetails } from "@shared/schema";
 
 const userUpdateSchema = z.object({
   licenceAgreementId: z.string().optional(),
@@ -84,10 +84,6 @@ type UserCreate = z.infer<typeof userCreateSchema>;
 function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
-  const { data: cultureCodes = [] } = useQuery<CultureCode[]>({
-    queryKey: ["/api/universal/culture-codes"],
-  });
 
   const { data: availableLicenceAgreements = [] } = useQuery<LicenceAgreementWithDetails[]>({
     queryKey: ["/api/licence-agreements/available"],
@@ -234,38 +230,23 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
             name="preferredLanguage"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Preferred Language</FormLabel>
-                <DropDownListField
-                  mode="edit"
-                  value={selectedCountry}
-                  onValueChange={setSelectedCountry}
-                  sourceType="metadata"
-                  sourcePath="countries.xml"
-                  showSearch={true}
-                  rootKey="countries"
-                  itemKey="country"
-                  getValue={(item) => item.countryCode[0]}
-                  getDisplayValue={(item) => item.countryName[0]}
-                  placeholder="Select country"
-                />
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-user-preferred-language">
-                      <SelectValue placeholder="Select a language" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {cultureCodes.map((culture) => (
-                      <SelectItem
-                        key={culture.cultureCode}
-                        value={culture.cultureCode}
-                        data-testid={`option-language-${culture.cultureCode}`}
-                      >
-                        {culture.cultureCode} - {culture.cultureNameEnglish}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel className="text-muted-foreground">Preferred Language</FormLabel>
+                <FormControl>
+                  <DropDownListField
+                    mode="edit"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    sourceType="metadata"
+                    sourcePath="culture-codes.xml"
+                    showSearch={true}
+                    rootKey="cultureCodes"
+                    itemKey="cultureCode"
+                    getValue={(item) => item.cultureCode[0]}
+                    getDisplayValue={(item) => `${item.cultureCode[0]} - ${item.cultureNameEnglish[0]}`}
+                    placeholder="Select a language"
+                    testId="select-user-preferred-language"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -278,9 +259,17 @@ function UserEditDialog({ user, onClose }: { user: UserType; onClose: () => void
               <FormItem>
                 <FormLabel className="text-muted-foreground">Timezone</FormLabel>
                 <FormControl>
-                  <TimezoneSelector
+                  <DropDownListField
+                    mode="edit"
                     value={field.value}
                     onValueChange={field.onChange}
+                    sourceType="metadata"
+                    sourcePath="timezones.xml"
+                    showSearch={true}
+                    rootKey="timezones"
+                    itemKey="timezone"
+                    getValue={(item) => item.timezoneId[0]}
+                    getDisplayValue={(item) => `${item.displayName[0]} (${item.utcOffset[0]})`}
                     placeholder="Select timezone..."
                     testId="select-user-timezone"
                   />
@@ -480,25 +469,6 @@ function UserCreateDialog({ onClose }: { onClose: () => void }) {
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
                   <Input placeholder="Enter last name" {...field} data-testid="input-create-user-last-name" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="timezone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-muted-foreground">Timezone</FormLabel>
-                <FormControl>
-                  <TimezoneSelector
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    placeholder="Select timezone..."
-                    testId="select-create-user-timezone"
-                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

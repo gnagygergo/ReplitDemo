@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<GlobalValueSet xmlns="">
+    <customValue>
+        <label>DEBI</label>
+        <code>DEBI</code>
+        <default>false</default>
+        <iconSet></iconSet>
+        <icon></icon>
+    </customValue>
+    <sorted>false</sorted>
+    <globalValueSetName>
+</GlobalValueSet>

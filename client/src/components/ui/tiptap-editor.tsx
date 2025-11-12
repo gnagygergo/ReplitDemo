@@ -174,6 +174,7 @@ const fontSizes = [
 ];
 
 const lineHeights = [
+  { label: 'Minimal (0.5)', value: '0.5' },
   { label: 'Extra Tight (0.85)', value: '0.85' },
   { label: 'Compact (0.9)', value: '0.9' },
   { label: 'Single (1.0)', value: '1.0' },

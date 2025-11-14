@@ -404,41 +404,8 @@ export function DropDownListFieldTypeEditor({
       </CardHeader>
       <CardContent>
         {/* Header-level fields */}
-        <div className="space-y-4 mb-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Header Fields</h3>
-            <div className="flex gap-2">
-              {!isEditingHeader ? (
-                <Button
-                  onClick={handleEditHeader}
-                  size="sm"
-                  variant="outline"
-                  data-testid="button-edit-header"
-                >
-                  Edit
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleSaveHeader}
-                    size="sm"
-                    data-testid="button-save-header"
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    onClick={handleCancelHeader}
-                    size="sm"
-                    variant="outline"
-                    data-testid="button-cancel-header"
-                  >
-                    Cancel
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+        <div className="mb-4">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-end">
             <div className="space-y-2">
               <Label htmlFor="xml-title" className="text-muted-foreground">
                 Title
@@ -470,6 +437,36 @@ export function DropDownListFieldTypeEditor({
                   <SelectItem value="descending">Descending</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex gap-2">
+              {!isEditingHeader ? (
+                <Button
+                  onClick={handleEditHeader}
+                  size="sm"
+                  variant="outline"
+                  data-testid="button-edit-header"
+                >
+                  Edit
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleSaveHeader}
+                    size="sm"
+                    data-testid="button-save-header"
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    onClick={handleCancelHeader}
+                    size="sm"
+                    variant="outline"
+                    data-testid="button-cancel-header"
+                  >
+                    Cancel
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

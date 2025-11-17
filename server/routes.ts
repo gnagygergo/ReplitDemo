@@ -2,8 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { universalCurrencies, universalCountries, universalCultureCodes, universalTimezones } from "./index";
-import { readFileSync, writeFileSync, readdirSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from "fs";
 import path from "path";
+import * as xml2js from "xml2js";
 import { parseString, Builder } from "xml2js";
 import { promisify } from "util";
 
@@ -1315,6 +1316,217 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching object field definitions:", error);
       res.status(500).json({ message: "Failed to fetch field definitions" });
+    }
+  });
+
+  // Get single field definition for editing
+  app.get("/api/object-fields/:objectName/:fieldCode", isAuthenticated, async (req, res) => {
+    try {
+      const { objectName, fieldCode } = req.params;
+      
+      // Security: Only allow specific object names
+      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
+      if (!allowedObjects.includes(objectName)) {
+        return res.status(400).json({ message: "Invalid object name" });
+      }
+
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the field definition file
+      const fieldFilePath = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects',
+        objectName,
+        'fields',
+        `${fieldCode}.field_meta.xml`
+      );
+
+      // Read and parse the XML file
+      const xmlContent = readFileSync(fieldFilePath, 'utf-8');
+      const parsedData = await parseXML(xmlContent) as any;
+      
+      // Extract and flatten the field definition
+      const fieldDef = parsedData.FieldDefinition || {};
+      const flattenedData: any = {};
+      
+      Object.keys(fieldDef).forEach(key => {
+        flattenedData[key] = fieldDef[key]?.[0] || '';
+      });
+
+      res.json(flattenedData);
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return res.status(404).json({ message: "Field definition not found" });
+      }
+      console.error("Error fetching field definition:", error);
+      res.status(500).json({ message: "Failed to fetch field definition" });
+    }
+  });
+
+  // Create new field definition
+  app.post("/api/object-fields/:objectName", isAuthenticated, async (req, res) => {
+    try {
+      const { objectName } = req.params;
+      const fieldData = req.body;
+      
+      // Security: Only allow specific object names
+      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
+      if (!allowedObjects.includes(objectName)) {
+        return res.status(400).json({ message: "Invalid object name" });
+      }
+
+      // Validate required fields
+      if (!fieldData.apiCode || !fieldData.label || !fieldData.type) {
+        return res.status(400).json({ message: "Missing required fields: apiCode, label, type" });
+      }
+
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the fields directory
+      const fieldsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects',
+        objectName,
+        'fields'
+      );
+
+      // Create directory if it doesn't exist
+      try {
+        mkdirSync(fieldsDir, { recursive: true });
+      } catch (error) {
+        // Directory may already exist, ignore
+      }
+
+      // Build the path to the new field definition file
+      const fieldFilePath = path.join(fieldsDir, `${fieldData.apiCode}.field_meta.xml`);
+
+      // Check if file already exists
+      if (existsSync(fieldFilePath)) {
+        return res.status(409).json({ message: "Field with this API code already exists" });
+      }
+
+      // Build XML object from field data
+      const xmlObject = {
+        FieldDefinition: {
+          $: { xmlns: "" },
+          type: [fieldData.type],
+          subtype: [fieldData.subtype || ''],
+          apiCode: [fieldData.apiCode],
+          label: [fieldData.label],
+          helpText: [fieldData.helpText || ''],
+          placeHolder: [fieldData.placeHolder || ''],
+          testId: [fieldData.testId || ''],
+          className: [fieldData.className || ''],
+          maxLength: [fieldData.maxLength || ''],
+          copyAble: [fieldData.copyAble || ''],
+          truncate: [fieldData.truncate || ''],
+          visibleLinesInView: [fieldData.visibleLinesInView || ''],
+          visibleLinesInEdit: [fieldData.visibleLinesInEdit || ''],
+        }
+      };
+
+      // Build XML string
+      const builder = new xml2js.Builder({
+        xmldec: { version: '1.0', encoding: 'UTF-8', standalone: undefined },
+        renderOpts: { pretty: true, indent: '  ', newline: '\n' }
+      });
+      const xmlString = builder.buildObject(xmlObject);
+
+      // Write to file
+      writeFileSync(fieldFilePath, xmlString, 'utf-8');
+
+      res.json({ success: true, message: "Field created successfully", apiCode: fieldData.apiCode });
+    } catch (error) {
+      console.error("Error creating field definition:", error);
+      res.status(500).json({ message: "Failed to create field definition" });
+    }
+  });
+
+  // Update existing field definition
+  app.put("/api/object-fields/:objectName/:fieldCode", isAuthenticated, async (req, res) => {
+    try {
+      const { objectName, fieldCode } = req.params;
+      const fieldData = req.body;
+      
+      // Security: Only allow specific object names
+      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
+      if (!allowedObjects.includes(objectName)) {
+        return res.status(400).json({ message: "Invalid object name" });
+      }
+
+      // Validate required fields
+      if (!fieldData.label || !fieldData.type) {
+        return res.status(400).json({ message: "Missing required fields: label, type" });
+      }
+
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the field definition file
+      const fieldFilePath = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects',
+        objectName,
+        'fields',
+        `${fieldCode}.field_meta.xml`
+      );
+
+      // Check if file exists
+      if (!existsSync(fieldFilePath)) {
+        return res.status(404).json({ message: "Field definition not found" });
+      }
+
+      // Build XML object from field data (use fieldCode from params, not from body)
+      const xmlObject = {
+        FieldDefinition: {
+          $: { xmlns: "" },
+          type: [fieldData.type],
+          subtype: [fieldData.subtype || ''],
+          apiCode: [fieldCode], // Use the fieldCode from the URL
+          label: [fieldData.label],
+          helpText: [fieldData.helpText || ''],
+          placeHolder: [fieldData.placeHolder || ''],
+          testId: [fieldData.testId || ''],
+          className: [fieldData.className || ''],
+          maxLength: [fieldData.maxLength || ''],
+          copyAble: [fieldData.copyAble || ''],
+          truncate: [fieldData.truncate || ''],
+          visibleLinesInView: [fieldData.visibleLinesInView || ''],
+          visibleLinesInEdit: [fieldData.visibleLinesInEdit || ''],
+        }
+      };
+
+      // Build XML string
+      const builder = new xml2js.Builder({
+        xmldec: { version: '1.0', encoding: 'UTF-8', standalone: undefined },
+        renderOpts: { pretty: true, indent: '  ', newline: '\n' }
+      });
+      const xmlString = builder.buildObject(xmlObject);
+
+      // Write to file
+      writeFileSync(fieldFilePath, xmlString, 'utf-8');
+
+      res.json({ success: true, message: "Field updated successfully", apiCode: fieldCode });
+    } catch (error) {
+      console.error("Error updating field definition:", error);
+      res.status(500).json({ message: "Failed to update field definition" });
     }
   });
 

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <FieldDefinition xmlns="">
   <type>TextField</type>
-  <subtype>text</subtype>
-  <apiCode>name</apiCode>
-  <label>Asset Name</label>
+  <subtype>text</subtype> <!-- text, email, phone, url-->
+  <apiCode>name</apiCode> <!-- same as TABLE field name -->
+  <label>Asset Name</label> 
   <helpText></helpText>
   <placeHolder>Enter the name of the Asset</placeHolder>
   <testId></testId>
@@ -11,6 +11,6 @@
   <maxLength></maxLength>
   <copyAble></copyAble>
   <truncate></truncate>
-  <visibleLinesInView></visibleLinesInView>
+  <visibleLinesInView></visibleLinesInView> 
   <visibleLinesInEdit></visibleLinesInEdit>
 </FieldDefinition>

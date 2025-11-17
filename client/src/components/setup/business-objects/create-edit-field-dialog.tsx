@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -55,8 +55,14 @@ export function CreateEditFieldDialog({
 }: CreateEditFieldDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [step, setStep] = useState<"fieldType" | "subtype" | "form">("fieldType");
-  const [selectedFieldType, setSelectedFieldType] = useState<string>("");
+  
+  // Initialize step based on whether we're editing or creating
+  const [step, setStep] = useState<"fieldType" | "subtype" | "form">(() => 
+    fieldToEdit ? "form" : "fieldType"
+  );
+  const [selectedFieldType, setSelectedFieldType] = useState<string>(() =>
+    fieldToEdit ? "TextField" : ""
+  );
 
   const form = useForm<TextFieldFormData>({
     resolver: zodResolver(textFieldSchema),
@@ -74,7 +80,8 @@ export function CreateEditFieldDialog({
     },
   });
 
-  useEffect(() => {
+  // Sync state when dialog opens or mode changes (before paint)
+  useLayoutEffect(() => {
     if (!open) {
       return;
     }
@@ -82,33 +89,6 @@ export function CreateEditFieldDialog({
     if (fieldToEdit) {
       setSelectedFieldType("TextField");
       setStep("form");
-      
-      fetch(`/api/object-fields/${objectName}/${fieldToEdit.apiCode}`, {
-        credentials: "include",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          form.reset({
-            apiCode: data.apiCode || "",
-            label: data.label || "",
-            subtype: data.subtype || "text",
-            helpText: data.helpText || "",
-            placeHolder: data.placeHolder || "",
-            maxLength: data.maxLength || "",
-            copyAble: data.copyAble === "true" || data.copyAble === true,
-            truncate: data.truncate === "true" || data.truncate === true,
-            visibleLinesInView: data.visibleLinesInView || "",
-            visibleLinesInEdit: data.visibleLinesInEdit || "",
-          });
-        })
-        .catch((error) => {
-          console.error("Error loading field data:", error);
-          toast({
-            title: "Error",
-            description: "Failed to load field data for editing",
-            variant: "destructive",
-          });
-        });
     } else {
       setStep("fieldType");
       setSelectedFieldType("");
@@ -125,6 +105,40 @@ export function CreateEditFieldDialog({
         visibleLinesInEdit: "",
       });
     }
+  }, [open, fieldToEdit, form]);
+
+  // Load field data for editing (after paint is fine)
+  useEffect(() => {
+    if (!open || !fieldToEdit) {
+      return;
+    }
+
+    fetch(`/api/object-fields/${objectName}/${fieldToEdit.apiCode}`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        form.reset({
+          apiCode: data.apiCode || "",
+          label: data.label || "",
+          subtype: data.subtype || "text",
+          helpText: data.helpText || "",
+          placeHolder: data.placeHolder || "",
+          maxLength: data.maxLength || "",
+          copyAble: data.copyAble === "true" || data.copyAble === true,
+          truncate: data.truncate === "true" || data.truncate === true,
+          visibleLinesInView: data.visibleLinesInView || "",
+          visibleLinesInEdit: data.visibleLinesInEdit || "",
+        });
+      })
+      .catch((error) => {
+        console.error("Error loading field data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load field data for editing",
+          variant: "destructive",
+        });
+      });
   }, [open, fieldToEdit, objectName, form, toast]);
 
   const createFieldMutation = useMutation({

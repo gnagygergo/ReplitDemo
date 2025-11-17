@@ -6,7 +6,7 @@
   <helpText></helpText>
   <placeHolder>Enter the name of the Asset</placeHolder>
   <testId></testId>
-  <className><className>
+  <className></className>
   <maxLength></maxLength>
   <copyAble></copyAble>
   <truncate></truncate>

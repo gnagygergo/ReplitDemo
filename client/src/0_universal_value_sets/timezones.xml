@@ -55,6 +55,7 @@
 <utcOffset>+01:00</utcOffset>
 <utcOffsetDST>+01:00</utcOffsetDST>
 </timezone>
+<?xml version="1.0" encoding="UTF-8" ?>
 <timezone>
 <timezoneId>Africa/Banjul</timezoneId>
 <displayName>Africa/Banjul</displayName>

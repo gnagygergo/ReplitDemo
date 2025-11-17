@@ -15,6 +15,7 @@ import {
   FileCheck,
   Building,
   BookOpen,
+  Boxes,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -196,6 +197,23 @@ const setupMenuItems: MenuItem[] = [
         label: "Your custom agents",
         description: "The sky is the limit",
         component: StandardAIServicesSettings,
+      },
+
+    ],
+  },
+  {
+    id: "object-process-builder",
+    label: "Object and Process Builder",
+    icon: Boxes,
+    description: "Structure and Business Process",
+    globalAdminOnly: true,
+    category: "business-objects",
+    children: [
+      {
+        id: "object-builder",
+        label: "Object Builder",
+        description: "Objects, Fields, Layouts, etc.",
+        component: BusinessObjectsBuilderModule,
       },
 
     ],

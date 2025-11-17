@@ -75,6 +75,10 @@ export function CreateEditFieldDialog({
   });
 
   useEffect(() => {
+    if (!open) {
+      return;
+    }
+
     if (fieldToEdit) {
       setSelectedFieldType("TextField");
       setStep("form");
@@ -108,9 +112,20 @@ export function CreateEditFieldDialog({
     } else {
       setStep("fieldType");
       setSelectedFieldType("");
-      form.reset();
+      form.reset({
+        apiCode: "",
+        label: "",
+        subtype: "text",
+        helpText: "",
+        placeHolder: "",
+        maxLength: "",
+        copyAble: false,
+        truncate: false,
+        visibleLinesInView: "",
+        visibleLinesInEdit: "",
+      });
     }
-  }, [fieldToEdit, objectName, form, toast]);
+  }, [open, fieldToEdit, objectName, form, toast]);
 
   const createFieldMutation = useMutation({
     mutationFn: async (data: TextFieldFormData) => {

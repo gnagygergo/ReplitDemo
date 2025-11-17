@@ -25,11 +25,18 @@ Preferred communication style: Simple, everyday language.
   - `TiptapEditor` - Rich text editor with comprehensive formatting capabilities including underline, highlight, text alignment (left/center/right/justify), links with dialog-based URL input, blockquotes, line spacing control, font sizes, text colors, code blocks, and clear formatting. Features a sticky toolbar that remains visible when scrolling long content
 - **Object Builder Module**: Administrative interface for viewing and managing custom field definitions across business objects
   - `BusinessObjectsBuilderModule` - Main component with object type selector and field definition table displaying Field Type, Field Code, and Label columns from XML metadata files
+  - `CreateEditFieldDialog` - Multi-step dialog for creating and editing custom fields with three-step workflow: (1) Field type selection (7 types), (2) Subtype selection (for TextField: Text/Email/Phone/URL), (3) Field configuration form with Zod validation
   - Location: `/setup/business-objects` route, accessible via Setup menu
   - Data Source: Company-specific XML files at `companies/[companyId]/objects/[objectName]/fields/*.field_meta.xml`
-  - API Endpoint: `/api/object-fields/:object` reads and parses field definition XML with multi-tenant isolation via GetCompanyContext
-  - Query Pattern: TanStack Query with explicit queryFn for dynamic object parameter, error/loading/empty states
-  - Currently supports "assets" object type with extensibility for additional objects
+  - API Endpoints: 
+    - `GET /api/object-fields/:object` - Lists all field definitions
+    - `GET /api/object-fields/:object/:fieldCode` - Fetches single field for editing
+    - `POST /api/object-fields/:object` - Creates new field XML file with xml2js Builder
+    - `PUT /api/object-fields/:object/:fieldCode` - Updates existing field XML file
+  - Template System: Uses template files from `companies/0_custom_field_templates/` directory for XML structure guidance
+  - Currently supports TextField creation/editing with full property support; other field types show "Coming Soon" message
+  - Query Pattern: TanStack Query with mutations for create/update operations and automatic cache invalidation
+  - Security: Multi-tenant isolation, authenticated access, path validation, company context filtering
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 - **Rich Text Editing**: TipTap editor with custom LineHeight extension, multi-color highlighting, and sticky toolbar using CSS position:sticky with backdrop blur for optimal UX on long documents

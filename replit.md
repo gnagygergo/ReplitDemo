@@ -23,6 +23,13 @@ Preferred communication style: Simple, everyday language.
   - `DropDownListField` - Standardized dropdown component with edit/view/table modes, supporting XML metadata sources (universal and company-specific), optional search functionality via Command component, and configurable value/display extractors
   - `DropDownListFieldTypeEditor` - Metadata editor component for XML-based value sets with table view, inline editing, sortable columns (label, code, default, iconSet, icon), add/delete functionality, header-level fields (sorting direction and title), deterministic change detection using state snapshots, and persistence to XML files via PUT /api/metadata/* endpoint
   - `TiptapEditor` - Rich text editor with comprehensive formatting capabilities including underline, highlight, text alignment (left/center/right/justify), links with dialog-based URL input, blockquotes, line spacing control, font sizes, text colors, code blocks, and clear formatting. Features a sticky toolbar that remains visible when scrolling long content
+- **Object Builder Module**: Administrative interface for viewing and managing custom field definitions across business objects
+  - `BusinessObjectsBuilderModule` - Main component with object type selector and field definition table displaying Field Type, Field Code, and Label columns from XML metadata files
+  - Location: `/setup/business-objects` route, accessible via Setup menu
+  - Data Source: Company-specific XML files at `companies/[companyId]/objects/[objectName]/fields/*.field_meta.xml`
+  - API Endpoint: `/api/object-fields/:object` reads and parses field definition XML with multi-tenant isolation via GetCompanyContext
+  - Query Pattern: TanStack Query with explicit queryFn for dynamic object parameter, error/loading/empty states
+  - Currently supports "assets" object type with extensibility for additional objects
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 - **Rich Text Editing**: TipTap editor with custom LineHeight extension, multi-color highlighting, and sticky toolbar using CSS position:sticky with backdrop blur for optimal UX on long documents

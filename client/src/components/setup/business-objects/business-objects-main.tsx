@@ -58,7 +58,8 @@ import QuoteManagement from "@/components/setup/business-objects/quotes/quote-se
 import PricingMethods from "@/components/setup/business-objects/quotes/pricing-methods";
 import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
 import CompanyDefaultSettings from "@/components/setup/business-objects/company-defaults/company-defaults";
-import StandardAIServicesSettings from "@/components/setup/business-objects/ai-services/standard-ai-services"; 
+import StandardAIServicesSettings from "@/components/setup/business-objects/ai-services/standard-ai-services";
+import BusinessObjectsBuilderModule from "@/components/setup/business-objects/business-objects-builder-module"; 
 
 // Type for child menu items with component
 type ChildMenuItem = {

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { universalCurrencies, universalCountries, universalCultureCodes, universalTimezones } from "./index";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, readdirSync } from "fs";
 import path from "path";
 import { parseString, Builder } from "xml2js";
 import { promisify } from "util";
@@ -1251,6 +1251,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching timezones:", error);
       res.status(500).json({ message: "Failed to fetch timezones" });
+    }
+  });
+
+  // Object field definitions endpoint
+  app.get("/api/object-fields/:objectName", isAuthenticated, async (req, res) => {
+    try {
+      const { objectName } = req.params;
+      
+      // Security: Only allow specific object names
+      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
+      if (!allowedObjects.includes(objectName)) {
+        return res.status(400).json({ message: "Invalid object name" });
+      }
+
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the fields directory
+      const fieldsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects',
+        objectName,
+        'fields'
+      );
+
+      // Check if directory exists and read all XML files
+      let files: string[];
+      try {
+        files = readdirSync(fieldsDir).filter(file => file.endsWith('.xml'));
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          // Directory doesn't exist, return empty array
+          return res.json([]);
+        }
+        throw error;
+      }
+
+      // Parse each field definition file
+      const fieldDefinitions = await Promise.all(
+        files.map(async (filename) => {
+          const filePath = path.join(fieldsDir, filename);
+          const xmlContent = readFileSync(filePath, 'utf-8');
+          const parsedData = await parseXML(xmlContent) as any;
+          
+          // Extract the relevant fields
+          const fieldDef = parsedData.FieldDefinition || {};
+          return {
+            type: fieldDef.type?.[0] || '',
+            apiCode: fieldDef.apiCode?.[0] || '',
+            label: fieldDef.label?.[0] || '',
+            filePath: filename,
+          };
+        })
+      );
+
+      res.json(fieldDefinitions);
+    } catch (error) {
+      console.error("Error fetching object field definitions:", error);
+      res.status(500).json({ message: "Failed to fetch field definitions" });
     }
   });
 

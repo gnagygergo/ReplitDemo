@@ -174,19 +174,33 @@ export function CreateEditFieldDialog({
 
   const handleFieldTypeSelect = (fieldType: string) => {
     setSelectedFieldType(fieldType);
-    if (fieldType === "TextField") {
-      setStep("subtype");
-    } else {
-      toast({
-        title: "Coming Soon",
-        description: `${fieldType} creation will be available in a future update`,
-      });
-    }
   };
 
   const handleSubtypeSelect = (subtype: string) => {
     form.setValue("subtype", subtype as "text" | "email" | "phone" | "url");
-    setStep("form");
+  };
+
+  const handleNext = () => {
+    if (step === "fieldType") {
+      if (!selectedFieldType) {
+        toast({
+          title: "Selection Required",
+          description: "Please select a field type to continue",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (selectedFieldType === "TextField") {
+        setStep("subtype");
+      } else {
+        toast({
+          title: "Coming Soon",
+          description: `${selectedFieldType} creation will be available in a future update`,
+        });
+      }
+    } else if (step === "subtype") {
+      setStep("form");
+    }
   };
 
   const handleBack = () => {
@@ -458,6 +472,15 @@ export function CreateEditFieldDialog({
           >
             Cancel
           </Button>
+          {(step === "fieldType" || step === "subtype") && !fieldToEdit && (
+            <Button
+              type="button"
+              onClick={handleNext}
+              data-testid="button-next"
+            >
+              Next
+            </Button>
+          )}
           {step === "form" && (
             <Button
               type="submit"

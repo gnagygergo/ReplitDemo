@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>NumberField</type>
+  <apiCode>quantity</apiCode>
+  <label>Quantity</label>
+  <helpText/>
+  <placeHolder>How many of this asset the customer has?</placeHolder>
+  <testId/>
+  <className/>
+  <step>1</step>
+  <format>Percentage</format>
+  <decimalPlaces>0</decimalPlaces>
+</FieldDefinition>

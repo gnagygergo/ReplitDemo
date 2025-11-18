@@ -380,6 +380,8 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <NumberField
+                            objectCode="assets"
+                            fieldCode="quantity"
                             label="Quantity"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
@@ -388,7 +390,7 @@ export default function AssetDetail() {
                             testId={
                               isEditing ? "input-quantity" : "text-quantity"
                             }
-                            decimals={0}
+                            
                           />
                           <FormMessage />
                         </FormItem>

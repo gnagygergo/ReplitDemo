@@ -11,14 +11,12 @@ import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
 import Registration from "@/pages/registration";
-import Accounts from "@/components/accounts/accounts";
 import Quotes from "@/components/quotes/quotes";
 import Opportunities from "@/components/opportunities/opportunities";
 import Products from "@/components/products/products";
 import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
-import AccountDetail from "@/components/accounts/account-detail";
 import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
 import DigitalOffice from "@/pages/digital-office";
@@ -69,6 +67,52 @@ function AssetDetailPage() {
   );
 }
 
+function AccountsPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const accountsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!accountsRef.current || prevCompanyIdRef.current !== companyId) {
+    accountsRef.current = loadCompanyComponent(companyId, "accounts", "accounts");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const Accounts = accountsRef.current;
+  
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Accounts />
+    </Suspense>
+  );
+}
+
+function AccountDetailPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const accountDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!accountDetailRef.current || prevCompanyIdRef.current !== companyId) {
+    accountDetailRef.current = loadCompanyComponent(companyId, "accounts", "account-detail");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const AccountDetail = accountDetailRef.current;
+  
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountDetail />
+    </Suspense>
+  );
+}
+
 function AuthenticatedRouter() {
   return (
     <CompanySettingsProvider>
@@ -82,8 +126,8 @@ function AuthenticatedRouter() {
             </div>
           )}
         />
-        <Route path="/accounts/:id" component={AccountDetail} />
-        <Route path="/accounts" component={Accounts} />
+        <Route path="/accounts/:id" component={AccountDetailPage} />
+        <Route path="/accounts" component={AccountsPage} />
         <Route path="/assets/:id" component={AssetDetailPage} />
         <Route path="/assets" component={AssetsPage} />
         <Route path="/quotes/:id" component={QuoteDetail} />

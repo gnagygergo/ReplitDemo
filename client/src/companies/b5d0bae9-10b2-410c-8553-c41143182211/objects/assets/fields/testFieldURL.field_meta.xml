@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <subtype>url</subtype>
+  <apiCode>testFieldURL</apiCode>
+  <label>Test Field URL</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <maxLength/>
+  <copyAble>false</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView/>
+  <visibleLinesInEdit/>
+</FieldDefinition>

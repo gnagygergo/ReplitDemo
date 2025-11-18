@@ -16,6 +16,7 @@ export interface FieldDefinition {
   testIdView?: string;
   testIdTable?: string;
   decimalPlaces?: string;
+  format?: string;
   percentageDisplay?: boolean;
   fieldType?: string;
   metadataSource?: string;

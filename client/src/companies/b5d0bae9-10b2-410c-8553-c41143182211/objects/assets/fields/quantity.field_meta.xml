@@ -2,12 +2,12 @@
 <FieldDefinition xmlns="">
   <type>NumberField</type>
   <apiCode>quantity</apiCode>
-  <label>Quantity</label>
+  <label>Asset quantity</label>
   <helpText/>
   <placeHolder>How many of this asset the customer has?</placeHolder>
   <testId/>
   <className/>
   <step>1</step>
-  <format>Percentage</format>
+  <format>percentage</format>
   <decimalPlaces>0</decimalPlaces>
 </FieldDefinition>

@@ -382,15 +382,12 @@ export default function AssetDetail() {
                           <NumberField
                             objectCode="assets"
                             fieldCode="quantity"
-                            label="Quantity"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="Enter quantity"
                             testId={
                               isEditing ? "input-quantity" : "text-quantity"
                             }
-                            
                           />
                           <FormMessage />
                         </FormItem>

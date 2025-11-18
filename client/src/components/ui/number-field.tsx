@@ -46,7 +46,7 @@ export function NumberField({
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
   const mergedStep = step ?? 1;
-  const mergedFormat = format ?? (fieldDef?.percentageDisplay ? "percentage" : "number");
+  const mergedFormat = format ?? fieldDef?.format ?? "number";
   const mergedDecimals = decimals ?? (fieldDef?.decimalPlaces ? parseInt(fieldDef.decimalPlaces) : 2);
   
   // Auto-generate testId based on mode if not provided and fieldCode is available

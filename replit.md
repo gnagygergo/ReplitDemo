@@ -49,16 +49,16 @@ Preferred communication style: Simple, everyday language.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 - **Rich Text Editing**: TipTap editor with custom LineHeight extension, multi-color highlighting, and sticky toolbar using CSS position:sticky with backdrop blur for optimal UX on long documents
 - **Company-Specific Component Architecture**: Full component duplication per company for maximum customization flexibility
-  - **Structure**: Components organized under `companies/[companyId]/objects/[objectName]/layouts/` to group all object resources (fields, layouts, validation rules) together
+  - **Structure**: All components for a business object organized under `companies/[companyId]/objects/[objectName]/layouts/` to achieve complete company-level isolation
   - **Baseline Templates**: Default components stored in `companies/0_default/objects/` serve as templates for new company registration
-  - **Dynamic Component Loader**: Runtime component resolution using `import.meta.glob` with glob pattern `companies/*/objects/[objectName]/layouts/*.tsx`
+  - **Dynamic Component Loader**: Runtime component resolution using `import.meta.glob` with relative glob pattern `../companies/*/objects/[objectName]/layouts/*.tsx`
     - Utility: `client/src/lib/loadCompanyComponent.tsx` handles dynamic imports based on user's companyId
-    - Wrapper Components: Lightweight wrapper components in `client/src/components/[objectName]/` load company-specific layouts
-    - App Routing: Routes in `App.tsx` reference wrapper components instead of direct component imports
+    - Direct Route Integration: Routes in `App.tsx` use `loadCompanyComponent` directly in route component functions, accessing companyId via `useAuth().user.companyId`
+    - No Shared Wrappers: No wrapper components in shared `client/src/components/` folder - all business object components are company-specific
   - **Why layouts/ folder**: Groups all UI layouts for a business object (list view, detail view, card view, form layouts) alongside related resources like field metadata and validation rules, creating a cohesive object-level package
-  - **Extensibility Pattern**: New business objects (accounts, opportunities, quotes) follow same structure - create baseline in 0_default, copy to company folders, create wrapper component, update App.tsx routing
+  - **Extensibility Pattern**: New business objects (accounts, opportunities, quotes) follow same structure - create baseline in 0_default, copy to company folders, add route with `loadCompanyComponent` in App.tsx
   - **Registration Flow**: New company creation copies baseline from `companies/0_default/` to `companies/[newCompanyId]/`, enabling immediate customization without affecting other tenants
-  - **Assets Implementation**: Pilot implementation with `assets.tsx` (list view) and `asset-detail.tsx` (detail view) in layouts folder, loaded via `AssetsWrapper` and `AssetDetailWrapper` components
+  - **Assets Implementation**: Pilot implementation with `assets.tsx` (list view) and `asset-detail.tsx` (detail view) in layouts folder, loaded directly in App.tsx routes via `loadCompanyComponent`
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

@@ -2,8 +2,9 @@ import { lazy, ComponentType } from "react";
 
 // Use import.meta.glob to tell Vite about all possible component paths
 // This creates a map of all company-specific layout components
+// Note: Vite returns keys relative to this file's location (e.g., "../companies/...")
 const componentModules = import.meta.glob(
-  "/src/companies/*/objects/*/layouts/*.tsx"
+  "../companies/*/objects/*/layouts/*.tsx"
 );
 
 /**
@@ -23,21 +24,22 @@ export function loadCompanyComponent<T extends ComponentType<any>>(
   objectName: string,
   componentName: string
 ): ComponentType<any> {
-  // Construct the path to the company-specific component
-  const componentPath = `/src/companies/${companyId}/objects/${objectName}/layouts/${componentName}.tsx`;
+  // Construct the relative path (matching the glob pattern above)
+  const componentPath = `../companies/${companyId}/objects/${objectName}/layouts/${componentName}.tsx`;
 
   // Check if the component exists for this company
   const moduleLoader = componentModules[componentPath];
 
   if (!moduleLoader) {
     // If component doesn't exist for this company, fall back to default template
-    const defaultPath = `/src/companies/0_default/objects/${objectName}/layouts/${componentName}.tsx`;
+    const defaultPath = `../companies/0_default/objects/${objectName}/layouts/${componentName}.tsx`;
     const defaultLoader = componentModules[defaultPath];
 
     if (!defaultLoader) {
       throw new Error(
         `Component not found: ${componentName} for object ${objectName}. ` +
-        `Checked paths: ${componentPath} and ${defaultPath}`
+        `Checked paths: ${componentPath} and ${defaultPath}. ` +
+        `Available keys: ${Object.keys(componentModules).join(", ")}`
       );
     }
 

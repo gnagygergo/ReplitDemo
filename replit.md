@@ -48,6 +48,17 @@ Preferred communication style: Simple, everyday language.
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.
 - **Date/Time Formatting**: Culture-aware date/time formatting using `useDateTimeFormat` hook that fetches user's preferred language settings and applies culture-specific formats from XML metadata
 - **Rich Text Editing**: TipTap editor with custom LineHeight extension, multi-color highlighting, and sticky toolbar using CSS position:sticky with backdrop blur for optimal UX on long documents
+- **Company-Specific Component Architecture**: Full component duplication per company for maximum customization flexibility
+  - **Structure**: Components organized under `companies/[companyId]/objects/[objectName]/layouts/` to group all object resources (fields, layouts, validation rules) together
+  - **Baseline Templates**: Default components stored in `companies/0_default/objects/` serve as templates for new company registration
+  - **Dynamic Component Loader**: Runtime component resolution using `import.meta.glob` with glob pattern `companies/*/objects/[objectName]/layouts/*.tsx`
+    - Utility: `client/src/lib/loadCompanyComponent.tsx` handles dynamic imports based on user's companyId
+    - Wrapper Components: Lightweight wrapper components in `client/src/components/[objectName]/` load company-specific layouts
+    - App Routing: Routes in `App.tsx` reference wrapper components instead of direct component imports
+  - **Why layouts/ folder**: Groups all UI layouts for a business object (list view, detail view, card view, form layouts) alongside related resources like field metadata and validation rules, creating a cohesive object-level package
+  - **Extensibility Pattern**: New business objects (accounts, opportunities, quotes) follow same structure - create baseline in 0_default, copy to company folders, create wrapper component, update App.tsx routing
+  - **Registration Flow**: New company creation copies baseline from `companies/0_default/` to `companies/[newCompanyId]/`, enabling immediate customization without affecting other tenants
+  - **Assets Implementation**: Pilot implementation with `assets.tsx` (list view) and `asset-detail.tsx` (detail view) in layouts folder, loaded via `AssetsWrapper` and `AssetDetailWrapper` components
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

@@ -10,9 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect, useMemo } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Currency } from "@shared/schema";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import DOMPurify from "isomorphic-dompurify";
+
+type Currency = {
+  currencyISOCode: string;
+  currencyName: string;
+  currencyLocaleName: string;
+  currencySymbol: string;
+};
 
 type CompanySettingWithMaster = {
   id: string;
@@ -127,6 +133,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix] });
+      queryClient.invalidateQueries({ queryKey: ["/api/company-settings"] });
       // Clear any highlight when successful
       setHighlightedSettingId(null);
       toast({
@@ -176,6 +183,7 @@ export default function SetupToggleLister({ settingPrefix, title = "Settings" }:
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/business-objects/company-settings/by-prefix", settingPrefix] });
+      queryClient.invalidateQueries({ queryKey: ["/api/company-settings"] });
       setIsConfirmDialogOpen(false);
       setParentSetting(null);
       setDependentSettings([]);

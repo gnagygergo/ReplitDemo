@@ -221,6 +221,17 @@ export function CreateEditFieldDialog({
             visibleLinesInEdit: data.visibleLinesInEdit || "",
           });
         } else if (fieldType === "NumberField") {
+          // Convert legacy lowercase format values to UI format values
+          let formatValue: "Number" | "Percentage" = "Number";
+          if (data.format) {
+            if (data.format === "percentage" || data.format === "Percentage") {
+              formatValue = "Percentage";
+            } else {
+              // Legacy values like "number", "Decimal", "Integer", "Currency" all map to "Number"
+              formatValue = "Number";
+            }
+          }
+          
           form.reset({
             type: "NumberField",
             apiCode: data.apiCode || "",
@@ -228,7 +239,7 @@ export function CreateEditFieldDialog({
             helpText: data.helpText || "",
             placeHolder: data.placeHolder || "",
             step: data.step || "",
-            format: data.format || "Decimal",
+            format: formatValue,
             decimalPlaces: data.decimalPlaces || "2",
           });
         } else if (fieldType === "DateTimeField") {

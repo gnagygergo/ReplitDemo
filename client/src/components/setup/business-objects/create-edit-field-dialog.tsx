@@ -41,9 +41,19 @@ const numberFieldSchema = z.object({
   label: z.string().min(1, "Label is required"),
   helpText: z.string().optional(),
   placeHolder: z.string().optional(),
-  step: z.string().optional(),
+  step: z.string().optional().refine(
+    (val) => !val || !isNaN(Number(val)),
+    { message: "Step must be a valid number" }
+  ),
   format: z.enum(["Integer", "Decimal", "Currency", "Percentage"]).optional(),
-  decimalPlaces: z.string().optional(),
+  decimalPlaces: z.string().optional().refine(
+    (val) => {
+      if (!val) return true; // Optional field
+      const num = Number(val);
+      return !isNaN(num) && num >= 0 && num <= 10;
+    },
+    { message: "Decimal places must be a number between 0 and 10" }
+  ),
 });
 
 const dateTimeFieldSchema = z.object({
@@ -665,6 +675,9 @@ export function CreateEditFieldDialog({
                       {...form.register("step")}
                       placeholder="e.g., 1 or 0.01"
                     />
+                    {"step" in form.formState.errors && form.formState.errors.step && (
+                      <p className="text-sm text-destructive">{form.formState.errors.step.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -680,6 +693,9 @@ export function CreateEditFieldDialog({
                       {...form.register("decimalPlaces")}
                       placeholder="e.g., 2"
                     />
+                    {"decimalPlaces" in form.formState.errors && form.formState.errors.decimalPlaces && (
+                      <p className="text-sm text-destructive">{form.formState.errors.decimalPlaces.message}</p>
+                    )}
                   </div>
                 </div>
 

@@ -1441,7 +1441,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
       } else if (fieldData.type === 'NumberField') {
         xmlObject.FieldDefinition.step = [fieldData.step || ''];
-        xmlObject.FieldDefinition.format = [fieldData.format || 'Decimal'];
+        // Convert format from UI values (Number/Percentage) to component values (number/percentage)
+        const formatValue = fieldData.format === 'Number' ? 'number' : fieldData.format === 'Percentage' ? 'percentage' : 'number';
+        xmlObject.FieldDefinition.format = [formatValue];
         xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
       } else if (fieldData.type === 'DateTimeField') {
         xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];
@@ -1528,7 +1530,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
       } else if (fieldData.type === 'NumberField') {
         xmlObject.FieldDefinition.step = [fieldData.step || ''];
-        xmlObject.FieldDefinition.format = [fieldData.format || 'Decimal'];
+        // Convert format from UI values (Number/Percentage) to component values (number/percentage)
+        const formatValue = fieldData.format === 'Number' ? 'number' : fieldData.format === 'Percentage' ? 'percentage' : 'number';
+        xmlObject.FieldDefinition.format = [formatValue];
         xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
       } else if (fieldData.type === 'DateTimeField') {
         xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];

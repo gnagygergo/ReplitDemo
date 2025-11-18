@@ -140,7 +140,7 @@ export function CreateEditFieldDialog({
           helpText: "",
           placeHolder: "",
           step: "",
-          format: "Decimal" as const,
+          format: "Number" as const,
           decimalPlaces: "2",
         };
       case "DateTimeField":

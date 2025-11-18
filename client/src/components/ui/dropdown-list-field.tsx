@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { FormLabel, FormControl } from "@/components/ui/form";
 import {
   Command,
   CommandEmpty,
@@ -32,6 +33,7 @@ export interface DropDownListFieldProps {
   sourceType: "metadata";
   sourcePath?: string;
   showSearch?: boolean;
+  label?: string;
   placeholder?: string;
   testId?: string;
   className?: string;
@@ -55,6 +57,7 @@ export function DropDownListField({
   sourceType,
   sourcePath,
   showSearch,
+  label,
   placeholder,
   testId,
   className,
@@ -75,6 +78,7 @@ export function DropDownListField({
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
+  const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "Select an option";
   const mergedShowSearch = showSearch ?? fieldDef?.allowSearch ?? false;
   const mergedSourcePath = sourcePath ?? fieldDef?.metadataSource ?? "";
@@ -135,119 +139,162 @@ export function DropDownListField({
   // View/table modes don't need metadata - they just display the value
   if (mode === "edit" && sourceType === "metadata" && !mergedSourcePath) {
     return (
-      <div className={cn("text-sm text-destructive", className || defaultEditClassName)} data-testid={mergedTestId}>
-        Missing metadata source path for field
-      </div>
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <FormControl>
+          <div className={cn("text-sm text-destructive", className || defaultEditClassName)} data-testid={mergedTestId}>
+            Missing metadata source path for field
+          </div>
+        </FormControl>
+      </>
     );
   }
 
   if (mode === "edit") {
     if (isLoading) {
       return (
-        <div className={className || defaultEditClassName} data-testid={mergedTestId}>
-          Loading options...
-        </div>
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <div className={className || defaultEditClassName} data-testid={mergedTestId}>
+              Loading options...
+            </div>
+          </FormControl>
+        </>
       );
     }
 
     // Use Command component for searchable dropdown
     if (mergedShowSearch) {
       return (
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className={cn(
-                "justify-between font-normal",
-                !value && "text-muted-foreground",
-                className || defaultEditClassName
-              )}
-              disabled={disabled}
-              data-testid={mergedTestId}
-            >
-              {displayTextForEditMode}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
-            <Command>
-              <CommandInput placeholder={`Search ${mergedPlaceholder.toLowerCase()}...`} />
-              <CommandList>
-                <CommandEmpty>No option found.</CommandEmpty>
-                <CommandGroup>
-                  {items.map((item: any, index: number) => {
-                    const itemValue = extractValue(item);
-                    const itemDisplay = extractDisplayValue(item);
-                    return (
-                      <CommandItem
-                        key={`${itemValue}-${index}`}
-                        value={itemDisplay}
-                        onSelect={() => {
-                          onValueChange?.(itemValue);
-                          setOpen(false);
-                        }}
-                        data-testid={`${mergedTestId}-option-${itemValue}`}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            value === itemValue ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {itemDisplay}
-                      </CommandItem>
-                    );
-                  })}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className={cn(
+                    "justify-between font-normal",
+                    !value && "text-muted-foreground",
+                    className || defaultEditClassName
+                  )}
+                  disabled={disabled}
+                  data-testid={mergedTestId}
+                >
+                  {displayTextForEditMode}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0" align="start">
+                <Command>
+                  <CommandInput placeholder={`Search ${mergedPlaceholder.toLowerCase()}...`} />
+                  <CommandList>
+                    <CommandEmpty>No option found.</CommandEmpty>
+                    <CommandGroup>
+                      {items.map((item: any, index: number) => {
+                        const itemValue = extractValue(item);
+                        const itemDisplay = extractDisplayValue(item);
+                        return (
+                          <CommandItem
+                            key={`${itemValue}-${index}`}
+                            value={itemDisplay}
+                            onSelect={() => {
+                              onValueChange?.(itemValue);
+                              setOpen(false);
+                            }}
+                            data-testid={`${mergedTestId}-option-${itemValue}`}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                value === itemValue ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {itemDisplay}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </FormControl>
+        </>
       );
     }
 
     // Use Select component for simple dropdown (no search)
     return (
-      <Select
-        value={value}
-        onValueChange={onValueChange}
-        disabled={disabled}
-      >
-        <SelectTrigger
-          className={className || defaultEditClassName}
-          data-testid={mergedTestId}
-        >
-          <SelectValue placeholder={mergedPlaceholder} />
-        </SelectTrigger>
-        <SelectContent>
-          {items.map((item: any, index: number) => {
-            const itemValue = extractValue(item);
-            const itemDisplay = extractDisplayValue(item);
-            return (
-              <SelectItem
-                key={`${itemValue}-${index}`}
-                value={itemValue}
-                data-testid={`${mergedTestId}-option-${itemValue}`}
-              >
-                {itemDisplay}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <FormControl>
+          <Select
+            value={value}
+            onValueChange={onValueChange}
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className={className || defaultEditClassName}
+              data-testid={mergedTestId}
+            >
+              <SelectValue placeholder={mergedPlaceholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {items.map((item: any, index: number) => {
+                const itemValue = extractValue(item);
+                const itemDisplay = extractDisplayValue(item);
+                return (
+                  <SelectItem
+                    key={`${itemValue}-${index}`}
+                    value={itemValue}
+                    data-testid={`${mergedTestId}-option-${itemValue}`}
+                  >
+                    {itemDisplay}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </FormControl>
+      </>
     );
   }
 
   if (mode === "view") {
     return (
-      <div
-        className={className || defaultViewClassName}
-        data-testid={mergedTestId}
-      >
-        {displayTextForViewMode}
-      </div>
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div
+          className={className || defaultViewClassName}
+          data-testid={mergedTestId}
+        >
+          {displayTextForViewMode}
+        </div>
+      </>
     );
   }
 

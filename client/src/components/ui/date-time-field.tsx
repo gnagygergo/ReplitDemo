@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FormLabel, FormControl } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { useDateTimeFormat } from "@/hooks/useDateTimeFormat";
 import { useUserTimezone } from "@/hooks/useUserTimezone";
@@ -16,6 +17,7 @@ export interface DateTimeFieldProps {
   mode: "edit" | "view" | "table";
   value: string | Date | null;
   onChange?: (value: Date | null) => void;
+  label?: string;
   placeholder?: string;
   testId?: string;
   className?: string;
@@ -28,6 +30,7 @@ export function DateTimeField({
   mode,
   value,
   onChange,
+  label,
   placeholder,
   testId,
   className,
@@ -46,6 +49,7 @@ export function DateTimeField({
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
+  const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? undefined;
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
@@ -100,9 +104,16 @@ export function DateTimeField({
   
   if (hasError) {
     return (
-      <div className={cn("text-sm text-destructive", className)}>
-        <span data-testid={mergedTestId}>Invalid date</span>
-      </div>
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div className={cn("text-sm text-destructive", className)}>
+          <span data-testid={mergedTestId}>Invalid date</span>
+        </div>
+      </>
     );
   }
 
@@ -121,38 +132,47 @@ export function DateTimeField({
       const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "Date") : null;
       
       return (
-        <Popover open={isOpen} onOpenChange={setIsOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "justify-start text-left font-normal",
-                !normalizedValue && "text-muted-foreground",
-                className || defaultEditClassName
-              )}
-              data-testid={mergedTestId}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || defaultPlaceholder)}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={displayValue || undefined}
-              onSelect={(date) => {
-                if (!date || !timezone) {
-                  onChange?.(null);
-                } else {
-                  const newDate = setDate(date, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 });
-                  onChange?.(parseDateInput(newDate, "Date", timezone, browserTimezone));
-                }
-                setIsOpen(false);
-              }}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "justify-start text-left font-normal",
+                    !normalizedValue && "text-muted-foreground",
+                    className || defaultEditClassName
+                  )}
+                  data-testid={mergedTestId}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || defaultPlaceholder)}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={displayValue || undefined}
+                  onSelect={(date) => {
+                    if (!date || !timezone) {
+                      onChange?.(null);
+                    } else {
+                      const newDate = setDate(date, { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 });
+                      onChange?.(parseDateInput(newDate, "Date", timezone, browserTimezone));
+                    }
+                    setIsOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </FormControl>
+        </>
       );
     }
 
@@ -162,29 +182,38 @@ export function DateTimeField({
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
       
       return (
-        <Input
-          type="time"
-          value={timeValue}
-          onChange={(e) => {
-            if (!e.target.value || !timezone) {
-              onChange?.(null);
-              return;
-            }
-            const [hours, minutes] = e.target.value.split(":");
-            const baseDate = normalizedValue && timezone ? 
-              utcToUserZoned(normalizedValue, timezone, "Time") : 
-              new Date();
-            const newDate = setDate(baseDate, {
-              hours: parseInt(hours, 10),
-              minutes: parseInt(minutes, 10),
-              seconds: 0,
-              milliseconds: 0,
-            });
-            onChange?.(parseDateInput(newDate, "Time", timezone, browserTimezone));
-          }}
-          className={className || defaultEditClassName}
-          data-testid={mergedTestId}
-        />
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <Input
+              type="time"
+              value={timeValue}
+              onChange={(e) => {
+                if (!e.target.value || !timezone) {
+                  onChange?.(null);
+                  return;
+                }
+                const [hours, minutes] = e.target.value.split(":");
+                const baseDate = normalizedValue && timezone ? 
+                  utcToUserZoned(normalizedValue, timezone, "Time") : 
+                  new Date();
+                const newDate = setDate(baseDate, {
+                  hours: parseInt(hours, 10),
+                  minutes: parseInt(minutes, 10),
+                  seconds: 0,
+                  milliseconds: 0,
+                });
+                onChange?.(parseDateInput(newDate, "Time", timezone, browserTimezone));
+              }}
+              className={className || defaultEditClassName}
+              data-testid={mergedTestId}
+            />
+          </FormControl>
+        </>
       );
     }
 
@@ -194,63 +223,72 @@ export function DateTimeField({
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
       
       return (
-        <div className="flex gap-2">
-          <Popover open={isOpen} onOpenChange={setIsOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "flex-1 justify-start text-left font-normal",
-                  !normalizedValue && "text-muted-foreground"
-                )}
-                data-testid={mergedTestId ? `${mergedTestId}-date` : undefined}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || "Select date...")}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={displayValue || undefined}
-                onSelect={(date) => {
-                  if (!date || !timezone) {
-                    onChange?.(null);
-                  } else {
-                    const existingTime = displayValue || setDate(new Date(), { hours: 0, minutes: 0 });
-                    const newDate = setDate(date, {
-                      hours: existingTime.getHours(),
-                      minutes: existingTime.getMinutes(),
-                      seconds: 0,
-                      milliseconds: 0,
-                    });
-                    onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
-                  }
-                  setIsOpen(false);
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <div className="flex gap-2">
+              <Popover open={isOpen} onOpenChange={setIsOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "flex-1 justify-start text-left font-normal",
+                      !normalizedValue && "text-muted-foreground"
+                    )}
+                    data-testid={mergedTestId ? `${mergedTestId}-date` : undefined}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || "Select date...")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={displayValue || undefined}
+                    onSelect={(date) => {
+                      if (!date || !timezone) {
+                        onChange?.(null);
+                      } else {
+                        const existingTime = displayValue || setDate(new Date(), { hours: 0, minutes: 0 });
+                        const newDate = setDate(date, {
+                          hours: existingTime.getHours(),
+                          minutes: existingTime.getMinutes(),
+                          seconds: 0,
+                          milliseconds: 0,
+                        });
+                        onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
+                      }
+                      setIsOpen(false);
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <Input
+                type="time"
+                value={timeValue}
+                onChange={(e) => {
+                  if (!e.target.value || !timezone) return;
+                  const [hours, minutes] = e.target.value.split(":");
+                  const baseDate = displayValue || new Date();
+                  const newDate = setDate(baseDate, {
+                    hours: parseInt(hours, 10),
+                    minutes: parseInt(minutes, 10),
+                    seconds: 0,
+                    milliseconds: 0,
+                  });
+                  onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
                 }}
-                initialFocus
+                className="w-32"
+                data-testid={mergedTestId ? `${mergedTestId}-time` : undefined}
               />
-            </PopoverContent>
-          </Popover>
-          <Input
-            type="time"
-            value={timeValue}
-            onChange={(e) => {
-              if (!e.target.value || !timezone) return;
-              const [hours, minutes] = e.target.value.split(":");
-              const baseDate = displayValue || new Date();
-              const newDate = setDate(baseDate, {
-                hours: parseInt(hours, 10),
-                minutes: parseInt(minutes, 10),
-                seconds: 0,
-                milliseconds: 0,
-              });
-              onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
-            }}
-            className="w-32"
-            data-testid={mergedTestId ? `${mergedTestId}-time` : undefined}
-          />
-        </div>
+            </div>
+          </FormControl>
+        </>
       );
     }
   }
@@ -259,9 +297,16 @@ export function DateTimeField({
     const displayValue = formatDateValue(normalizedValue, fieldType);
     
     return (
-      <div className={className || defaultViewClassName}>
-        <span data-testid={mergedTestId}>{displayValue}</span>
-      </div>
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div className={className || defaultViewClassName}>
+          <span data-testid={mergedTestId}>{displayValue}</span>
+        </div>
+      </>
     );
   }
 

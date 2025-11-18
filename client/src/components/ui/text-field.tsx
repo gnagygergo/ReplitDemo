@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { FormLabel, FormControl } from "@/components/ui/form";
 import { Copy, Check } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 
@@ -10,6 +11,7 @@ export interface TextFieldProps {
   mode: "edit" | "view" | "table";
   value: string;
   onChange?: (value: string) => void;
+  label?: string;
   placeholder?: string;
   type?: "text" | "email" | "url" | "password";
   testId?: string;
@@ -29,6 +31,7 @@ export function TextField({
   mode,
   value,
   onChange,
+  label,
   placeholder,
   type,
   testId,
@@ -52,6 +55,7 @@ export function TextField({
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
+  const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
   const mergedType = type ?? (fieldDef?.subtype as "text" | "email" | "url" | "password") ?? "text";
   const mergedMaxLength = maxLength ?? (fieldDef?.maxLength ? parseInt(fieldDef.maxLength) : undefined);
@@ -83,29 +87,47 @@ export function TextField({
     // Use Textarea for multi-line input
     if (mergedVisibleLinesInEdit) {
       return (
-        <Textarea
-          value={value}
-          onChange={(e) => onChange?.(e.target.value)}
-          placeholder={mergedPlaceholder}
-          maxLength={mergedMaxLength}
-          rows={mergedVisibleLinesInEdit}
-          className={className || defaultEditClassName}
-          data-testid={mergedTestId}
-        />
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <FormControl>
+            <Textarea
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              placeholder={mergedPlaceholder}
+              maxLength={mergedMaxLength}
+              rows={mergedVisibleLinesInEdit}
+              className={className || defaultEditClassName}
+              data-testid={mergedTestId}
+            />
+          </FormControl>
+        </>
       );
     }
 
     // Use Input for single-line input
     return (
-      <Input
-        type={mergedType}
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder={mergedPlaceholder}
-        maxLength={mergedMaxLength}
-        className={className || defaultEditClassName}
-        data-testid={mergedTestId}
-      />
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <FormControl>
+          <Input
+            type={mergedType}
+            value={value}
+            onChange={(e) => onChange?.(e.target.value)}
+            placeholder={mergedPlaceholder}
+            maxLength={mergedMaxLength}
+            className={className || defaultEditClassName}
+            data-testid={mergedTestId}
+          />
+        </FormControl>
+      </>
     );
   }
 
@@ -118,21 +140,60 @@ export function TextField({
       const maxHeight = `${mergedVisibleLinesInView * lineHeight}rem`;
       
       return (
-        <div className={`flex items-start gap-2 ${className || defaultViewClassName}`}>
-          <div 
-            className="whitespace-pre-wrap overflow-y-auto"
-            style={{ maxHeight }}
-            data-testid={mergedTestId}
-          >
-            {displayValue}
+        <>
+          {mergedLabel && (
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+          )}
+          <div className={`flex items-start gap-2 ${className || defaultViewClassName}`}>
+            <div 
+              className="whitespace-pre-wrap overflow-y-auto"
+              style={{ maxHeight }}
+              data-testid={mergedTestId}
+            >
+              {displayValue}
+            </div>
+            {mergedCopyable && value && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCopy}
+                className="h-6 w-6 p-0 flex-shrink-0"
+                data-testid={`${mergedTestId}-copy`}
+              >
+                {copied ? (
+                  <Check className="h-3 w-3 text-green-600" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+              </Button>
+            )}
           </div>
+        </>
+      );
+    }
+    
+    // Single-line view mode (default behavior)
+    return (
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div className={`flex items-center gap-2 ${className || defaultViewClassName}`}>
+          <span data-testid={mergedTestId}>
+            {displayValue}
+          </span>
           {mergedCopyable && value && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleCopy}
-              className="h-6 w-6 p-0 flex-shrink-0"
+              className="h-6 w-6 p-0"
               data-testid={`${mergedTestId}-copy`}
             >
               {copied ? (
@@ -143,32 +204,7 @@ export function TextField({
             </Button>
           )}
         </div>
-      );
-    }
-    
-    // Single-line view mode (default behavior)
-    return (
-      <div className={`flex items-center gap-2 ${className || defaultViewClassName}`}>
-        <span data-testid={mergedTestId}>
-          {displayValue}
-        </span>
-        {mergedCopyable && value && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className="h-6 w-6 p-0"
-            data-testid={`${mergedTestId}-copy`}
-          >
-            {copied ? (
-              <Check className="h-3 w-3 text-green-600" />
-            ) : (
-              <Copy className="h-3 w-3" />
-            )}
-          </Button>
-        )}
-      </div>
+      </>
     );
   }
 

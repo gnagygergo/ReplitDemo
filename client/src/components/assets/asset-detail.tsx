@@ -316,19 +316,14 @@ export default function AssetDetail() {
                       name="serialNumber"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-muted-foreground">
-                            Serial Number *
-                          </FormLabel>
-                          <FormControl>
-                            <TextField
-                              objectCode="assets"
-                              fieldCode="serialNumber"
-                              mode={isEditing ? "edit" : "view"}
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="Enter serial number"
-                            />
-                          </FormControl>
+                          <TextField
+                            objectCode="assets"
+                            fieldCode="serialNumber"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter serial number"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -340,18 +335,13 @@ export default function AssetDetail() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-muted-foreground">
-                            Name
-                          </FormLabel>
-                          <FormControl>
-                            <TextField
-                              mode={isEditing ? "edit" : "view"}
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              placeholder="Enter name"
-                              testId={isEditing ? "input-name" : "text-name"}
-                            />
-                          </FormControl>
+                          <TextField
+                            objectCode="assets" 
+                            fieldCode="name"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -363,22 +353,20 @@ export default function AssetDetail() {
                       name="description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <TextField
-                              mode={isEditing ? "edit" : "view"}
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              placeholder=""
-                              visibleLinesInEdit={3}
-                              visibleLinesInView={3}
-                              testId={
-                                isEditing
-                                  ? "input-description"
-                                  : "text-description"
-                              }
-                            />
-                          </FormControl>
+                          <TextField
+                            label="Description"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder=""
+                            visibleLinesInEdit={3}
+                            visibleLinesInView={3}
+                            testId={
+                              isEditing
+                                ? "input-description"
+                                : "text-description"
+                            }
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -390,21 +378,17 @@ export default function AssetDetail() {
                       name="quantity"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-muted-foreground">
-                            Quantity
-                          </FormLabel>
-                          <FormControl>
-                            <NumberField
-                              mode={isEditing ? "edit" : "view"}
-                              value={field.value}
-                              onChange={field.onChange}
-                              placeholder="Enter quantity"
-                              testId={
-                                isEditing ? "input-quantity" : "text-quantity"
-                              }
-                              decimals={0}
-                            />
-                          </FormControl>
+                          <NumberField
+                            label="Quantity"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Enter quantity"
+                            testId={
+                              isEditing ? "input-quantity" : "text-quantity"
+                            }
+                            decimals={0}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -416,17 +400,15 @@ export default function AssetDetail() {
                       name="installationDate"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Installation Date</FormLabel>
-                          <FormControl>
-                            <DateTimeField
-                              fieldType="Date"  // or "Date" or "Time"
-                              mode={isEditing ? "edit" : "view"}           // or "view" or "table"
-                              value={field.value}   // Date | null
-                              onChange={field.onChange}
-                              placeholder="Select installation date..."
-                              testId="input-install-date"
-                            />
-                          </FormControl>
+                          <DateTimeField
+                            label="Installation Date"
+                            fieldType="Date"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            placeholder="Select installation date..."
+                            testId="input-install-date"
+                          />
                           <FormMessage />
                         </FormItem>
                       )}

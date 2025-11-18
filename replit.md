@@ -27,16 +27,22 @@ Preferred communication style: Simple, everyday language.
 - **Metadata-Driven Field Configuration**: Field components (TextField, NumberField, DateTimeField, DropDownListField) support optional `objectCode` and `fieldCode` props that automatically fetch field definitions from XML metadata files using the `useFieldDefinition` hook. When provided, field properties (label, placeholder, maxLength, testId, copyable, truncate, visibleLines, decimalPlaces, percentageDisplay, allowSearch, metadataSource) are loaded from `companies/[companyId]/objects/[objectCode]/fields/[fieldCode].field_meta.xml` and merged with explicit props (explicit props take precedence). TestId values are auto-generated based on field code and mode (e.g., `input-serialNumber` for edit mode, `text-serialNumber` for view mode) if not explicitly provided. This pattern enables centralized field configuration management through the Object Builder module while maintaining backwards compatibility with hardcoded props
 - **Object Builder Module**: Administrative interface for viewing and managing custom field definitions across business objects
   - `BusinessObjectsBuilderModule` - Main component with object type selector and field definition table displaying Field Type, Field Code, and Label columns from XML metadata files
-  - `CreateEditFieldDialog` - Multi-step dialog for creating and editing custom fields with three-step workflow: (1) Field type selection (7 types), (2) Subtype selection (for TextField: Text/Email/Phone/URL), (3) Field configuration form with Zod validation
+  - `CreateEditFieldDialog` - Multi-step dialog for creating and editing custom fields with conditional workflow: (1) Field type selection (7 types), (2) Subtype selection (TextField: Text/Email/Phone/URL; DateTimeField: Date/Time/DateTime), (3) Field configuration form with type-specific Zod validation
   - Location: `/setup/business-objects` route, accessible via Setup menu
   - Data Source: Company-specific XML files at `companies/[companyId]/objects/[objectName]/fields/*.field_meta.xml`
   - API Endpoints: 
     - `GET /api/object-fields/:object` - Lists all field definitions
     - `GET /api/object-fields/:object/:fieldCode` - Fetches single field for editing
-    - `POST /api/object-fields/:object` - Creates new field XML file with xml2js Builder
-    - `PUT /api/object-fields/:object/:fieldCode` - Updates existing field XML file
+    - `POST /api/object-fields/:object` - Creates new field XML file with xml2js Builder and type-specific properties
+    - `PUT /api/object-fields/:object/:fieldCode` - Updates existing field XML file with type-specific properties
   - Template System: Uses template files from `companies/0_custom_field_templates/` directory for XML structure guidance
-  - Currently supports TextField creation/editing with full property support; other field types show "Coming Soon" message
+  - **Supported Field Types**:
+    - **TextField**: Full support with subtypes (Text/Email/Phone/URL), maxLength, copyable, truncate, visibleLines properties
+    - **NumberField**: Full support with step (validated as numeric), format (Integer/Decimal/Currency/Percentage), decimalPlaces (validated 0-10 range)
+    - **DateTimeField**: Full support with fieldType selector (Date/Time/DateTime)
+    - **PicklistField**: Full support with common field properties (API Code, Label, Help Text, Placeholder)
+    - Other types (LookupField, RichTextField, BooleanField) show "Coming Soon" message
+  - **Validation**: Discriminated union schemas with type-specific validation (numeric constraints, range checks), error display in UI prevents invalid submissions
   - Query Pattern: TanStack Query with mutations for create/update operations and automatic cache invalidation
   - Security: Multi-tenant isolation, authenticated access, path validation, company context filtering
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.

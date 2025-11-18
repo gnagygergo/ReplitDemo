@@ -1441,8 +1441,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
       } else if (fieldData.type === 'NumberField') {
         xmlObject.FieldDefinition.step = [fieldData.step || ''];
-        // Convert format from UI values (Number/Percentage) to component values (number/percentage)
-        const formatValue = fieldData.format === 'Number' ? 'number' : fieldData.format === 'Percentage' ? 'percentage' : 'number';
+        // Convert format from UI/legacy values to component values (number/percentage)
+        let formatValue = 'number'; // Safe default
+        if (fieldData.format) {
+          const format = fieldData.format.toLowerCase();
+          if (format === 'percentage') {
+            formatValue = 'percentage';
+          } else {
+            // All other values (Number, number, Decimal, Integer, Currency) map to 'number'
+            formatValue = 'number';
+          }
+        }
         xmlObject.FieldDefinition.format = [formatValue];
         xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
       } else if (fieldData.type === 'DateTimeField') {
@@ -1530,8 +1539,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
       } else if (fieldData.type === 'NumberField') {
         xmlObject.FieldDefinition.step = [fieldData.step || ''];
-        // Convert format from UI values (Number/Percentage) to component values (number/percentage)
-        const formatValue = fieldData.format === 'Number' ? 'number' : fieldData.format === 'Percentage' ? 'percentage' : 'number';
+        // Convert format from UI/legacy values to component values (number/percentage)
+        let formatValue = 'number'; // Safe default
+        if (fieldData.format) {
+          const format = fieldData.format.toLowerCase();
+          if (format === 'percentage') {
+            formatValue = 'percentage';
+          } else {
+            // All other values (Number, number, Decimal, Integer, Currency) map to 'number'
+            formatValue = 'number';
+          }
+        }
         xmlObject.FieldDefinition.format = [formatValue];
         xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
       } else if (fieldData.type === 'DateTimeField') {

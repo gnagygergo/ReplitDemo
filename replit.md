@@ -38,11 +38,11 @@ Preferred communication style: Simple, everyday language.
   - Template System: Uses template files from `companies/0_custom_field_templates/` directory for XML structure guidance
   - **Supported Field Types**:
     - **TextField**: Full support with subtypes (Text/Email/Phone/URL), maxLength, copyable, truncate, visibleLines properties
-    - **NumberField**: Full support with step (validated as numeric), format (Integer/Decimal/Currency/Percentage), decimalPlaces (validated 0-10 range)
+    - **NumberField**: Full support with step (validated as numeric), format (Number/Percentage, aligned with NumberField component), decimalPlaces (validated 0-10 range). Backend normalizes legacy format values (Decimal, Integer, Currency) to "number" for backwards compatibility
     - **DateTimeField**: Full support with fieldType selector (Date/Time/DateTime)
     - **PicklistField**: Full support with common field properties (API Code, Label, Help Text, Placeholder)
     - Other types (LookupField, RichTextField, BooleanField) show "Coming Soon" message
-  - **Validation**: Discriminated union schemas with type-specific validation (numeric constraints, range checks), error display in UI prevents invalid submissions
+  - **Validation**: Discriminated union schemas with type-specific validation (numeric constraints, range checks), error display in UI prevents invalid submissions. Legacy format value conversion ensures backwards compatibility with existing XML metadata
   - Query Pattern: TanStack Query with mutations for create/update operations and automatic cache invalidation
   - Security: Multi-tenant isolation, authenticated access, path validation, company context filtering
 - **Label Styling**: Standardized label styling using `text-muted-foreground` for consistent appearance across all forms.

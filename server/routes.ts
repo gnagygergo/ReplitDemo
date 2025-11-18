@@ -1417,25 +1417,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ message: "Field with this API code already exists" });
       }
 
-      // Build XML object from field data
-      const xmlObject = {
+      // Build XML object from field data with type-specific properties
+      const xmlObject: any = {
         FieldDefinition: {
           $: { xmlns: "" },
           type: [fieldData.type],
-          subtype: [fieldData.subtype || ''],
           apiCode: [fieldData.apiCode],
           label: [fieldData.label],
           helpText: [fieldData.helpText || ''],
           placeHolder: [fieldData.placeHolder || ''],
           testId: [fieldData.testId || ''],
           className: [fieldData.className || ''],
-          maxLength: [fieldData.maxLength || ''],
-          copyAble: [fieldData.copyAble || ''],
-          truncate: [fieldData.truncate || ''],
-          visibleLinesInView: [fieldData.visibleLinesInView || ''],
-          visibleLinesInEdit: [fieldData.visibleLinesInEdit || ''],
         }
       };
+
+      // Add type-specific fields
+      if (fieldData.type === 'TextField') {
+        xmlObject.FieldDefinition.subtype = [fieldData.subtype || ''];
+        xmlObject.FieldDefinition.maxLength = [fieldData.maxLength || ''];
+        xmlObject.FieldDefinition.copyAble = [fieldData.copyAble || ''];
+        xmlObject.FieldDefinition.truncate = [fieldData.truncate || ''];
+        xmlObject.FieldDefinition.visibleLinesInView = [fieldData.visibleLinesInView || ''];
+        xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
+      } else if (fieldData.type === 'NumberField') {
+        xmlObject.FieldDefinition.step = [fieldData.step || ''];
+        xmlObject.FieldDefinition.format = [fieldData.format || 'Decimal'];
+        xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
+      } else if (fieldData.type === 'DateTimeField') {
+        xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];
+      }
+      // PicklistField has no additional fields beyond common ones
 
       // Build XML string
       const builder = new xml2js.Builder({
@@ -1493,25 +1504,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Field definition not found" });
       }
 
-      // Build XML object from field data (use fieldCode from params, not from body)
-      const xmlObject = {
+      // Build XML object from field data with type-specific properties
+      const xmlObject: any = {
         FieldDefinition: {
           $: { xmlns: "" },
           type: [fieldData.type],
-          subtype: [fieldData.subtype || ''],
           apiCode: [fieldCode], // Use the fieldCode from the URL
           label: [fieldData.label],
           helpText: [fieldData.helpText || ''],
           placeHolder: [fieldData.placeHolder || ''],
           testId: [fieldData.testId || ''],
           className: [fieldData.className || ''],
-          maxLength: [fieldData.maxLength || ''],
-          copyAble: [fieldData.copyAble || ''],
-          truncate: [fieldData.truncate || ''],
-          visibleLinesInView: [fieldData.visibleLinesInView || ''],
-          visibleLinesInEdit: [fieldData.visibleLinesInEdit || ''],
         }
       };
+
+      // Add type-specific fields
+      if (fieldData.type === 'TextField') {
+        xmlObject.FieldDefinition.subtype = [fieldData.subtype || ''];
+        xmlObject.FieldDefinition.maxLength = [fieldData.maxLength || ''];
+        xmlObject.FieldDefinition.copyAble = [fieldData.copyAble || ''];
+        xmlObject.FieldDefinition.truncate = [fieldData.truncate || ''];
+        xmlObject.FieldDefinition.visibleLinesInView = [fieldData.visibleLinesInView || ''];
+        xmlObject.FieldDefinition.visibleLinesInEdit = [fieldData.visibleLinesInEdit || ''];
+      } else if (fieldData.type === 'NumberField') {
+        xmlObject.FieldDefinition.step = [fieldData.step || ''];
+        xmlObject.FieldDefinition.format = [fieldData.format || 'Decimal'];
+        xmlObject.FieldDefinition.decimalPlaces = [fieldData.decimalPlaces || '2'];
+      } else if (fieldData.type === 'DateTimeField') {
+        xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];
+      }
+      // PicklistField has no additional fields beyond common ones
 
       // Build XML string
       const builder = new xml2js.Builder({

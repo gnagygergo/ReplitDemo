@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { CompanySettingsProvider } from "@/contexts/CompanySettingsContext";
 import { loadCompanyComponent } from "@/lib/loadCompanyComponent";
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
@@ -25,7 +25,20 @@ import DigitalOffice from "@/pages/digital-office";
 
 function AssetsPage() {
   const { user } = useAuth();
-  const Assets = loadCompanyComponent(user?.companyId ?? undefined, "assets", "assets");
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const assetsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!assetsRef.current || prevCompanyIdRef.current !== companyId) {
+    assetsRef.current = loadCompanyComponent(companyId, "assets", "assets");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const Assets = assetsRef.current;
+  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Assets />
@@ -35,7 +48,20 @@ function AssetsPage() {
 
 function AssetDetailPage() {
   const { user } = useAuth();
-  const AssetDetail = loadCompanyComponent(user?.companyId ?? undefined, "assets", "asset-detail");
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const assetDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!assetDetailRef.current || prevCompanyIdRef.current !== companyId) {
+    assetDetailRef.current = loadCompanyComponent(companyId, "assets", "asset-detail");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const AssetDetail = assetDetailRef.current;
+  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <AssetDetail />

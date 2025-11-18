@@ -251,8 +251,8 @@ export default function AssetDetail() {
               data-testid="text-asset-subtitle"
             >
               {isCreating
-                ? "Create a new asset"
-                : asset?.name || "Asset Details"}
+                ? ""
+                : asset?.name || ""}
             </p>
           </div>
         </div>

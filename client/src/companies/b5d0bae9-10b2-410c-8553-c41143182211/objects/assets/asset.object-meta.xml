@@ -3,4 +3,6 @@
   <apiCode>assets</apiCode>
   <labelPlural>Assets</labelPlural>
   <labelSingular>Asset</labelSingular>
+  <iconSet>Lucide</iconSet>
+  <icon>Package</icon>
 </FieldDefinition>

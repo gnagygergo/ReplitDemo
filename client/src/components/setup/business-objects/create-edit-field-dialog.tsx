@@ -45,7 +45,7 @@ const numberFieldSchema = z.object({
     (val) => !val || !isNaN(Number(val)),
     { message: "Step must be a valid number" }
   ),
-  format: z.enum(["Integer", "Decimal", "Currency", "Percentage"]).optional(),
+  format: z.enum(["Number", "Percentage"]).optional(),
   decimalPlaces: z.string().optional().refine(
     (val) => {
       if (!val) return true; // Optional field
@@ -705,15 +705,13 @@ export function CreateEditFieldDialog({
                   </Label>
                   <Select
                     value={form.watch("format")}
-                    onValueChange={(value) => form.setValue("format", value as "Integer" | "Decimal" | "Currency" | "Percentage")}
+                    onValueChange={(value) => form.setValue("format", value as "Number" | "Percentage")}
                   >
                     <SelectTrigger id="format" data-testid="select-format">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Integer">Integer</SelectItem>
-                      <SelectItem value="Decimal">Decimal</SelectItem>
-                      <SelectItem value="Currency">Currency</SelectItem>
+                      <SelectItem value="Number">Number</SelectItem>
                       <SelectItem value="Percentage">Percentage</SelectItem>
                     </SelectContent>
                   </Select>

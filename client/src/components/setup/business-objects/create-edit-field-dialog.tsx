@@ -16,11 +16,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 const textFieldSchema = z.object({
+  type: z.literal("TextField"),
   apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
   label: z.string().min(1, "Label is required"),
   subtype: z.enum(["text", "email", "phone", "url"]),
@@ -33,7 +35,46 @@ const textFieldSchema = z.object({
   visibleLinesInEdit: z.string().optional(),
 });
 
+const numberFieldSchema = z.object({
+  type: z.literal("NumberField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+  step: z.string().optional(),
+  format: z.enum(["Integer", "Decimal", "Currency", "Percentage"]).optional(),
+  decimalPlaces: z.string().optional(),
+});
+
+const dateTimeFieldSchema = z.object({
+  type: z.literal("DateTimeField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  fieldType: z.enum(["Date", "Time", "DateTime"]),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+});
+
+const picklistFieldSchema = z.object({
+  type: z.literal("PicklistField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+});
+
+const formSchema = z.discriminatedUnion("type", [
+  textFieldSchema,
+  numberFieldSchema,
+  dateTimeFieldSchema,
+  picklistFieldSchema,
+]);
+
+type FormData = z.infer<typeof formSchema>;
 type TextFieldFormData = z.infer<typeof textFieldSchema>;
+type NumberFieldFormData = z.infer<typeof numberFieldSchema>;
+type DateTimeFieldFormData = z.infer<typeof dateTimeFieldSchema>;
+type PicklistFieldFormData = z.infer<typeof picklistFieldSchema>;
 
 interface CreateEditFieldDialogProps {
   open: boolean;
@@ -61,23 +102,69 @@ export function CreateEditFieldDialog({
     fieldToEdit ? "form" : "fieldType"
   );
   const [selectedFieldType, setSelectedFieldType] = useState<string>(() =>
-    fieldToEdit ? "TextField" : ""
+    fieldToEdit?.type || ""
   );
 
-  const form = useForm<TextFieldFormData>({
-    resolver: zodResolver(textFieldSchema),
-    defaultValues: {
-      apiCode: "",
-      label: "",
-      subtype: "text",
-      helpText: "",
-      placeHolder: "",
-      maxLength: "",
-      copyAble: false,
-      truncate: false,
-      visibleLinesInView: "",
-      visibleLinesInEdit: "",
-    },
+  // Helper to get default values based on field type
+  const getDefaultValues = (type: string): any => {
+    switch (type) {
+      case "TextField":
+        return {
+          type: "TextField" as const,
+          apiCode: "",
+          label: "",
+          subtype: "text" as const,
+          helpText: "",
+          placeHolder: "",
+          maxLength: "",
+          copyAble: false,
+          truncate: false,
+          visibleLinesInView: "",
+          visibleLinesInEdit: "",
+        };
+      case "NumberField":
+        return {
+          type: "NumberField" as const,
+          apiCode: "",
+          label: "",
+          helpText: "",
+          placeHolder: "",
+          step: "",
+          format: "Decimal" as const,
+          decimalPlaces: "2",
+        };
+      case "DateTimeField":
+        return {
+          type: "DateTimeField" as const,
+          apiCode: "",
+          label: "",
+          fieldType: "Date" as const,
+          helpText: "",
+          placeHolder: "",
+        };
+      case "PicklistField":
+        return {
+          type: "PicklistField" as const,
+          apiCode: "",
+          label: "",
+          helpText: "",
+          placeHolder: "",
+        };
+      default:
+        return {
+          type: "TextField" as const,
+          apiCode: "",
+          label: "",
+          subtype: "text" as const,
+          helpText: "",
+          placeHolder: "",
+        };
+    }
+  };
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: getDefaultValues(selectedFieldType || "TextField"),
   });
 
   // Sync state when dialog opens or mode changes (before paint)
@@ -87,23 +174,12 @@ export function CreateEditFieldDialog({
     }
 
     if (fieldToEdit) {
-      setSelectedFieldType("TextField");
+      setSelectedFieldType(fieldToEdit.type);
       setStep("form");
     } else {
       setStep("fieldType");
       setSelectedFieldType("");
-      form.reset({
-        apiCode: "",
-        label: "",
-        subtype: "text",
-        helpText: "",
-        placeHolder: "",
-        maxLength: "",
-        copyAble: false,
-        truncate: false,
-        visibleLinesInView: "",
-        visibleLinesInEdit: "",
-      });
+      form.reset(getDefaultValues("TextField"));
     }
   }, [open, fieldToEdit, form]);
 
@@ -118,18 +194,51 @@ export function CreateEditFieldDialog({
     })
       .then((res) => res.json())
       .then((data) => {
-        form.reset({
-          apiCode: data.apiCode || "",
-          label: data.label || "",
-          subtype: data.subtype || "text",
-          helpText: data.helpText || "",
-          placeHolder: data.placeHolder || "",
-          maxLength: data.maxLength || "",
-          copyAble: data.copyAble === "true" || data.copyAble === true,
-          truncate: data.truncate === "true" || data.truncate === true,
-          visibleLinesInView: data.visibleLinesInView || "",
-          visibleLinesInEdit: data.visibleLinesInEdit || "",
-        });
+        const fieldType = data.type || fieldToEdit.type;
+        
+        if (fieldType === "TextField") {
+          form.reset({
+            type: "TextField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            subtype: data.subtype || "text",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+            maxLength: data.maxLength || "",
+            copyAble: data.copyAble === "true" || data.copyAble === true,
+            truncate: data.truncate === "true" || data.truncate === true,
+            visibleLinesInView: data.visibleLinesInView || "",
+            visibleLinesInEdit: data.visibleLinesInEdit || "",
+          });
+        } else if (fieldType === "NumberField") {
+          form.reset({
+            type: "NumberField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+            step: data.step || "",
+            format: data.format || "Decimal",
+            decimalPlaces: data.decimalPlaces || "2",
+          });
+        } else if (fieldType === "DateTimeField") {
+          form.reset({
+            type: "DateTimeField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            fieldType: data.fieldType || "Date",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+          });
+        } else if (fieldType === "PicklistField") {
+          form.reset({
+            type: "PicklistField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+          });
+        }
       })
       .catch((error) => {
         console.error("Error loading field data:", error);
@@ -142,13 +251,16 @@ export function CreateEditFieldDialog({
   }, [open, fieldToEdit, objectName, form, toast]);
 
   const createFieldMutation = useMutation({
-    mutationFn: async (data: TextFieldFormData) => {
-      return apiRequest("POST", `/api/object-fields/${objectName}`, {
-        ...data,
-        type: "TextField",
-        copyAble: data.copyAble?.toString() || "false",
-        truncate: data.truncate?.toString() || "false",
-      });
+    mutationFn: async (data: FormData) => {
+      const payload: any = { ...data };
+      
+      // Transform boolean values to strings for TextField
+      if (data.type === "TextField") {
+        payload.copyAble = data.copyAble?.toString() || "false";
+        payload.truncate = data.truncate?.toString() || "false";
+      }
+      
+      return apiRequest("POST", `/api/object-fields/${objectName}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
@@ -168,13 +280,16 @@ export function CreateEditFieldDialog({
   });
 
   const updateFieldMutation = useMutation({
-    mutationFn: async (data: TextFieldFormData) => {
-      return apiRequest("PUT", `/api/object-fields/${objectName}/${fieldToEdit?.apiCode}`, {
-        ...data,
-        type: "TextField",
-        copyAble: data.copyAble?.toString() || "false",
-        truncate: data.truncate?.toString() || "false",
-      });
+    mutationFn: async (data: FormData) => {
+      const payload: any = { ...data };
+      
+      // Transform boolean values to strings for TextField
+      if (data.type === "TextField") {
+        payload.copyAble = data.copyAble?.toString() || "false";
+        payload.truncate = data.truncate?.toString() || "false";
+      }
+      
+      return apiRequest("PUT", `/api/object-fields/${objectName}/${fieldToEdit?.apiCode}`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
@@ -193,7 +308,7 @@ export function CreateEditFieldDialog({
     },
   });
 
-  const onSubmit = (data: TextFieldFormData) => {
+  const onSubmit = (data: FormData) => {
     if (fieldToEdit) {
       updateFieldMutation.mutate(data);
     } else {
@@ -203,10 +318,16 @@ export function CreateEditFieldDialog({
 
   const handleFieldTypeSelect = (fieldType: string) => {
     setSelectedFieldType(fieldType);
+    // Reset form with appropriate defaults for the selected field type
+    form.reset(getDefaultValues(fieldType));
   };
 
   const handleSubtypeSelect = (subtype: string) => {
-    form.setValue("subtype", subtype as "text" | "email" | "phone" | "url");
+    if (selectedFieldType === "TextField") {
+      form.setValue("subtype", subtype as "text" | "email" | "phone" | "url");
+    } else if (selectedFieldType === "DateTimeField") {
+      form.setValue("fieldType", subtype as "Date" | "Time" | "DateTime");
+    }
   };
 
   const handleNext = () => {
@@ -219,9 +340,17 @@ export function CreateEditFieldDialog({
         });
         return;
       }
-      if (selectedFieldType === "TextField") {
+      
+      // TextField and DateTimeField need subtype selection
+      if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
-      } else {
+      } 
+      // NumberField and PicklistField skip directly to form
+      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField") {
+        setStep("form");
+      }
+      // Other field types show coming soon message
+      else {
         toast({
           title: "Coming Soon",
           description: `${selectedFieldType} creation will be available in a future update`,
@@ -234,7 +363,13 @@ export function CreateEditFieldDialog({
 
   const handleBack = () => {
     if (step === "form") {
-      setStep("subtype");
+      // TextField and DateTimeField go back to subtype selection
+      if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
+        setStep("subtype");
+      } else {
+        // NumberField and PicklistField go back to field type selection
+        setStep("fieldType");
+      }
     } else if (step === "subtype") {
       setStep("fieldType");
     }
@@ -258,7 +393,8 @@ export function CreateEditFieldDialog({
           </DialogTitle>
           <DialogDescription>
             {step === "fieldType" && "Select the type of field you want to create"}
-            {step === "subtype" && "Select the subtype for the text field"}
+            {step === "subtype" && selectedFieldType === "TextField" && "Select the subtype for the text field"}
+            {step === "subtype" && selectedFieldType === "DateTimeField" && "Select the type of date/time field"}
             {step === "form" && "Configure the field properties"}
           </DialogDescription>
         </DialogHeader>
@@ -315,7 +451,7 @@ export function CreateEditFieldDialog({
           </div>
         )}
 
-        {step === "subtype" && (
+        {step === "subtype" && selectedFieldType === "TextField" && (
           <div className="space-y-4 py-4">
             <RadioGroup
               value={form.watch("subtype")}
@@ -349,8 +485,37 @@ export function CreateEditFieldDialog({
           </div>
         )}
 
+        {step === "subtype" && selectedFieldType === "DateTimeField" && (
+          <div className="space-y-4 py-4">
+            <RadioGroup
+              value={form.watch("fieldType")}
+              onValueChange={handleSubtypeSelect}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Date" id="fieldtype-date" data-testid="radio-fieldtype-date" />
+                <Label htmlFor="fieldtype-date" className="font-normal cursor-pointer">
+                  Date
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Time" id="fieldtype-time" data-testid="radio-fieldtype-time" />
+                <Label htmlFor="fieldtype-time" className="font-normal cursor-pointer">
+                  Time
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="DateTime" id="fieldtype-datetime" data-testid="radio-fieldtype-datetime" />
+                <Label htmlFor="fieldtype-datetime" className="font-normal cursor-pointer">
+                  Date and Time
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
         {step === "form" && (
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            {/* Common Fields for All Types */}
             <div className="space-y-2">
               <Label htmlFor="apiCode" className="text-muted-foreground">
                 API Code <span className="text-destructive">*</span>
@@ -407,78 +572,165 @@ export function CreateEditFieldDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* TextField-Specific Fields */}
+            {selectedFieldType === "TextField" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="maxLength" className="text-muted-foreground">
+                      Max Length
+                    </Label>
+                    <Input
+                      id="maxLength"
+                      data-testid="input-max-length"
+                      type="number"
+                      {...form.register("maxLength")}
+                      placeholder="e.g., 255"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="visibleLinesInView" className="text-muted-foreground">
+                      Visible Lines in View Mode
+                    </Label>
+                    <Input
+                      id="visibleLinesInView"
+                      data-testid="input-visible-lines-view"
+                      type="number"
+                      min="1"
+                      max="10"
+                      {...form.register("visibleLinesInView")}
+                      placeholder="1-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="visibleLinesInEdit" className="text-muted-foreground">
+                      Visible Lines in Edit Mode
+                    </Label>
+                    <Input
+                      id="visibleLinesInEdit"
+                      data-testid="input-visible-lines-edit"
+                      type="number"
+                      min="1"
+                      max="10"
+                      {...form.register("visibleLinesInEdit")}
+                      placeholder="1-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="copyAble"
+                      data-testid="checkbox-copyable"
+                      checked={form.watch("copyAble")}
+                      onCheckedChange={(checked) => form.setValue("copyAble", checked === true)}
+                    />
+                    <Label htmlFor="copyAble" className="font-normal cursor-pointer">
+                      Copy-able (Show copy to clipboard button)
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="truncate"
+                      data-testid="checkbox-truncate"
+                      checked={form.watch("truncate")}
+                      onCheckedChange={(checked) => form.setValue("truncate", checked === true)}
+                    />
+                    <Label htmlFor="truncate" className="font-normal cursor-pointer">
+                      Truncate long text with ellipsis
+                    </Label>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* NumberField-Specific Fields */}
+            {selectedFieldType === "NumberField" && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="step" className="text-muted-foreground">
+                      Step
+                    </Label>
+                    <Input
+                      id="step"
+                      data-testid="input-step"
+                      type="number"
+                      {...form.register("step")}
+                      placeholder="e.g., 1 or 0.01"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="decimalPlaces" className="text-muted-foreground">
+                      Decimal Places
+                    </Label>
+                    <Input
+                      id="decimalPlaces"
+                      data-testid="input-decimal-places"
+                      type="number"
+                      min="0"
+                      max="10"
+                      {...form.register("decimalPlaces")}
+                      placeholder="e.g., 2"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="format" className="text-muted-foreground">
+                    Format
+                  </Label>
+                  <Select
+                    value={form.watch("format")}
+                    onValueChange={(value) => form.setValue("format", value as "Integer" | "Decimal" | "Currency" | "Percentage")}
+                  >
+                    <SelectTrigger id="format" data-testid="select-format">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Integer">Integer</SelectItem>
+                      <SelectItem value="Decimal">Decimal</SelectItem>
+                      <SelectItem value="Currency">Currency</SelectItem>
+                      <SelectItem value="Percentage">Percentage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {/* DateTimeField-Specific Fields - Type selector only if not coming from subtype */}
+            {selectedFieldType === "DateTimeField" && (
               <div className="space-y-2">
-                <Label htmlFor="maxLength" className="text-muted-foreground">
-                  Max Length
+                <Label htmlFor="fieldType" className="text-muted-foreground">
+                  Type <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="maxLength"
-                  data-testid="input-max-length"
-                  type="number"
-                  {...form.register("maxLength")}
-                  placeholder="e.g., 255"
-                />
+                <Select
+                  value={form.watch("fieldType")}
+                  onValueChange={(value) => form.setValue("fieldType", value as "Date" | "Time" | "DateTime")}
+                >
+                  <SelectTrigger id="fieldType" data-testid="select-field-type">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Date">Date</SelectItem>
+                    <SelectItem value="Time">Time</SelectItem>
+                    <SelectItem value="DateTime">Date and Time</SelectItem>
+                  </SelectContent>
+                </Select>
+                {"fieldType" in form.formState.errors && form.formState.errors.fieldType && (
+                  <p className="text-sm text-destructive">{form.formState.errors.fieldType.message}</p>
+                )}
               </div>
+            )}
 
-              <div className="space-y-2">
-                <Label htmlFor="visibleLinesInView" className="text-muted-foreground">
-                  Visible Lines in View Mode
-                </Label>
-                <Input
-                  id="visibleLinesInView"
-                  data-testid="input-visible-lines-view"
-                  type="number"
-                  min="1"
-                  max="10"
-                  {...form.register("visibleLinesInView")}
-                  placeholder="1-10"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="visibleLinesInEdit" className="text-muted-foreground">
-                  Visible Lines in Edit Mode
-                </Label>
-                <Input
-                  id="visibleLinesInEdit"
-                  data-testid="input-visible-lines-edit"
-                  type="number"
-                  min="1"
-                  max="10"
-                  {...form.register("visibleLinesInEdit")}
-                  placeholder="1-10"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="copyAble"
-                  data-testid="checkbox-copyable"
-                  checked={form.watch("copyAble")}
-                  onCheckedChange={(checked) => form.setValue("copyAble", checked === true)}
-                />
-                <Label htmlFor="copyAble" className="font-normal cursor-pointer">
-                  Copy-able (Show copy to clipboard button)
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="truncate"
-                  data-testid="checkbox-truncate"
-                  checked={form.watch("truncate")}
-                  onCheckedChange={(checked) => form.setValue("truncate", checked === true)}
-                />
-                <Label htmlFor="truncate" className="font-normal cursor-pointer">
-                  Truncate long text with ellipsis
-                </Label>
-              </div>
-            </div>
+            {/* PicklistField - No additional fields beyond common ones */}
           </form>
         )}
 

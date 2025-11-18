@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useDateTimeFormat } from "@/hooks/useDateTimeFormat";
 import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { utcToUserZoned, userZonedToUtc, parseDateInput } from "@/utils/timezone-utils";
+import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface DateTimeFieldProps {
   fieldType: "Date" | "Time" | "DateTime";
@@ -18,6 +19,8 @@ export interface DateTimeFieldProps {
   placeholder?: string;
   testId?: string;
   className?: string;
+  objectCode?: string;
+  fieldCode?: string;
 }
 
 export function DateTimeField({
@@ -28,11 +31,29 @@ export function DateTimeField({
   placeholder,
   testId,
   className,
+  objectCode,
+  fieldCode,
 }: DateTimeFieldProps) {
   const { formatDateValue, defaultTimePresentation } = useDateTimeFormat();
   const { timezone } = useUserTimezone();
   const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch field definition if objectCode and fieldCode are provided
+  const { data: fieldDef } = useFieldDefinition({
+    objectCode,
+    fieldCode,
+  });
+
+  // Merge field definition with explicit props (explicit props take precedence)
+  const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? undefined;
+  
+  // Auto-generate testId based on mode if not provided and fieldCode is available
+  const mergedTestId = testId ?? (
+    mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
+    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
+    : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
+  );
 
   /**
    * Normalize string values to Date objects.
@@ -80,7 +101,7 @@ export function DateTimeField({
   if (hasError) {
     return (
       <div className={cn("text-sm text-destructive", className)}>
-        <span data-testid={testId}>Invalid date</span>
+        <span data-testid={mergedTestId}>Invalid date</span>
       </div>
     );
   }
@@ -109,10 +130,10 @@ export function DateTimeField({
                 !normalizedValue && "text-muted-foreground",
                 className || defaultEditClassName
               )}
-              data-testid={testId}
+              data-testid={mergedTestId}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {normalizedValue ? formatDateValue(normalizedValue, "Date") : (placeholder || defaultPlaceholder)}
+              {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || defaultPlaceholder)}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -162,7 +183,7 @@ export function DateTimeField({
             onChange?.(parseDateInput(newDate, "Time", timezone, browserTimezone));
           }}
           className={className || defaultEditClassName}
-          data-testid={testId}
+          data-testid={mergedTestId}
         />
       );
     }
@@ -182,10 +203,10 @@ export function DateTimeField({
                   "flex-1 justify-start text-left font-normal",
                   !normalizedValue && "text-muted-foreground"
                 )}
-                data-testid={testId ? `${testId}-date` : undefined}
+                data-testid={mergedTestId ? `${mergedTestId}-date` : undefined}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {normalizedValue ? formatDateValue(normalizedValue, "Date") : (placeholder || "Select date...")}
+                {normalizedValue ? formatDateValue(normalizedValue, "Date") : (mergedPlaceholder || "Select date...")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -227,7 +248,7 @@ export function DateTimeField({
               onChange?.(parseDateInput(newDate, "DateTime", timezone, browserTimezone));
             }}
             className="w-32"
-            data-testid={testId ? `${testId}-time` : undefined}
+            data-testid={mergedTestId ? `${mergedTestId}-time` : undefined}
           />
         </div>
       );
@@ -239,7 +260,7 @@ export function DateTimeField({
     
     return (
       <div className={className || defaultViewClassName}>
-        <span data-testid={testId}>{displayValue}</span>
+        <span data-testid={mergedTestId}>{displayValue}</span>
       </div>
     );
   }
@@ -248,7 +269,7 @@ export function DateTimeField({
     const displayValue = formatDateValue(normalizedValue, fieldType);
     
     return (
-      <span className={className || defaultTableClassName} data-testid={testId}>
+      <span className={className || defaultTableClassName} data-testid={mergedTestId}>
         {displayValue}
       </span>
     );

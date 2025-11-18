@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Copy, Check } from "lucide-react";
+import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface TextFieldProps {
   mode: "edit" | "view" | "table";
@@ -20,25 +21,51 @@ export interface TextFieldProps {
   recordId?: string;
   visibleLinesInEdit?: number;
   visibleLinesInView?: number;
+  objectCode?: string;
+  fieldCode?: string;
 }
 
 export function TextField({
   mode,
   value,
   onChange,
-  placeholder = "",
-  type = "text",
+  placeholder,
+  type,
   testId,
   className,
   maxLength,
-  copyable = false,
-  truncate = false,
+  copyable,
+  truncate,
   linkPath,
   recordId,
   visibleLinesInEdit,
   visibleLinesInView,
+  objectCode,
+  fieldCode,
 }: TextFieldProps) {
   const [copied, setCopied] = useState(false);
+
+  // Fetch field definition if objectCode and fieldCode are provided
+  const { data: fieldDef } = useFieldDefinition({
+    objectCode,
+    fieldCode,
+  });
+
+  // Merge field definition with explicit props (explicit props take precedence)
+  const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
+  const mergedType = type ?? (fieldDef?.subtype as "text" | "email" | "url" | "password") ?? "text";
+  const mergedMaxLength = maxLength ?? (fieldDef?.maxLength ? parseInt(fieldDef.maxLength) : undefined);
+  const mergedCopyable = copyable ?? fieldDef?.copyAble ?? false;
+  const mergedTruncate = truncate ?? fieldDef?.truncate ?? false;
+  const mergedVisibleLinesInEdit = visibleLinesInEdit ?? (fieldDef?.visibleLinesInEdit ? parseInt(fieldDef.visibleLinesInEdit) : undefined);
+  const mergedVisibleLinesInView = visibleLinesInView ?? (fieldDef?.visibleLinesInView ? parseInt(fieldDef.visibleLinesInView) : undefined);
+  
+  // Auto-generate testId based on mode if not provided and fieldCode is available
+  const mergedTestId = testId ?? (
+    mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
+    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
+    : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
+  );
 
   const handleCopy = async () => {
     if (value) {
@@ -54,16 +81,16 @@ export function TextField({
 
   if (mode === "edit") {
     // Use Textarea for multi-line input
-    if (visibleLinesInEdit) {
+    if (mergedVisibleLinesInEdit) {
       return (
         <Textarea
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          rows={visibleLinesInEdit}
+          placeholder={mergedPlaceholder}
+          maxLength={mergedMaxLength}
+          rows={mergedVisibleLinesInEdit}
           className={className || defaultEditClassName}
-          data-testid={testId}
+          data-testid={mergedTestId}
         />
       );
     }
@@ -71,13 +98,13 @@ export function TextField({
     // Use Input for single-line input
     return (
       <Input
-        type={type}
+        type={mergedType}
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        maxLength={maxLength}
+        placeholder={mergedPlaceholder}
+        maxLength={mergedMaxLength}
         className={className || defaultEditClassName}
-        data-testid={testId}
+        data-testid={mergedTestId}
       />
     );
   }
@@ -86,27 +113,27 @@ export function TextField({
     const displayValue = value || "-";
     
     // Multi-line view mode with preserved line breaks
-    if (visibleLinesInView) {
+    if (mergedVisibleLinesInView) {
       const lineHeight = 1.5; // Tailwind's default line height for text-sm
-      const maxHeight = `${visibleLinesInView * lineHeight}rem`;
+      const maxHeight = `${mergedVisibleLinesInView * lineHeight}rem`;
       
       return (
         <div className={`flex items-start gap-2 ${className || defaultViewClassName}`}>
           <div 
             className="whitespace-pre-wrap overflow-y-auto"
             style={{ maxHeight }}
-            data-testid={testId}
+            data-testid={mergedTestId}
           >
             {displayValue}
           </div>
-          {copyable && value && (
+          {mergedCopyable && value && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={handleCopy}
               className="h-6 w-6 p-0 flex-shrink-0"
-              data-testid={`${testId}-copy`}
+              data-testid={`${mergedTestId}-copy`}
             >
               {copied ? (
                 <Check className="h-3 w-3 text-green-600" />
@@ -122,17 +149,17 @@ export function TextField({
     // Single-line view mode (default behavior)
     return (
       <div className={`flex items-center gap-2 ${className || defaultViewClassName}`}>
-        <span data-testid={testId}>
+        <span data-testid={mergedTestId}>
           {displayValue}
         </span>
-        {copyable && value && (
+        {mergedCopyable && value && (
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={handleCopy}
             className="h-6 w-6 p-0"
-            data-testid={`${testId}-copy`}
+            data-testid={`${mergedTestId}-copy`}
           >
             {copied ? (
               <Check className="h-3 w-3 text-green-600" />
@@ -147,7 +174,7 @@ export function TextField({
 
   if (mode === "table") {
     const displayValue = value || "-";
-    const truncatedValue = truncate && value.length > 30 
+    const truncatedValue = mergedTruncate && value.length > 30 
       ? `${value.substring(0, 30)}...` 
       : displayValue;
 
@@ -157,8 +184,8 @@ export function TextField({
         <Link href={`${linkPath}/${recordId}`}>
           <span 
             className="text-primary hover:underline cursor-pointer"
-            data-testid={testId}
-            title={truncate && value.length > 30 ? value : undefined}
+            data-testid={mergedTestId}
+            title={mergedTruncate && value.length > 30 ? value : undefined}
           >
             {truncatedValue}
           </span>
@@ -170,8 +197,8 @@ export function TextField({
     return (
       <span 
         className={className || defaultTableClassName}
-        data-testid={testId}
-        title={truncate && value.length > 30 ? value : undefined}
+        data-testid={mergedTestId}
+        title={mergedTruncate && value.length > 30 ? value : undefined}
       >
         {truncatedValue}
       </span>

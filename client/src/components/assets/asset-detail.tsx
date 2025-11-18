@@ -321,15 +321,12 @@ export default function AssetDetail() {
                           </FormLabel>
                           <FormControl>
                             <TextField
+                              objectCode="assets"
+                              fieldCode="serialNumber"
                               mode={isEditing ? "edit" : "view"}
                               value={field.value}
                               onChange={field.onChange}
                               placeholder="Enter serial number"
-                              testId={
-                                isEditing
-                                  ? "input-serial-number"
-                                  : "text-serial-number"
-                              }
                             />
                           </FormControl>
                           <FormMessage />

@@ -23,13 +23,14 @@ import {
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface DropDownListFieldProps {
   mode: "edit" | "view" | "table";
   value?: string;
   onValueChange?: (value: string) => void;
   sourceType: "metadata";
-  sourcePath: string;
+  sourcePath?: string;
   showSearch?: boolean;
   placeholder?: string;
   testId?: string;
@@ -43,6 +44,8 @@ export interface DropDownListFieldProps {
   rootKey?: string;
   // Item key in XML structure (e.g., "currency" for currencies.xml)
   itemKey?: string;
+  objectCode?: string;
+  fieldCode?: string;
 }
 
 export function DropDownListField({
@@ -51,8 +54,8 @@ export function DropDownListField({
   onValueChange,
   sourceType,
   sourcePath,
-  showSearch = false,
-  placeholder = "Select an option",
+  showSearch,
+  placeholder,
   testId,
   className,
   disabled = false,
@@ -60,13 +63,33 @@ export function DropDownListField({
   getValue,
   rootKey,
   itemKey,
+  objectCode,
+  fieldCode,
 }: DropDownListFieldProps) {
   const [open, setOpen] = useState(false);
 
+  // Fetch field definition if objectCode and fieldCode are provided
+  const { data: fieldDef } = useFieldDefinition({
+    objectCode,
+    fieldCode,
+  });
+
+  // Merge field definition with explicit props (explicit props take precedence)
+  const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "Select an option";
+  const mergedShowSearch = showSearch ?? fieldDef?.allowSearch ?? false;
+  const mergedSourcePath = sourcePath ?? fieldDef?.metadataSource ?? "";
+  
+  // Auto-generate testId based on mode if not provided and fieldCode is available
+  const mergedTestId = testId ?? (
+    mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
+    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
+    : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
+  );
+
   // Only fetch metadata for sourceType="metadata"
   const { data: metadataResponse, isLoading } = useMetadata({
-    sourcePath,
-    enabled: sourceType === "metadata",
+    sourcePath: mergedSourcePath,
+    enabled: sourceType === "metadata" && !!mergedSourcePath,
   });
 
   // Extract items from XML response
@@ -102,23 +125,33 @@ export function DropDownListField({
   // Display text for Command button in edit mode (shows placeholder if no value)
   const displayTextForEditMode = selectedItem
     ? extractDisplayValue(selectedItem)
-    : placeholder;
+    : mergedPlaceholder;
 
   const defaultEditClassName = "w-full";
   const defaultViewClassName = "text-sm py-2";
   const defaultTableClassName = "text-sm";
 
+  // Guard against missing metadata source path ONLY in edit mode
+  // View/table modes don't need metadata - they just display the value
+  if (mode === "edit" && sourceType === "metadata" && !mergedSourcePath) {
+    return (
+      <div className={cn("text-sm text-destructive", className || defaultEditClassName)} data-testid={mergedTestId}>
+        Missing metadata source path for field
+      </div>
+    );
+  }
+
   if (mode === "edit") {
     if (isLoading) {
       return (
-        <div className={className || defaultEditClassName} data-testid={testId}>
+        <div className={className || defaultEditClassName} data-testid={mergedTestId}>
           Loading options...
         </div>
       );
     }
 
     // Use Command component for searchable dropdown
-    if (showSearch) {
+    if (mergedShowSearch) {
       return (
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
@@ -132,7 +165,7 @@ export function DropDownListField({
                 className || defaultEditClassName
               )}
               disabled={disabled}
-              data-testid={testId}
+              data-testid={mergedTestId}
             >
               {displayTextForEditMode}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -140,7 +173,7 @@ export function DropDownListField({
           </PopoverTrigger>
           <PopoverContent className="w-full p-0" align="start">
             <Command>
-              <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
+              <CommandInput placeholder={`Search ${mergedPlaceholder.toLowerCase()}...`} />
               <CommandList>
                 <CommandEmpty>No option found.</CommandEmpty>
                 <CommandGroup>
@@ -155,7 +188,7 @@ export function DropDownListField({
                           onValueChange?.(itemValue);
                           setOpen(false);
                         }}
-                        data-testid={`${testId}-option-${itemValue}`}
+                        data-testid={`${mergedTestId}-option-${itemValue}`}
                       >
                         <Check
                           className={cn(
@@ -184,9 +217,9 @@ export function DropDownListField({
       >
         <SelectTrigger
           className={className || defaultEditClassName}
-          data-testid={testId}
+          data-testid={mergedTestId}
         >
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={mergedPlaceholder} />
         </SelectTrigger>
         <SelectContent>
           {items.map((item: any, index: number) => {
@@ -196,7 +229,7 @@ export function DropDownListField({
               <SelectItem
                 key={`${itemValue}-${index}`}
                 value={itemValue}
-                data-testid={`${testId}-option-${itemValue}`}
+                data-testid={`${mergedTestId}-option-${itemValue}`}
               >
                 {itemDisplay}
               </SelectItem>
@@ -211,7 +244,7 @@ export function DropDownListField({
     return (
       <div
         className={className || defaultViewClassName}
-        data-testid={testId}
+        data-testid={mergedTestId}
       >
         {displayTextForViewMode}
       </div>
@@ -222,7 +255,7 @@ export function DropDownListField({
     return (
       <div
         className={className || defaultTableClassName}
-        data-testid={testId}
+        data-testid={mergedTestId}
       >
         {displayTextForViewMode}
       </div>

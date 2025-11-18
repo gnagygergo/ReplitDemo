@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectDefinition xmlns="">
+  <apiCode>assets</apiCode>
+  <labelPlural>Assets</labelPlural>
+  <labelSingular>Asset</labelSingular>
+</FieldDefinition>

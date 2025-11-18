@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { CompanySettingsProvider } from "@/contexts/CompanySettingsContext";
+import { loadCompanyComponent } from "@/lib/loadCompanyComponent";
+import { Suspense } from "react";
 import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
@@ -12,16 +14,34 @@ import Registration from "@/pages/registration";
 import Accounts from "@/components/accounts/accounts";
 import Quotes from "@/components/quotes/quotes";
 import Opportunities from "@/components/opportunities/opportunities";
-import AssetsWrapper from "@/components/assets/assets-wrapper";
 import Products from "@/components/products/products";
 import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
 import AccountDetail from "@/components/accounts/account-detail";
-import AssetDetailWrapper from "@/components/assets/asset-detail-wrapper";
 import QuoteDetail from "@/components/quotes/quote-detail";
 import ProductDetail from "@/components/products/product-detail";
 import DigitalOffice from "@/pages/digital-office";
+
+function AssetsPage() {
+  const { user } = useAuth();
+  const Assets = loadCompanyComponent(user?.companyId ?? undefined, "assets", "assets");
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Assets />
+    </Suspense>
+  );
+}
+
+function AssetDetailPage() {
+  const { user } = useAuth();
+  const AssetDetail = loadCompanyComponent(user?.companyId ?? undefined, "assets", "asset-detail");
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AssetDetail />
+    </Suspense>
+  );
+}
 
 function AuthenticatedRouter() {
   return (
@@ -38,8 +58,8 @@ function AuthenticatedRouter() {
         />
         <Route path="/accounts/:id" component={AccountDetail} />
         <Route path="/accounts" component={Accounts} />
-        <Route path="/assets/:id" component={AssetDetailWrapper} />
-        <Route path="/assets" component={AssetsWrapper} />
+        <Route path="/assets/:id" component={AssetDetailPage} />
+        <Route path="/assets" component={AssetsPage} />
         <Route path="/quotes/:id" component={QuoteDetail} />
         <Route path="/quotes" component={Quotes} />
         <Route path="/opportunities" component={Opportunities} />

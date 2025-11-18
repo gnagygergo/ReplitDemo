@@ -317,6 +317,7 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
+                            label="Serial Number"
                             objectCode="assets"
                             fieldCode="serialNumber"
                             mode={isEditing ? "edit" : "view"}

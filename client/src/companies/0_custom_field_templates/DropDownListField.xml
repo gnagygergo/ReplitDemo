@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<FieldDefinition xmlns="">
+  <type>DropDownListField</type> 
+  <apiCode>installationDate</apiCode> 
+  <label>Installation Date</label> 
+  <helpText></helpText>
+  <placeHolder></placeHolder>
+  <testId></testId>
+  <className></className>
+  <sourceType></sourceType> <!-- metadata -->
+  <sourcePath></sourcePath> <!-- countries.xml -->
+  <showSearch></showSearch> <!-- true or false -->
+  <rootKey></rootKey> <!-- countries - the rootkey of the xml file -->
+  <itemKey></itemKey> <!-- country- the itemkey in the xml file for each item -->
+  <getValue></getValue> <!-- item.countryCode[0] -->
+  <getDisplayValue></getDisplayValue> <!-- item.countryName[0] -->
+</FieldDefinition>
+

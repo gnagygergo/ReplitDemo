@@ -283,26 +283,69 @@ export default function SmartAccountManagementDetailCard({
                     )}
                   />
 
-                  {/* Row 3: Company Registration ID (full width) - Using metadata-driven TextField */}
+                  {/* Row 3: Company Information - Visible when isSelfEmployed or isLegalEntity */}
                   {(form.watch("isSelfEmployed") || form.watch("isLegalEntity")) && (
-                    <FormField
-                      control={form.control}
-                      name="companyRegistrationId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <TextField
-                              mode="edit"
-                              value={field.value || ""}
-                              onChange={field.onChange}
-                              objectCode="accounts"
-                              fieldCode="company_registration_id"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <>
+                      {/* Company Official Name */}
+                      <FormField
+                        control={form.control}
+                        name="companyOfficialName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <TextField
+                                mode="edit"
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                objectCode="accounts"
+                                fieldCode="company_official_name"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Company Registration ID */}
+                      <FormField
+                        control={form.control}
+                        name="companyRegistrationId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <TextField
+                                mode="edit"
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                objectCode="accounts"
+                                fieldCode="company_registration_id"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {/* Tax ID */}
+                      <FormField
+                        control={form.control}
+                        name="taxId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <TextField
+                                mode="edit"
+                                value={field.value || ""}
+                                onChange={field.onChange}
+                                objectCode="accounts"
+                                fieldCode="tax_id"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
                   )}
 
                   {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
@@ -351,7 +394,28 @@ export default function SmartAccountManagementDetailCard({
                     </div>
                   )}
 
-                  {/* Row 5: Address Section with Google Maps Integration */}
+                  {/* Row 5: Created Date - Read-only metadata field shown in edit mode */}
+                  {account?.createdDate && (
+                    <FormField
+                      control={form.control}
+                      name="createdDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <DateTimeField
+                              mode="view"
+                              value={field.value ?? null}
+                              onChange={field.onChange}
+                              objectCode="accounts"
+                              fieldCode="created_date"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Row 6: Address Section with Google Maps Integration */}
                   <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                     <h3 className="font-semibold text-sm">Address Information</h3>
                     
@@ -514,15 +578,36 @@ export default function SmartAccountManagementDetailCard({
                   fieldCode="name"
                 />
 
-                {/* Row 3: Company Registration ID (full width) - Using metadata-driven TextField */}
+                {/* Row 3: Company Information - Visible when isSelfEmployed or isLegalEntity */}
                 {(account.isSelfEmployed || account.isLegalEntity) && (
-                  <TextField
-                    mode="view"
-                    value={account.companyRegistrationId || ""}
-                    onChange={() => {}}
-                    objectCode="accounts"
-                    fieldCode="company_registration_id"
-                  />
+                  <>
+                    {/* Company Official Name */}
+                    <TextField
+                      mode="view"
+                      value={account.companyOfficialName || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="company_official_name"
+                    />
+
+                    {/* Company Registration ID */}
+                    <TextField
+                      mode="view"
+                      value={account.companyRegistrationId || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="company_registration_id"
+                    />
+
+                    {/* Tax ID */}
+                    <TextField
+                      mode="view"
+                      value={account.taxId || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="tax_id"
+                    />
+                  </>
                 )}
 
                 {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
@@ -576,6 +661,17 @@ export default function SmartAccountManagementDetailCard({
                     )}
                   </div>
                 </div>
+
+                {/* Row 6: Created Date - Using metadata-driven DateTimeField */}
+                {account.createdDate && (
+                  <DateTimeField
+                    mode="view"
+                    value={account.createdDate}
+                    onChange={() => {}}
+                    objectCode="accounts"
+                    fieldCode="created_date"
+                  />
+                )}
               </div>
             )}
           </>

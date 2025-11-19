@@ -399,12 +399,11 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <DateTimeField
-                            label="Installation Date"
-                            fieldType="Date"
+                            objectCode="assets"
+                            fieldCode="installationDate"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="Select installation date..."
                             testId="input-install-date"
                           />
                           <FormMessage />

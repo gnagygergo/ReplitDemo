@@ -28,9 +28,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LookupField } from "@/components/ui/lookup-field";
 import { NumberField } from "@/components/ui/number-field";
 import { TextField } from "@/components/ui/text-field";
+import { DateTimeField } from "@/components/ui/date-time-field";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 
 export default function Assets() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -263,12 +263,13 @@ export default function Assets() {
                         
                         </TableCell>
                         <TableCell>
-                          {asset.installationDate
-                            ? format(
-                                new Date(asset.installationDate),
-                                "MMM d, yyyy",
-                              )
-                            : "-"}
+                          <DateTimeField
+                            mode="table"
+                            value={asset.installationDate}
+                            objectCode="assets"
+                            fieldCode="installation_date"
+                            testId={`text-installation-date-${asset.id}`}
+                          />
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

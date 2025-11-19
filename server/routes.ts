@@ -1439,6 +1439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fieldDef = parsedData.FieldDefinition || {};
       const flattenedData: any = {};
       
+      // Get field type first to handle type-specific logic
+      const fieldType = fieldDef.type?.[0] || '';
+      
       // Define boolean fields that need special handling
       const booleanFields = ['copyAble', 'truncate', 'percentageDisplay', 'allowSearch'];
       
@@ -1453,6 +1456,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             flattenedData[key] = false;
           }
           // If value is undefined or empty, leave it undefined (don't set the key)
+        } else if (key === 'defaultValue' && fieldType === 'CheckboxField') {
+          // For CheckboxField defaultValue, only include if it's a valid value
+          if (value === 'true' || value === 'false') {
+            flattenedData[key] = value;
+          }
+          // If invalid or missing, don't set the key - let frontend apply default
         } else {
           flattenedData[key] = value || '';
         }

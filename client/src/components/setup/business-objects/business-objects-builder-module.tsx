@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil } from "lucide-react";
 import { CreateEditFieldDialog } from "./create-edit-field-dialog";
+import { ObjectBuilder } from "./object-builder";
 
 interface FieldDefinition {
   type: string;
@@ -16,8 +14,11 @@ interface FieldDefinition {
   filePath: string;
 }
 
-function CustomFieldBuilder() {
-  const [selectedObject, setSelectedObject] = useState<string>("assets");
+interface CustomFieldBuilderProps {
+  selectedObject: string;
+}
+
+export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fieldToEdit, setFieldToEdit] = useState<FieldDefinition | null>(null);
 
@@ -46,99 +47,74 @@ function CustomFieldBuilder() {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Custom Field Builder</CardTitle>
-          <Button onClick={handleAddField} data-testid="button-add-field">
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Field
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Object Selection Dropdown */}
-        <div className="space-y-2">
-          <Label htmlFor="object-select" className="text-muted-foreground">
-            Select Object
-          </Label>
-          <Select
-            value={selectedObject}
-            onValueChange={setSelectedObject}
-          >
-            <SelectTrigger id="object-select" data-testid="select-object" className="w-64">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="assets">Assets</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Field Definitions</h3>
+        <Button onClick={handleAddField} data-testid="button-add-field">
+          <Plus className="h-4 w-4 mr-2" />
+          Add New Field
+        </Button>
+      </div>
 
-        {/* Selected Object Field List */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">Field Definitions</h3>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : error ? (
-            <div className="border rounded-md p-6 text-center">
-              <p className="text-destructive" data-testid="error-message">
-                Error loading field definitions: {error.message}
-              </p>
-            </div>
-          ) : (
-            <div className="border rounded-md">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead data-testid="header-field-type">Field Type</TableHead>
-                    <TableHead data-testid="header-field-code">Field Code</TableHead>
-                    <TableHead data-testid="header-label">Label</TableHead>
-                    <TableHead className="w-24" data-testid="header-actions">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {!fieldDefinitions || fieldDefinitions.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="text-center text-muted-foreground" data-testid="empty-state">
-                        No field definitions found for {selectedObject}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    fieldDefinitions.map((field, index) => (
-                      <TableRow key={`${field.apiCode}-${index}`} data-testid={`row-field-${field.apiCode}`}>
-                        <TableCell data-testid={`cell-type-${field.apiCode}`}>
-                          {field.type}
-                        </TableCell>
-                        <TableCell data-testid={`cell-code-${field.apiCode}`}>
-                          {field.apiCode}
-                        </TableCell>
-                        <TableCell data-testid={`cell-label-${field.apiCode}`}>
-                          {field.label}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditField(field)}
-                            data-testid={`button-edit-${field.apiCode}`}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+      {isLoading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
-      </CardContent>
+      ) : error ? (
+        <div className="border rounded-md p-6 text-center">
+          <p className="text-destructive" data-testid="error-message">
+            Error loading field definitions: {error.message}
+          </p>
+        </div>
+      ) : (
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead data-testid="header-field-type">Field Type</TableHead>
+                <TableHead data-testid="header-field-code">Field Code</TableHead>
+                <TableHead data-testid="header-label">Label</TableHead>
+                <TableHead className="w-24" data-testid="header-actions">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {!fieldDefinitions || fieldDefinitions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground" data-testid="empty-state">
+                    No field definitions found for {selectedObject}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                fieldDefinitions.map((field, index) => (
+                  <TableRow key={`${field.apiCode}-${index}`} data-testid={`row-field-${field.apiCode}`}>
+                    <TableCell data-testid={`cell-type-${field.apiCode}`}>
+                      {field.type}
+                    </TableCell>
+                    <TableCell data-testid={`cell-code-${field.apiCode}`}>
+                      {field.apiCode}
+                    </TableCell>
+                    <TableCell data-testid={`cell-label-${field.apiCode}`}>
+                      {field.label}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditField(field)}
+                        data-testid={`button-edit-${field.apiCode}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <CreateEditFieldDialog
         open={dialogOpen}
@@ -146,7 +122,7 @@ function CustomFieldBuilder() {
         objectName={selectedObject}
         fieldToEdit={fieldToEdit}
       />
-    </Card>
+    </div>
   );
 }
 
@@ -157,7 +133,7 @@ export default function BusinessObjectsBuilderModule() {
         <h2 className="text-2xl font-bold">Object and Process Builder</h2>
         <p className="text-muted-foreground">Define custom fields, layouts, and business processes</p>
       </div>
-      <CustomFieldBuilder />
+      <ObjectBuilder />
     </div>
   );
 }

@@ -1255,6 +1255,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all object definitions for the company
+  app.get("/api/object-definitions", isAuthenticated, async (req, res) => {
+    try {
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the objects directory
+      const objectsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects'
+      );
+
+      // Check if directory exists and read all folders
+      let folders: string[];
+      try {
+        const entries = readdirSync(objectsDir, { withFileTypes: true });
+        folders = entries
+          .filter(entry => entry.isDirectory())
+          .map(entry => entry.name);
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          // Directory doesn't exist, return empty array
+          return res.json([]);
+        }
+        throw error;
+      }
+
+      // For each folder, look for [objectName].object-meta.xml
+      const objectDefinitions = [];
+      for (const folderName of folders) {
+        const objectMetaPath = path.join(
+          objectsDir,
+          folderName,
+          `${folderName}.object-meta.xml`
+        );
+
+        // Check if the object-meta.xml file exists
+        try {
+          const xmlContent = readFileSync(objectMetaPath, 'utf-8');
+          const parsedData = await parseXML(xmlContent) as any;
+          
+          // Extract the relevant fields
+          const objDef = parsedData.ObjectDefinition || {};
+          objectDefinitions.push({
+            apiCode: objDef.apiCode?.[0] || folderName,
+            labelPlural: objDef.labelPlural?.[0] || folderName,
+            labelSingular: objDef.labelSingular?.[0] || folderName,
+            iconSet: objDef.iconSet?.[0] || 'Lucide',
+            icon: objDef.icon?.[0] || 'Package',
+          });
+        } catch (error: any) {
+          // If object-meta.xml doesn't exist for this folder, skip it
+          if (error.code !== 'ENOENT') {
+            console.error(`Error reading object definition for ${folderName}:`, error);
+          }
+        }
+      }
+
+      res.json(objectDefinitions);
+    } catch (error) {
+      console.error("Error fetching object definitions:", error);
+      res.status(500).json({ message: "Failed to fetch object definitions" });
+    }
+  });
+
   // Object field definitions endpoint
   app.get("/api/object-fields/:objectName", isAuthenticated, async (req, res) => {
     try {

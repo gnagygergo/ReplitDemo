@@ -1587,12 +1587,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { objectName, fieldCode } = req.params;
       const fieldData = req.body;
-      
-      // Security: Only allow specific object names
-      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
-      if (!allowedObjects.includes(objectName)) {
-        return res.status(400).json({ message: "Invalid object name" });
-      }
 
       // Validate required fields
       if (!fieldData.label || !fieldData.type) {
@@ -1603,6 +1597,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const companyContext = await storage.GetCompanyContext(req);
       if (!companyContext) {
         return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Security: Verify the object exists by checking for object-meta.xml
+      const objectMetaPath = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'objects',
+        objectName,
+        `${objectName}.object-meta.xml`
+      );
+      if (!existsSync(objectMetaPath)) {
+        return res.status(404).json({ message: "Object not found" });
       }
 
       // Build the path to the field definition file

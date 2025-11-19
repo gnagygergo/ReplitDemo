@@ -570,82 +570,42 @@ export default function SmartAccountManagementDetailCard({
                 )}
 
                 {/* Row 2: Account Name (full width) - Using metadata-driven TextField */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <TextField
-                          mode="view"
-                          value={account.name || ""}
-                          onChange={() => {}}
-                          objectCode="accounts"
-                          fieldCode="name"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
+                <TextField
+                  mode="view"
+                  value={account.name || ""}
+                  onChange={() => {}}
+                  objectCode="accounts"
+                  fieldCode="name"
                 />
 
                 {/* Row 3: Company Information - Visible when isSelfEmployed or isLegalEntity */}
                 {(account.isSelfEmployed || account.isLegalEntity) && (
                   <>
                     {/* Company Official Name */}
-                    <FormField
-                      control={form.control}
-                      name="companyOfficialName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <TextField
-                              mode="view"
-                              value={account.companyOfficialName || ""}
-                              onChange={() => {}}
-                              objectCode="accounts"
-                              fieldCode="company_official_name"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
+                    <TextField
+                      mode="view"
+                      value={account.companyOfficialName || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="company_official_name"
                     />
 
                     {/* Company Registration ID */}
-                    <FormField
-                      control={form.control}
-                      name="companyRegistrationId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <TextField
-                              mode="view"
-                              value={account.companyRegistrationId || ""}
-                              onChange={() => {}}
-                              objectCode="accounts"
-                              fieldCode="company_registration_id"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
+                    <TextField
+                      mode="view"
+                      value={account.companyRegistrationId || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="company_registration_id"
                     />
 
                     {/* Tax ID */}
-                    <FormField
-                      control={form.control}
-                      name="taxId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <TextField
-                              mode="view"
-                              value={account.taxId || ""}
-                              onChange={() => {}}
-                              objectCode="accounts"
-                              fieldCode="tax_id"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
+                    <TextField
+                      mode="view"
+                      value={account.taxId || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="tax_id"
                     />
                   </>
                 )}
@@ -654,22 +614,12 @@ export default function SmartAccountManagementDetailCard({
                 {!account.isShippingAddress && !account.isLegalEntity && (
                   <div className="grid grid-cols-2 gap-4">
                     {/* Email - Using metadata-driven TextField */}
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <TextField
-                              mode="view"
-                              value={account.email || ""}
-                              onChange={() => {}}
-                              objectCode="accounts"
-                              fieldCode="email"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
+                    <TextField
+                      mode="view"
+                      value={account.email || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="email"
                     />
 
                     {/* Mobile Phone */}
@@ -714,22 +664,12 @@ export default function SmartAccountManagementDetailCard({
 
                 {/* Row 6: Created Date - Using metadata-driven DateTimeField */}
                 {account.createdDate && (
-                  <FormField
-                    control={form.control}
-                    name="createdDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <DateTimeField
-                            mode="view"
-                            value={account.createdDate}
-                            onChange={() => {}}
-                            objectCode="accounts"
-                            fieldCode="created_date"
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
+                  <DateTimeField
+                    mode="view"
+                    value={account.createdDate}
+                    onChange={() => {}}
+                    objectCode="accounts"
+                    fieldCode="created_date"
                   />
                 )}
               </div>

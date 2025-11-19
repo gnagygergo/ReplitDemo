@@ -11,14 +11,9 @@ import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
 import Registration from "@/pages/registration";
-import Quotes from "@/components/quotes/quotes";
-import Opportunities from "@/components/opportunities/opportunities";
-import Products from "@/components/products/products";
 import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
-import QuoteDetail from "@/components/quotes/quote-detail";
-import ProductDetail from "@/components/products/product-detail";
 import DigitalOffice from "@/pages/digital-office";
 
 function AssetsPage() {
@@ -38,7 +33,7 @@ function AssetsPage() {
   const Assets = assetsRef.current;
   
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div data-testid="loading-assets">Loading...</div>}>
       <Assets />
     </Suspense>
   );
@@ -61,7 +56,7 @@ function AssetDetailPage() {
   const AssetDetail = assetDetailRef.current;
   
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div data-testid="loading-asset-detail">Loading...</div>}>
       <AssetDetail />
     </Suspense>
   );
@@ -84,7 +79,7 @@ function AccountsPage() {
   const Accounts = accountsRef.current;
   
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div data-testid="loading-accounts">Loading...</div>}>
       <Accounts />
     </Suspense>
   );
@@ -107,8 +102,123 @@ function AccountDetailPage() {
   const AccountDetail = accountDetailRef.current;
   
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div data-testid="loading-account-detail">Loading...</div>}>
       <AccountDetail />
+    </Suspense>
+  );
+}
+
+function OpportunitiesPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const opportunitiesRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!opportunitiesRef.current || prevCompanyIdRef.current !== companyId) {
+    opportunitiesRef.current = loadCompanyComponent(companyId, "opportunities", "opportunities");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const Opportunities = opportunitiesRef.current;
+  
+  return (
+    <Suspense fallback={<div data-testid="loading-opportunities">Loading...</div>}>
+      <Opportunities />
+    </Suspense>
+  );
+}
+
+function ProductsPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const productsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!productsRef.current || prevCompanyIdRef.current !== companyId) {
+    productsRef.current = loadCompanyComponent(companyId, "products", "products");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const Products = productsRef.current;
+  
+  return (
+    <Suspense fallback={<div data-testid="loading-products">Loading...</div>}>
+      <Products />
+    </Suspense>
+  );
+}
+
+function ProductDetailPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const productDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!productDetailRef.current || prevCompanyIdRef.current !== companyId) {
+    productDetailRef.current = loadCompanyComponent(companyId, "products", "product-detail");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const ProductDetail = productDetailRef.current;
+  
+  return (
+    <Suspense fallback={<div data-testid="loading-product-detail">Loading...</div>}>
+      <ProductDetail />
+    </Suspense>
+  );
+}
+
+function QuotesPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const quotesRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!quotesRef.current || prevCompanyIdRef.current !== companyId) {
+    quotesRef.current = loadCompanyComponent(companyId, "quotes", "quotes");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const Quotes = quotesRef.current;
+  
+  return (
+    <Suspense fallback={<div data-testid="loading-quotes">Loading...</div>}>
+      <Quotes />
+    </Suspense>
+  );
+}
+
+function QuoteDetailPage() {
+  const { user } = useAuth();
+  // Normalize companyId: trim and use default if empty
+  const companyId = user?.companyId?.trim() || "0_default";
+  
+  const quoteDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
+  const prevCompanyIdRef = useRef<string>("0_default");
+  
+  // Load component on first render or when companyId actually changes
+  if (!quoteDetailRef.current || prevCompanyIdRef.current !== companyId) {
+    quoteDetailRef.current = loadCompanyComponent(companyId, "quotes", "quote-detail");
+    prevCompanyIdRef.current = companyId;
+  }
+  
+  const QuoteDetail = quoteDetailRef.current;
+  
+  return (
+    <Suspense fallback={<div data-testid="loading-quote-detail">Loading...</div>}>
+      <QuoteDetail />
     </Suspense>
   );
 }
@@ -130,11 +240,11 @@ function AuthenticatedRouter() {
         <Route path="/accounts" component={AccountsPage} />
         <Route path="/assets/:id" component={AssetDetailPage} />
         <Route path="/assets" component={AssetsPage} />
-        <Route path="/quotes/:id" component={QuoteDetail} />
-        <Route path="/quotes" component={Quotes} />
-        <Route path="/opportunities" component={Opportunities} />
-        <Route path="/products/:id" component={ProductDetail} />
-        <Route path="/products" component={Products} />
+        <Route path="/quotes/:id" component={QuoteDetailPage} />
+        <Route path="/quotes" component={QuotesPage} />
+        <Route path="/opportunities" component={OpportunitiesPage} />
+        <Route path="/products/:id" component={ProductDetailPage} />
+        <Route path="/products" component={ProductsPage} />
         <Route path="/setup" component={Setup} />
         <Route path="setup/business-objects" component={BusinessObjectsManager} />
         <Route path="/digital-office" component={DigitalOffice} />

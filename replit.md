@@ -20,7 +20,7 @@ Preferred communication style: Simple, everyday language.
     - **TiptapEditor**: Rich text editor with comprehensive formatting and sticky toolbar.
 - **Metadata-Driven Field Configuration**: Field components fetch definitions from XML metadata using `objectCode` and `fieldCode` props, allowing centralized configuration via the Object Builder module.
 - **Object Builder Module**: Administrative interface for managing custom field definitions with a multi-step dialog for creation/editing, type-specific validation, and persistence to XML files. Supports TextField (with subtypes), NumberField, DateTimeField, and PicklistField types.
-- **Company-Specific Component Architecture**: Full component duplication per company (`companies/[companyId]/objects/[objectName]/layouts/`) for maximum customization, loaded dynamically at runtime via `loadCompanyComponent`. Default components are sourced from `companies/0_default/`.
+- **Company-Specific Component Architecture**: Full component duplication per company (`companies/[companyId]/objects/[objectName]/layouts/`) for maximum customization, loaded dynamically at runtime via `loadCompanyComponent`. Default components are sourced from `companies/0_default/`. All major business objects (accounts, assets, opportunities, products, quotes) use this architecture with companyId normalization and useRef-based component caching.
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

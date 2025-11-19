@@ -5,10 +5,10 @@ import { type Quote, type QuoteLine } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileSpreadsheet } from "lucide-react";
-import QuoteHeaderCard from "@/components/quotes/quote-cards/quote-header-card";
-import QuoteLinesCard from "@/components/quotes/quote-cards/quote-lines-card";
-import QuoteEmailsCard from "@/components/quotes/quote-cards/quote-emails-card";
-import QuoteFooterCard from "@/components/quotes/quote-cards/quote-footer-card";
+import QuoteHeaderCard from "./quote-cards/quote-header-card";
+import QuoteLinesCard from "./quote-cards/quote-lines-card";
+import QuoteEmailsCard from "./quote-cards/quote-emails-card";
+import QuoteFooterCard from "./quote-cards/quote-footer-card";
 
 export default function QuoteDetail() {
   const [match, params] = useRoute("/quotes/:id");

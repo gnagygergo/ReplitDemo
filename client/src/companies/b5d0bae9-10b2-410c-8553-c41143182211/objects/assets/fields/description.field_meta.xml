@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>description</apiCode>
+  <label>Description</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>text</subtype>
+  <maxLength/>
+  <copyAble>false</copyAble>
+  <truncate>true</truncate>
+  <visibleLinesInView>3</visibleLinesInView>
+  <visibleLinesInEdit>4</visibleLinesInEdit>
+</FieldDefinition>

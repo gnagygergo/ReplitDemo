@@ -355,13 +355,11 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
-                            label="Description"
+                            objectCode="assets"
+                            fieldCode="description"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value || ""}
                             onChange={field.onChange}
-                            placeholder=""
-                            visibleLinesInEdit={3}
-                            visibleLinesInView={3}
                             testId={
                               isEditing
                                 ? "input-description"

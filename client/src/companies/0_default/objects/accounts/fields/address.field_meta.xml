@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>AddressField</type>
+  <apiCode>address</apiCode>
+  <label>Address</label>
+  <helpText>Complete mailing address with Google Maps autocomplete</helpText>
+  <placeHolder>Search for an address...</placeHolder>
+  <testId/>
+  <className/>
+  <streetAddressColumn>street_address</streetAddressColumn>
+  <cityColumn>city</cityColumn>
+  <stateProvinceColumn>state_province</stateProvinceColumn>
+  <zipCodeColumn>zip_code</zipCodeColumn>
+  <countryColumn>country</countryColumn>
+</FieldDefinition>

@@ -82,12 +82,26 @@ const checkboxFieldSchema = z.object({
   defaultValue: z.enum(["true", "false"]).optional(),
 });
 
+const addressFieldSchema = z.object({
+  type: z.literal("AddressField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+  streetAddressColumn: z.string().min(1, "Street address column is required"),
+  cityColumn: z.string().min(1, "City column is required"),
+  stateProvinceColumn: z.string().min(1, "State/Province column is required"),
+  zipCodeColumn: z.string().min(1, "ZIP code column is required"),
+  countryColumn: z.string().min(1, "Country column is required"),
+});
+
 const formSchema = z.discriminatedUnion("type", [
   textFieldSchema,
   numberFieldSchema,
   dateTimeFieldSchema,
   picklistFieldSchema,
   checkboxFieldSchema,
+  addressFieldSchema,
 ]);
 
 type FormData = z.infer<typeof formSchema>;
@@ -96,6 +110,7 @@ type NumberFieldFormData = z.infer<typeof numberFieldSchema>;
 type DateTimeFieldFormData = z.infer<typeof dateTimeFieldSchema>;
 type PicklistFieldFormData = z.infer<typeof picklistFieldSchema>;
 type CheckboxFieldFormData = z.infer<typeof checkboxFieldSchema>;
+type AddressFieldFormData = z.infer<typeof addressFieldSchema>;
 
 interface CreateEditFieldDialogProps {
   open: boolean;
@@ -179,6 +194,19 @@ export function CreateEditFieldDialog({
           helpText: "",
           placeHolder: "",
           defaultValue: "false" as const,
+        };
+      case "AddressField":
+        return {
+          type: "AddressField" as const,
+          apiCode: "",
+          label: "",
+          helpText: "",
+          placeHolder: "",
+          streetAddressColumn: "street_address",
+          cityColumn: "city",
+          stateProvinceColumn: "state_province",
+          zipCodeColumn: "zip_code",
+          countryColumn: "country",
         };
       default:
         return {
@@ -288,6 +316,19 @@ export function CreateEditFieldDialog({
             placeHolder: data.placeHolder || "",
             defaultValue: data.defaultValue || "false",
           });
+        } else if (fieldType === "AddressField") {
+          form.reset({
+            type: "AddressField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+            streetAddressColumn: data.streetAddressColumn || "street_address",
+            cityColumn: data.cityColumn || "city",
+            stateProvinceColumn: data.stateProvinceColumn || "state_province",
+            zipCodeColumn: data.zipCodeColumn || "zip_code",
+            countryColumn: data.countryColumn || "country",
+          });
         }
       })
       .catch((error) => {
@@ -395,8 +436,8 @@ export function CreateEditFieldDialog({
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
       } 
-      // NumberField, PicklistField, and CheckboxField skip directly to form
-      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField" || selectedFieldType === "CheckboxField") {
+      // NumberField, PicklistField, CheckboxField, and AddressField skip directly to form
+      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField" || selectedFieldType === "CheckboxField" || selectedFieldType === "AddressField") {
         setStep("form");
       }
       // Other field types show coming soon message
@@ -501,6 +542,12 @@ export function CreateEditFieldDialog({
                 <RadioGroupItem value="CheckboxField" id="type-checkbox" data-testid="radio-field-type-checkbox" />
                 <Label htmlFor="type-checkbox" className="font-normal cursor-pointer">
                   Checkbox field
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="AddressField" id="type-address" data-testid="radio-field-type-address" />
+                <Label htmlFor="type-address" className="font-normal cursor-pointer">
+                  Address field with Google Maps autocomplete
                 </Label>
               </div>
             </RadioGroup>
@@ -812,6 +859,90 @@ export function CreateEditFieldDialog({
                   <p className="text-sm text-destructive">{form.formState.errors.defaultValue.message}</p>
                 )}
               </div>
+            )}
+
+            {/* AddressField-Specific Fields */}
+            {selectedFieldType === "AddressField" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="streetAddressColumn" className="text-muted-foreground">
+                    Street Address Column <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="streetAddressColumn"
+                    {...form.register("streetAddressColumn")}
+                    placeholder="street_address"
+                    data-testid="input-street-address-column"
+                  />
+                  {"streetAddressColumn" in form.formState.errors && form.formState.errors.streetAddressColumn && (
+                    <p className="text-sm text-destructive">{form.formState.errors.streetAddressColumn.message}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cityColumn" className="text-muted-foreground">
+                      City Column <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="cityColumn"
+                      {...form.register("cityColumn")}
+                      placeholder="city"
+                      data-testid="input-city-column"
+                    />
+                    {"cityColumn" in form.formState.errors && form.formState.errors.cityColumn && (
+                      <p className="text-sm text-destructive">{form.formState.errors.cityColumn.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="stateProvinceColumn" className="text-muted-foreground">
+                      State/Province Column <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="stateProvinceColumn"
+                      {...form.register("stateProvinceColumn")}
+                      placeholder="state_province"
+                      data-testid="input-state-province-column"
+                    />
+                    {"stateProvinceColumn" in form.formState.errors && form.formState.errors.stateProvinceColumn && (
+                      <p className="text-sm text-destructive">{form.formState.errors.stateProvinceColumn.message}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCodeColumn" className="text-muted-foreground">
+                      ZIP Code Column <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="zipCodeColumn"
+                      {...form.register("zipCodeColumn")}
+                      placeholder="zip_code"
+                      data-testid="input-zip-code-column"
+                    />
+                    {"zipCodeColumn" in form.formState.errors && form.formState.errors.zipCodeColumn && (
+                      <p className="text-sm text-destructive">{form.formState.errors.zipCodeColumn.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="countryColumn" className="text-muted-foreground">
+                      Country Column <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="countryColumn"
+                      {...form.register("countryColumn")}
+                      placeholder="country"
+                      data-testid="input-country-column"
+                    />
+                    {"countryColumn" in form.formState.errors && form.formState.errors.countryColumn && (
+                      <p className="text-sm text-destructive">{form.formState.errors.countryColumn.message}</p>
+                    )}
+                  </div>
+                </div>
+              </>
             )}
 
             {/* PicklistField - No additional fields beyond common ones */}

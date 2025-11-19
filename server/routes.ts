@@ -1573,6 +1573,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];
       } else if (fieldData.type === 'CheckboxField') {
         xmlObject.FieldDefinition.defaultValue = [fieldData.defaultValue || 'false'];
+      } else if (fieldData.type === 'AddressField') {
+        xmlObject.FieldDefinition.streetAddressColumn = [fieldData.streetAddressColumn || 'street_address'];
+        xmlObject.FieldDefinition.cityColumn = [fieldData.cityColumn || 'city'];
+        xmlObject.FieldDefinition.stateProvinceColumn = [fieldData.stateProvinceColumn || 'state_province'];
+        xmlObject.FieldDefinition.zipCodeColumn = [fieldData.zipCodeColumn || 'zip_code'];
+        xmlObject.FieldDefinition.countryColumn = [fieldData.countryColumn || 'country'];
       }
       // PicklistField has no additional fields beyond common ones
 
@@ -1680,6 +1686,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.fieldType = [fieldData.fieldType || 'Date'];
       } else if (fieldData.type === 'CheckboxField') {
         xmlObject.FieldDefinition.defaultValue = [fieldData.defaultValue || 'false'];
+      } else if (fieldData.type === 'AddressField') {
+        xmlObject.FieldDefinition.streetAddressColumn = [fieldData.streetAddressColumn || 'street_address'];
+        xmlObject.FieldDefinition.cityColumn = [fieldData.cityColumn || 'city'];
+        xmlObject.FieldDefinition.stateProvinceColumn = [fieldData.stateProvinceColumn || 'state_province'];
+        xmlObject.FieldDefinition.zipCodeColumn = [fieldData.zipCodeColumn || 'zip_code'];
+        xmlObject.FieldDefinition.countryColumn = [fieldData.countryColumn || 'country'];
       }
       // PicklistField has no additional fields beyond common ones
 

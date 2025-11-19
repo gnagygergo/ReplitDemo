@@ -1287,16 +1287,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw error;
       }
 
-      // For each folder, look for [objectName].object-meta.xml
+      // For each folder, look for [objectName].object_meta.xml
       const objectDefinitions = [];
       for (const folderName of folders) {
         const objectMetaPath = path.join(
           objectsDir,
           folderName,
-          `${folderName}.object-meta.xml`
+          `${folderName}.object_meta.xml`
         );
 
-        // Check if the object-meta.xml file exists
+        // Check if the object_meta.xml file exists
         try {
           const xmlContent = readFileSync(objectMetaPath, 'utf-8');
           const parsedData = await parseXML(xmlContent) as any;
@@ -1311,7 +1311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             icon: objDef.icon?.[0] || 'Package',
           });
         } catch (error: any) {
-          // If object-meta.xml doesn't exist for this folder, skip it
+          // If object_meta.xml doesn't exist for this folder, skip it
           if (error.code !== 'ENOENT') {
             console.error(`Error reading object definition for ${folderName}:`, error);
           }
@@ -1336,14 +1336,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Company context required" });
       }
 
-      // Security: Verify the object exists by checking for object-meta.xml
+      // Security: Verify the object exists by checking for object_meta.xml
       const objectMetaPath = path.join(
         process.cwd(),
         'client/src/companies',
         companyContext,
         'objects',
         objectName,
-        `${objectName}.object-meta.xml`
+        `${objectName}.object_meta.xml`
       );
       if (!existsSync(objectMetaPath)) {
         return res.status(404).json({ message: "Object not found" });
@@ -1407,14 +1407,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Company context required" });
       }
 
-      // Security: Verify the object exists by checking for object-meta.xml
+      // Security: Verify the object exists by checking for object_meta.xml
       const objectMetaPath = path.join(
         process.cwd(),
         'client/src/companies',
         companyContext,
         'objects',
         objectName,
-        `${objectName}.object-meta.xml`
+        `${objectName}.object_meta.xml`
       );
       if (!existsSync(objectMetaPath)) {
         return res.status(404).json({ message: "Object not found" });
@@ -1494,14 +1494,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Company context required" });
       }
 
-      // Security: Verify the object exists by checking for object-meta.xml
+      // Security: Verify the object exists by checking for object_meta.xml
       const objectMetaPath = path.join(
         process.cwd(),
         'client/src/companies',
         companyContext,
         'objects',
         objectName,
-        `${objectName}.object-meta.xml`
+        `${objectName}.object_meta.xml`
       );
       if (!existsSync(objectMetaPath)) {
         return res.status(404).json({ message: "Object not found" });
@@ -1610,14 +1610,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Company context required" });
       }
 
-      // Security: Verify the object exists by checking for object-meta.xml
+      // Security: Verify the object exists by checking for object_meta.xml
       const objectMetaPath = path.join(
         process.cwd(),
         'client/src/companies',
         companyContext,
         'objects',
         objectName,
-        `${objectName}.object-meta.xml`
+        `${objectName}.object_meta.xml`
       );
       if (!existsSync(objectMetaPath)) {
         return res.status(404).json({ message: "Object not found" });

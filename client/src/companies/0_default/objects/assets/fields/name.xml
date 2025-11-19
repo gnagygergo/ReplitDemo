@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <subtype>text</subtype>
+  <apiCode>name</apiCode>
+  <label>Asset Name</label>
+  <helpText></helpText>
+  <placeHolder>Enter the name of the Asset</placeHolder>
+  <testId></testId>
+  <className></className>
+  <maxLength></maxLength>
+  <copyAble></copyAble>
+  <truncate></truncate>
+  <visibleLinesInView></visibleLinesInView>
+  <visibleLinesInEdit></visibleLinesInEdit>
+</FieldDefinition>

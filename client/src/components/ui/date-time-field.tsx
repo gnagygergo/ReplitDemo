@@ -43,7 +43,7 @@ export function DateTimeField({
   const [isOpen, setIsOpen] = useState(false);
 
   // Fetch field definition if objectCode and fieldCode are provided
-  const { data: fieldDef } = useFieldDefinition({
+  const { data: fieldDef, isLoading: isLoadingFieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
   });
@@ -60,7 +60,27 @@ export function DateTimeField({
     : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
   );
   
+  // If fieldType is not explicitly provided and we're loading metadata, show loading state
+  if (!fieldType && isLoadingFieldDef) {
+    if (mode === "table") {
+      return <span className={className || "text-sm"} data-testid={mergedTestId}>-</span>;
+    }
+    return (
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div className={mode === "edit" ? "w-full" : "text-sm py-2"}>
+          <span data-testid={mergedTestId}>-</span>
+        </div>
+      </>
+    );
+  }
+  
   // Error handling: fieldType must be provided either as prop or via metadata
+  // Only error if metadata has finished loading and still no fieldType
   if (!mergedFieldType) {
     console.error(
       `DateTimeField error: fieldType not provided. Either pass fieldType prop or provide objectCode="${objectCode}" and fieldCode="${fieldCode}" with valid XML metadata containing <fieldType>.`

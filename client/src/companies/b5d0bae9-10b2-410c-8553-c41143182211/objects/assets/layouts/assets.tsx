@@ -31,6 +31,7 @@ import { TextField } from "@/components/ui/text-field";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { DateTimeField } from "@/components/ui/date-time-field";
 
 export default function Assets() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -263,12 +264,13 @@ export default function Assets() {
                         
                         </TableCell>
                         <TableCell>
-                          {asset.installationDate
-                            ? format(
-                                new Date(asset.installationDate),
-                                "MMM d, yyyy",
-                              )
-                            : "-"}
+                          <DateTimeField
+                            mode="table"
+                            value={asset.installationDate}
+                            testId={`text-quantity-${asset.id}`}
+                            objectCode="assets"
+                            fieldCode="installationDate"
+                          />  
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

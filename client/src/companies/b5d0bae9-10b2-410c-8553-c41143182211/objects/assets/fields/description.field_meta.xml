@@ -9,7 +9,7 @@
   <className/>
   <subtype>text</subtype>
   <maxLength/>
-  <copyAble>false</copyAble>
+  <copyAble>true</copyAble>
   <truncate>true</truncate>
   <visibleLinesInView>3</visibleLinesInView>
   <visibleLinesInEdit>4</visibleLinesInEdit>

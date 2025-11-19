@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>DateTimeField</type>
+  <apiCode>created_date</apiCode>
+  <label>Created Date</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <fieldType>DateTime</fieldType>
+</FieldDefinition>

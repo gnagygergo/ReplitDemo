@@ -26,7 +26,7 @@ function AssetsPage() {
   
   // Load component on first render or when companyId actually changes
   if (!assetsRef.current || prevCompanyIdRef.current !== companyId) {
-    assetsRef.current = loadCompanyComponent(companyId, "assets", "assets");
+    assetsRef.current = loadCompanyComponent(companyId, "assets", "assets.table-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -49,7 +49,7 @@ function AssetDetailPage() {
   
   // Load component on first render or when companyId actually changes
   if (!assetDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    assetDetailRef.current = loadCompanyComponent(companyId, "assets", "asset-detail");
+    assetDetailRef.current = loadCompanyComponent(companyId, "assets", "asset-detail.detail-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -72,7 +72,7 @@ function AccountsPage() {
   
   // Load component on first render or when companyId actually changes
   if (!accountsRef.current || prevCompanyIdRef.current !== companyId) {
-    accountsRef.current = loadCompanyComponent(companyId, "accounts", "accounts");
+    accountsRef.current = loadCompanyComponent(companyId, "accounts", "accounts.table-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -95,7 +95,7 @@ function AccountDetailPage() {
   
   // Load component on first render or when companyId actually changes
   if (!accountDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    accountDetailRef.current = loadCompanyComponent(companyId, "accounts", "account-detail");
+    accountDetailRef.current = loadCompanyComponent(companyId, "accounts", "account-detail.detail-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -118,7 +118,7 @@ function OpportunitiesPage() {
   
   // Load component on first render or when companyId actually changes
   if (!opportunitiesRef.current || prevCompanyIdRef.current !== companyId) {
-    opportunitiesRef.current = loadCompanyComponent(companyId, "opportunities", "opportunities");
+    opportunitiesRef.current = loadCompanyComponent(companyId, "opportunities", "opportunities.table-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -141,7 +141,7 @@ function ProductsPage() {
   
   // Load component on first render or when companyId actually changes
   if (!productsRef.current || prevCompanyIdRef.current !== companyId) {
-    productsRef.current = loadCompanyComponent(companyId, "products", "products");
+    productsRef.current = loadCompanyComponent(companyId, "products", "products.table-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -164,7 +164,7 @@ function ProductDetailPage() {
   
   // Load component on first render or when companyId actually changes
   if (!productDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    productDetailRef.current = loadCompanyComponent(companyId, "products", "product-detail");
+    productDetailRef.current = loadCompanyComponent(companyId, "products", "product-detail.detail-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -187,7 +187,7 @@ function QuotesPage() {
   
   // Load component on first render or when companyId actually changes
   if (!quotesRef.current || prevCompanyIdRef.current !== companyId) {
-    quotesRef.current = loadCompanyComponent(companyId, "quotes", "quotes");
+    quotesRef.current = loadCompanyComponent(companyId, "quotes", "quotes.table-view");
     prevCompanyIdRef.current = companyId;
   }
   
@@ -210,7 +210,7 @@ function QuoteDetailPage() {
   
   // Load component on first render or when companyId actually changes
   if (!quoteDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    quoteDetailRef.current = loadCompanyComponent(companyId, "quotes", "quote-detail");
+    quoteDetailRef.current = loadCompanyComponent(companyId, "quotes", "quote-detail.detail-view");
     prevCompanyIdRef.current = companyId;
   }
   

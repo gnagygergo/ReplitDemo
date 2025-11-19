@@ -92,9 +92,10 @@ export default function SmartAccountManagementDetailCard({
         <CardTitle>{isEditing ? "" : account?.name}</CardTitle>
       </CardHeader>
       <CardContent>
-        {isEditing ? (
-          <Form {...form}>
-            <form className="space-y-6">
+        <Form {...form}>
+          <form className="space-y-6">
+            {isEditing ? (
+              <>
               {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
               {showAccountNature && !(account?.isShippingAddress || account?.isCompanyContact) && (
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
@@ -530,9 +531,8 @@ export default function SmartAccountManagementDetailCard({
                   </div>
                 </div>
               )}
-              </form>
-          </Form>
-        ) : (
+              </>
+            ) : (
           <>
             {!account ? (
               <div>No account data</div>
@@ -675,7 +675,9 @@ export default function SmartAccountManagementDetailCard({
               </div>
             )}
           </>
-        )}
+            )}
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

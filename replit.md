@@ -19,7 +19,11 @@ Preferred communication style: Simple, everyday language.
     - **Self-Contained Field Components**: `LookupField`, `TextField`, `NumberField`, `DateTimeField`, `DropDownListField` components that internally render `FormLabel` and `FormControl`, sourcing labels automatically from XML metadata or explicit props.
     - **TiptapEditor**: Rich text editor with comprehensive formatting and sticky toolbar.
 - **Metadata-Driven Field Configuration**: Field components fetch definitions from XML metadata using `objectCode` and `fieldCode` props, allowing centralized configuration via the Object Builder module.
-- **Object Builder Module**: Administrative interface for managing custom field definitions with a multi-step dialog for creation/editing, type-specific validation, and persistence to XML files. Supports TextField (with subtypes), NumberField, DateTimeField, and PicklistField types.
+- **Object Builder Module**: Comprehensive administrative interface for managing business objects and their configurations:
+    - **List View**: Displays all business objects defined in `[companyId]/objects/` folders as cards with search functionality.
+    - **Detail View**: Tabbed interface with Object Details, Fields, and Layouts tabs.
+    - **Fields Tab**: Integrates the Custom Field Builder for managing field definitions with multi-step dialog for creation/editing, type-specific validation, and persistence to XML files. Supports TextField (with subtypes), NumberField, DateTimeField, and PicklistField types.
+    - **Dynamic Loading**: Queries `*.object-meta.xml` files to discover and display available business objects.
 - **Company-Specific Component Architecture**: Full component duplication per company (`companies/[companyId]/objects/[objectName]/layouts/`) for maximum customization, loaded dynamically at runtime via `loadCompanyComponent`. Default components are sourced from `companies/0_default/`. All major business objects (accounts, assets, opportunities, products, quotes) use this architecture with companyId normalization and useRef-based component caching.
 
 ### Backend Architecture
@@ -29,6 +33,7 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful endpoints with standardized error handling.
 - **Universal Metadata System**: XML-based metadata for static reference data (e.g., currencies, countries) via dedicated API endpoints.
 - **Dynamic Metadata API**: `/api/metadata/*` endpoint serves and updates XML files dynamically from universal and company-specific paths with security validation.
+- **Object Definitions API**: `/api/object-definitions` endpoint scans company-specific `objects/` folders and returns business object metadata from `*.object-meta.xml` files.
 
 ### Data Model
 - **Entities**: Accounts, Opportunities, Assets, Companies, Users with CRUD operations, search, sorting, and filtering.

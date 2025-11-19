@@ -73,11 +73,21 @@ const picklistFieldSchema = z.object({
   placeHolder: z.string().optional(),
 });
 
+const checkboxFieldSchema = z.object({
+  type: z.literal("CheckboxField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+  defaultValue: z.enum(["true", "false"]).optional(),
+});
+
 const formSchema = z.discriminatedUnion("type", [
   textFieldSchema,
   numberFieldSchema,
   dateTimeFieldSchema,
   picklistFieldSchema,
+  checkboxFieldSchema,
 ]);
 
 type FormData = z.infer<typeof formSchema>;
@@ -85,6 +95,7 @@ type TextFieldFormData = z.infer<typeof textFieldSchema>;
 type NumberFieldFormData = z.infer<typeof numberFieldSchema>;
 type DateTimeFieldFormData = z.infer<typeof dateTimeFieldSchema>;
 type PicklistFieldFormData = z.infer<typeof picklistFieldSchema>;
+type CheckboxFieldFormData = z.infer<typeof checkboxFieldSchema>;
 
 interface CreateEditFieldDialogProps {
   open: boolean;
@@ -159,6 +170,15 @@ export function CreateEditFieldDialog({
           label: "",
           helpText: "",
           placeHolder: "",
+        };
+      case "CheckboxField":
+        return {
+          type: "CheckboxField" as const,
+          apiCode: "",
+          label: "",
+          helpText: "",
+          placeHolder: "",
+          defaultValue: "false" as const,
         };
       default:
         return {
@@ -258,6 +278,15 @@ export function CreateEditFieldDialog({
             label: data.label || "",
             helpText: data.helpText || "",
             placeHolder: data.placeHolder || "",
+          });
+        } else if (fieldType === "CheckboxField") {
+          form.reset({
+            type: "CheckboxField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+            defaultValue: data.defaultValue || "false",
           });
         }
       })
@@ -366,8 +395,8 @@ export function CreateEditFieldDialog({
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
       } 
-      // NumberField and PicklistField skip directly to form
-      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField") {
+      // NumberField, PicklistField, and CheckboxField skip directly to form
+      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField" || selectedFieldType === "CheckboxField") {
         setStep("form");
       }
       // Other field types show coming soon message
@@ -466,6 +495,12 @@ export function CreateEditFieldDialog({
                 <RadioGroupItem value="FormulaField" id="type-formula" data-testid="radio-field-type-formula" />
                 <Label htmlFor="type-formula" className="font-normal cursor-pointer">
                   Formula field
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="CheckboxField" id="type-checkbox" data-testid="radio-field-type-checkbox" />
+                <Label htmlFor="type-checkbox" className="font-normal cursor-pointer">
+                  Checkbox field
                 </Label>
               </div>
             </RadioGroup>
@@ -751,6 +786,30 @@ export function CreateEditFieldDialog({
                 </Select>
                 {"fieldType" in form.formState.errors && form.formState.errors.fieldType && (
                   <p className="text-sm text-destructive">{form.formState.errors.fieldType.message}</p>
+                )}
+              </div>
+            )}
+
+            {/* CheckboxField-Specific Fields */}
+            {selectedFieldType === "CheckboxField" && (
+              <div className="space-y-2">
+                <Label htmlFor="defaultValue" className="text-muted-foreground">
+                  Default Value
+                </Label>
+                <Select
+                  value={form.watch("defaultValue") || "false"}
+                  onValueChange={(value) => form.setValue("defaultValue", value as "true" | "false")}
+                >
+                  <SelectTrigger id="defaultValue" data-testid="select-default-value">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="false">Unchecked (False)</SelectItem>
+                    <SelectItem value="true">Checked (True)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {"defaultValue" in form.formState.errors && form.formState.errors.defaultValue && (
+                  <p className="text-sm text-destructive">{form.formState.errors.defaultValue.message}</p>
                 )}
               </div>
             )}

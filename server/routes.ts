@@ -1355,8 +1355,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fieldDef = parsedData.FieldDefinition || {};
       const flattenedData: any = {};
       
+      // Define boolean fields that need special handling
+      const booleanFields = ['copyAble', 'truncate', 'percentageDisplay', 'allowSearch'];
+      
       Object.keys(fieldDef).forEach(key => {
-        flattenedData[key] = fieldDef[key]?.[0] || '';
+        const value = fieldDef[key]?.[0];
+        
+        // Convert string boolean values to actual booleans, preserve undefined
+        if (booleanFields.includes(key)) {
+          if (value === 'true') {
+            flattenedData[key] = true;
+          } else if (value === 'false') {
+            flattenedData[key] = false;
+          }
+          // If value is undefined or empty, leave it undefined (don't set the key)
+        } else {
+          flattenedData[key] = value || '';
+        }
       });
 
       res.json(flattenedData);

@@ -212,7 +212,15 @@ export default function Assets() {
                             testId={`link-asset-${asset.id}`}
                           />
                         </TableCell>
-                        <TableCell>{asset.description || "-"}</TableCell>
+                        <TableCell>
+                          <TextField
+                            mode="table"
+                            value={asset.description || ""}
+                            objectCode="assets"
+                            fieldCode="description"
+                            testId={`text-description-${asset.id}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <LookupField
                             mode="table"

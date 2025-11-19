@@ -267,7 +267,7 @@ export default function Assets() {
                             mode="table"
                             value={asset.installationDate}
                             objectCode="assets"
-                            fieldCode="installation_date"
+                            fieldCode="installationDate"
                             testId={`text-installation-date-${asset.id}`}
                           />
                         </TableCell>

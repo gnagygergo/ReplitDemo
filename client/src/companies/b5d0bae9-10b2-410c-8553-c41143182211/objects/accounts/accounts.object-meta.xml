@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectDefinition xmlns="">
+  <apiCode>accounts</apiCode>
+  <labelPlural>Accounts</labelPlural>
+  <labelSingular>Account</labelSingular>
+  <iconSet>Lucide</iconSet>
+  <icon>Building</icon>
+</ObjectDefinition>

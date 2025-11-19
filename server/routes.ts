@@ -1329,12 +1329,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/object-fields/:objectName", isAuthenticated, async (req, res) => {
     try {
       const { objectName } = req.params;
-      
-      // Security: Only allow specific object names
-      const allowedObjects = ['assets', 'accounts', 'opportunities', 'quotes'];
-      if (!allowedObjects.includes(objectName)) {
-        return res.status(400).json({ message: "Invalid object name" });
-      }
 
       // Get company context
       const companyContext = await storage.GetCompanyContext(req);

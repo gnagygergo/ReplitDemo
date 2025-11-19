@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectDefinition xmlns="">
+  <apiCode>products</apiCode>
+  <labelPlural>Products</labelPlural>
+  <labelSingular>Product</labelSingular>
+  <iconSet>Lucide</iconSet>
+  <icon>Package</icon>
+</ObjectDefinition>

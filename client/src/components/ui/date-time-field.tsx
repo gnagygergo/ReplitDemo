@@ -13,7 +13,7 @@ import { utcToUserZoned, userZonedToUtc, parseDateInput } from "@/utils/timezone
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface DateTimeFieldProps {
-  fieldType: "Date" | "Time" | "DateTime";
+  fieldType?: "Date" | "Time" | "DateTime";
   mode: "edit" | "view" | "table";
   value: string | Date | null;
   onChange?: (value: Date | null) => void;
@@ -51,6 +51,7 @@ export function DateTimeField({
   // Merge field definition with explicit props (explicit props take precedence)
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? undefined;
+  const mergedFieldType = fieldType ?? (fieldDef?.fieldType as "Date" | "Time" | "DateTime" | undefined);
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -58,6 +59,27 @@ export function DateTimeField({
     : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
     : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
   );
+  
+  // Error handling: fieldType must be provided either as prop or via metadata
+  if (!mergedFieldType) {
+    console.error(
+      `DateTimeField error: fieldType not provided. Either pass fieldType prop or provide objectCode="${objectCode}" and fieldCode="${fieldCode}" with valid XML metadata containing <fieldType>.`
+    );
+    return (
+      <>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground">
+            {mergedLabel}
+          </FormLabel>
+        )}
+        <div className="text-sm text-destructive">
+          <span data-testid={mergedTestId || "text-fieldtype-missing"}>
+            Field type unavailable
+          </span>
+        </div>
+      </>
+    );
+  }
 
   /**
    * Normalize string values to Date objects.
@@ -118,8 +140,8 @@ export function DateTimeField({
   }
 
   const defaultPlaceholder = 
-    fieldType === "Date" ? "Select date..." :
-    fieldType === "Time" ? "Select time..." :
+    mergedFieldType === "Date" ? "Select date..." :
+    mergedFieldType === "Time" ? "Select time..." :
     "Select date and time...";
 
   const defaultEditClassName = "w-full";
@@ -127,7 +149,7 @@ export function DateTimeField({
   const defaultTableClassName = "text-sm";
 
   if (mode === "edit") {
-    if (fieldType === "Date") {
+    if (mergedFieldType === "Date") {
       // For Date fields, convert UTC to user timezone for display (preserves calendar day)
       const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "Date") : null;
       
@@ -176,7 +198,7 @@ export function DateTimeField({
       );
     }
 
-    if (fieldType === "Time") {
+    if (mergedFieldType === "Time") {
       // For Time fields, convert UTC to user timezone for display
       const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "Time") : null;
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
@@ -217,7 +239,7 @@ export function DateTimeField({
       );
     }
 
-    if (fieldType === "DateTime") {
+    if (mergedFieldType === "DateTime") {
       // For DateTime fields, convert UTC to user timezone for display
       const displayValue = normalizedValue && timezone ? utcToUserZoned(normalizedValue, timezone, "DateTime") : null;
       const timeValue = displayValue ? formatDate(displayValue, "HH:mm") : "";
@@ -294,7 +316,7 @@ export function DateTimeField({
   }
 
   if (mode === "view") {
-    const displayValue = formatDateValue(normalizedValue, fieldType);
+    const displayValue = formatDateValue(normalizedValue, mergedFieldType);
     
     return (
       <>
@@ -311,7 +333,7 @@ export function DateTimeField({
   }
 
   if (mode === "table") {
-    const displayValue = formatDateValue(normalizedValue, fieldType);
+    const displayValue = formatDateValue(normalizedValue, mergedFieldType);
     
     return (
       <span className={className || defaultTableClassName} data-testid={mergedTestId}>

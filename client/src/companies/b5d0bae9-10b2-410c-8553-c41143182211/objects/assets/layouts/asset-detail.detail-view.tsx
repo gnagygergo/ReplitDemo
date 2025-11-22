@@ -7,8 +7,6 @@ import {
   type AssetWithDetails,
   type InsertAsset,
   insertAssetSchema,
-  type Account,
-  type Product,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,9 +32,7 @@ import { Package, Edit, Save, X, Building } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import AccountLookupDialog from "@/components/ui/account-lookup-dialog";
-import ProductLookupDialog from "@/components/ui/product-lookup-dialog";
-import { LookupField } from "@/components/ui/lookup-field";
+import LookupFormField from "@/components/ui/lookup-form-field";
 import { NumberField } from "@/components/ui/number-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
@@ -48,10 +44,6 @@ export default function AssetDetail() {
   const [, setLocation] = useLocation();
   const isCreating = params?.id === "new";
   const [isEditing, setIsEditing] = useState(isCreating);
-  const [showAccountLookup, setShowAccountLookup] = useState(false);
-  const [showProductLookup, setShowProductLookup] = useState(false);
-  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -88,13 +80,6 @@ export default function AssetDetail() {
         productId: asset.productId || "",
         installationDate: asset.installationDate || null,
       });
-
-      if (asset.account) {
-        setSelectedAccount(asset.account);
-      }
-      if (asset.product) {
-        setSelectedProduct(asset.product);
-      }
     }
   }, [asset, form, isCreating]);
 
@@ -171,26 +156,8 @@ export default function AssetDetail() {
           productId: asset.productId || "",
           installationDate: asset.installationDate || null,
         });
-        if (asset.account) {
-          setSelectedAccount(asset.account);
-        }
-        if (asset.product) {
-          setSelectedProduct(asset.product);
-        }
       }
     }
-  };
-
-  const handleAccountSelect = (account: Account) => {
-    setSelectedAccount(account);
-    form.setValue("accountId", account.id);
-    setShowAccountLookup(false);
-  };
-
-  const handleProductSelect = (product: Product) => {
-    setSelectedProduct(product);
-    form.setValue("productId", product.id);
-    setShowProductLookup(false);
   };
 
   if (!isCreating) {
@@ -251,8 +218,8 @@ export default function AssetDetail() {
               data-testid="text-asset-subtitle"
             >
               {isCreating
-                ? ""
-                : asset?.name || ""}
+                ? "Create a new asset"
+                : asset?.name || "Asset Details"}
             </p>
           </div>
         </div>
@@ -355,11 +322,13 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
-                            objectCode="assets"
-                            fieldCode="description"
+                            label="Description"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value || ""}
                             onChange={field.onChange}
+                            placeholder=""
+                            visibleLinesInEdit={3}
+                            visibleLinesInView={3}
                             testId={
                               isEditing
                                 ? "input-description"
@@ -417,39 +386,14 @@ export default function AssetDetail() {
                       name="accountId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Account</FormLabel>
-                          <FormControl>
-                            <LookupField
-                              mode={isEditing ? "edit" : "view"}
-                              value={
-                                selectedAccount
-                                  ? {
-                                      id: selectedAccount.id,
-                                      name: selectedAccount.name,
-                                    }
-                                  : null
-                              }
-                              onOpenLookup={() => setShowAccountLookup(true)}
-                              onClear={
-                                isEditing
-                                  ? () => {
-                                      setSelectedAccount(null);
-                                      form.setValue("accountId", "");
-                                    }
-                                  : undefined
-                              }
-                              placeholder="Select account"
-                              icon={<Building className="w-4 h-4" />}
-                              linkPath="/accounts"
-                              testId={
-                                isEditing
-                                  ? "button-select-account"
-                                  : "text-account"
-                              }
-                              valueTestIdPrefix="account"
-                              ariaLabel="Open account lookup dialog"
-                            />
-                          </FormControl>
+                          <LookupFormField
+                            objectCode="assets"
+                            fieldCode="account_id"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={!isEditing}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -461,39 +405,14 @@ export default function AssetDetail() {
                       name="productId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Product</FormLabel>
-                          <FormControl>
-                            <LookupField
-                              mode={isEditing ? "edit" : "view"}
-                              value={
-                                selectedProduct
-                                  ? {
-                                      id: selectedProduct.id,
-                                      name: selectedProduct.productName,
-                                    }
-                                  : null
-                              }
-                              onOpenLookup={() => setShowProductLookup(true)}
-                              onClear={
-                                isEditing
-                                  ? () => {
-                                      setSelectedProduct(null);
-                                      form.setValue("productId", "");
-                                    }
-                                  : undefined
-                              }
-                              placeholder="Select Product"
-                              icon={<Building className="w-4 h-4" />}
-                              linkPath="/products"
-                              testId={
-                                isEditing
-                                  ? "button-select-product"
-                                  : "text-product"
-                              }
-                              valueTestIdPrefix="product"
-                              ariaLabel="Open product lookup dialog"
-                            />
-                          </FormControl>
+                          <LookupFormField
+                            objectCode="assets"
+                            fieldCode="product_id"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            disabled={!isEditing}
+                          />
                           <FormMessage />
                         </FormItem>
                       )}
@@ -515,20 +434,6 @@ export default function AssetDetail() {
           </div>
         </Panel>
       </PanelGroup>
-
-      {/* Account Lookup Dialog */}
-      <AccountLookupDialog
-        open={showAccountLookup}
-        onClose={() => setShowAccountLookup(false)}
-        onSelect={handleAccountSelect}
-      />
-
-      {/* Product Lookup Dialog */}
-      <ProductLookupDialog
-        open={showProductLookup}
-        onClose={() => setShowProductLookup(false)}
-        onSelect={handleProductSelect}
-      />
     </div>
   );
 }

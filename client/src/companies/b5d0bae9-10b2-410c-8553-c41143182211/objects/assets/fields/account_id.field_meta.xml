@@ -2,9 +2,11 @@
 <FieldDefinition xmlns="">
   <type>LookupField</type>
   <apiCode>account_id</apiCode>
-  <label>Account link</label>
-  <helpText/>
-  <placeHolder/>
-  <testId/>
-  <className/>
+  <label>Account</label>
+  <helpText>The account this asset belongs to</helpText>
+  <placeHolder>Select account...</placeHolder>
+  <referencedObject>accounts</referencedObject>
+  <primaryDisplayField>name</primaryDisplayField>
+  <displayColumns>name, address_city</displayColumns>
+
 </FieldDefinition>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>CheckboxField</type>
+  <apiCode>is_self_employed</apiCode>
+  <label>Self Employed</label>
+  <helpText>The difference between Self Employed and Person Account is that for Self Employed account records you can add a Company Registration Id that represents their solo entrepreneurship. </helpText>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <defaultValue>false</defaultValue>
+</FieldDefinition>

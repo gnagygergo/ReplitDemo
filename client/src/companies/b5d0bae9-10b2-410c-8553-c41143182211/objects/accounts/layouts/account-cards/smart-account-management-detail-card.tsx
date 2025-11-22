@@ -111,11 +111,12 @@ export default function SmartAccountManagementDetailCard({
                         control={form.control}
                         name="isPersonAccount"
                         render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormItem>
                             <FormControl>
-                              <Checkbox
-                                checked={!!field.value}
-                                onCheckedChange={(checked) => {
+                              <CheckboxField
+                                mode="edit"
+                                value={field.value}
+                                onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
                                     form.setValue("isLegalEntity", false);
@@ -123,12 +124,11 @@ export default function SmartAccountManagementDetailCard({
                                   }
                                 }}
                                 disabled={!!account?.isPersonAccount}
-                                data-testid="checkbox-is-person-account"
+                                objectCode="accounts"
+                                fieldCode="is_person_account"
                               />
                             </FormControl>
-                            <FormLabel className="!mt-0 cursor-pointer">
-                              Private Person
-                            </FormLabel>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -142,23 +142,23 @@ export default function SmartAccountManagementDetailCard({
                         control={form.control}
                         name="isSelfEmployed"
                         render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormItem>
                             <FormControl>
-                              <Checkbox
-                                checked={!!field.value}
-                                onCheckedChange={(checked) => {
+                              <CheckboxField
+                                mode="edit"
+                                value={field.value}
+                                onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
                                     form.setValue("isLegalEntity", false);
                                     form.setValue("isShippingAddress", false);
                                   }
                                 }}
-                                data-testid="checkbox-is-self-employed"
+                                objectCode="accounts"
+                                fieldCode="is_self_employed"
                               />
                             </FormControl>
-                            <FormLabel className="!mt-0 cursor-pointer">
-                              Self Employed
-                            </FormLabel>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
@@ -173,11 +173,12 @@ export default function SmartAccountManagementDetailCard({
                         control={form.control}
                         name="isLegalEntity"
                         render={({ field }) => (
-                          <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormItem>
                             <FormControl>
-                              <Checkbox
-                                checked={!!field.value}
-                                onCheckedChange={(checked) => {
+                              <CheckboxField
+                                mode="edit"
+                                value={field.value}
+                                onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
                                     form.setValue("isPersonAccount", false);
@@ -185,12 +186,11 @@ export default function SmartAccountManagementDetailCard({
                                     form.setValue("isCompanyContact", false);
                                   }
                                 }}
-                                data-testid="checkbox-is-legal-entity"
+                                objectCode="accounts"
+                                fieldCode="is_legal_entity"
                               />
                             </FormControl>
-                            <FormLabel className="!mt-0 cursor-pointer">
-                              Legal Entity
-                            </FormLabel>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />

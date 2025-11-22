@@ -187,6 +187,7 @@ export function AddressField({
     ].filter(Boolean);
 
     const displayValue = parts.length > 0 ? parts.join(", ") : "-";
+    const hasAddress = parts.length > 0;
 
     return (
       <>
@@ -196,9 +197,19 @@ export function AddressField({
           </FormLabel>
         )}
         <div className={className || defaultViewClassName}>
-          <span data-testid={mergedTestId}>
-            {displayValue}
-          </span>
+          {hasAddress ? (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayValue)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+              data-testid={mergedTestId ? `${mergedTestId}-link` : "link-view-address-on-map"}
+            >
+              <span data-testid={mergedTestId}>{displayValue}</span>
+            </a>
+          ) : (
+            <span data-testid={mergedTestId}>{displayValue}</span>
+          )}
         </div>
       </>
     );

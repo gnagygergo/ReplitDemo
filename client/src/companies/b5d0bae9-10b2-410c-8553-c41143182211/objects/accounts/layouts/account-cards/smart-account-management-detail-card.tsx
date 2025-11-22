@@ -1,7 +1,7 @@
 // This Card is used on the Account Detail View.
 // It is used when Smart Account Management is activated.
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
 import {
@@ -67,24 +67,6 @@ export default function SmartAccountManagementDetailCard({
     form.watch("isCompanyContact") ||
     form.watch("isLegalEntity") ||
     form.watch("isShippingAddress");
-  
-  // Get Google Maps API key from company settings
-  const googleMapsApiKey = getSetting("google_maps_api_key")?.settingValue || "";
-
-  // Memoize the address selection callback to prevent unnecessary re-renders
-  const handlePlaceSelected = useCallback((addressComponents: {
-    streetAddress: string;
-    city: string;
-    stateProvince: string;
-    zipCode: string;
-    country: string;
-  }) => {
-    form.setValue("streetAddress", addressComponents.streetAddress);
-    form.setValue("city", addressComponents.city);
-    form.setValue("stateProvince", addressComponents.stateProvince);
-    form.setValue("zipCode", addressComponents.zipCode);
-    form.setValue("country", addressComponents.country);
-  }, [form]);
 
   return (
     <Card>
@@ -114,8 +96,8 @@ export default function SmartAccountManagementDetailCard({
                           <FormItem>
                             <FormControl>
                               <CheckboxField
-                                mode="edit"
-                                value={field.value}
+                                mode={account?.isPersonAccount ? "view" : "edit"}
+                                value={!!field.value}
                                 onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
@@ -123,7 +105,6 @@ export default function SmartAccountManagementDetailCard({
                                     form.setValue("isShippingAddress", false);
                                   }
                                 }}
-                                disabled={!!account?.isPersonAccount}
                                 objectCode="accounts"
                                 fieldCode="is_person_account"
                               />
@@ -146,7 +127,7 @@ export default function SmartAccountManagementDetailCard({
                             <FormControl>
                               <CheckboxField
                                 mode="edit"
-                                value={field.value}
+                                value={!!field.value}
                                 onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
@@ -177,7 +158,7 @@ export default function SmartAccountManagementDetailCard({
                             <FormControl>
                               <CheckboxField
                                 mode="edit"
-                                value={field.value}
+                                value={!!field.value}
                                 onChange={(checked) => {
                                   field.onChange(checked);
                                   if (checked) {
@@ -417,25 +398,41 @@ export default function SmartAccountManagementDetailCard({
                   )}
 
                   {/* Row 6: Address Field with Google Maps Integration */}
-                  <AddressField
-                    mode="edit"
-                    value={{
-                      streetAddress: form.watch("streetAddress") || "",
-                      city: form.watch("city") || "",
-                      stateProvince: form.watch("stateProvince") || "",
-                      zipCode: form.watch("zipCode") || "",
-                      country: form.watch("country") || ""
-                    }}
-                    onChange={(address) => {
-                      form.setValue("streetAddress", address.streetAddress);
-                      form.setValue("city", address.city);
-                      form.setValue("stateProvince", address.stateProvince);
-                      form.setValue("zipCode", address.zipCode);
-                      form.setValue("country", address.country);
-                    }}
-                    objectCode="accounts"
-                    fieldCode="address"
-                  />
+                  <div>
+                    <AddressField
+                      mode="edit"
+                      value={{
+                        streetAddress: form.watch("streetAddress") || "",
+                        city: form.watch("city") || "",
+                        stateProvince: form.watch("stateProvince") || "",
+                        zipCode: form.watch("zipCode") || "",
+                        country: form.watch("country") || ""
+                      }}
+                      onChange={(address) => {
+                        form.setValue("streetAddress", address.streetAddress, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("city", address.city, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("stateProvince", address.stateProvince, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("zipCode", address.zipCode, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("country", address.country, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                      }}
+                      objectCode="accounts"
+                      fieldCode="address"
+                    />
+                    {/* Display validation errors if any exist for address fields */}
+                    {(form.formState.errors.streetAddress || 
+                      form.formState.errors.city || 
+                      form.formState.errors.stateProvince || 
+                      form.formState.errors.zipCode || 
+                      form.formState.errors.country) && (
+                      <div className="text-sm text-destructive mt-2">
+                        {form.formState.errors.streetAddress?.message}
+                        {form.formState.errors.city?.message}
+                        {form.formState.errors.stateProvince?.message}
+                        {form.formState.errors.zipCode?.message}
+                        {form.formState.errors.country?.message}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               </>

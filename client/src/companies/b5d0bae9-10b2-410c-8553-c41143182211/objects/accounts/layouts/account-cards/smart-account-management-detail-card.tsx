@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -32,10 +31,11 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
-import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { TextField } from "@/components/ui/text-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
+import { CheckboxField } from "@/components/ui/checkbox-field";
+import { AddressField } from "@/components/ui/address-field";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;

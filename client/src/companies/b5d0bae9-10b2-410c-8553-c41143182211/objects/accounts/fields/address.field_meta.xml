@@ -2,7 +2,7 @@
 <FieldDefinition xmlns="">
   <type>AddressField</type>
   <apiCode>address</apiCode>
-  <label>Address</label>
+  <label>Customer Address</label>
   <helpText/>
   <placeHolder/>
   <testId/>

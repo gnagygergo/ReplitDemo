@@ -390,7 +390,6 @@ export default function AssetDetail() {
                           <LookupFormField
                             objectCode="assets"
                             fieldCode="account_id"
-                            formFieldName="accountId"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
@@ -410,7 +409,6 @@ export default function AssetDetail() {
                           <LookupFormField
                             objectCode="assets"
                             fieldCode="product_id"
-                            formFieldName="productId"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

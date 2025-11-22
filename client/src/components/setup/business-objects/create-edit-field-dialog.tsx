@@ -202,11 +202,11 @@ export function CreateEditFieldDialog({
           label: "",
           helpText: "",
           placeHolder: "",
-          streetAddressColumn: "street_address",
-          cityColumn: "city",
-          stateProvinceColumn: "state_province",
-          zipCodeColumn: "zip_code",
-          countryColumn: "country",
+          streetAddressColumn: "",
+          cityColumn: "",
+          stateProvinceColumn: "",
+          zipCodeColumn: "",
+          countryColumn: "",
         };
       default:
         return {
@@ -323,11 +323,11 @@ export function CreateEditFieldDialog({
             label: data.label || "",
             helpText: data.helpText || "",
             placeHolder: data.placeHolder || "",
-            streetAddressColumn: data.streetAddressColumn || "street_address",
-            cityColumn: data.cityColumn || "city",
-            stateProvinceColumn: data.stateProvinceColumn || "state_province",
-            zipCodeColumn: data.zipCodeColumn || "zip_code",
-            countryColumn: data.countryColumn || "country",
+            streetAddressColumn: data.streetAddressColumn || "",
+            cityColumn: data.cityColumn || "",
+            stateProvinceColumn: data.stateProvinceColumn || "",
+            zipCodeColumn: data.zipCodeColumn || "",
+            countryColumn: data.countryColumn || "",
           });
         }
       })
@@ -340,6 +340,27 @@ export function CreateEditFieldDialog({
         });
       });
   }, [open, fieldToEdit, objectName, form, toast]);
+
+  // Auto-populate AddressField column names based on apiCode prefix
+  const apiCode = form.watch("apiCode");
+  useEffect(() => {
+    if (selectedFieldType === "AddressField" && !fieldToEdit) {
+      if (apiCode) {
+        form.setValue("streetAddressColumn", `${apiCode}_street_address`);
+        form.setValue("cityColumn", `${apiCode}_city`);
+        form.setValue("stateProvinceColumn", `${apiCode}_state_province`);
+        form.setValue("zipCodeColumn", `${apiCode}_zip_code`);
+        form.setValue("countryColumn", `${apiCode}_country`);
+      } else {
+        // Reset to empty strings when apiCode is cleared
+        form.setValue("streetAddressColumn", "");
+        form.setValue("cityColumn", "");
+        form.setValue("stateProvinceColumn", "");
+        form.setValue("zipCodeColumn", "");
+        form.setValue("countryColumn", "");
+      }
+    }
+  }, [apiCode, selectedFieldType, fieldToEdit, form]);
 
   const createFieldMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -621,14 +642,14 @@ export function CreateEditFieldDialog({
             {/* Common Fields for All Types */}
             <div className="space-y-2">
               <Label htmlFor="apiCode" className="text-muted-foreground">
-                API Code <span className="text-destructive">*</span>
+                {selectedFieldType === "AddressField" ? "Address Field Prefix" : "API Code"} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="apiCode"
                 data-testid="input-api-code"
                 {...form.register("apiCode")}
                 disabled={!!fieldToEdit}
-                placeholder="e.g., customerEmail"
+                placeholder={selectedFieldType === "AddressField" ? "e.g., physical_location" : "e.g., customerEmail"}
               />
               {form.formState.errors.apiCode && (
                 <p className="text-sm text-destructive">{form.formState.errors.apiCode.message}</p>
@@ -864,82 +885,115 @@ export function CreateEditFieldDialog({
             {/* AddressField-Specific Fields */}
             {selectedFieldType === "AddressField" && (
               <>
+                {!fieldToEdit && (
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="rounded-full bg-primary/10 p-1.5">
+                        <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">Auto-Generated Columns</p>
+                        <p className="text-xs text-muted-foreground">
+                          The API Code you enter will be used as a prefix to automatically generate 5 database columns:
+                        </p>
+                        <div className="mt-2 space-y-1 text-xs font-mono bg-background rounded p-2">
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_street_address</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_city</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_state_province</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_zip_code</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_country</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {fieldToEdit && (
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+                    <div className="flex items-start gap-2">
+                      <div className="rounded-full bg-primary/10 p-1.5">
+                        <svg className="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-medium">Database Column Mappings</p>
+                        <p className="text-xs text-muted-foreground">
+                          These column names were auto-generated when the field was created and cannot be changed:
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="streetAddressColumn" className="text-muted-foreground">
-                    Street Address Column <span className="text-destructive">*</span>
+                    Street Address Column
                   </Label>
                   <Input
                     id="streetAddressColumn"
                     {...form.register("streetAddressColumn")}
-                    placeholder="street_address"
+                    disabled
                     data-testid="input-street-address-column"
+                    className="bg-muted"
                   />
-                  {"streetAddressColumn" in form.formState.errors && form.formState.errors.streetAddressColumn && (
-                    <p className="text-sm text-destructive">{form.formState.errors.streetAddressColumn.message}</p>
-                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="cityColumn" className="text-muted-foreground">
-                      City Column <span className="text-destructive">*</span>
+                      City Column
                     </Label>
                     <Input
                       id="cityColumn"
                       {...form.register("cityColumn")}
-                      placeholder="city"
+                      disabled
                       data-testid="input-city-column"
+                      className="bg-muted"
                     />
-                    {"cityColumn" in form.formState.errors && form.formState.errors.cityColumn && (
-                      <p className="text-sm text-destructive">{form.formState.errors.cityColumn.message}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="stateProvinceColumn" className="text-muted-foreground">
-                      State/Province Column <span className="text-destructive">*</span>
+                      State/Province Column
                     </Label>
                     <Input
                       id="stateProvinceColumn"
                       {...form.register("stateProvinceColumn")}
-                      placeholder="state_province"
+                      disabled
                       data-testid="input-state-province-column"
+                      className="bg-muted"
                     />
-                    {"stateProvinceColumn" in form.formState.errors && form.formState.errors.stateProvinceColumn && (
-                      <p className="text-sm text-destructive">{form.formState.errors.stateProvinceColumn.message}</p>
-                    )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="zipCodeColumn" className="text-muted-foreground">
-                      ZIP Code Column <span className="text-destructive">*</span>
+                      ZIP Code Column
                     </Label>
                     <Input
                       id="zipCodeColumn"
                       {...form.register("zipCodeColumn")}
-                      placeholder="zip_code"
+                      disabled
                       data-testid="input-zip-code-column"
+                      className="bg-muted"
                     />
-                    {"zipCodeColumn" in form.formState.errors && form.formState.errors.zipCodeColumn && (
-                      <p className="text-sm text-destructive">{form.formState.errors.zipCodeColumn.message}</p>
-                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="countryColumn" className="text-muted-foreground">
-                      Country Column <span className="text-destructive">*</span>
+                      Country Column
                     </Label>
                     <Input
                       id="countryColumn"
                       {...form.register("countryColumn")}
-                      placeholder="country"
+                      disabled
                       data-testid="input-country-column"
+                      className="bg-muted"
                     />
-                    {"countryColumn" in form.formState.errors && form.formState.errors.countryColumn && (
-                      <p className="text-sm text-destructive">{form.formState.errors.countryColumn.message}</p>
-                    )}
                   </div>
                 </div>
               </>

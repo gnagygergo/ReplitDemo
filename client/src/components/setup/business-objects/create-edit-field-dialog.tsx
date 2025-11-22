@@ -18,7 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 const textFieldSchema = z.object({
@@ -95,6 +95,17 @@ const addressFieldSchema = z.object({
   countryColumn: z.string().min(1, "Country column is required"),
 });
 
+const lookupFieldSchema = z.object({
+  type: z.literal("LookupField"),
+  apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
+  label: z.string().min(1, "Label is required"),
+  helpText: z.string().optional(),
+  placeHolder: z.string().optional(),
+  referencedObject: z.string().min(1, "Referenced object is required"),
+  primaryDisplayField: z.string().min(1, "Primary display field is required"),
+  displayColumns: z.array(z.string()).min(1, "At least one display column is required").max(5, "Maximum 5 display columns allowed"),
+});
+
 const formSchema = z.discriminatedUnion("type", [
   textFieldSchema,
   numberFieldSchema,
@@ -102,6 +113,7 @@ const formSchema = z.discriminatedUnion("type", [
   picklistFieldSchema,
   checkboxFieldSchema,
   addressFieldSchema,
+  lookupFieldSchema,
 ]);
 
 type FormData = z.infer<typeof formSchema>;
@@ -111,6 +123,7 @@ type DateTimeFieldFormData = z.infer<typeof dateTimeFieldSchema>;
 type PicklistFieldFormData = z.infer<typeof picklistFieldSchema>;
 type CheckboxFieldFormData = z.infer<typeof checkboxFieldSchema>;
 type AddressFieldFormData = z.infer<typeof addressFieldSchema>;
+type LookupFieldFormData = z.infer<typeof lookupFieldSchema>;
 
 interface CreateEditFieldDialogProps {
   open: boolean;
@@ -134,7 +147,7 @@ export function CreateEditFieldDialog({
   const queryClient = useQueryClient();
   
   // Initialize step based on whether we're editing or creating
-  const [step, setStep] = useState<"fieldType" | "subtype" | "form">(() => 
+  const [step, setStep] = useState<"fieldType" | "subtype" | "lookupObject" | "form">(() => 
     fieldToEdit ? "form" : "fieldType"
   );
   const [selectedFieldType, setSelectedFieldType] = useState<string>(() =>
@@ -208,6 +221,17 @@ export function CreateEditFieldDialog({
           zipCodeColumn: "",
           countryColumn: "",
         };
+      case "LookupField":
+        return {
+          type: "LookupField" as const,
+          apiCode: "",
+          label: "",
+          helpText: "",
+          placeHolder: "",
+          referencedObject: "",
+          primaryDisplayField: "",
+          displayColumns: [],
+        };
       default:
         return {
           type: "TextField" as const,
@@ -223,6 +247,30 @@ export function CreateEditFieldDialog({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: getDefaultValues(selectedFieldType || "TextField"),
+  });
+
+  // Fetch available objects for LookupField
+  const { data: availableObjects = [] } = useQuery<Array<{
+    apiCode: string;
+    labelPlural: string;
+    labelSingular: string;
+    iconSet: string;
+    icon: string;
+  }>>({
+    queryKey: ["/api/object-definitions"],
+    enabled: step === "lookupObject" || (fieldToEdit?.type === "LookupField" && step === "form"),
+  });
+
+  // Fetch fields for the selected referenced object
+  const selectedReferencedObject = form.watch("referencedObject" as any);
+  const { data: objectFields = [] } = useQuery<Array<{
+    type: string;
+    apiCode: string;
+    label: string;
+    filePath: string;
+  }>>({
+    queryKey: ["/api/object-fields", selectedReferencedObject],
+    enabled: !!selectedReferencedObject && (step === "form" || step === "lookupObject"),
   });
 
   // Sync state when dialog opens or mode changes (before paint)
@@ -328,6 +376,27 @@ export function CreateEditFieldDialog({
             stateProvinceColumn: data.stateProvinceColumn || "",
             zipCodeColumn: data.zipCodeColumn || "",
             countryColumn: data.countryColumn || "",
+          });
+        } else if (fieldType === "LookupField") {
+          // Parse displayColumns if it's a string
+          let displayColumns = data.displayColumns || [];
+          if (typeof displayColumns === "string") {
+            try {
+              displayColumns = JSON.parse(displayColumns);
+            } catch {
+              displayColumns = displayColumns.split(',').map((s: string) => s.trim()).filter(Boolean);
+            }
+          }
+          
+          form.reset({
+            type: "LookupField",
+            apiCode: data.apiCode || "",
+            label: data.label || "",
+            helpText: data.helpText || "",
+            placeHolder: data.placeHolder || "",
+            referencedObject: data.referencedObject || "",
+            primaryDisplayField: data.primaryDisplayField || "",
+            displayColumns: displayColumns,
           });
         }
       })
@@ -456,7 +525,11 @@ export function CreateEditFieldDialog({
       // TextField and DateTimeField need subtype selection
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
-      } 
+      }
+      // LookupField needs object selection
+      else if (selectedFieldType === "LookupField") {
+        setStep("lookupObject");
+      }
       // NumberField, PicklistField, CheckboxField, and AddressField skip directly to form
       else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField" || selectedFieldType === "CheckboxField" || selectedFieldType === "AddressField") {
         setStep("form");
@@ -470,6 +543,18 @@ export function CreateEditFieldDialog({
       }
     } else if (step === "subtype") {
       setStep("form");
+    } else if (step === "lookupObject") {
+      // Validate that an object has been selected
+      const selectedObject = form.getValues("referencedObject" as any);
+      if (!selectedObject) {
+        toast({
+          title: "Selection Required",
+          description: "Please select an object to continue",
+          variant: "destructive",
+        });
+        return;
+      }
+      setStep("form");
     }
   };
 
@@ -478,11 +563,18 @@ export function CreateEditFieldDialog({
       // TextField and DateTimeField go back to subtype selection
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
-      } else {
-        // NumberField and PicklistField go back to field type selection
+      }
+      // LookupField goes back to object selection
+      else if (selectedFieldType === "LookupField") {
+        setStep("lookupObject");
+      }
+      // NumberField and PicklistField go back to field type selection
+      else {
         setStep("fieldType");
       }
     } else if (step === "subtype") {
+      setStep("fieldType");
+    } else if (step === "lookupObject") {
       setStep("fieldType");
     }
   };
@@ -507,6 +599,7 @@ export function CreateEditFieldDialog({
             {step === "fieldType" && "Select the type of field you want to create"}
             {step === "subtype" && selectedFieldType === "TextField" && "Select the subtype for the text field"}
             {step === "subtype" && selectedFieldType === "DateTimeField" && "Select the type of date/time field"}
+            {step === "lookupObject" && "Select the object this lookup field will reference"}
             {step === "form" && "Configure the field properties"}
           </DialogDescription>
         </DialogHeader>
@@ -634,6 +727,46 @@ export function CreateEditFieldDialog({
                 </Label>
               </div>
             </RadioGroup>
+          </div>
+        )}
+
+        {step === "lookupObject" && (
+          <div className="space-y-4 py-4">
+            <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+              <p className="text-sm font-medium">Lookup field to reference a record on an object</p>
+              <p className="text-xs text-muted-foreground">
+                Select which object this field will reference. For example, if you're adding a lookup field to Assets, you might select "Accounts" to link each asset to an account.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="referencedObject" className="text-muted-foreground">
+                Referenced Object <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={form.watch("referencedObject" as any) || ""}
+                onValueChange={(value) => {
+                  form.setValue("referencedObject" as any, value);
+                  // Reset display fields when object changes
+                  form.setValue("primaryDisplayField" as any, "");
+                  form.setValue("displayColumns" as any, []);
+                }}
+              >
+                <SelectTrigger id="referencedObject" data-testid="select-referenced-object">
+                  <SelectValue placeholder="Select an object..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableObjects.map((obj) => (
+                    <SelectItem key={obj.apiCode} value={obj.apiCode}>
+                      {obj.labelSingular}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(form.formState.errors as any).referencedObject && (
+                <p className="text-sm text-destructive">{(form.formState.errors as any).referencedObject?.message}</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -999,6 +1132,91 @@ export function CreateEditFieldDialog({
               </>
             )}
 
+            {/* LookupField-Specific Fields */}
+            {selectedFieldType === "LookupField" && (
+              <>
+                <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                  <p className="text-sm font-medium">Lookup Configuration</p>
+                  <p className="text-xs text-muted-foreground">
+                    Select which field to display as the name and up to 5 fields to show in the lookup dialog table.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="primaryDisplayField" className="text-muted-foreground">
+                    Primary Display Field <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={(form.watch as any)("primaryDisplayField") || ""}
+                    onValueChange={(value) => {
+                      (form.setValue as any)("primaryDisplayField", value);
+                    }}
+                  >
+                    <SelectTrigger id="primaryDisplayField" data-testid="select-primary-display-field">
+                      <SelectValue placeholder="Select field to display..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {objectFields.map((field) => (
+                        <SelectItem key={field.apiCode} value={field.apiCode}>
+                          {field.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {(form.formState.errors as any).primaryDisplayField && (
+                    <p className="text-sm text-destructive">{(form.formState.errors as any).primaryDisplayField?.message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    This field will be displayed as the record name in view and edit modes
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">
+                    Display Columns (Select up to 5) <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="space-y-2 border rounded-md p-4 max-h-64 overflow-y-auto">
+                    {objectFields.map((field) => {
+                      const selectedColumns = (form.watch as any)("displayColumns") || [];
+                      const isSelected = selectedColumns.includes(field.apiCode);
+                      const isDisabled = !isSelected && selectedColumns.length >= 5;
+
+                      return (
+                        <div key={field.apiCode} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`column-${field.apiCode}`}
+                            checked={isSelected}
+                            disabled={isDisabled}
+                            onCheckedChange={(checked) => {
+                              const currentColumns = (form.watch as any)("displayColumns") || [];
+                              if (checked) {
+                                (form.setValue as any)("displayColumns", [...currentColumns, field.apiCode]);
+                              } else {
+                                (form.setValue as any)("displayColumns", currentColumns.filter((c: string) => c !== field.apiCode));
+                              }
+                            }}
+                            data-testid={`checkbox-column-${field.apiCode}`}
+                          />
+                          <Label
+                            htmlFor={`column-${field.apiCode}`}
+                            className={`font-normal cursor-pointer ${isDisabled ? 'text-muted-foreground' : ''}`}
+                          >
+                            {field.label} ({field.type})
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {(form.formState.errors as any).displayColumns && (
+                    <p className="text-sm text-destructive">{(form.formState.errors as any).displayColumns?.message}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Selected columns ({((form.watch as any)("displayColumns") || []).length}/5) will appear in the lookup dialog table
+                  </p>
+                </div>
+              </>
+            )}
+
             {/* PicklistField - No additional fields beyond common ones */}
           </form>
         )}
@@ -1022,7 +1240,7 @@ export function CreateEditFieldDialog({
           >
             Cancel
           </Button>
-          {(step === "fieldType" || step === "subtype") && !fieldToEdit && (
+          {(step === "fieldType" || step === "subtype" || step === "lookupObject") && !fieldToEdit && (
             <Button
               type="button"
               onClick={handleNext}

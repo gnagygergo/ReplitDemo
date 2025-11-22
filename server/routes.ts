@@ -1579,6 +1579,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.stateProvinceColumn = [fieldData.stateProvinceColumn || 'state_province'];
         xmlObject.FieldDefinition.zipCodeColumn = [fieldData.zipCodeColumn || 'zip_code'];
         xmlObject.FieldDefinition.countryColumn = [fieldData.countryColumn || 'country'];
+      } else if (fieldData.type === 'LookupField') {
+        xmlObject.FieldDefinition.referencedObject = [fieldData.referencedObject || ''];
+        xmlObject.FieldDefinition.primaryDisplayField = [fieldData.primaryDisplayField || ''];
+        // Store displayColumns as comma-separated string
+        const displayColumnsStr = Array.isArray(fieldData.displayColumns) 
+          ? fieldData.displayColumns.join(',') 
+          : (fieldData.displayColumns || '');
+        xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
       }
       // PicklistField has no additional fields beyond common ones
 
@@ -1692,6 +1700,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.stateProvinceColumn = [fieldData.stateProvinceColumn || 'state_province'];
         xmlObject.FieldDefinition.zipCodeColumn = [fieldData.zipCodeColumn || 'zip_code'];
         xmlObject.FieldDefinition.countryColumn = [fieldData.countryColumn || 'country'];
+      } else if (fieldData.type === 'LookupField') {
+        xmlObject.FieldDefinition.referencedObject = [fieldData.referencedObject || ''];
+        xmlObject.FieldDefinition.primaryDisplayField = [fieldData.primaryDisplayField || ''];
+        // Store displayColumns as comma-separated string
+        const displayColumnsStr = Array.isArray(fieldData.displayColumns) 
+          ? fieldData.displayColumns.join(',') 
+          : (fieldData.displayColumns || '');
+        xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
       }
       // PicklistField has no additional fields beyond common ones
 

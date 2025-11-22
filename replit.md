@@ -22,8 +22,9 @@ Preferred communication style: Simple, everyday language.
 - **Object Builder Module**: Comprehensive administrative interface for managing business objects and their configurations:
     - **List View**: Displays all business objects defined in `[companyId]/objects/` folders as cards with search functionality.
     - **Detail View**: Tabbed interface with Object Details, Fields, and Layouts tabs.
-    - **Fields Tab**: Integrates the Custom Field Builder for managing field definitions with multi-step dialog for creation/editing, type-specific validation, and persistence to XML files. Supports TextField (with subtypes), NumberField, DateTimeField, and PicklistField types.
-    - **Dynamic Loading**: Queries `*.object-meta.xml` files to discover and display available business objects.
+    - **Fields Tab**: Integrates the Custom Field Builder for managing field definitions with multi-step dialog for creation/editing, type-specific validation, and persistence to XML files. Supports TextField (with subtypes), NumberField, DateTimeField, PicklistField, CheckboxField, and AddressField types.
+    - **AddressField Type**: Prefix-based auto-generation of 5 database columns (street_address, city, state_province, zip_code, country). Users provide a prefix (e.g., "physical_location") and the system automatically generates column names like "physical_location_street_address". Column names are disabled for editing and displayed in both create (live preview) and edit (read-only) modes.
+    - **Dynamic Loading**: Queries `*.object_meta.xml` files to discover and display available business objects.
 - **Company-Specific Component Architecture**: Full component duplication per company (`companies/[companyId]/objects/[objectName]/layouts/`) for maximum customization, loaded dynamically at runtime via `loadCompanyComponent`. Default components are sourced from `companies/0_default/`. All major business objects (accounts, assets, opportunities, products, quotes) use this architecture with companyId normalization and useRef-based component caching.
 
 ### Backend Architecture

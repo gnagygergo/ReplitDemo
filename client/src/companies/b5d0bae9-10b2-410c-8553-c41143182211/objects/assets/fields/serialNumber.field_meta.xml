@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>serialNumber</apiCode>
+  <label>Serial Number</label>
+  <helpText>Unique identifier for this asset</helpText>
+  <placeHolder>Enter serial number...</placeHolder>
+  <textType>Text</textType>
+  <maxLength>255</maxLength>
+  <copyAble>true</copyAble>
+  <testIdEdit>input-serial-number</testIdEdit>
+  <testIdView>link-serial-number</testIdView>
+  <testIdTable>link-serial-number</testIdTable>
+</FieldDefinition>

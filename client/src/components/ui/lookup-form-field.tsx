@@ -165,6 +165,25 @@ export default function LookupFormField({
       return <span className="text-muted-foreground text-sm" data-testid={mergedTestId}>-</span>;
     }
 
+    // Render as clickable button if onRecordClick is provided
+    if (onRecordClick) {
+      return (
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <IconComponent className="w-3 h-3 text-primary" />
+          </div>
+          <button
+            onClick={handleRecordClick}
+            className="font-medium text-sm text-primary hover:underline"
+            data-testid={mergedTestId}
+          >
+            {primaryDisplayValue}
+          </button>
+        </div>
+      );
+    }
+
+    // Otherwise render as plain text
     return (
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">

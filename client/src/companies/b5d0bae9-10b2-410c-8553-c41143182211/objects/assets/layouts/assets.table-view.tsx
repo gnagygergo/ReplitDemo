@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LookupField } from "@/components/ui/lookup-field";
+import LookupFormField from "@/components/ui/lookup-form-field";
 import { NumberField } from "@/components/ui/number-field";
 import { TextField } from "@/components/ui/text-field";
 import { apiRequest } from "@/lib/queryClient";
@@ -200,17 +200,19 @@ export default function Assets() {
                         <TableCell className="font-medium">
                           <TextField
                             mode="table"
+                            objectCode="assets"
+                            fieldCode="serialNumber"
                             value={asset.serialNumber}
                             linkPath="/assets"
                             recordId={asset.id}
-                            testId={`link-asset-${asset.id}`}
                           />
                         </TableCell>
                         <TableCell>
                           <TextField
                             mode="table"
+                            objectCode="assets"
+                            fieldCode="name"
                             value={asset.name || "-"}
-                            testId={`link-asset-${asset.id}`}
                           />
                         </TableCell>
                         <TableCell>
@@ -223,45 +225,30 @@ export default function Assets() {
                           />
                         </TableCell>
                         <TableCell>
-                          <LookupField
+                          <LookupFormField
                             mode="table"
-                            value={
-                              asset.account
-                                ? {
-                                    id: asset.account.id,
-                                    name: asset.account.name,
-                                  }
-                                : null
-                            }
-                            onOpenLookup={() => {}} // Not needed in table mode, but required by interface
-                            linkPath="/accounts"
-                            testId={`link-account-${asset.id}`}
+                            objectCode="assets"
+                            fieldCode="account_id"
+                            value={asset.accountId}
+                            onRecordClick={(id) => window.location.href = `/accounts/${id}`}
                           />
                         </TableCell>
                         <TableCell>
-                          <LookupField
+                          <LookupFormField
                             mode="table"
-                            value={
-                              asset.product
-                                ? {
-                                    id: asset.product.id,
-                                    name: asset.product.productName,
-                                  }
-                                : null
-                            }
-                            onOpenLookup={() => {}} // Not needed in table mode, but required by interface
-                            linkPath="/products"
-                            testId={`link-product-${asset.id}`}
+                            objectCode="assets"
+                            fieldCode="product_id"
+                            value={asset.productId}
+                            onRecordClick={(id) => window.location.href = `/products/${id}`}
                           />
                         </TableCell>
                         <TableCell>
                           <NumberField
                             mode="table"
+                            objectCode="assets"
+                            fieldCode="quantity"
                             value={asset.quantity != null ? Number(asset.quantity) : null}
-                            testId={`text-quantity-${asset.id}`}
-                            decimals={0}
-                          />  
-                        
+                          />
                         </TableCell>
                         <TableCell>
                           <DateTimeField

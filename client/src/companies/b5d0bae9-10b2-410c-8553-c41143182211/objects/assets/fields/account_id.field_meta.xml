@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>LookupField</type>
+  <apiCode>account_id</apiCode>
+  <label>Account link</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+</FieldDefinition>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LookupField>
+  <apiCode>product_id</apiCode>
+  <label>Product</label>
+  <helpText>The product model for this asset</helpText>
+  <placeHolder>Select product...</placeHolder>
+  <referencedObject>products</referencedObject>
+  <primaryDisplayField>productName</primaryDisplayField>
+  <displayColumns>productCode,productName,description</displayColumns>
+</LookupField>

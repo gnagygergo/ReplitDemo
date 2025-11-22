@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LookupField>
+  <apiCode>account_id</apiCode>
+  <label>Account</label>
+  <helpText>The account this asset belongs to</helpText>
+  <placeHolder>Select account...</placeHolder>
+  <referencedObject>accounts</referencedObject>
+  <primaryDisplayField>name</primaryDisplayField>
+  <displayColumns>name,tax_id,address_city</displayColumns>
+</LookupField>

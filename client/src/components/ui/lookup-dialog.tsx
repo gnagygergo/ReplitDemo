@@ -27,7 +27,7 @@ interface LookupDialogProps {
   open: boolean;
   onClose: () => void;
   onSelect: (record: any) => void;
-  selectedRecordId?: string;
+  selectedRecordId?: string | null;
   referencedObject: string;
   objectLabel: string;
   objectIcon?: string;

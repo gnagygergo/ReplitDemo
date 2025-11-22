@@ -11,8 +11,9 @@ import { useFormContext } from "react-hook-form";
 interface LookupFormFieldProps {
   objectCode: string;
   fieldCode: string;
+  formFieldName?: string;
   mode?: "view" | "edit" | "table";
-  value?: string;
+  value?: string | null;
   onChange?: (value: string | null) => void;
   onRecordClick?: (recordId: string) => void;
   disabled?: boolean;
@@ -31,6 +32,7 @@ interface FieldMetadata {
 export default function LookupFormField({
   objectCode,
   fieldCode,
+  formFieldName,
   mode = "edit",
   value,
   onChange,
@@ -40,14 +42,17 @@ export default function LookupFormField({
   const formContext = useFormContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Determine which field name to use for form binding (defaults to fieldCode for backward compatibility)
+  const formField = formFieldName || fieldCode;
+
   // Use form context if available, otherwise use props
   const fieldValue = formContext 
-    ? (formContext.watch(fieldCode) as string | undefined)
+    ? (formContext.watch(formField) as string | undefined)
     : value;
   
   const setFieldValue = (newValue: string | null) => {
     if (formContext) {
-      formContext.setValue(fieldCode, newValue || "");
+      formContext.setValue(formField, newValue || "");
     }
     onChange?.(newValue);
   };
@@ -138,7 +143,7 @@ export default function LookupFormField({
               <button
                 onClick={handleRecordClick}
                 className="text-primary hover:underline flex items-center gap-1 font-medium"
-                data-testid={`link-${fieldCode}`}
+                data-testid={`link-${formField}`}
               >
                 {primaryDisplayValue}
                 <ExternalLink className="w-3 h-3" />
@@ -191,10 +196,10 @@ export default function LookupFormField({
           className={`
             relative flex items-center gap-2 min-h-10 px-3 py-2 border rounded-md 
             ${disabled ? 'bg-muted cursor-not-allowed' : 'cursor-pointer hover:bg-accent/50'}
-            ${formContext?.formState.errors[fieldCode] ? 'border-destructive' : 'border-input'}
+            ${formContext?.formState.errors[formField] ? 'border-destructive' : 'border-input'}
           `}
           onClick={() => !disabled && setIsDialogOpen(true)}
-          data-testid={`input-${fieldCode}`}
+          data-testid={`input-${formField}`}
         >
           {isLoadingRecord ? (
             <Skeleton className="h-6 w-full" />
@@ -214,7 +219,7 @@ export default function LookupFormField({
                     e.stopPropagation();
                     handleClear();
                   }}
-                  data-testid={`button-clear-${fieldCode}`}
+                  data-testid={`button-clear-${formField}`}
                 >
                   <X className="h-4 w-4" />
                 </Button>

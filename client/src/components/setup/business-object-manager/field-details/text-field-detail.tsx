@@ -240,6 +240,7 @@ export function TextFieldDetail({
               onChange={(val) => setFormData({ ...formData, maxLength: val || undefined })}
               label="Max Length"
               data-testid="input-max-length"
+              decimals={0}
             />
           </div>
 

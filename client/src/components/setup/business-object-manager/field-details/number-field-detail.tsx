@@ -231,6 +231,7 @@ export function NumberFieldDetail({
               onChange={(val) => setFormData({ ...formData, decimalPlaces: val !== null ? val : undefined })}
               label="Decimal Places"
               data-testid="input-decimal-places"
+              decimals={0}
             />
             <NumberField
               mode={isEditing ? "edit" : "view"}

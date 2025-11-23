@@ -200,7 +200,7 @@ export function TextFieldDetail({
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              mode={isEditing ? "edit" : "view"}
+              mode="view"
               value={formData.apiCode}
               onChange={(val) => setFormData({ ...formData, apiCode: val })}
               label="API Code"
@@ -217,7 +217,7 @@ export function TextFieldDetail({
 
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              mode={isEditing ? "edit" : "view"}
+              mode="view"
               value={formData.subtype || ""}
               onChange={(val) => setFormData({ ...formData, subtype: val })}
               label="Subtype"
@@ -235,26 +235,10 @@ export function TextFieldDetail({
 
           <TextField
             mode={isEditing ? "edit" : "view"}
-            value={formData.defaultValue || ""}
-            onChange={(val) => setFormData({ ...formData, defaultValue: val })}
-            label="Default Value"
-            data-testid="input-default-value"
-          />
-
-          <TextField
-            mode={isEditing ? "edit" : "view"}
             value={formData.helpText || ""}
             onChange={(val) => setFormData({ ...formData, helpText: val })}
             label="Help Text"
             data-testid="input-help-text"
-          />
-
-          <CheckboxField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.required || false}
-            onChange={(val) => setFormData({ ...formData, required: val })}
-            label="Required Field"
-            data-testid="input-required"
           />
         </CardContent>
       </Card>

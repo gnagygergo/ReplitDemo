@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectDefinition xmlns="">
+  <apiCode>users</apiCode>
+  <labelPlural>Users</labelPlural>
+  <labelSingular>User</labelSingular>
+  <iconSet>Lucide</iconSet>
+  <icon>square-user-round</icon>
+</ObjectDefinition>

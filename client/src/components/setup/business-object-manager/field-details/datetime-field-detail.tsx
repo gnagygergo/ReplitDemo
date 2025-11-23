@@ -6,7 +6,6 @@ import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
-import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
@@ -31,9 +30,6 @@ interface DateTimeFieldMetadata {
   apiCode: string;
   label: string;
   fieldType?: string;
-  format?: string;
-  defaultValue?: string;
-  required?: boolean;
   helpText?: string;
 }
 
@@ -182,35 +178,10 @@ export function DateTimeFieldDetail({
 
           <TextField
             mode={isEditing ? "edit" : "view"}
-            value={formData.format || ""}
-            onChange={(val) => setFormData({ ...formData, format: val })}
-            label="Date Format"
-            placeholder="yyyy-MM-dd HH:mm:ss"
-            data-testid="input-format"
-          />
-
-          <TextField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.defaultValue || ""}
-            onChange={(val) => setFormData({ ...formData, defaultValue: val })}
-            label="Default Value"
-            data-testid="input-default-value"
-          />
-
-          <TextField
-            mode={isEditing ? "edit" : "view"}
             value={formData.helpText || ""}
             onChange={(val) => setFormData({ ...formData, helpText: val })}
             label="Help Text"
             data-testid="input-help-text"
-          />
-
-          <CheckboxField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.required || false}
-            onChange={(val) => setFormData({ ...formData, required: val })}
-            label="Required Field"
-            data-testid="input-required"
           />
         </CardContent>
       </Card>

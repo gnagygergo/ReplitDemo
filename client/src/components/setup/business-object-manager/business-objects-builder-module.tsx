@@ -4,8 +4,7 @@ export default function BusinessObjectsBuilderModule() {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold">Object and Process Builder</h2>
-        <p className="text-muted-foreground">Define custom fields, layouts, and business processes</p>
+        <p className="text-muted-foreground">This is the place where you can overview or customize the business objects that build up your system. Define custom fields, layouts, and govern the lifecycle of any business objects that you have.</p>
       </div>
       <ObjectBuilder />
     </div>

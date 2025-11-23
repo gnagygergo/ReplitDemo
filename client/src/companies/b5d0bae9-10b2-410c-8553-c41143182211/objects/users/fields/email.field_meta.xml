@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>email</apiCode>
+  <label>Email</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>email</subtype>
+  <maxLength>254</maxLength>
+  <copyAble>false</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView/>
+  <visibleLinesInEdit/>
+</FieldDefinition>

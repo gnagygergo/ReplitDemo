@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus, Pencil } from "lucide-react";
 import { CreateEditFieldDialog } from "./create-edit-field-dialog";
+import { FieldDetailViewRouter } from "./field-detail-view-router";
 
 interface FieldDefinition {
   type: string;
@@ -17,9 +18,13 @@ interface CustomFieldBuilderProps {
   selectedObject: string;
 }
 
+type ViewMode = 'view' | 'edit';
+
 export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fieldToEdit, setFieldToEdit] = useState<FieldDefinition | null>(null);
+  const [selectedField, setSelectedField] = useState<FieldDefinition | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('view');
 
   const handleAddField = () => {
     setFieldToEdit(null);
@@ -29,6 +34,30 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
   const handleEditField = (field: FieldDefinition) => {
     setFieldToEdit(field);
     setDialogOpen(true);
+  };
+
+  const handleFieldClick = (field: FieldDefinition) => {
+    setSelectedField(field);
+    setViewMode('view');
+  };
+
+  const handleBackToList = () => {
+    setSelectedField(null);
+    setViewMode('view');
+  };
+
+  const handleEditMode = () => {
+    setViewMode('edit');
+  };
+
+  const handleSaveField = () => {
+    // After save, stay in view mode to show updated data
+    setViewMode('view');
+  };
+
+  const handleCancelEdit = () => {
+    // Return to view mode without saving
+    setViewMode('view');
   };
 
   const { data: fieldDefinitions, isLoading, error } = useQuery<FieldDefinition[]>({
@@ -45,6 +74,22 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
     enabled: !!selectedObject,
   });
 
+  // If a field is selected, show detail view
+  if (selectedField) {
+    return (
+      <FieldDetailViewRouter
+        field={selectedField}
+        objectName={selectedObject}
+        mode={viewMode}
+        onBack={handleBackToList}
+        onEdit={handleEditMode}
+        onSave={handleSaveField}
+        onCancel={handleCancelEdit}
+      />
+    );
+  }
+
+  // Otherwise, show field list
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -95,7 +140,13 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
                       {field.apiCode}
                     </TableCell>
                     <TableCell data-testid={`cell-label-${field.apiCode}`}>
-                      {field.label}
+                      <button
+                        onClick={() => handleFieldClick(field)}
+                        className="text-left text-primary hover:underline cursor-pointer font-medium"
+                        data-testid={`link-field-${field.apiCode}`}
+                      >
+                        {field.label}
+                      </button>
                     </TableCell>
                     <TableCell>
                       <Button

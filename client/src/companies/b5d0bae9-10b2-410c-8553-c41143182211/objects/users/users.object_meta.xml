@@ -4,5 +4,5 @@
   <labelPlural>Users</labelPlural>
   <labelSingular>User</labelSingular>
   <iconSet>Lucide</iconSet>
-  <icon>square-user-round</icon>
+  <icon>SquareUserRound</icon>
 </ObjectDefinition>

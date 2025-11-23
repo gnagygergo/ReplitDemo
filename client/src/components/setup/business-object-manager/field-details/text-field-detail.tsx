@@ -258,6 +258,7 @@ export function TextFieldDetail({
               onChange={(val) => setFormData({ ...formData, visibleLinesInView: val || undefined })}
               label="Visible Lines in View"
               data-testid="input-visible-lines-view"
+              decimals={0}
             />
             <NumberField
               mode={isEditing ? "edit" : "view"}
@@ -265,6 +266,7 @@ export function TextFieldDetail({
               onChange={(val) => setFormData({ ...formData, visibleLinesInEdit: val || undefined })}
               label="Visible Lines in Edit"
               data-testid="input-visible-lines-edit"
+              decimals={0}
             />
           </div>
 

@@ -39,6 +39,9 @@ interface TextFieldMetadata {
   required?: boolean;
   helpText?: string;
   placeHolder?: string;
+  visibleLinesInView?: number;
+  visibleLinesInEdit?: number;
+  copyAble?: boolean;
 }
 
 export function TextFieldDetail({
@@ -246,6 +249,31 @@ export function TextFieldDetail({
             onChange={(val) => setFormData({ ...formData, helpText: val })}
             label="Help Text"
             data-testid="input-help-text"
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <NumberField
+              mode={isEditing ? "edit" : "view"}
+              value={formData.visibleLinesInView || null}
+              onChange={(val) => setFormData({ ...formData, visibleLinesInView: val || undefined })}
+              label="Visible Lines in View"
+              data-testid="input-visible-lines-view"
+            />
+            <NumberField
+              mode={isEditing ? "edit" : "view"}
+              value={formData.visibleLinesInEdit || null}
+              onChange={(val) => setFormData({ ...formData, visibleLinesInEdit: val || undefined })}
+              label="Visible Lines in Edit"
+              data-testid="input-visible-lines-edit"
+            />
+          </div>
+
+          <CheckboxField
+            mode={isEditing ? "edit" : "view"}
+            value={formData.copyAble || false}
+            onChange={(val) => setFormData({ ...formData, copyAble: val })}
+            label="Copy-able"
+            data-testid="input-copyable"
           />
         </CardContent>
       </Card>

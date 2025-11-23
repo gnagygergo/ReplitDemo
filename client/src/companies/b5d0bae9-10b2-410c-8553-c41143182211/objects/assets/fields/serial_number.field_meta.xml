@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>serial_number</apiCode>
+  <label>Serial Number</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>text</subtype>
+  <maxLength>255</maxLength>
+  <copyAble>true</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView>1</visibleLinesInView>
+  <visibleLinesInEdit>1</visibleLinesInEdit>
+</FieldDefinition>

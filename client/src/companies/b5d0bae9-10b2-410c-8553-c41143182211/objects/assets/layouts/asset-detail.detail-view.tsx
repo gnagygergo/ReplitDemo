@@ -285,7 +285,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <TextField
                             objectCode="assets"
-                            fieldCode="serialNumber"
+                            fieldCode="serial_number"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

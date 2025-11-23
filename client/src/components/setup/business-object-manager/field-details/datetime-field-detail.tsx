@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
+import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
   type: string;
@@ -52,6 +53,8 @@ export function DateTimeFieldDetail({
     label: field.label,
   });
 
+  const formMethods = useForm();
+
   useEffect(() => {
     setIsEditing(mode === 'edit');
   }, [mode]);
@@ -92,8 +95,9 @@ export function DateTimeFieldDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <FormProvider {...formMethods}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -228,6 +232,7 @@ export function DateTimeFieldDetail({
           </p>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FormProvider>
   );
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Package, ArrowLeft } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { CustomFieldBuilder } from "./business-objects-builder-module";
+import { CustomFieldBuilder } from "./custom-field-builder";
 
 interface ObjectDefinition {
   apiCode: string;

@@ -6,6 +6,8 @@ import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormLabel } from "@/components/ui/form";
 import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
@@ -167,14 +169,22 @@ export function DateTimeFieldDetail({
             />
           </div>
 
-          <TextField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.fieldType || ""}
-            onChange={(val) => setFormData({ ...formData, fieldType: val })}
-            label="Field Type"
-            placeholder="Date, Time, or DateTime"
-            data-testid="input-field-type"
-          />
+          <div className="space-y-2">
+            <FormLabel className="text-muted-foreground">Field Type</FormLabel>
+            <Select
+              value={formData.fieldType || "DateTime"}
+              onValueChange={(value) => setFormData({ ...formData, fieldType: value })}
+            >
+              <SelectTrigger disabled={!isEditing} data-testid="select-field-type">
+                <SelectValue placeholder="Select field type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Date">Date</SelectItem>
+                <SelectItem value="Time">Time</SelectItem>
+                <SelectItem value="DateTime">DateTime</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <TextField
             mode={isEditing ? "edit" : "view"}

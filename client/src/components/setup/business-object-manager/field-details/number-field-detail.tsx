@@ -227,15 +227,15 @@ export function NumberFieldDetail({
           <div className="grid grid-cols-2 gap-4">
             <NumberField
               mode={isEditing ? "edit" : "view"}
-              value={formData.decimalPlaces || null}
-              onChange={(val) => setFormData({ ...formData, decimalPlaces: val || undefined })}
+              value={formData.decimalPlaces ?? null}
+              onChange={(val) => setFormData({ ...formData, decimalPlaces: val !== null ? val : undefined })}
               label="Decimal Places"
               data-testid="input-decimal-places"
             />
             <NumberField
               mode={isEditing ? "edit" : "view"}
-              value={formData.step || null}
-              onChange={(val) => setFormData({ ...formData, step: val || undefined })}
+              value={formData.step ?? null}
+              onChange={(val) => setFormData({ ...formData, step: val !== null ? val : undefined })}
               label="Step"
               data-testid="input-step"
             />

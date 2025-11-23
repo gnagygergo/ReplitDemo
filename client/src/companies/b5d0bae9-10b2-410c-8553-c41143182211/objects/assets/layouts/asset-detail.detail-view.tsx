@@ -284,7 +284,6 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
-                            label="Serial Number"
                             objectCode="assets"
                             fieldCode="serialNumber"
                             mode={isEditing ? "edit" : "view"}
@@ -304,7 +303,7 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
-                            objectCode="assets" 
+                            objectCode="assets"
                             fieldCode="name"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value || ""}
@@ -322,13 +321,13 @@ export default function AssetDetail() {
                       render={({ field }) => (
                         <FormItem>
                           <TextField
+                            objectCode="assets"
+                            fieldCode="description"
                             label="Description"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value || ""}
                             onChange={field.onChange}
                             placeholder=""
-                            visibleLinesInEdit={3}
-                            visibleLinesInView={3}
                             testId={
                               isEditing
                                 ? "input-description"

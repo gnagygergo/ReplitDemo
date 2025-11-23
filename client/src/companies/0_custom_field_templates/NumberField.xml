@@ -9,6 +9,6 @@
   <className></className>
   <step>1</step>
   <format></format>
-  <decimals></decimals>
+  <decimalPlaces></decimalPlaces>
 </FieldDefinition>
 

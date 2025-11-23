@@ -9,6 +9,7 @@ import { NumberField } from "@/components/ui/number-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
   type: string;
@@ -55,6 +56,10 @@ export function TextFieldDetail({
     apiCode: field.apiCode,
     label: field.label,
   });
+
+  // Create a form context even though we manage state manually
+  // This is needed because field components use FormLabel/FormControl internally
+  const formMethods = useForm();
 
   useEffect(() => {
     setIsEditing(mode === 'edit');
@@ -132,24 +137,25 @@ export function TextFieldDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            data-testid="button-back-to-list"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Field List
-          </Button>
-          <h3 className="text-lg font-semibold" data-testid="text-field-title">
-            {field.label} ({field.type})
-          </h3>
-        </div>
+    <FormProvider {...formMethods}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              data-testid="button-back-to-list"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Field List
+            </Button>
+            <h3 className="text-lg font-semibold" data-testid="text-field-title">
+              {field.label} ({field.type})
+            </h3>
+          </div>
 
-        {isEditing ? (
+          {isEditing ? (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -184,10 +190,10 @@ export function TextFieldDetail({
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
-        )}
-      </div>
+          )}
+        </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>Field Configuration</CardTitle>
         </CardHeader>
@@ -271,7 +277,8 @@ export function TextFieldDetail({
             This is how the field will appear in forms
           </p>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </FormProvider>
   );
 }

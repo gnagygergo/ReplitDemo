@@ -9,6 +9,7 @@ import { TextField } from "@/components/ui/text-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
   type: string;
@@ -57,6 +58,8 @@ export function NumberFieldDetail({
     apiCode: field.apiCode,
     label: field.label,
   });
+
+  const formMethods = useForm();
 
   useEffect(() => {
     setIsEditing(mode === 'edit');
@@ -131,9 +134,10 @@ export function NumberFieldDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <FormProvider {...formMethods}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
@@ -183,10 +187,10 @@ export function NumberFieldDetail({
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
-        )}
-      </div>
+          )}
+        </div>
 
-      <Card>
+        <Card>
         <CardHeader>
           <CardTitle>Field Configuration</CardTitle>
         </CardHeader>
@@ -285,7 +289,8 @@ export function NumberFieldDetail({
             This is how the field will appear in forms
           </p>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </FormProvider>
   );
 }

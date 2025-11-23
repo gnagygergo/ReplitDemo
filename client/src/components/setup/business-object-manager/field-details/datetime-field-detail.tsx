@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
@@ -9,6 +9,8 @@ import { TextField } from "@/components/ui/text-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
 import { useForm, FormProvider } from "react-hook-form";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface FieldDefinition {
   type: string;
@@ -44,6 +46,7 @@ export function DateTimeFieldDetail({
   onSave,
   onCancel,
 }: DateTimeFieldDetailProps) {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [formData, setFormData] = useState<DateTimeFieldMetadata>({
     type: field.type,
@@ -78,9 +81,45 @@ export function DateTimeFieldDetail({
     }
   }, [metadata]);
 
+  // Mutation to save field metadata
+  const saveMutation = useMutation({
+    mutationFn: async (data: DateTimeFieldMetadata) => {
+      const response = await fetch(
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ FieldDefinition: data }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to save field metadata");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
+      queryClient.invalidateQueries({ queryKey: ["/api/metadata", objectName, "fields", field.filePath] });
+      
+      toast({
+        title: "Field saved",
+        description: "Field definition has been updated successfully.",
+      });
+      onSave();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = async () => {
-    console.log("Saving field:", formData);
-    onSave();
+    saveMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -120,6 +159,7 @@ export function DateTimeFieldDetail({
                 setFormData(metadata || formData);
                 onCancel();
               }}
+              disabled={saveMutation.isPending}
               data-testid="button-cancel-edit"
             >
               <X className="h-4 w-4 mr-2" />
@@ -128,10 +168,11 @@ export function DateTimeFieldDetail({
             <Button
               size="sm"
               onClick={handleSave}
+              disabled={saveMutation.isPending}
               data-testid="button-save-field"
             >
               <Save className="h-4 w-4 mr-2" />
-              Save
+              {saveMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </div>
         ) : (

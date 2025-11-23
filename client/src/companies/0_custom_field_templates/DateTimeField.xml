@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <FieldDefinition xmlns="">
-  <type>Date</type> <!-- "Date" | "Time" | "DateTime" -->
+  <type>DateTimeField</type> <!-- actually this is not used by the interpreter -->
+  <fieldType>Date</fieldType> <!-- "Date" | "Time" | "DateTime" -->
   <apiCode>installationDate</apiCode> 
   <label>Installation Date</label> 
   <helpText></helpText>

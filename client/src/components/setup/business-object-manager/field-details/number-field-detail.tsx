@@ -70,7 +70,7 @@ export function NumberFieldDetail({
     queryKey: ["/api/metadata", objectName, "fields", field.filePath],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
         { credentials: "include" }
       );
       if (!response.ok) {
@@ -93,7 +93,7 @@ export function NumberFieldDetail({
   const saveMutation = useMutation({
     mutationFn: async (data: NumberFieldMetadata) => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

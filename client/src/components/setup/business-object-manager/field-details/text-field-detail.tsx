@@ -70,7 +70,7 @@ export function TextFieldDetail({
     queryKey: ["/api/metadata", objectName, "fields", field.filePath],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
         { credentials: "include" }
       );
       if (!response.ok) {
@@ -97,7 +97,7 @@ export function TextFieldDetail({
   const saveMutation = useMutation({
     mutationFn: async (data: TextFieldMetadata) => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

@@ -10,6 +10,7 @@ import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useForm, FormProvider } from "react-hook-form";
+import { flattenXmlMetadata } from "@/lib/metadata-utils";
 
 interface FieldDefinition {
   type: string;
@@ -76,7 +77,10 @@ export function NumberFieldDetail({
         throw new Error("Failed to fetch field metadata");
       }
       const xmlData = await response.json();
-      return xmlData.FieldDefinition || {};
+      const fieldDef = xmlData.FieldDefinition || {};
+      
+      // Flatten and type-cast xml2js arrays (pass field type for context-aware casting)
+      return flattenXmlMetadata(fieldDef, field.type) as NumberFieldMetadata;
     },
   });
 

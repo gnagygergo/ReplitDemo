@@ -80,7 +80,10 @@ export function TextFieldDetail({
       const fieldDef = xmlData.FieldDefinition || {};
       
       // Flatten and type-cast xml2js arrays (pass field type for context-aware casting)
-      return flattenXmlMetadata(fieldDef, field.type) as TextFieldMetadata;
+      const flattened = flattenXmlMetadata(fieldDef, field.type);
+      console.log('TextField metadata - raw fieldDef:', fieldDef);
+      console.log('TextField metadata - flattened:', flattened);
+      return flattened as TextFieldMetadata;
     },
   });
 

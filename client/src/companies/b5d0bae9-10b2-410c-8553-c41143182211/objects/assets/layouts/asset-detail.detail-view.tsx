@@ -368,7 +368,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <DateTimeField
                             objectCode="assets"
-                            fieldCode="installationDate"
+                            fieldCode="installation_date"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

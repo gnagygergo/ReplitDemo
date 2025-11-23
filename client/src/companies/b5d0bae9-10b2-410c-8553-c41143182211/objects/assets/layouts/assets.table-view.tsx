@@ -201,7 +201,7 @@ export default function Assets() {
                           <TextField
                             mode="table"
                             objectCode="assets"
-                            fieldCode="serialNumber"
+                            fieldCode="serial-number"
                             value={asset.serialNumber}
                             linkPath="/assets"
                             recordId={asset.id}
@@ -256,7 +256,7 @@ export default function Assets() {
                             value={asset.installationDate}
                             testId={`text-quantity-${asset.id}`}
                             objectCode="assets"
-                            fieldCode="installationDate"
+                            fieldCode="installation_date"
                           />  
                         </TableCell>
                         <TableCell className="text-right">

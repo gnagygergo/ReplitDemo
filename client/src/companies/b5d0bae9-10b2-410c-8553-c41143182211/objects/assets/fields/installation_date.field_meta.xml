@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FieldDefinition>
+  <type>DateTimeField</type>
+  <apiCode>installation_date</apiCode>
+  <label>Installation Date of the Asset</label>
+  <fieldType>Date</fieldType>
+</FieldDefinition>

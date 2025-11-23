@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,7 +6,8 @@ import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NumberField } from "@/components/ui/number-field";
 import { TextField } from "@/components/ui/text-field";
-import { CheckboxField } from "@/components/ui/checkbox-field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FormLabel } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useForm, FormProvider } from "react-hook-form";
@@ -33,14 +34,10 @@ interface NumberFieldMetadata {
   type: string;
   apiCode: string;
   label: string;
-  precision?: number;
-  scale?: number;
-  minValue?: number;
-  maxValue?: number;
-  defaultValue?: number;
-  required?: boolean;
   helpText?: string;
   decimalPlaces?: number;
+  step?: number;
+  format?: string;
 }
 
 export function NumberFieldDetail({
@@ -59,6 +56,7 @@ export function NumberFieldDetail({
     apiCode: field.apiCode,
     label: field.label,
   });
+  const hasLoadedMetadata = useRef(false);
 
   const formMethods = useForm();
 
@@ -85,20 +83,30 @@ export function NumberFieldDetail({
   });
 
   useEffect(() => {
-    if (metadata) {
+    if (metadata && !hasLoadedMetadata.current) {
       setFormData(metadata);
+      hasLoadedMetadata.current = true;
     }
   }, [metadata]);
 
   const saveMutation = useMutation({
     mutationFn: async (data: NumberFieldMetadata) => {
+      // Convert numeric values to strings for XML serialization
+      // Normalize format to lowercase
+      const xmlData = {
+        ...data,
+        decimalPlaces: data.decimalPlaces !== undefined ? String(data.decimalPlaces) : undefined,
+        step: data.step !== undefined ? String(data.step) : undefined,
+        format: data.format?.toLowerCase() || "number",
+      };
+      
       const response = await fetch(
         `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ FieldDefinition: data }),
+          body: JSON.stringify({ FieldDefinition: xmlData }),
         }
       );
       if (!response.ok) {
@@ -201,7 +209,7 @@ export function NumberFieldDetail({
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              mode={isEditing ? "edit" : "view"}
+              mode="view"
               value={formData.apiCode}
               onChange={(val) => setFormData({ ...formData, apiCode: val })}
               label="API Code"
@@ -219,44 +227,43 @@ export function NumberFieldDetail({
           <div className="grid grid-cols-2 gap-4">
             <NumberField
               mode={isEditing ? "edit" : "view"}
-              value={formData.precision || null}
-              onChange={(val) => setFormData({ ...formData, precision: val || undefined })}
-              label="Precision (Total Digits)"
-              data-testid="input-precision"
-            />
-            <NumberField
-              mode={isEditing ? "edit" : "view"}
               value={formData.decimalPlaces || null}
               onChange={(val) => setFormData({ ...formData, decimalPlaces: val || undefined })}
               label="Decimal Places"
               data-testid="input-decimal-places"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <NumberField
               mode={isEditing ? "edit" : "view"}
-              value={formData.minValue || null}
-              onChange={(val) => setFormData({ ...formData, minValue: val || undefined })}
-              label="Minimum Value"
-              data-testid="input-min-value"
-            />
-            <NumberField
-              mode={isEditing ? "edit" : "view"}
-              value={formData.maxValue || null}
-              onChange={(val) => setFormData({ ...formData, maxValue: val || undefined })}
-              label="Maximum Value"
-              data-testid="input-max-value"
+              value={formData.step || null}
+              onChange={(val) => setFormData({ ...formData, step: val || undefined })}
+              label="Step"
+              data-testid="input-step"
             />
           </div>
 
-          <NumberField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.defaultValue || null}
-            onChange={(val) => setFormData({ ...formData, defaultValue: val || undefined })}
-            label="Default Value"
-            data-testid="input-default-value"
-          />
+          <div className="space-y-2">
+            <FormLabel className="text-muted-foreground">Format</FormLabel>
+            <Select
+              value={
+                formData.format === "percentage" || formData.format === "Percentage"
+                  ? "Percentage"
+                  : "Number"
+              }
+              onValueChange={(value) => {
+                const lowercaseValue = value.toLowerCase();
+                setFormData({ ...formData, format: lowercaseValue });
+              }}
+              disabled={!isEditing}
+            >
+              <SelectTrigger data-testid="select-format">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Number">Number</SelectItem>
+                <SelectItem value="Percentage">Percentage</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <TextField
             mode={isEditing ? "edit" : "view"}
@@ -264,14 +271,6 @@ export function NumberFieldDetail({
             onChange={(val) => setFormData({ ...formData, helpText: val })}
             label="Help Text"
             data-testid="input-help-text"
-          />
-
-          <CheckboxField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.required || false}
-            onChange={(val) => setFormData({ ...formData, required: val })}
-            label="Required Field"
-            data-testid="input-required"
           />
         </CardContent>
       </Card>
@@ -287,6 +286,8 @@ export function NumberFieldDetail({
             label={formData.label || field.label}
             placeholder="0.00"
             decimals={formData.decimalPlaces}
+            step={formData.step}
+            format={(formData.format?.toLowerCase() === "percentage" ? "percentage" : "number") as "number" | "percentage"}
             data-testid="preview-field"
           />
           <p className="text-sm text-muted-foreground mt-2">

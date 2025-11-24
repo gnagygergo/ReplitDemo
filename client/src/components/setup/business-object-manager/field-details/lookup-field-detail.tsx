@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useForm, FormProvider } from "react-hook-form";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
@@ -7,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LookupField from "@/components/ui/lookup-form-field";
 import { TextField } from "@/components/ui/text-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 interface FieldDefinition {
   type: string;
@@ -44,12 +47,15 @@ export function LookupFieldDetail({
   onSave,
   onCancel,
 }: LookupFieldDetailProps) {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [formData, setFormData] = useState<LookupFieldMetadata>({
     type: field.type,
     apiCode: field.apiCode,
     label: field.label,
   });
+
+  const formMethods = useForm();
 
   useEffect(() => {
     setIsEditing(mode === 'edit');
@@ -76,9 +82,45 @@ export function LookupFieldDetail({
     }
   }, [metadata]);
 
+  // Mutation to save field metadata
+  const saveMutation = useMutation({
+    mutationFn: async (data: LookupFieldMetadata) => {
+      const response = await fetch(
+        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ FieldDefinition: data }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to save field metadata");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
+      queryClient.invalidateQueries({ queryKey: ["/api/metadata", objectName, "fields", field.filePath] });
+      
+      toast({
+        title: "Field saved",
+        description: "Field definition has been updated successfully.",
+      });
+      onSave();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = async () => {
-    console.log("Saving field:", formData);
-    onSave();
+    saveMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -91,22 +133,23 @@ export function LookupFieldDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            data-testid="button-back-to-list"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Field List
-          </Button>
-          <h3 className="text-lg font-semibold" data-testid="text-field-title">
-            {field.label} ({field.type})
-          </h3>
-        </div>
+    <FormProvider {...formMethods}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              data-testid="button-back-to-list"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Field List
+            </Button>
+            <h3 className="text-lg font-semibold" data-testid="text-field-title">
+              {field.label} ({field.type})
+            </h3>
+          </div>
 
         {isEditing ? (
           <div className="flex gap-2">
@@ -117,6 +160,7 @@ export function LookupFieldDetail({
                 setFormData(metadata || formData);
                 onCancel();
               }}
+              disabled={saveMutation.isPending}
               data-testid="button-cancel-edit"
             >
               <X className="h-4 w-4 mr-2" />
@@ -125,10 +169,11 @@ export function LookupFieldDetail({
             <Button
               size="sm"
               onClick={handleSave}
+              disabled={saveMutation.isPending}
               data-testid="button-save-field"
             >
               <Save className="h-4 w-4 mr-2" />
-              Save
+              {saveMutation.isPending ? "Saving..." : "Save"}
             </Button>
           </div>
         ) : (
@@ -218,5 +263,6 @@ export function LookupFieldDetail({
         </CardContent>
       </Card>
     </div>
+    </FormProvider>
   );
 }

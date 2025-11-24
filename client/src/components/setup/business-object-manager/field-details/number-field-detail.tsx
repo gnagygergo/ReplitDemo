@@ -105,7 +105,7 @@ export function NumberFieldDetail({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ FieldDefinition: xmlData }),
+          body: JSON.stringify(xmlData),
         }
       );
       if (!response.ok) {

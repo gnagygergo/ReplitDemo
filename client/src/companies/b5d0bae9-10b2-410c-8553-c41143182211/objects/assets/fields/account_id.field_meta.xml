@@ -7,6 +7,6 @@
   <placeHolder>Select account...</placeHolder>
   <referencedObject>accounts</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
-  <displayColumns>name, address_city</displayColumns>
+  <displayColumns>name</displayColumns>
 
 </FieldDefinition>

@@ -93,7 +93,7 @@ export function DropDownListFieldDetail({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ FieldDefinition: data }),
+          body: JSON.stringify(data),
         }
       );
       if (!response.ok) {

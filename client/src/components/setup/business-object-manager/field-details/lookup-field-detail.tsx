@@ -110,7 +110,16 @@ export function LookupFieldDetail({
 
   useEffect(() => {
     if (metadata) {
-      setFormData(metadata);
+      // Normalize displayColumns: convert comma-separated string to array if needed
+      const normalizedMetadata = {
+        ...metadata,
+        displayColumns: metadata.displayColumns
+          ? typeof metadata.displayColumns === 'string'
+            ? metadata.displayColumns.split(',').map(col => col.trim()).filter(col => col)
+            : metadata.displayColumns
+          : []
+      };
+      setFormData(normalizedMetadata);
     }
   }, [metadata]);
 

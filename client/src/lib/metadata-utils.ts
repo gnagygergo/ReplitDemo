@@ -23,6 +23,9 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
     'allowNegativeNumbers', 'onlyPositive', 'displayThousandsSeparator'
   ];
   
+  // Fields that should be parsed as arrays
+  const arrayFields = ['displayColumns'];
+  
   // Get field type to determine defaultValue type
   // Prefer knownFieldType (from caller) over XML metadata
   const fieldType = knownFieldType || fieldDef.type?.[0];
@@ -47,6 +50,32 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
         flattened[key] = true;
       } else if (value === 'false') {
         flattened[key] = false;
+      }
+    } else if (arrayFields.includes(key)) {
+      // Parse array fields from JSON or comma-separated strings
+      if (typeof value === 'string') {
+        try {
+          // Try parsing as JSON first
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            flattened[key] = parsed;
+          } else {
+            // If not an array, wrap in array
+            flattened[key] = [value];
+          }
+        } catch {
+          // If JSON parse fails, try comma-separated
+          if (value.includes(',')) {
+            flattened[key] = value.split(',').map(s => s.trim()).filter(s => s);
+          } else if (value) {
+            // Single value
+            flattened[key] = [value];
+          } else {
+            flattened[key] = [];
+          }
+        }
+      } else if (Array.isArray(value)) {
+        flattened[key] = value;
       }
     } else if (key === 'defaultValue') {
       // Type-cast defaultValue based on field type

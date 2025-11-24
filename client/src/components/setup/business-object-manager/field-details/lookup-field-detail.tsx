@@ -17,6 +17,7 @@ import {
 import { TextField } from "@/components/ui/text-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { flattenXmlMetadata } from "@/lib/metadata-utils";
 
 interface FieldDefinition {
   type: string;
@@ -101,7 +102,11 @@ export function LookupFieldDetail({
         throw new Error("Failed to fetch field metadata");
       }
       const xmlData = await response.json();
-      return xmlData.FieldDefinition || {};
+      const fieldDef = xmlData.FieldDefinition || {};
+      
+      // Flatten and type-cast xml2js arrays
+      const flattened = flattenXmlMetadata(fieldDef, field.type);
+      return flattened as LookupFieldMetadata;
     },
   });
 

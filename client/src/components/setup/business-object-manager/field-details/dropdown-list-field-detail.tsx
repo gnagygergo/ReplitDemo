@@ -74,6 +74,7 @@ export function DropDownListFieldDetail({
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
+      // API already returns flattened data, no need to flatten again
       return await response.json();
     },
   });

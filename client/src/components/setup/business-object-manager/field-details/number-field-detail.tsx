@@ -11,7 +11,6 @@ import { FormLabel } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useForm, FormProvider } from "react-hook-form";
-import { flattenXmlMetadata } from "@/lib/metadata-utils";
 
 interface FieldDefinition {
   type: string;
@@ -77,10 +76,8 @@ export function NumberFieldDetail({
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const fieldData = await response.json();
-      
-      // Flatten and type-cast xml2js arrays (pass field type for context-aware casting)
-      return flattenXmlMetadata(fieldData, field.type) as NumberFieldMetadata;
+      // API already returns flattened data, no need to flatten again
+      return await response.json();
     },
   });
 

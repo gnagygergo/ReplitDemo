@@ -10,7 +10,6 @@ import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useForm, FormProvider } from "react-hook-form";
-import { flattenXmlMetadata } from "@/lib/metadata-utils";
 
 interface FieldDefinition {
   type: string;
@@ -82,13 +81,8 @@ export function TextFieldDetail({
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const fieldData = await response.json();
-      
-      // Flatten and type-cast xml2js arrays (pass field type for context-aware casting)
-      const flattened = flattenXmlMetadata(fieldData, field.type);
-      console.log('TextField metadata - raw fieldData:', fieldData);
-      console.log('TextField metadata - flattened:', flattened);
-      return flattened as TextFieldMetadata;
+      // API already returns flattened data, no need to flatten again
+      return await response.json();
     },
   });
 

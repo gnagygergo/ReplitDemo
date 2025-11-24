@@ -7,6 +7,36 @@
  * @param knownFieldType - Optional field type to use for context-aware casting (e.g., "TextField", "NumberField")
  */
 
+/**
+ * Recursively unwrap xml2js element objects and arrays
+ * xml2js can nest values in complex ways:
+ * - { _: 'value' } - element with text content
+ * - { _: ['value'] } - element with attributes and text
+ * - ['value1', 'value2'] - multiple elements
+ * - [{ _: 'value1' }, { _: 'value2' }] - multiple elements with text
+ * - { $: { attr: 'val' } } - element with only attributes (no text)
+ */
+function unwrapXmlValue(value: any): any {
+  // If array, take first element and recurse
+  if (Array.isArray(value)) {
+    return value.length > 0 ? unwrapXmlValue(value[0]) : '';
+  }
+  
+  // If object with underscore property (text content), extract and recurse
+  if (typeof value === 'object' && value !== null && '_' in value) {
+    return unwrapXmlValue(value._);
+  }
+  
+  // If object without text content (e.g., attribute-only nodes), return empty
+  // This prevents [object Object] artifacts from polluting arrays
+  if (typeof value === 'object' && value !== null) {
+    return '';
+  }
+  
+  // Base case: scalar value (string, number, boolean, null, undefined)
+  return value;
+}
+
 export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Record<string, any> {
   const flattened: any = {};
   
@@ -37,35 +67,51 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
     if (arrayFields.includes(key)) {
       if (Array.isArray(rawValue)) {
         // xml2js gives us an array - this is native XML array format
-        // xml2js may return element objects shaped like { _: 'value' }
-        // Map over entries and unwrap element objects, then filter empties
+        // Each entry could be a scalar, object with underscore, or nested array
+        // Recursively unwrap each entry, trim, and filter empties
         flattened[key] = rawValue
           .map(entry => {
-            // Handle xml2js element objects with underscore property
-            if (typeof entry === 'object' && entry !== null && '_' in entry) {
-              return entry._;
+            const unwrapped = unwrapXmlValue(entry);
+            // Convert to string safely: preserve zero but filter null/undefined
+            if (unwrapped === null || unwrapped === undefined) {
+              return '';
+            } else if (typeof unwrapped === 'string') {
+              return unwrapped.trim();
+            } else {
+              // Preserve numeric zero and other values
+              return String(unwrapped);
             }
-            // Handle plain string values
-            return entry;
           })
-          .filter(v => v !== '' && v !== undefined && v !== null);
+          .filter(v => v !== '');
       } else if (typeof rawValue === 'string') {
-        // Single string value - parse as JSON or CSV
-        try {
-          const parsed = JSON.parse(rawValue);
-          flattened[key] = Array.isArray(parsed) ? parsed : [rawValue];
-        } catch {
-          if (rawValue.includes(',')) {
-            flattened[key] = rawValue.split(',').map(s => s.trim()).filter(s => s);
-          } else if (rawValue) {
-            flattened[key] = [rawValue];
-          } else {
-            flattened[key] = [];
+        // Single string value - parse as JSON or CSV (legacy formats)
+        const trimmed = rawValue.trim();
+        if (!trimmed) {
+          flattened[key] = [];
+        } else {
+          try {
+            const parsed = JSON.parse(trimmed);
+            flattened[key] = Array.isArray(parsed) ? parsed : [trimmed];
+          } catch {
+            if (trimmed.includes(',')) {
+              flattened[key] = trimmed.split(',').map(s => s.trim()).filter(s => s);
+            } else {
+              flattened[key] = [trimmed];
+            }
           }
         }
-      } else if (typeof rawValue === 'object' && rawValue !== null && '_' in rawValue) {
-        // Single xml2js element object - unwrap and wrap in array
-        flattened[key] = rawValue._ ? [rawValue._] : [];
+      } else if (typeof rawValue === 'object' && rawValue !== null) {
+        // Single xml2js element object - unwrap recursively and wrap in array
+        const unwrapped = unwrapXmlValue(rawValue);
+        let stringValue: string;
+        if (unwrapped === null || unwrapped === undefined) {
+          stringValue = '';
+        } else if (typeof unwrapped === 'string') {
+          stringValue = unwrapped.trim();
+        } else {
+          stringValue = String(unwrapped);
+        }
+        flattened[key] = stringValue ? [stringValue] : [];
       } else {
         flattened[key] = [];
       }

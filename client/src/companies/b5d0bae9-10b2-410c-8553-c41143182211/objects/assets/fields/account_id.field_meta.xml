@@ -5,8 +5,9 @@
   <label>Account</label>
   <helpText>The account this asset belongs to</helpText>
   <placeHolder>Select account...</placeHolder>
+  <testId/>
+  <className/>
   <referencedObject>accounts</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
-  <displayColumns>name</displayColumns>
-
+  <displayColumns>name,company_registration_id</displayColumns>
 </FieldDefinition>

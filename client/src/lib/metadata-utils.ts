@@ -37,8 +37,18 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
     if (arrayFields.includes(key)) {
       if (Array.isArray(rawValue)) {
         // xml2js gives us an array - this is native XML array format
-        // Filter out empty strings and return as-is
-        flattened[key] = rawValue.filter(v => v !== '' && v !== undefined);
+        // xml2js may return element objects shaped like { _: 'value' }
+        // Map over entries and unwrap element objects, then filter empties
+        flattened[key] = rawValue
+          .map(entry => {
+            // Handle xml2js element objects with underscore property
+            if (typeof entry === 'object' && entry !== null && '_' in entry) {
+              return entry._;
+            }
+            // Handle plain string values
+            return entry;
+          })
+          .filter(v => v !== '' && v !== undefined && v !== null);
       } else if (typeof rawValue === 'string') {
         // Single string value - parse as JSON or CSV
         try {
@@ -53,6 +63,9 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
             flattened[key] = [];
           }
         }
+      } else if (typeof rawValue === 'object' && rawValue !== null && '_' in rawValue) {
+        // Single xml2js element object - unwrap and wrap in array
+        flattened[key] = rawValue._ ? [rawValue._] : [];
       } else {
         flattened[key] = [];
       }

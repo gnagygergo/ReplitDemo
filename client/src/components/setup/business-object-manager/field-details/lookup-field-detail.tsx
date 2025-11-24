@@ -45,6 +45,16 @@ interface LookupFieldMetadata {
   helpText?: string;
 }
 
+// Helper function to safely normalize displayColumns to array format
+const normalizeDisplayColumns = (displayColumns: string[] | string | undefined): string[] => {
+  if (!displayColumns) return [];
+  if (Array.isArray(displayColumns)) return displayColumns;
+  if (typeof displayColumns === 'string') {
+    return displayColumns.split(',').map((col: string) => col.trim()).filter((col: string) => col);
+  }
+  return [];
+};
+
 export function LookupFieldDetail({
   field,
   objectName,
@@ -113,11 +123,7 @@ export function LookupFieldDetail({
       // Normalize displayColumns: convert comma-separated string to array if needed
       const normalizedMetadata = {
         ...metadata,
-        displayColumns: metadata.displayColumns
-          ? typeof metadata.displayColumns === 'string'
-            ? metadata.displayColumns.split(',').map(col => col.trim()).filter(col => col)
-            : metadata.displayColumns
-          : []
+        displayColumns: normalizeDisplayColumns(metadata.displayColumns)
       };
       setFormData(normalizedMetadata);
     }
@@ -199,7 +205,12 @@ export function LookupFieldDetail({
               variant="outline"
               size="sm"
               onClick={() => {
-                setFormData(metadata || formData);
+                // Normalize displayColumns when resetting on cancel
+                const resetData = metadata ? {
+                  ...metadata,
+                  displayColumns: normalizeDisplayColumns(metadata.displayColumns)
+                } : formData;
+                setFormData(resetData);
                 onCancel();
               }}
               disabled={saveMutation.isPending}
@@ -328,7 +339,7 @@ export function LookupFieldDetail({
               <div className="space-y-2 border rounded-md p-4 max-h-64 overflow-y-auto">
                 {formData.referencedObject && objectFields.length > 0 ? (
                   objectFields.map((field) => {
-                    const selectedColumns = formData.displayColumns || [];
+                    const selectedColumns = normalizeDisplayColumns(formData.displayColumns);
                     const isSelected = selectedColumns.includes(field.apiCode);
                     const isDisabled = !isSelected && selectedColumns.length >= 5;
 
@@ -339,7 +350,7 @@ export function LookupFieldDetail({
                           checked={isSelected}
                           disabled={isDisabled}
                           onCheckedChange={(checked) => {
-                            const currentColumns = formData.displayColumns || [];
+                            const currentColumns = normalizeDisplayColumns(formData.displayColumns);
                             if (checked) {
                               setFormData({
                                 ...formData,
@@ -371,13 +382,13 @@ export function LookupFieldDetail({
               </div>
             ) : (
               <div className="text-sm py-2">
-                {formData.displayColumns && formData.displayColumns.length > 0
-                  ? formData.displayColumns.join(", ")
+                {normalizeDisplayColumns(formData.displayColumns).length > 0
+                  ? normalizeDisplayColumns(formData.displayColumns).join(", ")
                   : "-"}
               </div>
             )}
             <p className="text-xs text-muted-foreground">
-              Selected columns ({(formData.displayColumns || []).length}/5) will appear in the lookup dialog table
+              Selected columns ({normalizeDisplayColumns(formData.displayColumns).length}/5) will appear in the lookup dialog table
             </p>
           </div>
 
@@ -415,8 +426,8 @@ export function LookupFieldDetail({
             <div>
               <p className="text-xs font-medium text-muted-foreground">Display Columns</p>
               <p className="text-sm">
-                {formData.displayColumns && formData.displayColumns.length > 0
-                  ? formData.displayColumns.join(", ")
+                {normalizeDisplayColumns(formData.displayColumns).length > 0
+                  ? normalizeDisplayColumns(formData.displayColumns).join(", ")
                   : "Not configured"}
               </p>
             </div>

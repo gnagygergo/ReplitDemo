@@ -65,6 +65,9 @@ export function LookupFieldDetail({
 
   const formMethods = useForm();
 
+  // Extract fieldCode from filePath (remove .field_meta.xml extension)
+  const fieldCode = field.filePath.replace('.field_meta.xml', '');
+
   useEffect(() => {
     setIsEditing(mode === 'edit');
   }, [mode]);
@@ -92,20 +95,19 @@ export function LookupFieldDetail({
   });
 
   const { data: metadata, isLoading } = useQuery<LookupFieldMetadata>({
-    queryKey: ["/api/metadata", objectName, "fields", field.filePath],
+    queryKey: ["/api/object-fields", objectName, fieldCode],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         { credentials: "include" }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const xmlData = await response.json();
-      const fieldDef = xmlData.FieldDefinition || {};
+      const fieldData = await response.json();
       
       // Flatten and type-cast xml2js arrays
-      const flattened = flattenXmlMetadata(fieldDef, field.type);
+      const flattened = flattenXmlMetadata(fieldData, field.type);
       return flattened as LookupFieldMetadata;
     },
   });
@@ -120,7 +122,7 @@ export function LookupFieldDetail({
   const saveMutation = useMutation({
     mutationFn: async (data: LookupFieldMetadata) => {
       const response = await fetch(
-        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -136,7 +138,7 @@ export function LookupFieldDetail({
     onSuccess: () => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metadata", objectName, "fields", field.filePath] });
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName, fieldCode] });
       
       toast({
         title: "Field saved",

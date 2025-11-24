@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropDownListField } from "@/components/ui/dropdown-list-field";
 import { TextField } from "@/components/ui/text-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { useForm, FormProvider } from "react-hook-form";
 
 interface FieldDefinition {
   type: string;
@@ -44,6 +47,7 @@ export function DropDownListFieldDetail({
   onSave,
   onCancel,
 }: DropDownListFieldDetailProps) {
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [formData, setFormData] = useState<DropDownListFieldMetadata>({
     type: field.type,
@@ -51,22 +55,26 @@ export function DropDownListFieldDetail({
     label: field.label,
   });
 
+  const formMethods = useForm();
+
+  // Extract fieldCode from filePath (remove .field_meta.xml extension)
+  const fieldCode = field.filePath.replace('.field_meta.xml', '');
+
   useEffect(() => {
     setIsEditing(mode === 'edit');
   }, [mode]);
 
   const { data: metadata, isLoading } = useQuery<DropDownListFieldMetadata>({
-    queryKey: ["/api/metadata", objectName, "fields", field.filePath],
+    queryKey: ["/api/object-fields", objectName, fieldCode],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         { credentials: "include" }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const xmlData = await response.json();
-      return xmlData.FieldDefinition || {};
+      return await response.json();
     },
   });
 
@@ -76,9 +84,42 @@ export function DropDownListFieldDetail({
     }
   }, [metadata]);
 
+  const saveMutation = useMutation({
+    mutationFn: async (data: DropDownListFieldMetadata) => {
+      const response = await fetch(
+        `/api/object-fields/${objectName}/${fieldCode}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ FieldDefinition: data }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to save field metadata");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName, fieldCode] });
+      toast({
+        title: "Field saved",
+        description: "Field definition has been updated successfully.",
+      });
+      onSave();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Save failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSave = async () => {
-    console.log("Saving field:", formData);
-    onSave();
+    saveMutation.mutate(formData);
   };
 
   if (isLoading) {
@@ -91,58 +132,61 @@ export function DropDownListFieldDetail({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            data-testid="button-back-to-list"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Field List
-          </Button>
-          <h3 className="text-lg font-semibold" data-testid="text-field-title">
-            {field.label} ({field.type})
-          </h3>
-        </div>
+    <FormProvider {...formMethods}>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onBack}
+              data-testid="button-back-to-list"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Field List
+            </Button>
+            <h3 className="text-lg font-semibold" data-testid="text-field-title">
+              {field.label} ({field.type})
+            </h3>
+          </div>
 
-        {isEditing ? (
-          <div className="flex gap-2">
+          {isEditing ? (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFormData(metadata || formData);
+                  onCancel();
+                }}
+                disabled={saveMutation.isPending}
+                data-testid="button-cancel-edit"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saveMutation.isPending}
+                data-testid="button-save-field"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {saveMutation.isPending ? "Saving..." : "Save"}
+              </Button>
+            </div>
+          ) : (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => {
-                setFormData(metadata || formData);
-                onCancel();
-              }}
-              data-testid="button-cancel-edit"
+              onClick={onEdit}
+              data-testid="button-edit-field"
             >
-              <X className="h-4 w-4 mr-2" />
-              Cancel
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              data-testid="button-save-field"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-          </div>
-        ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEdit}
-            data-testid="button-edit-field"
-          >
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
 
       <Card>
         <CardHeader>
@@ -220,5 +264,6 @@ export function DropDownListFieldDetail({
         </CardContent>
       </Card>
     </div>
+    </FormProvider>
   );
 }

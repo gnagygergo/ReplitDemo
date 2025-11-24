@@ -56,22 +56,24 @@ export function DateTimeFieldDetail({
 
   const formMethods = useForm();
 
+  // Extract fieldCode from filePath (remove .field_meta.xml extension)
+  const fieldCode = field.filePath.replace('.field_meta.xml', '');
+
   useEffect(() => {
     setIsEditing(mode === 'edit');
   }, [mode]);
 
   const { data: metadata, isLoading } = useQuery<DateTimeFieldMetadata>({
-    queryKey: ["/api/metadata", objectName, "fields", field.filePath],
+    queryKey: ["/api/object-fields", objectName, fieldCode],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         { credentials: "include" }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const xmlData = await response.json();
-      return xmlData.FieldDefinition || {};
+      return await response.json();
     },
   });
 
@@ -85,7 +87,7 @@ export function DateTimeFieldDetail({
   const saveMutation = useMutation({
     mutationFn: async (data: DateTimeFieldMetadata) => {
       const response = await fetch(
-        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -101,7 +103,7 @@ export function DateTimeFieldDetail({
     onSuccess: () => {
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metadata", objectName, "fields", field.filePath] });
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName, fieldCode] });
       
       toast({
         title: "Field saved",

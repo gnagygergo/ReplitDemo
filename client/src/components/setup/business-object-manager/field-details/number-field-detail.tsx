@@ -60,25 +60,27 @@ export function NumberFieldDetail({
 
   const formMethods = useForm();
 
+  // Extract fieldCode from filePath (remove .field_meta.xml extension)
+  const fieldCode = field.filePath.replace('.field_meta.xml', '');
+
   useEffect(() => {
     setIsEditing(mode === 'edit');
   }, [mode]);
 
   const { data: metadata, isLoading } = useQuery<NumberFieldMetadata>({
-    queryKey: ["/api/metadata", objectName, "fields", field.filePath],
+    queryKey: ["/api/object-fields", objectName, fieldCode],
     queryFn: async () => {
       const response = await fetch(
-        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         { credentials: "include" }
       );
       if (!response.ok) {
         throw new Error("Failed to fetch field metadata");
       }
-      const xmlData = await response.json();
-      const fieldDef = xmlData.FieldDefinition || {};
+      const fieldData = await response.json();
       
       // Flatten and type-cast xml2js arrays (pass field type for context-aware casting)
-      return flattenXmlMetadata(fieldDef, field.type) as NumberFieldMetadata;
+      return flattenXmlMetadata(fieldData, field.type) as NumberFieldMetadata;
     },
   });
 
@@ -101,7 +103,7 @@ export function NumberFieldDetail({
       };
       
       const response = await fetch(
-        `/api/metadata/companies/[companyId]/objects/${objectName}/fields/${field.filePath}`,
+        `/api/object-fields/${objectName}/${fieldCode}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -116,7 +118,7 @@ export function NumberFieldDetail({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
-      queryClient.invalidateQueries({ queryKey: ["/api/metadata", objectName, "fields", field.filePath] });
+      queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName, fieldCode] });
       toast({
         title: "Field saved",
         description: "Field definition has been updated successfully.",

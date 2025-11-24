@@ -31,7 +31,36 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
   const fieldType = knownFieldType || fieldDef.type?.[0];
   
   Object.keys(fieldDef).forEach(key => {
-    const value = fieldDef[key]?.[0];
+    const rawValue = fieldDef[key];
+    
+    // Handle array fields specially - check if xml2js returned a true array
+    if (arrayFields.includes(key)) {
+      if (Array.isArray(rawValue)) {
+        // xml2js gives us an array - this is native XML array format
+        // Filter out empty strings and return as-is
+        flattened[key] = rawValue.filter(v => v !== '' && v !== undefined);
+      } else if (typeof rawValue === 'string') {
+        // Single string value - parse as JSON or CSV
+        try {
+          const parsed = JSON.parse(rawValue);
+          flattened[key] = Array.isArray(parsed) ? parsed : [rawValue];
+        } catch {
+          if (rawValue.includes(',')) {
+            flattened[key] = rawValue.split(',').map(s => s.trim()).filter(s => s);
+          } else if (rawValue) {
+            flattened[key] = [rawValue];
+          } else {
+            flattened[key] = [];
+          }
+        }
+      } else {
+        flattened[key] = [];
+      }
+      return;
+    }
+    
+    // For non-array fields, extract first element from xml2js array
+    const value = rawValue?.[0];
     
     // Skip undefined or empty string values
     if (value === undefined || value === '') {
@@ -50,32 +79,6 @@ export function flattenXmlMetadata(fieldDef: any, knownFieldType?: string): Reco
         flattened[key] = true;
       } else if (value === 'false') {
         flattened[key] = false;
-      }
-    } else if (arrayFields.includes(key)) {
-      // Parse array fields from JSON or comma-separated strings
-      if (typeof value === 'string') {
-        try {
-          // Try parsing as JSON first
-          const parsed = JSON.parse(value);
-          if (Array.isArray(parsed)) {
-            flattened[key] = parsed;
-          } else {
-            // If not an array, wrap in array
-            flattened[key] = [value];
-          }
-        } catch {
-          // If JSON parse fails, try comma-separated
-          if (value.includes(',')) {
-            flattened[key] = value.split(',').map(s => s.trim()).filter(s => s);
-          } else if (value) {
-            // Single value
-            flattened[key] = [value];
-          } else {
-            flattened[key] = [];
-          }
-        }
-      } else if (Array.isArray(value)) {
-        flattened[key] = value;
       }
     } else if (key === 'defaultValue') {
       // Type-cast defaultValue based on field type

@@ -68,6 +68,28 @@ export function LookupFieldDetail({
     setIsEditing(mode === 'edit');
   }, [mode]);
 
+  // Fetch available objects for Referenced Object dropdown
+  const { data: availableObjects = [] } = useQuery<Array<{
+    apiCode: string;
+    labelPlural: string;
+    labelSingular: string;
+    iconSet: string;
+    icon: string;
+  }>>({
+    queryKey: ["/api/object-definitions"],
+  });
+
+  // Fetch fields for the selected referenced object
+  const { data: objectFields = [] } = useQuery<Array<{
+    type: string;
+    apiCode: string;
+    label: string;
+    filePath: string;
+  }>>({
+    queryKey: ["/api/object-fields", formData.referencedObject],
+    enabled: !!formData.referencedObject,
+  });
+
   const { data: metadata, isLoading } = useQuery<LookupFieldMetadata>({
     queryKey: ["/api/metadata", objectName, "fields", field.filePath],
     queryFn: async () => {
@@ -218,21 +240,132 @@ export function LookupFieldDetail({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <TextField
-              mode={isEditing ? "edit" : "view"}
-              value={formData.targetObject || ""}
-              onChange={(val) => setFormData({ ...formData, targetObject: val })}
-              label="Target Object"
-              data-testid="input-target-object"
-            />
-            <TextField
-              mode={isEditing ? "edit" : "view"}
-              value={formData.targetField || ""}
-              onChange={(val) => setFormData({ ...formData, targetField: val })}
-              label="Target Field"
-              data-testid="input-target-field"
-            />
+          <div className="space-y-2">
+            <Label htmlFor="referencedObject" className="text-muted-foreground">
+              Referenced Object
+            </Label>
+            {isEditing ? (
+              <Select
+                value={formData.referencedObject || ""}
+                onValueChange={(value) => {
+                  setFormData({
+                    ...formData,
+                    referencedObject: value,
+                    primaryDisplayField: "",
+                    displayColumns: [],
+                  });
+                }}
+              >
+                <SelectTrigger id="referencedObject" data-testid="select-referenced-object">
+                  <SelectValue placeholder="Select an object..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableObjects.map((obj) => (
+                    <SelectItem key={obj.apiCode} value={obj.apiCode}>
+                      {obj.labelSingular}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm py-2">
+                {formData.referencedObject || "-"}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="primaryDisplayField" className="text-muted-foreground">
+              Primary Display Field
+            </Label>
+            {isEditing ? (
+              <Select
+                value={formData.primaryDisplayField || ""}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, primaryDisplayField: value });
+                }}
+                disabled={!formData.referencedObject}
+              >
+                <SelectTrigger id="primaryDisplayField" data-testid="select-primary-display-field">
+                  <SelectValue placeholder="Select field to display..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {objectFields.map((field) => (
+                    <SelectItem key={field.apiCode} value={field.apiCode}>
+                      {field.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="text-sm py-2">
+                {formData.primaryDisplayField || "-"}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              This field will be displayed as the record name in view and edit modes
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-muted-foreground">
+              Display Columns (Select up to 5)
+            </Label>
+            {isEditing ? (
+              <div className="space-y-2 border rounded-md p-4 max-h-64 overflow-y-auto">
+                {formData.referencedObject && objectFields.length > 0 ? (
+                  objectFields.map((field) => {
+                    const selectedColumns = formData.displayColumns || [];
+                    const isSelected = selectedColumns.includes(field.apiCode);
+                    const isDisabled = !isSelected && selectedColumns.length >= 5;
+
+                    return (
+                      <div key={field.apiCode} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`column-${field.apiCode}`}
+                          checked={isSelected}
+                          disabled={isDisabled}
+                          onCheckedChange={(checked) => {
+                            const currentColumns = formData.displayColumns || [];
+                            if (checked) {
+                              setFormData({
+                                ...formData,
+                                displayColumns: [...currentColumns, field.apiCode],
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                displayColumns: currentColumns.filter((c) => c !== field.apiCode),
+                              });
+                            }
+                          }}
+                          data-testid={`checkbox-column-${field.apiCode}`}
+                        />
+                        <Label
+                          htmlFor={`column-${field.apiCode}`}
+                          className={`font-normal cursor-pointer ${isDisabled ? 'text-muted-foreground' : ''}`}
+                        >
+                          {field.label} ({field.type})
+                        </Label>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Select a referenced object first
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="text-sm py-2">
+                {formData.displayColumns && formData.displayColumns.length > 0
+                  ? formData.displayColumns.join(", ")
+                  : "-"}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Selected columns ({(formData.displayColumns || []).length}/5) will appear in the lookup dialog table
+            </p>
           </div>
 
           <TextField
@@ -241,14 +374,6 @@ export function LookupFieldDetail({
             onChange={(val) => setFormData({ ...formData, helpText: val })}
             label="Help Text"
             data-testid="input-help-text"
-          />
-
-          <CheckboxField
-            mode={isEditing ? "edit" : "view"}
-            value={formData.required || false}
-            onChange={(val) => setFormData({ ...formData, required: val })}
-            label="Required Field"
-            data-testid="input-required"
           />
         </CardContent>
       </Card>
@@ -259,13 +384,29 @@ export function LookupFieldDetail({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground mb-4">
-            Lookup field preview requires a target object configuration. Configure the target object first to see a live preview.
+            Lookup field configuration summary
           </p>
-          <div className="p-4 border rounded-md bg-muted/50">
-            <p className="text-sm font-medium">{formData.label || field.label}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Target: {formData.targetObject || "Not configured"} → {formData.targetField || "Not configured"}
-            </p>
+          <div className="p-4 border rounded-md bg-muted/50 space-y-2">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Label</p>
+              <p className="text-sm">{formData.label || field.label}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Referenced Object</p>
+              <p className="text-sm">{formData.referencedObject || "Not configured"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Primary Display Field</p>
+              <p className="text-sm">{formData.primaryDisplayField || "Not configured"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Display Columns</p>
+              <p className="text-sm">
+                {formData.displayColumns && formData.displayColumns.length > 0
+                  ? formData.displayColumns.join(", ")
+                  : "Not configured"}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

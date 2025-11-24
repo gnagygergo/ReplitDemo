@@ -161,14 +161,8 @@ export function LookupFieldDetail({
   });
 
   const handleSave = async () => {
-    // Convert displayColumns array back to comma-separated string for API
-    const dataToSave = {
-      ...formData,
-      displayColumns: Array.isArray(formData.displayColumns)
-        ? formData.displayColumns.join(',')
-        : formData.displayColumns || ''
-    };
-    saveMutation.mutate(dataToSave as LookupFieldMetadata);
+    // Backend handles array-to-string conversion, so just send the array
+    saveMutation.mutate(formData);
   };
 
   if (isLoading) {

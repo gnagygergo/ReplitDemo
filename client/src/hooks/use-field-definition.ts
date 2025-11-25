@@ -20,6 +20,8 @@ export interface FieldDefinition {
   percentageDisplay?: boolean;
   fieldType?: string;
   metadataSource?: string;
+  sourcePath?: string;
+  sourceType?: "universalMetadata" | "globalMetadata";
   sortingDirection?: string;
   allowSearch?: boolean;
 }

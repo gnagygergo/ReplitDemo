@@ -255,7 +255,7 @@ export function DropDownListFieldDetail({
             value=""
             onValueChange={() => {}}
             label={formData.label || field.label}
-            sourceType="metadata"
+            sourceType="universalMetadata"
             sourcePath={formData.picklistName || "sample_picklist"}
             data-testid="preview-field"
           />

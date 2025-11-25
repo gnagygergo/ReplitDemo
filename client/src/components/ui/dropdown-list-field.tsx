@@ -30,7 +30,7 @@ export interface DropDownListFieldProps {
   mode: "edit" | "view" | "table";
   value?: string;
   onValueChange?: (value: string) => void;
-  sourceType: "metadata";
+  sourceType?: "universalMetadata" | "globalMetadata";
   sourcePath?: string;
   showSearch?: boolean;
   label?: string;
@@ -42,9 +42,9 @@ export interface DropDownListFieldProps {
   getDisplayValue?: (item: any) => string;
   // Function to extract option value from metadata item
   getValue?: (item: any) => string;
-  // Root key in XML structure (e.g., "currencies" for currencies.xml)
+  // Root key in XML structure (e.g., "currencies" for currencies.xml) - only used for universalMetadata
   rootKey?: string;
-  // Item key in XML structure (e.g., "currency" for currencies.xml)
+  // Item key in XML structure (e.g., "currency" for currencies.xml) - only used for universalMetadata
   itemKey?: string;
   objectCode?: string;
   fieldCode?: string;
@@ -81,7 +81,8 @@ export function DropDownListField({
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "Select an option";
   const mergedShowSearch = showSearch ?? fieldDef?.allowSearch ?? false;
-  const mergedSourcePath = sourcePath ?? fieldDef?.metadataSource ?? "";
+  const mergedSourcePath = sourcePath ?? fieldDef?.sourcePath ?? fieldDef?.metadataSource ?? "";
+  const mergedSourceType = sourceType ?? fieldDef?.sourceType ?? "universalMetadata";
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -90,25 +91,50 @@ export function DropDownListField({
     : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
   );
 
-  // Only fetch metadata for sourceType="metadata"
+  // Fetch metadata for both universalMetadata and globalMetadata
   const { data: metadataResponse, isLoading } = useMetadata({
     sourcePath: mergedSourcePath,
-    enabled: sourceType === "metadata" && !!mergedSourcePath,
+    enabled: !!mergedSourcePath,
   });
 
-  // Extract items from XML response
-  const items = metadataResponse?.[rootKey || "root"]?.[itemKey || "item"] || [];
+  // Extract items from XML response based on sourceType
+  let items: any[] = [];
+  if (mergedSourceType === "globalMetadata") {
+    // For globalMetadata, extract from GlobalValueSet.customValue structure
+    items = metadataResponse?.GlobalValueSet?.customValue || [];
+  } else {
+    // For universalMetadata, use rootKey/itemKey
+    items = metadataResponse?.[rootKey || "root"]?.[itemKey || "item"] || [];
+  }
 
-  // Default display value extractor (assumes first property is display value)
+  // Default display value extractor
   const defaultGetDisplayValue = (item: any) => {
     if (typeof item === "string") return item;
+    
+    // For globalMetadata, extract from label (with fallback to first property)
+    if (mergedSourceType === "globalMetadata") {
+      const firstValue = Object.values(item)[0];
+      const fallback = Array.isArray(firstValue) ? firstValue[0] : "";
+      return item.label?.[0] || item.fullName?.[0] || item.valueName?.[0] || fallback || "";
+    }
+    
+    // For universalMetadata, assume first property is display value
     const firstKey = Object.keys(item)[0];
     return item[firstKey]?.[0] || "";
   };
 
-  // Default value extractor (assumes first property is the value)
+  // Default value extractor
   const defaultGetValue = (item: any) => {
     if (typeof item === "string") return item;
+    
+    // For globalMetadata, extract from code (with fallback to fullName/valueName)
+    if (mergedSourceType === "globalMetadata") {
+      const firstValue = Object.values(item)[0];
+      const fallback = Array.isArray(firstValue) ? firstValue[0] : "";
+      return item.code?.[0] || item.fullName?.[0] || item.valueName?.[0] || fallback || "";
+    }
+    
+    // For universalMetadata, assume first property is the value
     const firstKey = Object.keys(item)[0];
     return item[firstKey]?.[0] || "";
   };
@@ -137,7 +163,7 @@ export function DropDownListField({
 
   // Guard against missing metadata source path ONLY in edit mode
   // View/table modes don't need metadata - they just display the value
-  if (mode === "edit" && sourceType === "metadata" && !mergedSourcePath) {
+  if (mode === "edit" && !mergedSourcePath) {
     return (
       <>
         {mergedLabel && (
@@ -147,7 +173,7 @@ export function DropDownListField({
         )}
         <FormControl>
           <div className={cn("text-sm text-destructive", className || defaultEditClassName)} data-testid={mergedTestId}>
-            Missing metadata source path for field
+            Missing source path for field
           </div>
         </FormControl>
       </>

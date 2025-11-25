@@ -1325,6 +1325,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all global value sets for the company
+  app.get("/api/global-value-sets", isAuthenticated, async (req, res) => {
+    try {
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the global_value_sets directory
+      const globalValueSetsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'global_value_sets'
+      );
+
+      // Check if directory exists and read all files
+      let files: string[];
+      try {
+        const entries = readdirSync(globalValueSetsDir, { withFileTypes: true });
+        files = entries
+          .filter(entry => entry.isFile() && entry.name.endsWith('.globalValueSet-meta.xml'))
+          .map(entry => entry.name);
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          // Directory doesn't exist, return empty array
+          return res.json([]);
+        }
+        throw error;
+      }
+
+      // For each file, parse and extract metadata
+      const globalValueSets = [];
+      for (const fileName of files) {
+        const filePath = path.join(globalValueSetsDir, fileName);
+
+        try {
+          const xmlContent = readFileSync(filePath, 'utf-8');
+          const parsedData = await parseXML(xmlContent) as any;
+          
+          // Extract the relevant fields
+          const gvs = parsedData.GlobalValueSet || {};
+          // Extract name from filename (remove .globalValueSet-meta.xml extension)
+          const name = fileName.replace('.globalValueSet-meta.xml', '');
+          
+          globalValueSets.push({
+            name: name,
+            label: gvs.label?.[0] || name,
+            description: gvs.description?.[0] || '',
+          });
+        } catch (error: any) {
+          console.error(`Error reading global value set ${fileName}:`, error);
+        }
+      }
+
+      res.json(globalValueSets);
+    } catch (error) {
+      console.error("Error fetching global value sets:", error);
+      res.status(500).json({ message: "Failed to fetch global value sets" });
+    }
+  });
+
   // Object field definitions endpoint
   app.get("/api/object-fields/:objectName", isAuthenticated, async (req, res) => {
     try {

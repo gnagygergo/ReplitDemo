@@ -1475,7 +1475,7 @@ export function CreateEditFieldDialog({
           >
             Cancel
           </Button>
-          {(step === "fieldType" || step === "subtype" || step === "lookupObject") && !fieldToEdit && (
+          {(step === "fieldType" || step === "subtype" || step === "sourceSelection" || step === "lookupObject") && !fieldToEdit && (
             <Button
               type="button"
               onClick={handleNext}

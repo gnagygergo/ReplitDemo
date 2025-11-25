@@ -10,6 +10,32 @@ import { promisify } from "util";
 
 const parseXML = promisify(parseString);
 const xmlBuilder = new Builder();
+
+// Helper function to normalize sourceType to camelCase for DropDownListField
+function normalizeSourceType(sourceType: string | undefined): string | undefined {
+  if (!sourceType) return undefined;
+  
+  // Convert PascalCase to camelCase
+  if (sourceType === 'UniversalMetadata') return 'universalMetadata';
+  if (sourceType === 'GlobalMetadata') return 'globalMetadata';
+  
+  // Already in camelCase or unknown value - return as is
+  return sourceType;
+}
+
+// Helper function to convert sourceType from camelCase to camelCase for XML storage
+// (Frontend may send PascalCase from form, we want to store camelCase)
+function convertSourceTypeToXmlFormat(sourceType: string | undefined): string | undefined {
+  if (!sourceType) return undefined;
+  
+  // Convert PascalCase to camelCase
+  if (sourceType === 'UniversalMetadata') return 'universalMetadata';
+  if (sourceType === 'GlobalMetadata') return 'globalMetadata';
+  
+  // Already in camelCase - return as is
+  return sourceType;
+}
+
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";

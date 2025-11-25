@@ -1586,7 +1586,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Additional validation for DropDownListField
       if (fieldData.type === 'DropDownListField') {
-        if (fieldData.sourceType === 'UniversalMetadata') {
+        // Handle both PascalCase and camelCase for backward compatibility
+        const isUniversalMetadata = fieldData.sourceType === 'UniversalMetadata' || fieldData.sourceType === 'universalMetadata';
+        if (isUniversalMetadata) {
           if (!fieldData.rootKey || !fieldData.rootKey.trim()) {
             return res.status(400).json({ message: "Root key is required for Universal Metadata sources" });
           }
@@ -1697,15 +1699,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
       } else if (fieldData.type === 'DropDownListField') {
         xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
-        xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
+        // Convert sourceType to camelCase for XML storage
+        const normalizedSourceType = convertSourceTypeToXmlFormat(fieldData.sourceType) || 'globalMetadata';
+        xmlObject.FieldDefinition.sourceType = [normalizedSourceType];
         xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
         xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
         // For UniversalMetadata sources, only include rootKey and itemKey if non-empty
         // For GlobalMetadata sources, omit them entirely
-        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.rootKey && fieldData.rootKey.trim()) {
+        // Check for both PascalCase and camelCase for backward compatibility
+        const isUniversalMetadata = fieldData.sourceType === 'UniversalMetadata' || fieldData.sourceType === 'universalMetadata';
+        if (isUniversalMetadata && fieldData.rootKey && fieldData.rootKey.trim()) {
           xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
         }
-        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.itemKey && fieldData.itemKey.trim()) {
+        if (isUniversalMetadata && fieldData.itemKey && fieldData.itemKey.trim()) {
           xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
         }
       }
@@ -1740,7 +1746,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Additional validation for DropDownListField
       if (fieldData.type === 'DropDownListField') {
-        if (fieldData.sourceType === 'UniversalMetadata') {
+        // Handle both PascalCase and camelCase for backward compatibility
+        const isUniversalMetadata = fieldData.sourceType === 'UniversalMetadata' || fieldData.sourceType === 'universalMetadata';
+        if (isUniversalMetadata) {
           if (!fieldData.rootKey || !fieldData.rootKey.trim()) {
             return res.status(400).json({ message: "Root key is required for Universal Metadata sources" });
           }
@@ -1842,15 +1850,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
       } else if (fieldData.type === 'DropDownListField') {
         xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
-        xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
+        // Convert sourceType to camelCase for XML storage
+        const normalizedSourceType = convertSourceTypeToXmlFormat(fieldData.sourceType) || 'globalMetadata';
+        xmlObject.FieldDefinition.sourceType = [normalizedSourceType];
         xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
         xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
         // For UniversalMetadata sources, only include rootKey and itemKey if non-empty
         // For GlobalMetadata sources, omit them entirely
-        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.rootKey && fieldData.rootKey.trim()) {
+        // Check for both PascalCase and camelCase for backward compatibility
+        const isUniversalMetadata = fieldData.sourceType === 'UniversalMetadata' || fieldData.sourceType === 'universalMetadata';
+        if (isUniversalMetadata && fieldData.rootKey && fieldData.rootKey.trim()) {
           xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
         }
-        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.itemKey && fieldData.itemKey.trim()) {
+        if (isUniversalMetadata && fieldData.itemKey && fieldData.itemKey.trim()) {
           xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
         }
       }

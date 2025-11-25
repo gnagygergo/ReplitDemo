@@ -1732,17 +1732,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/metadata/*", isAuthenticated, async (req, res) => {
     try {
       // Extract the requested path from the URL (everything after /api/metadata/)
-      const requestedPath = req.params[0];
+      let requestedPath = req.params[0];
       
       // Security: Reject any path containing directory traversal attempts
       if (!requestedPath || requestedPath.includes('..') || requestedPath.includes('~')) {
         return res.status(400).json({ message: "Invalid metadata path" });
       }
 
+      // Auto-resolve global_value_sets paths to company-specific paths
+      // global_value_sets are ALWAYS company-specific
+      if (requestedPath.startsWith('global_value_sets/')) {
+        const companyContext = await storage.GetCompanyContext(req);
+        if (!companyContext) {
+          return res.status(403).json({ message: "Company context required for global value sets" });
+        }
+        // Extract the name from "global_value_sets/industries" -> "industries"
+        const valueSetName = requestedPath.replace('global_value_sets/', '');
+        // Build company-specific path with proper extension using placeholder for security check
+        requestedPath = `companies/[companyId]/global_value_sets/${valueSetName}.globalValueSet-meta.xml`;
+      }
+
       // Security: Whitelist of allowed path patterns
       const allowedPatterns = [
         /^[a-zA-Z0-9_.-]+\.xml$/, // Simple filenames like "currencies.xml"
-        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths
+        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths with [companyId] placeholder
       ];
 
       const isAllowed = allowedPatterns.some(pattern => pattern.test(requestedPath));
@@ -1797,17 +1810,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/metadata/*", isAuthenticated, async (req, res) => {
     try {
       // Extract the requested path from the URL (everything after /api/metadata/)
-      const requestedPath = req.params[0];
+      let requestedPath = req.params[0];
       
       // Security: Reject any path containing directory traversal attempts
       if (!requestedPath || requestedPath.includes('..') || requestedPath.includes('~')) {
         return res.status(400).json({ message: "Invalid metadata path" });
       }
 
+      // Auto-resolve global_value_sets paths to company-specific paths
+      // global_value_sets are ALWAYS company-specific
+      if (requestedPath.startsWith('global_value_sets/')) {
+        const companyContext = await storage.GetCompanyContext(req);
+        if (!companyContext) {
+          return res.status(403).json({ message: "Company context required for global value sets" });
+        }
+        // Extract the name from "global_value_sets/industries" -> "industries"
+        const valueSetName = requestedPath.replace('global_value_sets/', '');
+        // Build company-specific path with proper extension using placeholder for security check
+        requestedPath = `companies/[companyId]/global_value_sets/${valueSetName}.globalValueSet-meta.xml`;
+      }
+
       // Security: Whitelist of allowed path patterns
       const allowedPatterns = [
         /^[a-zA-Z0-9_.-]+\.xml$/, // Simple filenames like "currencies.xml"
-        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths
+        /^companies\/\[companyId\]\/[a-zA-Z0-9_.\/-]+\.xml$/, // Company-specific paths with [companyId] placeholder
       ];
 
       const isAllowed = allowedPatterns.some(pattern => pattern.test(requestedPath));

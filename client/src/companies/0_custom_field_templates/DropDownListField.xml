@@ -7,12 +7,18 @@
   <placeHolder></placeHolder>
   <testId></testId>
   <className></className>
-  <sourceType></sourceType> <!-- metadata -->
+  <sourceType></sourceType> <!-- UniversalMetadata OR GlobalMetadata OR LocalMetadata -->
   <sourcePath></sourcePath> <!-- countries.xml -->
   <showSearch></showSearch> <!-- true or false -->
-  <rootKey></rootKey> <!-- countries - the rootkey of the xml file -->
-  <itemKey></itemKey> <!-- country- the itemkey in the xml file for each item -->
+  <rootKey></rootKey> <!-- countries - the rootkey of the xml file. ONLY for UniversalMetadata -->
+  <itemKey></itemKey> <!-- country- the itemkey in the xml file for each item. ONLY for UniversalMetadata -->
   <getValue></getValue> <!-- item.countryCode[0] -->
   <getDisplayValue></getDisplayValue> <!-- item.countryName[0] -->
+  <values> <!-- ONLY FOR LocalMetadata -->
+    <value>
+      <label>Option 1</label>
+      <code>option1</code>
+    </value>
+  </values>
 </FieldDefinition>
 

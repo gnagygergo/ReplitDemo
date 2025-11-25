@@ -9,5 +9,5 @@
   <className/>
   <referencedObject>accounts</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
-  <displayColumns>name,company_registration_id</displayColumns>
+  <displayColumns>name,company_registration_id,email</displayColumns>
 </FieldDefinition>

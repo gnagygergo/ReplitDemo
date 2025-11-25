@@ -1558,6 +1558,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
+      // Normalize sourceType to camelCase for DropDownListField
+      if (flattenedData.sourceType) {
+        flattenedData.sourceType = normalizeSourceType(flattenedData.sourceType);
+      }
+
       res.json(flattenedData);
     } catch (error: any) {
       if (error.code === 'ENOENT') {

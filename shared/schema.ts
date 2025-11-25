@@ -685,7 +685,7 @@ export const insertAccountSchema = createInsertSchema(accounts)
     id: true,
   })
   .extend({
-    industry: z.enum(["tech", "construction", "services"]).optional(),
+    industry: z.string().optional(),
     ownerId: z.string().min(1, "Owner is required"),
     parentAccountId: optionalForeignKey,
   });

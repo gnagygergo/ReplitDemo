@@ -36,6 +36,7 @@ import { TextField } from "@/components/ui/text-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { AddressField } from "@/components/ui/address-field";
+import { DropDownListField } from "@/components/ui/drop-down-list-field";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;
@@ -242,6 +243,9 @@ export default function SmartAccountManagementDetailCard({
                           </FormItem>
                         )}
                       />
+
+                      
+                      
                     </div>
                   )}
 
@@ -307,6 +311,8 @@ export default function SmartAccountManagementDetailCard({
                           </FormItem>
                         )}
                       />
+
+                    
 
                       {/* Tax ID */}
                       <FormField
@@ -493,7 +499,7 @@ export default function SmartAccountManagementDetailCard({
                       objectCode="accounts"
                       fieldCode="company_official_name"
                     />
-
+                  
                     {/* Company Registration ID */}
                     <TextField
                       mode="view"

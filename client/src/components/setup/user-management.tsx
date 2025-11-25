@@ -271,7 +271,7 @@ function UserEditDialog({
                     mode="edit"
                     value={field.value}
                     onValueChange={field.onChange}
-                    sourceType="metadata"
+                    sourceType="universalMetadata"
                     sourcePath="culture_codes.xml"
                     showSearch={true}
                     rootKey="cultures"
@@ -302,7 +302,7 @@ function UserEditDialog({
                     mode="edit"
                     value={field.value}
                     onValueChange={field.onChange}
-                    sourceType="metadata"
+                    sourceType="universalMetadata"
                     sourcePath="timezones.xml"
                     showSearch={true}
                     rootKey="timezones"

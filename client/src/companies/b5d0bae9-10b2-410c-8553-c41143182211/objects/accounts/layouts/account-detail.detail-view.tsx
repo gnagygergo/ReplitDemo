@@ -378,12 +378,12 @@ export default function AccountDetail() {
               accountName={account?.name || ""}
             />
               )}
-            {/*<AccountDetailCategorizationCard
+            <AccountDetailCategorizationCard
               account={account || null}
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-            />*/}
+            />
           </div>
         </Panel> 
 

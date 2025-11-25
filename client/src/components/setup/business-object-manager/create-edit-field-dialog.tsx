@@ -77,6 +77,24 @@ const dropDownListFieldSchema = z.object({
   showSearch: z.boolean().optional(),
   rootKey: z.string().optional(),
   itemKey: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // For UniversalMetadata sources, rootKey and itemKey must be non-empty
+  if (data.sourceType === "UniversalMetadata") {
+    if (!data.rootKey || data.rootKey.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Root key is required for Universal Metadata sources",
+        path: ["rootKey"],
+      });
+    }
+    if (!data.itemKey || data.itemKey.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Item key is required for Universal Metadata sources",
+        path: ["itemKey"],
+      });
+    }
+  }
 });
 
 const checkboxFieldSchema = z.object({
@@ -472,6 +490,20 @@ export function CreateEditFieldDialog({
       // Transform boolean values to strings for DropDownListField
       if (data.type === "DropDownListField") {
         payload.showSearch = data.showSearch?.toString() || "false";
+        
+        // Normalize rootKey and itemKey for UniversalMetadata sources
+        if (payload.sourceType === "UniversalMetadata") {
+          if (!payload.rootKey || payload.rootKey.trim() === "") {
+            // Set defaults based on sourcePath
+            if (payload.sourcePath === "countries.xml") {
+              payload.rootKey = "countries";
+              payload.itemKey = "country";
+            } else if (payload.sourcePath === "currencies.xml") {
+              payload.rootKey = "currencies";
+              payload.itemKey = "currency";
+            }
+          }
+        }
       }
       
       return apiRequest("POST", `/api/object-fields/${objectName}`, payload);
@@ -506,6 +538,20 @@ export function CreateEditFieldDialog({
       // Transform boolean values to strings for DropDownListField
       if (data.type === "DropDownListField") {
         payload.showSearch = data.showSearch?.toString() || "false";
+        
+        // Normalize rootKey and itemKey for UniversalMetadata sources
+        if (payload.sourceType === "UniversalMetadata") {
+          if (!payload.rootKey || payload.rootKey.trim() === "") {
+            // Set defaults based on sourcePath
+            if (payload.sourcePath === "countries.xml") {
+              payload.rootKey = "countries";
+              payload.itemKey = "country";
+            } else if (payload.sourcePath === "currencies.xml") {
+              payload.rootKey = "currencies";
+              payload.itemKey = "currency";
+            }
+          }
+        }
       }
       
       return apiRequest("PUT", `/api/object-fields/${objectName}/${fieldToEdit?.apiCode}`, payload);

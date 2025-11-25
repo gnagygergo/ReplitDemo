@@ -1553,6 +1553,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Missing required fields: apiCode, label, type" });
       }
 
+      // Additional validation for DropDownListField
+      if (fieldData.type === 'DropDownListField') {
+        if (fieldData.sourceType === 'UniversalMetadata') {
+          if (!fieldData.rootKey || !fieldData.rootKey.trim()) {
+            return res.status(400).json({ message: "Root key is required for Universal Metadata sources" });
+          }
+          if (!fieldData.itemKey || !fieldData.itemKey.trim()) {
+            return res.status(400).json({ message: "Item key is required for Universal Metadata sources" });
+          }
+        }
+      }
+
       // Get company context
       const companyContext = await storage.GetCompanyContext(req);
       if (!companyContext) {
@@ -1657,16 +1669,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
         xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
         xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
-        // Only include rootKey and itemKey if they have values (UniversalMetadata only)
-        if (fieldData.rootKey) {
+        // For UniversalMetadata sources, only include rootKey and itemKey if non-empty
+        // For GlobalMetadata sources, omit them entirely
+        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.rootKey && fieldData.rootKey.trim()) {
           xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
-        } else {
-          xmlObject.FieldDefinition.rootKey = [''];
         }
-        if (fieldData.itemKey) {
+        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.itemKey && fieldData.itemKey.trim()) {
           xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
-        } else {
-          xmlObject.FieldDefinition.itemKey = [''];
         }
       }
 
@@ -1696,6 +1705,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate required fields
       if (!fieldData.label || !fieldData.type) {
         return res.status(400).json({ message: "Missing required fields: label, type" });
+      }
+
+      // Additional validation for DropDownListField
+      if (fieldData.type === 'DropDownListField') {
+        if (fieldData.sourceType === 'UniversalMetadata') {
+          if (!fieldData.rootKey || !fieldData.rootKey.trim()) {
+            return res.status(400).json({ message: "Root key is required for Universal Metadata sources" });
+          }
+          if (!fieldData.itemKey || !fieldData.itemKey.trim()) {
+            return res.status(400).json({ message: "Item key is required for Universal Metadata sources" });
+          }
+        }
       }
 
       // Get company context
@@ -1793,16 +1814,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
         xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
         xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
-        // Only include rootKey and itemKey if they have values (UniversalMetadata only)
-        if (fieldData.rootKey) {
+        // For UniversalMetadata sources, only include rootKey and itemKey if non-empty
+        // For GlobalMetadata sources, omit them entirely
+        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.rootKey && fieldData.rootKey.trim()) {
           xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
-        } else {
-          xmlObject.FieldDefinition.rootKey = [''];
         }
-        if (fieldData.itemKey) {
+        if (fieldData.sourceType === 'UniversalMetadata' && fieldData.itemKey && fieldData.itemKey.trim()) {
           xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
-        } else {
-          xmlObject.FieldDefinition.itemKey = [''];
         }
       }
 

@@ -77,24 +77,6 @@ const dropDownListFieldSchema = z.object({
   showSearch: z.boolean().optional(),
   rootKey: z.string().optional(),
   itemKey: z.string().optional(),
-}).superRefine((data, ctx) => {
-  // For UniversalMetadata sources, rootKey and itemKey must be non-empty
-  if (data.sourceType === "UniversalMetadata") {
-    if (!data.rootKey || data.rootKey.trim().length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Root key is required for Universal Metadata sources",
-        path: ["rootKey"],
-      });
-    }
-    if (!data.itemKey || data.itemKey.trim().length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Item key is required for Universal Metadata sources",
-        path: ["itemKey"],
-      });
-    }
-  }
 });
 
 const checkboxFieldSchema = z.object({

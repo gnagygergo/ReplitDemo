@@ -65,12 +65,18 @@ const dateTimeFieldSchema = z.object({
   placeHolder: z.string().optional(),
 });
 
-const picklistFieldSchema = z.object({
-  type: z.literal("PicklistField"),
+const dropDownListFieldSchema = z.object({
+  type: z.literal("DropDownListField"),
   apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
   label: z.string().min(1, "Label is required"),
+  subtype: z.enum(["singleSelect", "multiSelect"]),
   helpText: z.string().optional(),
   placeHolder: z.string().optional(),
+  sourceType: z.enum(["UniversalMetadata", "GlobalMetadata"]),
+  sourcePath: z.string().min(1, "Source path is required"),
+  showSearch: z.boolean().optional(),
+  rootKey: z.string().optional(),
+  itemKey: z.string().optional(),
 });
 
 const checkboxFieldSchema = z.object({
@@ -110,7 +116,7 @@ const formSchema = z.discriminatedUnion("type", [
   textFieldSchema,
   numberFieldSchema,
   dateTimeFieldSchema,
-  picklistFieldSchema,
+  dropDownListFieldSchema,
   checkboxFieldSchema,
   addressFieldSchema,
   lookupFieldSchema,
@@ -120,7 +126,7 @@ type FormData = z.infer<typeof formSchema>;
 type TextFieldFormData = z.infer<typeof textFieldSchema>;
 type NumberFieldFormData = z.infer<typeof numberFieldSchema>;
 type DateTimeFieldFormData = z.infer<typeof dateTimeFieldSchema>;
-type PicklistFieldFormData = z.infer<typeof picklistFieldSchema>;
+type DropDownListFieldFormData = z.infer<typeof dropDownListFieldSchema>;
 type CheckboxFieldFormData = z.infer<typeof checkboxFieldSchema>;
 type AddressFieldFormData = z.infer<typeof addressFieldSchema>;
 type LookupFieldFormData = z.infer<typeof lookupFieldSchema>;
@@ -147,7 +153,7 @@ export function CreateEditFieldDialog({
   const queryClient = useQueryClient();
   
   // Initialize step based on whether we're editing or creating
-  const [step, setStep] = useState<"fieldType" | "subtype" | "lookupObject" | "form">(() => 
+  const [step, setStep] = useState<"fieldType" | "subtype" | "lookupObject" | "sourceSelection" | "form">(() => 
     fieldToEdit ? "form" : "fieldType"
   );
   const [selectedFieldType, setSelectedFieldType] = useState<string>(() =>
@@ -191,13 +197,19 @@ export function CreateEditFieldDialog({
           helpText: "",
           placeHolder: "",
         };
-      case "PicklistField":
+      case "DropDownListField":
         return {
-          type: "PicklistField" as const,
+          type: "DropDownListField" as const,
           apiCode: "",
           label: "",
+          subtype: "singleSelect" as const,
           helpText: "",
           placeHolder: "",
+          sourceType: "GlobalMetadata" as const,
+          sourcePath: "",
+          showSearch: false,
+          rootKey: "",
+          itemKey: "",
         };
       case "CheckboxField":
         return {
@@ -259,6 +271,16 @@ export function CreateEditFieldDialog({
   }>>({
     queryKey: ["/api/object-definitions"],
     enabled: step === "lookupObject" || (fieldToEdit?.type === "LookupField" && step === "form"),
+  });
+
+  // Fetch available global value sets for DropDownListField
+  const { data: availableGlobalValueSets = [] } = useQuery<Array<{
+    name: string;
+    label: string;
+    valueCount: number;
+  }>>({
+    queryKey: ["/api/global-value-sets"],
+    enabled: step === "sourceSelection" || (fieldToEdit?.type === "DropDownListField" && step === "form"),
   });
 
   // Fetch fields for the selected referenced object
@@ -347,13 +369,19 @@ export function CreateEditFieldDialog({
             helpText: data.helpText || "",
             placeHolder: data.placeHolder || "",
           });
-        } else if (fieldType === "PicklistField") {
+        } else if (fieldType === "DropDownListField") {
           form.reset({
-            type: "PicklistField",
+            type: "DropDownListField",
             apiCode: data.apiCode || "",
             label: data.label || "",
+            subtype: data.subtype || "singleSelect",
             helpText: data.helpText || "",
             placeHolder: data.placeHolder || "",
+            sourceType: data.sourceType || "GlobalMetadata",
+            sourcePath: data.sourcePath || "",
+            showSearch: data.showSearch === "true" || data.showSearch === true,
+            rootKey: data.rootKey || "",
+            itemKey: data.itemKey || "",
           });
         } else if (fieldType === "CheckboxField") {
           form.reset({
@@ -441,6 +469,11 @@ export function CreateEditFieldDialog({
         payload.truncate = data.truncate?.toString() || "false";
       }
       
+      // Transform boolean values to strings for DropDownListField
+      if (data.type === "DropDownListField") {
+        payload.showSearch = data.showSearch?.toString() || "false";
+      }
+      
       return apiRequest("POST", `/api/object-fields/${objectName}`, payload);
     },
     onSuccess: () => {
@@ -468,6 +501,11 @@ export function CreateEditFieldDialog({
       if (data.type === "TextField") {
         payload.copyAble = data.copyAble?.toString() || "false";
         payload.truncate = data.truncate?.toString() || "false";
+      }
+      
+      // Transform boolean values to strings for DropDownListField
+      if (data.type === "DropDownListField") {
+        payload.showSearch = data.showSearch?.toString() || "false";
       }
       
       return apiRequest("PUT", `/api/object-fields/${objectName}/${fieldToEdit?.apiCode}`, payload);
@@ -526,12 +564,16 @@ export function CreateEditFieldDialog({
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
       }
+      // DropDownListField needs source selection
+      else if (selectedFieldType === "DropDownListField") {
+        setStep("sourceSelection");
+      }
       // LookupField needs object selection
       else if (selectedFieldType === "LookupField") {
         setStep("lookupObject");
       }
-      // NumberField, PicklistField, CheckboxField, and AddressField skip directly to form
-      else if (selectedFieldType === "NumberField" || selectedFieldType === "PicklistField" || selectedFieldType === "CheckboxField" || selectedFieldType === "AddressField") {
+      // NumberField, CheckboxField, and AddressField skip directly to form
+      else if (selectedFieldType === "NumberField" || selectedFieldType === "CheckboxField" || selectedFieldType === "AddressField") {
         setStep("form");
       }
       // Other field types show coming soon message
@@ -542,6 +584,18 @@ export function CreateEditFieldDialog({
         });
       }
     } else if (step === "subtype") {
+      setStep("form");
+    } else if (step === "sourceSelection") {
+      // Validate that sourcePath is set
+      const sourcePath = form.getValues("sourcePath" as any);
+      if (!sourcePath) {
+        toast({
+          title: "Selection Required",
+          description: "Please select a data source to continue",
+          variant: "destructive",
+        });
+        return;
+      }
       setStep("form");
     } else if (step === "lookupObject") {
       // Validate that an object has been selected
@@ -564,15 +618,21 @@ export function CreateEditFieldDialog({
       if (selectedFieldType === "TextField" || selectedFieldType === "DateTimeField") {
         setStep("subtype");
       }
+      // DropDownListField goes back to source selection
+      else if (selectedFieldType === "DropDownListField") {
+        setStep("sourceSelection");
+      }
       // LookupField goes back to object selection
       else if (selectedFieldType === "LookupField") {
         setStep("lookupObject");
       }
-      // NumberField and PicklistField go back to field type selection
+      // Other fields go back to field type selection
       else {
         setStep("fieldType");
       }
     } else if (step === "subtype") {
+      setStep("fieldType");
+    } else if (step === "sourceSelection") {
       setStep("fieldType");
     } else if (step === "lookupObject") {
       setStep("fieldType");
@@ -599,6 +659,7 @@ export function CreateEditFieldDialog({
             {step === "fieldType" && "Select the type of field you want to create"}
             {step === "subtype" && selectedFieldType === "TextField" && "Select the subtype for the text field"}
             {step === "subtype" && selectedFieldType === "DateTimeField" && "Select the type of date/time field"}
+            {step === "sourceSelection" && "Select the data source for this dropdown list"}
             {step === "lookupObject" && "Select the object this lookup field will reference"}
             {step === "form" && "Configure the field properties"}
           </DialogDescription>
@@ -635,9 +696,9 @@ export function CreateEditFieldDialog({
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="PicklistField" id="type-picklist" data-testid="radio-field-type-picklist" />
-                <Label htmlFor="type-picklist" className="font-normal cursor-pointer">
-                  Single select or multiselect picklist field
+                <RadioGroupItem value="DropDownListField" id="type-dropdown" data-testid="radio-field-type-dropdown" />
+                <Label htmlFor="type-dropdown" className="font-normal cursor-pointer">
+                  Single select or multiselect dropdown list field
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -767,6 +828,121 @@ export function CreateEditFieldDialog({
                 <p className="text-sm text-destructive">{(form.formState.errors as any).referencedObject?.message}</p>
               )}
             </div>
+          </div>
+        )}
+
+        {step === "sourceSelection" && (
+          <div className="space-y-4 py-4">
+            <RadioGroup
+              value={
+                form.watch("sourcePath" as any) === "countries.xml" ? "countries" :
+                form.watch("sourcePath" as any) === "currencies.xml" ? "currencies" :
+                form.watch("sourcePath" as any)?.startsWith("global_value_sets/") ? "custom" : ""
+              }
+              onValueChange={(value) => {
+                const currentValues = form.getValues() as any;
+                if (value === "countries") {
+                  form.reset({
+                    type: "DropDownListField",
+                    apiCode: currentValues.apiCode || "",
+                    label: currentValues.label || "",
+                    subtype: currentValues.subtype || "singleSelect",
+                    helpText: currentValues.helpText || "",
+                    placeHolder: currentValues.placeHolder || "",
+                    sourceType: "UniversalMetadata",
+                    sourcePath: "countries.xml",
+                    showSearch: false,
+                    rootKey: "countries",
+                    itemKey: "country",
+                  });
+                } else if (value === "currencies") {
+                  form.reset({
+                    type: "DropDownListField",
+                    apiCode: currentValues.apiCode || "",
+                    label: currentValues.label || "",
+                    subtype: currentValues.subtype || "singleSelect",
+                    helpText: currentValues.helpText || "",
+                    placeHolder: currentValues.placeHolder || "",
+                    sourceType: "UniversalMetadata",
+                    sourcePath: "currencies.xml",
+                    showSearch: false,
+                    rootKey: "currencies",
+                    itemKey: "currency",
+                  });
+                } else if (value === "custom") {
+                  form.reset({
+                    type: "DropDownListField",
+                    apiCode: currentValues.apiCode || "",
+                    label: currentValues.label || "",
+                    subtype: currentValues.subtype || "singleSelect",
+                    helpText: currentValues.helpText || "",
+                    placeHolder: currentValues.placeHolder || "",
+                    sourceType: "GlobalMetadata",
+                    sourcePath: "",
+                    showSearch: false,
+                    rootKey: "",
+                    itemKey: "",
+                  });
+                }
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="countries" id="source-countries" data-testid="radio-source-countries" />
+                <Label htmlFor="source-countries" className="font-normal cursor-pointer">
+                  I need a Country dropdown list
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="currencies" id="source-currencies" data-testid="radio-source-currencies" />
+                <Label htmlFor="source-currencies" className="font-normal cursor-pointer">
+                  I need a Currency dropdown list
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="custom" id="source-custom" data-testid="radio-source-custom" />
+                <Label htmlFor="source-custom" className="font-normal cursor-pointer">
+                  I need a dropdown list for an existing Global Value Set
+                </Label>
+              </div>
+            </RadioGroup>
+
+            {form.watch("sourceType" as any) === "GlobalMetadata" && (
+              <div className="space-y-2 ml-6">
+                <Label htmlFor="globalValueSet" className="text-muted-foreground">
+                  Select Global Value Set <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={form.watch("sourcePath" as any)?.replace("global_value_sets/", "") || ""}
+                  onValueChange={(value) => {
+                    const currentValues = form.getValues() as any;
+                    form.reset({
+                      type: "DropDownListField",
+                      apiCode: currentValues.apiCode || "",
+                      label: currentValues.label || "",
+                      subtype: currentValues.subtype || "singleSelect",
+                      helpText: currentValues.helpText || "",
+                      placeHolder: currentValues.placeHolder || "",
+                      sourceType: "GlobalMetadata",
+                      sourcePath: `global_value_sets/${value}`,
+                      showSearch: false,
+                      rootKey: "",
+                      itemKey: "",
+                    });
+                  }}
+                >
+                  <SelectTrigger id="globalValueSet" data-testid="select-global-value-set">
+                    <SelectValue placeholder="Select a global value set..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableGlobalValueSets.map((gvs) => (
+                      <SelectItem key={gvs.name} value={gvs.name}>
+                        {gvs.label} ({gvs.valueCount} values)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         )}
 
@@ -988,6 +1164,37 @@ export function CreateEditFieldDialog({
                 {"fieldType" in form.formState.errors && form.formState.errors.fieldType && (
                   <p className="text-sm text-destructive">{form.formState.errors.fieldType.message}</p>
                 )}
+              </div>
+            )}
+
+            {/* DropDownListField-Specific Fields */}
+            {selectedFieldType === "DropDownListField" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">
+                    What type of dropdown component do you need? <span className="text-destructive">*</span>
+                  </Label>
+                  <RadioGroup
+                    value={form.watch("subtype")}
+                    onValueChange={(value) => form.setValue("subtype", value as "singleSelect" | "multiSelect")}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="singleSelect" id="subtype-single" data-testid="radio-subtype-single" />
+                      <Label htmlFor="subtype-single" className="font-normal cursor-pointer">
+                        Single Value Selection dropdown
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="multiSelect" id="subtype-multi" data-testid="radio-subtype-multi" />
+                      <Label htmlFor="subtype-multi" className="font-normal cursor-pointer">
+                        Multivalue Selection dropdown
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  {"subtype" in form.formState.errors && form.formState.errors.subtype && (
+                    <p className="text-sm text-destructive">{form.formState.errors.subtype.message}</p>
+                  )}
+                </div>
               </div>
             )}
 

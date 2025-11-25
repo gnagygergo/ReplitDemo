@@ -1366,15 +1366,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const xmlContent = readFileSync(filePath, 'utf-8');
           const parsedData = await parseXML(xmlContent) as any;
           
-          // Extract the relevant fields
-          const gvs = parsedData.GlobalValueSet || {};
           // Extract name from filename (remove .globalValueSet-meta.xml extension)
           const name = fileName.replace('.globalValueSet-meta.xml', '');
           
+          // Count the number of values in this set
+          const customValues = parsedData.GlobalValueSet?.customValue || [];
+          const valueCount = Array.isArray(customValues) ? customValues.length : (customValues ? 1 : 0);
+          
           globalValueSets.push({
             name: name,
-            label: gvs.label?.[0] || name,
-            description: gvs.description?.[0] || '',
+            label: name.charAt(0).toUpperCase() + name.slice(1), // Capitalize first letter
+            valueCount: valueCount,
           });
         } catch (error: any) {
           console.error(`Error reading global value set ${fileName}:`, error);
@@ -1650,8 +1652,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? fieldData.displayColumns.join(',') 
           : (fieldData.displayColumns || '');
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
+      } else if (fieldData.type === 'DropDownListField') {
+        xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
+        xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
+        xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
+        xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
+        // Only include rootKey and itemKey if they have values (UniversalMetadata only)
+        if (fieldData.rootKey) {
+          xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
+        } else {
+          xmlObject.FieldDefinition.rootKey = [''];
+        }
+        if (fieldData.itemKey) {
+          xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
+        } else {
+          xmlObject.FieldDefinition.itemKey = [''];
+        }
       }
-      // PicklistField has no additional fields beyond common ones
 
       // Build XML string
       const builder = new xml2js.Builder({
@@ -1771,8 +1788,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? fieldData.displayColumns.join(',') 
           : (fieldData.displayColumns || '');
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
+      } else if (fieldData.type === 'DropDownListField') {
+        xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
+        xmlObject.FieldDefinition.sourceType = [fieldData.sourceType || 'GlobalMetadata'];
+        xmlObject.FieldDefinition.sourcePath = [fieldData.sourcePath || ''];
+        xmlObject.FieldDefinition.showSearch = [fieldData.showSearch || 'false'];
+        // Only include rootKey and itemKey if they have values (UniversalMetadata only)
+        if (fieldData.rootKey) {
+          xmlObject.FieldDefinition.rootKey = [fieldData.rootKey];
+        } else {
+          xmlObject.FieldDefinition.rootKey = [''];
+        }
+        if (fieldData.itemKey) {
+          xmlObject.FieldDefinition.itemKey = [fieldData.itemKey];
+        } else {
+          xmlObject.FieldDefinition.itemKey = [''];
+        }
       }
-      // PicklistField has no additional fields beyond common ones
 
       // Build XML string
       const builder = new xml2js.Builder({

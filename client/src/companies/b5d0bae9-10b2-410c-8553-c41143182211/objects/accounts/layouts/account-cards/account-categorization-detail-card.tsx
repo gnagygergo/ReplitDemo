@@ -1,9 +1,6 @@
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
-import {
-  type AccountWithOwner,
-  type InsertAccount,
-} from "@shared/schema";
+import { type AccountWithOwner, type InsertAccount } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
@@ -56,13 +53,13 @@ export default function AccountDetailCategorizationCard({
                 <FormItem>
                   <FormControl>
                     <DropDownListField
+                      objectCode="accounts"
+                      fieldCode="industry"
                       mode={isEditing ? "edit" : "view"}
                       value={field.value}
                       onValueChange={field.onChange}
-                      label="Industry"
-                      sourceType="globalMetadata"
-                      sourcePath="global_value_sets/industries"
                       data-testid="field-industry"
+                      
                     />
                   </FormControl>
                   <FormMessage />

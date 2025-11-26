@@ -7,7 +7,6 @@ import {
   type AccountWithOwner,
   type InsertAccount,
   insertAccountSchema,
-  type User,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Building, Edit, Save, X } from "lucide-react";
@@ -17,7 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
-import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useObjectFieldTypes } from "@/hooks/use-object-field-types";
 import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-utils";
@@ -37,8 +35,6 @@ export default function AccountDetail() {
   const [, setLocation] = useLocation();
   const isCreating = params?.id === "new";
   const [isEditing, setIsEditing] = useState(isCreating);
-  const [showUserLookup, setShowUserLookup] = useState(false);
-  const [selectedOwner, setSelectedOwner] = useState<User | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
@@ -157,15 +153,8 @@ export default function AccountDetail() {
           ownerId: account.ownerId,
         });
         form.reset(formValues as InsertAccount);
-        setSelectedOwner(account.owner);
       }
     }
-  };
-
-  const handleUserSelect = (user: User) => {
-    setSelectedOwner(user);
-    form.setValue("ownerId", user.id);
-    setShowUserLookup(false);
   };
 
   // Initialize form when account data is loaded - with refs pattern to prevent overwrites
@@ -179,7 +168,6 @@ export default function AccountDetail() {
           ownerId: account.ownerId,
         });
         form.reset(formValues as InsertAccount);
-        setSelectedOwner(account.owner);
         
         formInitializedRef.current = true;
         lastAccountIdRef.current = params.id;
@@ -197,11 +185,10 @@ export default function AccountDetail() {
 
   // Initialize owner with current user when creating new account
   useEffect(() => {
-    if (isCreating && currentUser && !selectedOwner) {
-      setSelectedOwner(currentUser);
+    if (isCreating && currentUser && !form.getValues("ownerId")) {
       form.setValue("ownerId", currentUser.id);
     }
-  }, [isCreating, currentUser, selectedOwner, form]);
+  }, [isCreating, currentUser, form]);
 
   // Skip loading and not found states when creating new account
   if (!isCreating) {
@@ -316,8 +303,6 @@ export default function AccountDetail() {
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-              selectedOwner={selectedOwner}
-              setShowUserLookup={setShowUserLookup}
               isSettingEnabled={isSettingEnabled}
             />
 
@@ -326,8 +311,6 @@ export default function AccountDetail() {
               isEditing={isEditing}
               form={form}
               updateMutation={createMutation.isPending || updateMutation.isPending ? updateMutation : updateMutation}
-              selectedOwner={selectedOwner}
-              setShowUserLookup={setShowUserLookup}
             />
             
             {/* AI Account Data Finder */}
@@ -418,14 +401,6 @@ export default function AccountDetail() {
           </div>
         </Panel>
       </PanelGroup>
-
-      <UserLookupDialog
-        open={showUserLookup}
-        onClose={() => setShowUserLookup(false)}
-        onSelect={handleUserSelect}
-        selectedUserId={selectedOwner?.id}
-        autoSelectCurrentUser={isCreating}
-      />
     </div>
   );
 }

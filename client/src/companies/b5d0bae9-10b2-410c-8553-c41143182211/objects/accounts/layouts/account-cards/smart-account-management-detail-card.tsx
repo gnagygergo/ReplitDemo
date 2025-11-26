@@ -6,7 +6,6 @@ import { type UseMutationResult } from "@tanstack/react-query";
 import {
   type AccountWithOwner,
   type InsertAccount,
-  type User,
 } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,8 +27,6 @@ interface SmartAccountManagementDetailCardProps {
   isEditing: boolean;
   form: UseFormReturn<InsertAccount>;
   updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
-  selectedOwner: User | null;
-  setShowUserLookup: (show: boolean) => void;
   isSettingEnabled: (settingCode: string) => boolean;
   showAccountNature?: boolean;
 }
@@ -39,8 +36,6 @@ export default function SmartAccountManagementDetailCard({
   isEditing,
   form,
   updateMutation,
-  selectedOwner,
-  setShowUserLookup,
   isSettingEnabled,
   showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {

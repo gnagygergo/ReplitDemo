@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>AddressField</type>
+  <apiCode>location</apiCode>
+  <label>Asset Location</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <streetAddressColumn>locationStreetAddress</streetAddressColumn>
+  <cityColumn>locationCity</cityColumn>
+  <stateProvinceColumn>locationStateProvince</stateProvinceColumn>
+  <zipCodeColumn>locationZipCode</zipCodeColumn>
+  <countryColumn>locationCountry</countryColumn>
+</FieldDefinition>

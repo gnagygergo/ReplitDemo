@@ -148,6 +148,11 @@ export const assets = pgTable("assets", {
   installationDate: date("installation_date"),
   productId: varchar("product_id").references(() => products.id),
   accountId: varchar("account_id").references(() => accounts.id),
+  locationStreetAddress: text("location_street_address"),
+  locationCity: text("location_city"),
+  locationStateProvince: text("location_state_province"),
+  locationZipCode: text("location_zip_code"),
+  locationCountry: text("location_country"),
   companyId: varchar("company_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });

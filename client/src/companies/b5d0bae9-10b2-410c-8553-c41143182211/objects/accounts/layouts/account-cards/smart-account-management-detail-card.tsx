@@ -76,7 +76,7 @@ export default function SmartAccountManagementDetailCard({
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form className="space-y-6">
+          <form className="space-y-4">
             {isEditing ? (
               <>
               {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}

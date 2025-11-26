@@ -8,6 +8,6 @@
   <testId/>
   <className/>
   <referencedObject>users</referencedObject>
-  <primaryDisplayField>email</primaryDisplayField>
-  <displayColumns>email</displayColumns>
+  <primaryDisplayField>firstName</primaryDisplayField>
+  <displayColumns>email,firstName,lastName</displayColumns>
 </FieldDefinition>

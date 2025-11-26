@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>firstName</apiCode>
+  <label>First Name</label>
+  <helpText/>
+  <placeHolder>Enter First Name</placeHolder>
+  <testId/>
+  <className/>
+  <subtype>text</subtype>
+  <maxLength>255</maxLength>
+  <copyAble>false</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView/>
+  <visibleLinesInEdit>1</visibleLinesInEdit>
+</FieldDefinition>

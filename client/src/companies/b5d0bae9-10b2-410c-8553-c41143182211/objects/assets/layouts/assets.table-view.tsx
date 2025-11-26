@@ -201,7 +201,7 @@ export default function Assets() {
                           <TextField
                             mode="table"
                             objectCode="assets"
-                            fieldCode="serial-number"
+                            fieldCode="serialNumber"
                             value={asset.serialNumber}
                             linkPath="/assets"
                             recordId={asset.id}
@@ -228,7 +228,7 @@ export default function Assets() {
                           <LookupFormField
                             mode="table"
                             objectCode="assets"
-                            fieldCode="account_id"
+                            fieldCode="accountId"
                             value={asset.accountId}
                             onRecordClick={(id) => window.location.href = `/accounts/${id}`}
                           />
@@ -237,7 +237,7 @@ export default function Assets() {
                           <LookupFormField
                             mode="table"
                             objectCode="assets"
-                            fieldCode="product_id"
+                            fieldCode="productId"
                             value={asset.productId}
                             onRecordClick={(id) => window.location.href = `/products/${id}`}
                           />
@@ -256,7 +256,7 @@ export default function Assets() {
                             value={asset.installationDate}
                             testId={`text-quantity-${asset.id}`}
                             objectCode="assets"
-                            fieldCode="installation_date"
+                            fieldCode="installationDate"
                           />  
                         </TableCell>
                         <TableCell className="text-right">

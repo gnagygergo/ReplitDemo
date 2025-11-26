@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>CheckboxField</type>
+  <apiCode>isShippingAddress</apiCode>
+  <label>Is Shipping Address</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <defaultValue>false</defaultValue>
+</FieldDefinition>

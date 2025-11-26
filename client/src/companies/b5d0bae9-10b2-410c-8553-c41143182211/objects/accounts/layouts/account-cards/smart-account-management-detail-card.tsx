@@ -36,7 +36,7 @@ import { TextField } from "@/components/ui/text-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { AddressField } from "@/components/ui/address-field";
-import { DropDownListField } from "@/components/ui/drop-down-list-field";
+import { DropDownListField } from "@/components/ui/dropdown-list-field";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;
@@ -408,34 +408,34 @@ export default function SmartAccountManagementDetailCard({
                     <AddressField
                       mode="edit"
                       value={{
-                        streetAddress: form.watch("streetAddress") || "",
-                        city: form.watch("city") || "",
-                        stateProvince: form.watch("stateProvince") || "",
-                        zipCode: form.watch("zipCode") || "",
-                        country: form.watch("country") || ""
+                        streetAddress: form.watch("addressStreetAddress") || "",
+                        city: form.watch("addressCity") || "",
+                        stateProvince: form.watch("addressStateProvince") || "",
+                        zipCode: form.watch("addressZipCode") || "",
+                        country: form.watch("addressCountry") || ""
                       }}
                       onChange={(address) => {
-                        form.setValue("streetAddress", address.streetAddress, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("city", address.city, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("stateProvince", address.stateProvince, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("zipCode", address.zipCode, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("country", address.country, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("addressStreetAddress", address.streetAddress, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("addressCity", address.city, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("addressStateProvince", address.stateProvince, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("addressZipCode", address.zipCode, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                        form.setValue("addressCountry", address.country, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
                       }}
                       objectCode="accounts"
                       fieldCode="address"
                     />
                     {/* Display validation errors if any exist for address fields */}
-                    {(form.formState.errors.streetAddress || 
-                      form.formState.errors.city || 
-                      form.formState.errors.stateProvince || 
-                      form.formState.errors.zipCode || 
-                      form.formState.errors.country) && (
+                    {(form.formState.errors.addressStreetAddress || 
+                      form.formState.errors.addressCity || 
+                      form.formState.errors.addressStateProvince || 
+                      form.formState.errors.addressZipCode || 
+                      form.formState.errors.addressCountry) && (
                       <div className="text-sm text-destructive mt-2">
-                        {form.formState.errors.streetAddress?.message}
-                        {form.formState.errors.city?.message}
-                        {form.formState.errors.stateProvince?.message}
-                        {form.formState.errors.zipCode?.message}
-                        {form.formState.errors.country?.message}
+                        {form.formState.errors.addressStreetAddress?.message}
+                        {form.formState.errors.addressCity?.message}
+                        {form.formState.errors.addressStateProvince?.message}
+                        {form.formState.errors.addressZipCode?.message}
+                        {form.formState.errors.addressCountry?.message}
                       </div>
                     )}
                   </div>
@@ -551,11 +551,11 @@ export default function SmartAccountManagementDetailCard({
                 <AddressField
                   mode="view"
                   value={{
-                    streetAddress: account.streetAddress || "",
-                    city: account.city || "",
-                    stateProvince: account.stateProvince || "",
-                    zipCode: account.zipCode || "",
-                    country: account.country || ""
+                    streetAddress: account.addressStreetAddress || "",
+                    city: account.addressCity || "",
+                    stateProvince: account.addressStateProvince || "",
+                    zipCode: account.addressZipCode || "",
+                    country: account.addressCountry || ""
                   }}
                   onChange={() => {}}
                   objectCode="accounts"

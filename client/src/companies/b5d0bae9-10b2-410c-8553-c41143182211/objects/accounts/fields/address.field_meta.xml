@@ -7,9 +7,9 @@
   <placeHolder/>
   <testId/>
   <className/>
-  <streetAddressColumn>street_address</streetAddressColumn>
-  <cityColumn>city</cityColumn>
-  <stateProvinceColumn>state_province</stateProvinceColumn>
-  <zipCodeColumn>zip_code</zipCodeColumn>
-  <countryColumn>country</countryColumn>
+  <streetAddressColumn>address_street_address</streetAddressColumn>
+  <cityColumn>address_city</cityColumn>
+  <stateProvinceColumn>address_state_province</stateProvinceColumn>
+  <zipCodeColumn>address_zip_code</zipCodeColumn>
+  <countryColumn>address_country</countryColumn>
 </FieldDefinition>

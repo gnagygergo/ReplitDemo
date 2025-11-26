@@ -102,11 +102,11 @@ export const accounts = pgTable("accounts", {
   companyRegistrationId: text("company_registration_id"),
   taxId: text("tax_id"),
   address: text("address"),
-  streetAddress: text("street_address"),
-  city: text("city"),
-  stateProvince: text("state_province"),
-  zipCode: text("zip_code"),
-  country: text("country"),
+  addressStreetAddress: text("address_street_address"),
+  addressCity: text("address_city"),
+  addressStateProvince: text("address_state_province"),
+  addressZipCode: text("address_zip_code"),
+  addressCountry: text("address_country"),
   industry: text("industry"),
   ownerId: varchar("owner_id")
     .notNull()

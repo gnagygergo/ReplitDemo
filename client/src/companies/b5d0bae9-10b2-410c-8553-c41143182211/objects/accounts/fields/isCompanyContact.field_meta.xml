@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>CheckboxField</type>
+  <apiCode>isCompanyContact</apiCode>
+  <label>Is Company Contact</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <defaultValue>false</defaultValue>
+</FieldDefinition>

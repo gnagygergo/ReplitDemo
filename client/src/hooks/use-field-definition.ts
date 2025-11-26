@@ -24,6 +24,12 @@ export interface FieldDefinition {
   sourceType?: "universalMetadata" | "globalMetadata";
   sortingDirection?: string;
   allowSearch?: boolean;
+  // AddressField-specific properties
+  streetAddressColumn?: string;
+  cityColumn?: string;
+  stateProvinceColumn?: string;
+  zipCodeColumn?: string;
+  countryColumn?: string;
 }
 
 interface UseFieldDefinitionOptions {

@@ -40,6 +40,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
 import { useObjectFieldTypes } from "@/hooks/use-object-field-types";
 import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-utils";
+import { AddressField } from "@/components/ui/address-field"
 
 export default function AssetDetail() {
   const [match, params] = useRoute("/assets/:id");
@@ -379,6 +380,25 @@ export default function AssetDetail() {
                           <DateTimeField
                             objectCode="assets"
                             fieldCode="installationDate"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            testId="input-install-date"
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Asset Location  */}
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <AddressField
+                            objectCode="assets"
+                            fieldCode="location"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

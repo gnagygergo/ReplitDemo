@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -10,43 +10,7 @@ import {
   type User,
 } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Building,
-  Edit,
-  Save,
-  X,
-  Users,
-  User as UserIcon,
-} from "lucide-react";
+import { Building, Edit, Save, X } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +19,8 @@ import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { getAccountIcon, getAccountTypeLabel } from "@/lib/account-helpers";
 import UserLookupDialog from "@/components/ui/user-lookup-dialog";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useObjectFieldTypes } from "@/hooks/use-object-field-types";
+import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-utils";
 import SmartAccountManagementDetailCard from "./account-cards/smart-account-management-detail-card";
 import AccountDetailOwnershipCard from "./account-cards/account-ownership-detail-card";
 import AccountDetailCategorizationCard from "./account-cards/account-categorization-detail-card";
@@ -78,6 +44,16 @@ export default function AccountDetail() {
   const { user: currentUser } = useAuth();
   const { isSettingEnabled } = useCompanySettings();
 
+  // Refs to prevent background refetches from overwriting user input
+  const formInitializedRef = useRef(false);
+  const lastAccountIdRef = useRef<string | null>(null);
+
+  // Fetch field types for accounts object
+  const { data: fieldTypeMap = {} } = useObjectFieldTypes({
+    objectCode: "accounts",
+    enabled: true,
+  });
+
   // Fetch account data (skip when creating new account)
   const { data: account, isLoading: isLoadingAccount } =
     useQuery<AccountWithOwner>({
@@ -85,29 +61,34 @@ export default function AccountDetail() {
       enabled: !!params?.id && !isCreating,
     });
 
+  // Build default values using field type map
+  const defaultFormValues = buildDefaultFormValues(fieldTypeMap, {
+    name: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    mobilePhone: "",
+    companyOfficialName: "",
+    companyRegistrationId: "",
+    taxId: "",
+    address: "",
+    addressStreetAddress: "",
+    addressCity: "",
+    addressStateProvince: "",
+    addressZipCode: "",
+    addressCountry: "",
+    industry: "",
+    ownerId: "",
+    isPersonAccount: false,
+    isSelfEmployed: false,
+    isCompanyContact: false,
+    isLegalEntity: false,
+    isShippingAddress: false,
+  });
+
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
-    defaultValues: {
-      name: "",
-      firstName: "",
-      lastName: "",
-      email: "",
-      mobilePhone: "",
-      companyRegistrationId: "",
-      address: "",
-      addressStreetAddress: "",
-      addressCity: "",
-      addressStateProvince: "",
-      addressZipCode: "",
-      addressCountry: "",
-      industry: "",
-      ownerId: "",
-      isPersonAccount: false,
-      isSelfEmployed: false,
-      isCompanyContact: false,
-      isLegalEntity: false,
-      isShippingAddress: false,
-    },
+    defaultValues: defaultFormValues as InsertAccount,
   });
 
   // Create mutation
@@ -121,9 +102,7 @@ export default function AccountDetail() {
       toast({
         title: "Account created successfully",
       });
-      // Switch to view mode before navigating
       setIsEditing(false);
-      // Navigate to the new account's detail page
       setLocation(`/accounts/${newAccount.id}`);
     },
     onError: (error: any) => {
@@ -169,33 +148,15 @@ export default function AccountDetail() {
 
   const handleCancel = () => {
     if (isCreating) {
-      // Navigate back to accounts list when canceling creation
       setLocation("/accounts");
     } else {
       setIsEditing(false);
-      // Reset form to current account data
+      // Reset form to current account data using transformRecordToFormValues
       if (account) {
-        form.reset({
-          name: account.name,
-          firstName: account.firstName || "",
-          lastName: account.lastName || "",
-          email: account.email || "",
-          mobilePhone: account.mobilePhone || "",
-          companyRegistrationId: account.companyRegistrationId || "",
-          address: account.address || "",
-          addressStreetAddress: account.addressStreetAddress || "",
-          addressCity: account.addressCity || "",
-          addressStateProvince: account.addressStateProvince || "",
-          addressZipCode: account.addressZipCode || "",
-          addressCountry: account.addressCountry || "",
-          industry: account.industry || "",
+        const formValues = transformRecordToFormValues(account, fieldTypeMap, {
           ownerId: account.ownerId,
-          isPersonAccount: account.isPersonAccount || false,
-          isSelfEmployed: account.isSelfEmployed || false,
-          isCompanyContact: account.isCompanyContact || false,
-          isLegalEntity: account.isLegalEntity || false,
-          isShippingAddress: account.isShippingAddress || false,
         });
+        form.reset(formValues as InsertAccount);
         setSelectedOwner(account.owner);
       }
     }
@@ -207,33 +168,32 @@ export default function AccountDetail() {
     setShowUserLookup(false);
   };
 
-  // Initialize form when account data is loaded
+  // Initialize form when account data is loaded - with refs pattern to prevent overwrites
   useEffect(() => {
-    if (account) {
-      form.reset({
-        name: account.name,
-        firstName: account.firstName || "",
-        lastName: account.lastName || "",
-        email: account.email || "",
-        mobilePhone: account.mobilePhone || "",
-        companyRegistrationId: account.companyRegistrationId || "",
-        address: account.address || "",
-        addressStreetAddress: account.addressStreetAddress || "",
-        addressCity: account.addressCity || "",
-        addressStateProvince: account.addressStateProvince || "",
-        addressZipCode: account.addressZipCode || "",
-        addressCountry: account.addressCountry || "",
-        industry: account.industry || "",
-        ownerId: account.ownerId,
-        isPersonAccount: account.isPersonAccount || false,
-        isSelfEmployed: account.isSelfEmployed || false,
-        isCompanyContact: account.isCompanyContact || false,
-        isLegalEntity: account.isLegalEntity || false,
-        isShippingAddress: account.isShippingAddress || false,
-      });
-      setSelectedOwner(account.owner);
+    if (account && params?.id) {
+      // Only initialize if this is a new account ID or form hasn't been initialized
+      const isNewAccountId = lastAccountIdRef.current !== params.id;
+      
+      if (isNewAccountId || !formInitializedRef.current) {
+        const formValues = transformRecordToFormValues(account, fieldTypeMap, {
+          ownerId: account.ownerId,
+        });
+        form.reset(formValues as InsertAccount);
+        setSelectedOwner(account.owner);
+        
+        formInitializedRef.current = true;
+        lastAccountIdRef.current = params.id;
+      }
     }
-  }, [account, form]);
+  }, [account, params?.id, fieldTypeMap, form]);
+
+  // Reset refs when switching to a different account or creating new
+  useEffect(() => {
+    if (isCreating) {
+      formInitializedRef.current = false;
+      lastAccountIdRef.current = null;
+    }
+  }, [isCreating]);
 
   // Initialize owner with current user when creating new account
   useEffect(() => {
@@ -371,7 +331,6 @@ export default function AccountDetail() {
             />
             
             {/* AI Account Data Finder */}
-            
             {(isSettingEnabled("account_data_web_search") && 
               <FindAccountData 
               accountId={params?.id || ""}
@@ -394,8 +353,6 @@ export default function AccountDetail() {
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {!isCreating && params?.id && (
               <>
-                
-
                 {(isSettingEnabled("opportunity_management_activated") && 
                 <AccountOpportunitiesListCard
                   accountId={params.id}

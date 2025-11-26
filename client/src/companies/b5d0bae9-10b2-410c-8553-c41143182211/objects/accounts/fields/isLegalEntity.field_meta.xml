@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FieldDefinition xmlns="">
+<FieldDefinition>
   <type>CheckboxField</type>
-  <apiCode>is_legal_entity</apiCode>
+  <apiCode>isLegalEntity</apiCode>
   <label>Legal Entity</label>
-  <helpText/>
-  <placeHolder/>
-  <testId/>
-  <className/>
   <defaultValue>false</defaultValue>
 </FieldDefinition>

@@ -1,16 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<FieldDefinition xmlns="">
+<FieldDefinition>
   <type>TextField</type>
-  <apiCode>tax_id</apiCode>
+  <apiCode>taxId</apiCode>
   <label>TAX Id</label>
-  <helpText/>
-  <placeHolder/>
-  <testId/>
-  <className/>
   <subtype>text</subtype>
   <maxLength>255</maxLength>
   <copyAble>true</copyAble>
   <truncate>false</truncate>
-  <visibleLinesInView/>
-  <visibleLinesInEdit/>
 </FieldDefinition>

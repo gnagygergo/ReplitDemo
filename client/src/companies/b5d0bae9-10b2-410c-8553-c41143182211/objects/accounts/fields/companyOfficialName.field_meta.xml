@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <FieldDefinition>
   <type>TextField</type>
-  <apiCode>company_official_name</apiCode>
+  <apiCode>companyOfficialName</apiCode>
   <label>Company Official Name</label>
   <subtype>text</subtype>
   <maxLength>255</maxLength>

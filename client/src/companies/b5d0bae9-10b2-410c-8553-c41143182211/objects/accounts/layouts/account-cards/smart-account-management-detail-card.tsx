@@ -1,7 +1,6 @@
 // This Card is used on the Account Detail View.
 // It is used when Smart Account Management is activated.
 
-import { useState } from "react";
 import { type UseFormReturn } from "react-hook-form";
 import { type UseMutationResult } from "@tanstack/react-query";
 import {
@@ -10,17 +9,7 @@ import {
   type User,
 } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Form,
   FormControl,
@@ -29,14 +18,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
-import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { TextField } from "@/components/ui/text-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { AddressField } from "@/components/ui/address-field";
-import { DropDownListField } from "@/components/ui/dropdown-list-field";
 
 interface SmartAccountManagementDetailCardProps {
   account: AccountWithOwner | null;
@@ -59,7 +44,6 @@ export default function SmartAccountManagementDetailCard({
   isSettingEnabled,
   showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {
-  const { getSetting } = useCompanySettings();
   
   // Check if any account nature checkbox is selected
   const hasAnyAccountNature =
@@ -107,7 +91,7 @@ export default function SmartAccountManagementDetailCard({
                                   }
                                 }}
                                 objectCode="accounts"
-                                fieldCode="is_person_account"
+                                fieldCode="isPersonAccount"
                               />
                             </FormControl>
                             <FormMessage />
@@ -137,7 +121,7 @@ export default function SmartAccountManagementDetailCard({
                                   }
                                 }}
                                 objectCode="accounts"
-                                fieldCode="is_self_employed"
+                                fieldCode="isSelfEmployed"
                               />
                             </FormControl>
                             <FormMessage />
@@ -169,7 +153,7 @@ export default function SmartAccountManagementDetailCard({
                                   }
                                 }}
                                 objectCode="accounts"
-                                fieldCode="is_legal_entity"
+                                fieldCode="isLegalEntity"
                               />
                             </FormControl>
                             <FormMessage />
@@ -189,26 +173,24 @@ export default function SmartAccountManagementDetailCard({
                   {/* Row 1: First Name + Last Name (grid-cols-2) */}
                   {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
                     <div className="grid grid-cols-2 gap-4">
-                      {/* First Name */}
+                      {/* First Name - Using metadata-driven TextField */}
                       <FormField
                         control={form.control}
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
+                              <TextField
+                                mode="edit"
                                 value={field.value || ""}
-                                placeholder="Enter first name"
-                                data-testid="input-edit-first-name"
-                                onChange={(e) => {
-                                  field.onChange(e);
+                                onChange={(value) => {
+                                  field.onChange(value);
                                   const lastName = form.getValues("lastName");
-                                  const newName =
-                                    `${e.target.value} ${lastName || ""}`.trim();
+                                  const newName = `${value} ${lastName || ""}`.trim();
                                   form.setValue("name", newName);
                                 }}
+                                objectCode="accounts"
+                                fieldCode="firstName"
                               />
                             </FormControl>
                             <FormMessage />
@@ -216,36 +198,30 @@ export default function SmartAccountManagementDetailCard({
                         )}
                       />
 
-                      {/* Last Name */}
+                      {/* Last Name - Using metadata-driven TextField */}
                       <FormField
                         control={form.control}
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
+                              <TextField
+                                mode="edit"
                                 value={field.value || ""}
-                                placeholder="Enter last name"
-                                data-testid="input-edit-last-name"
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  const firstName =
-                                    form.getValues("firstName");
-                                  const newName =
-                                    `${firstName || ""} ${e.target.value}`.trim();
+                                onChange={(value) => {
+                                  field.onChange(value);
+                                  const firstName = form.getValues("firstName");
+                                  const newName = `${firstName || ""} ${value}`.trim();
                                   form.setValue("name", newName);
                                 }}
+                                objectCode="accounts"
+                                fieldCode="lastName"
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
-                      
-                      
                     </div>
                   )}
 
@@ -284,7 +260,7 @@ export default function SmartAccountManagementDetailCard({
                                 value={field.value || ""}
                                 onChange={field.onChange}
                                 objectCode="accounts"
-                                fieldCode="company_official_name"
+                                fieldCode="companyOfficialName"
                               />
                             </FormControl>
                             <FormMessage />
@@ -304,15 +280,13 @@ export default function SmartAccountManagementDetailCard({
                                 value={field.value || ""}
                                 onChange={field.onChange}
                                 objectCode="accounts"
-                                fieldCode="company_registration_id"
+                                fieldCode="companyRegistrationId"
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-
-                    
 
                       {/* Tax ID */}
                       <FormField
@@ -326,7 +300,7 @@ export default function SmartAccountManagementDetailCard({
                                 value={field.value || ""}
                                 onChange={field.onChange}
                                 objectCode="accounts"
-                                fieldCode="tax_id"
+                                fieldCode="taxId"
                               />
                             </FormControl>
                             <FormMessage />
@@ -359,20 +333,19 @@ export default function SmartAccountManagementDetailCard({
                         )}
                       />
 
-                      {/* Mobile Phone */}
+                      {/* Mobile Phone - Using metadata-driven TextField */}
                       <FormField
                         control={form.control}
                         name="mobilePhone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Mobile Phone</FormLabel>
                             <FormControl>
-                              <Input
-                                {...field}
+                              <TextField
+                                mode="edit"
                                 value={field.value || ""}
-                                type="tel"
-                                placeholder="Enter mobile phone"
-                                data-testid="input-edit-mobile-phone"
+                                onChange={field.onChange}
+                                objectCode="accounts"
+                                fieldCode="mobilePhone"
                               />
                             </FormControl>
                             <FormMessage />
@@ -395,7 +368,7 @@ export default function SmartAccountManagementDetailCard({
                               value={field.value ?? null}
                               onChange={field.onChange}
                               objectCode="accounts"
-                              fieldCode="created_date"
+                              fieldCode="createdDate"
                             />
                           </FormControl>
                         </FormItem>
@@ -403,42 +376,13 @@ export default function SmartAccountManagementDetailCard({
                     />
                   )}
 
-                  {/* Row 6: Address Field with Google Maps Integration */}
-                  <div>
-                    <AddressField
-                      mode="edit"
-                      value={{
-                        streetAddress: form.watch("addressStreetAddress") || "",
-                        city: form.watch("addressCity") || "",
-                        stateProvince: form.watch("addressStateProvince") || "",
-                        zipCode: form.watch("addressZipCode") || "",
-                        country: form.watch("addressCountry") || ""
-                      }}
-                      onChange={(address) => {
-                        form.setValue("addressStreetAddress", address.streetAddress, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("addressCity", address.city, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("addressStateProvince", address.stateProvince, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("addressZipCode", address.zipCode, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                        form.setValue("addressCountry", address.country, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
-                      }}
-                      objectCode="accounts"
-                      fieldCode="address"
-                    />
-                    {/* Display validation errors if any exist for address fields */}
-                    {(form.formState.errors.addressStreetAddress || 
-                      form.formState.errors.addressCity || 
-                      form.formState.errors.addressStateProvince || 
-                      form.formState.errors.addressZipCode || 
-                      form.formState.errors.addressCountry) && (
-                      <div className="text-sm text-destructive mt-2">
-                        {form.formState.errors.addressStreetAddress?.message}
-                        {form.formState.errors.addressCity?.message}
-                        {form.formState.errors.addressStateProvince?.message}
-                        {form.formState.errors.addressZipCode?.message}
-                        {form.formState.errors.addressCountry?.message}
-                      </div>
-                    )}
-                  </div>
+                  {/* Row 6: Address Field with form integration */}
+                  <AddressField
+                    form={form}
+                    mode="edit"
+                    objectCode="accounts"
+                    fieldCode="address"
+                  />
                 </div>
               )}
               </>
@@ -451,31 +395,23 @@ export default function SmartAccountManagementDetailCard({
                 {/* Row 1: First Name + Last Name (grid-cols-2) */}
                 {!account.isShippingAddress && !account.isLegalEntity && (
                   <div className="grid grid-cols-2 gap-4">
-                    {/* First Name */}
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">
-                        First Name
-                      </label>
-                      <div
-                        className="mt-1 text-foreground"
-                        data-testid="text-first-name-value"
-                      >
-                        {account.firstName || "Not provided"}
-                      </div>
-                    </div>
+                    {/* First Name - Using metadata-driven TextField */}
+                    <TextField
+                      mode="view"
+                      value={account.firstName || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="firstName"
+                    />
 
-                    {/* Last Name */}
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">
-                        Last Name
-                      </label>
-                      <div
-                        className="mt-1 text-foreground"
-                        data-testid="text-last-name-value"
-                      >
-                        {account.lastName || "Not provided"}
-                      </div>
-                    </div>
+                    {/* Last Name - Using metadata-driven TextField */}
+                    <TextField
+                      mode="view"
+                      value={account.lastName || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="lastName"
+                    />
                   </div>
                 )}
 
@@ -497,7 +433,7 @@ export default function SmartAccountManagementDetailCard({
                       value={account.companyOfficialName || ""}
                       onChange={() => {}}
                       objectCode="accounts"
-                      fieldCode="company_official_name"
+                      fieldCode="companyOfficialName"
                     />
                   
                     {/* Company Registration ID */}
@@ -506,7 +442,7 @@ export default function SmartAccountManagementDetailCard({
                       value={account.companyRegistrationId || ""}
                       onChange={() => {}}
                       objectCode="accounts"
-                      fieldCode="company_registration_id"
+                      fieldCode="companyRegistrationId"
                     />
 
                     {/* Tax ID */}
@@ -515,7 +451,7 @@ export default function SmartAccountManagementDetailCard({
                       value={account.taxId || ""}
                       onChange={() => {}}
                       objectCode="accounts"
-                      fieldCode="tax_id"
+                      fieldCode="taxId"
                     />
                   </>
                 )}
@@ -532,22 +468,18 @@ export default function SmartAccountManagementDetailCard({
                       fieldCode="email"
                     />
 
-                    {/* Mobile Phone */}
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">
-                        Mobile Phone
-                      </label>
-                      <div
-                        className="mt-1 text-foreground"
-                        data-testid="text-mobile-phone-value"
-                      >
-                        {account.mobilePhone || "Not provided"}
-                      </div>
-                    </div>
+                    {/* Mobile Phone - Using metadata-driven TextField */}
+                    <TextField
+                      mode="view"
+                      value={account.mobilePhone || ""}
+                      onChange={() => {}}
+                      objectCode="accounts"
+                      fieldCode="mobilePhone"
+                    />
                   </div>
                 )}
 
-                {/* Row 5: Address Field */}
+                {/* Row 5: Address Field with form integration for view mode */}
                 <AddressField
                   mode="view"
                   value={{
@@ -569,7 +501,7 @@ export default function SmartAccountManagementDetailCard({
                     value={account.createdDate}
                     onChange={() => {}}
                     objectCode="accounts"
-                    fieldCode="created_date"
+                    fieldCode="createdDate"
                   />
                 )}
               </div>

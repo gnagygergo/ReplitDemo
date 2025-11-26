@@ -8,19 +8,8 @@ import {
   type InsertAccount,
   type User,
 } from "@shared/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -71,10 +60,8 @@ export default function AccountDetailOwnershipCard({
 }: AccountDetailOwnershipCardProps) {
   return (
     <Card>
-      <CardContent>
-      
+      <CardContent className="pt-6">
         {isEditing ? (
-          // EDIT MODE
           <Form {...form}>
             <form className="space-y-6">
               <FormField
@@ -97,10 +84,7 @@ export default function AccountDetailOwnershipCard({
                           <div className="flex items-center space-x-3">
                             <Avatar className="h-8 w-8">
                               <AvatarImage
-                                src={
-                                  selectedOwner.profileImageUrl ||
-                                  undefined
-                                }
+                                src={selectedOwner.profileImageUrl || undefined}
                               />
                               <AvatarFallback className="text-xs">
                                 {getUserInitials(selectedOwner)}
@@ -133,38 +117,36 @@ export default function AccountDetailOwnershipCard({
             </form>
           </Form>
         ) : (
-          // VIEW MODE
           <>
             {!account ? (
               <div>No account data</div>
             ) : (
               <div className="space-y-6">
-                {/* Owner */}
                 <div>
-              <label className="text-sm font-medium text-muted-foreground">
-                Account Owner
-              </label>
-              <div
-                className="mt-1 flex items-center space-x-3"
-                data-testid="text-account-owner-value"
-              >
-                <Avatar className="h-10 w-10">
-                  <AvatarImage
-                    src={account.owner?.profileImageUrl || undefined}
-                  />
-                  <AvatarFallback>
-                    {getUserInitials(account.owner)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium text-foreground">
-                    {getUserDisplayName(account.owner)}
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Account Owner
+                  </label>
+                  <div
+                    className="mt-1 flex items-center space-x-3"
+                    data-testid="text-account-owner-value"
+                  >
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage
+                        src={account.owner?.profileImageUrl || undefined}
+                      />
+                      <AvatarFallback>
+                        {account.owner ? getUserInitials(account.owner) : "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-foreground">
+                        {account.owner ? getUserDisplayName(account.owner) : "Unknown User"}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {account.owner?.email}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {account.owner?.email}
-                  </div>
-                </div>
-              </div>
                 </div>
               </div>
             )}

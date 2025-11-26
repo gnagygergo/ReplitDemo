@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition>
+  <type>CheckboxField</type>
+  <apiCode>isPersonAccount</apiCode>
+  <label>Person Account</label>
+  <defaultValue>false</defaultValue>
+</FieldDefinition>

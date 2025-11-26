@@ -32,41 +32,27 @@ export default function AccountDetailOwnershipCard({
   return (
     <Card>
       <CardContent className="pt-6">
-        {isEditing ? (
-          <Form {...form}>
-            <form className="space-y-6">
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <LookupFormField
-                      objectCode="accounts"
-                      fieldCode="ownerId"
-                      mode="edit"
-                      value={field.value}
-                      onChange={(value) => field.onChange(value || "")}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        ) : (
-          <>
-            {!account ? (
-              <div>No account data</div>
-            ) : (
-              <LookupFormField
-                objectCode="accounts"
-                fieldCode="ownerId"
-                mode="view"
-                value={account.ownerId}
-              />
-            )}
-          </>
-        )}
+        <Form {...form}>
+          <form className="space-y-6">
+            <FormField
+              control={form.control}
+              name="ownerId"
+              render={({ field }) => (
+                <FormItem>
+                  <LookupFormField
+                    objectCode="accounts"
+                    fieldCode="ownerId"
+                    mode={isEditing ? "edit" : "view"}
+                    value={field.value}
+                    onChange={(value) => field.onChange(value || "")}
+                    disabled={!isEditing}
+                  />
+                  {isEditing && <FormMessage />}
+                </FormItem>
+              )}
+            />
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

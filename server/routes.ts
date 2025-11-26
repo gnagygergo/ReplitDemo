@@ -731,6 +731,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single user by ID
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const user = await storage.getUser(req.params.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      // Security: Remove sensitive fields from response
+      const { password, ...safeUser } = user as any;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   app.put("/api/users/:id", async (req, res) => {
     try {
       // Security: Remove isAdmin from update schema - privilege escalation protection

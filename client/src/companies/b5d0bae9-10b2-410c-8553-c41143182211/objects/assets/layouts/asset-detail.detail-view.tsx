@@ -390,23 +390,13 @@ export default function AssetDetail() {
                       )}
                     />
 
-                    {/* Asset Location  */}
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <AddressField
-                            objectCode="assets"
-                            fieldCode="location"
-                            mode={isEditing ? "edit" : "view"}
-                            value={field.value}
-                            onChange={field.onChange}
-                            testId="input-install-date"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    {/* Asset Location */}
+                    <AddressField
+                      form={form}
+                      objectCode="assets"
+                      fieldCode="location"
+                      mode={isEditing ? "edit" : "view"}
+                      testId="address-location"
                     />
 
                     {/* Account */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRoute, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -38,6 +38,8 @@ import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { format } from "date-fns";
+import { useObjectFieldTypes } from "@/hooks/use-object-field-types";
+import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-utils";
 
 export default function AssetDetail() {
   const [match, params] = useRoute("/assets/:id");
@@ -47,6 +49,9 @@ export default function AssetDetail() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch field type definitions for the assets object
+  const { data: fieldTypeMap = {} } = useObjectFieldTypes({ objectCode: "assets" });
+
   // Fetch asset data (skip when creating new asset)
   const { data: asset, isLoading: isLoadingAsset } = useQuery<AssetWithDetails>(
     {
@@ -55,33 +60,45 @@ export default function AssetDetail() {
     },
   );
 
+  // Track whether form has been initialized to prevent reset loops
+  const formInitializedRef = useRef(false);
+  const lastAssetIdRef = useRef<string | undefined>(params?.id);
+  
+  // Check if field metadata is loaded (has any entries)
+  const hasFieldMetadata = Object.keys(fieldTypeMap).length > 0;
+
+  // Build default values dynamically from field types (memoized)
+  const defaultFormValues = useMemo(() => 
+    buildDefaultFormValues(fieldTypeMap) as InsertAsset,
+    [fieldTypeMap]
+  );
+
   const form = useForm<InsertAsset>({
     resolver: zodResolver(insertAssetSchema),
-    defaultValues: {
-      name: "",
-      serialNumber: "",
-      description: "",
-      quantity: null,
-      accountId: "",
-      productId: "",
-      installationDate: null,
-    },
+    defaultValues: defaultFormValues,
   });
 
-  // Update form when asset data loads
+  // Reset initialization flag when route changes (navigating to different record)
   useEffect(() => {
-    if (asset && !isCreating) {
-      form.reset({
-        name: asset.name || "",
-        serialNumber: asset.serialNumber || "",
-        description: asset.description || "",
-        quantity: asset.quantity != null ? parseFloat(asset.quantity) : null,
-        accountId: asset.accountId || "",
-        productId: asset.productId || "",
-        installationDate: asset.installationDate || null,
-      });
+    if (lastAssetIdRef.current !== params?.id) {
+      formInitializedRef.current = false;
+      lastAssetIdRef.current = params?.id;
     }
-  }, [asset, form, isCreating]);
+  }, [params?.id]);
+
+  // Initialize form once when metadata becomes available
+  useEffect(() => {
+    if (formInitializedRef.current) return;
+    
+    if (isCreating && hasFieldMetadata) {
+      form.reset(defaultFormValues);
+      formInitializedRef.current = true;
+    } else if (!isCreating && asset && hasFieldMetadata) {
+      const formValues = transformRecordToFormValues(asset, fieldTypeMap) as InsertAsset;
+      form.reset(formValues);
+      formInitializedRef.current = true;
+    }
+  }, [isCreating, hasFieldMetadata, asset, fieldTypeMap, defaultFormValues, form]);
 
   // Create mutation
   const createMutation = useMutation({
@@ -147,15 +164,8 @@ export default function AssetDetail() {
     } else {
       setIsEditing(false);
       if (asset) {
-        form.reset({
-          name: asset.name || "",
-          serialNumber: asset.serialNumber || "",
-          description: asset.description || "",
-          quantity: asset.quantity != null ? parseFloat(asset.quantity) : null,
-          accountId: asset.accountId || "",
-          productId: asset.productId || "",
-          installationDate: asset.installationDate || null,
-        });
+        const formValues = transformRecordToFormValues(asset, fieldTypeMap) as InsertAsset;
+        form.reset(formValues);
       }
     }
   };
@@ -285,7 +295,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <TextField
                             objectCode="assets"
-                            fieldCode="serial_number"
+                            fieldCode="serialNumber"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
@@ -368,7 +378,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <DateTimeField
                             objectCode="assets"
-                            fieldCode="installation_date"
+                            fieldCode="installationDate"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
@@ -387,7 +397,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <LookupFormField
                             objectCode="assets"
-                            fieldCode="account_id"
+                            fieldCode="accountId"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}
@@ -406,7 +416,7 @@ export default function AssetDetail() {
                         <FormItem>
                           <LookupFormField
                             objectCode="assets"
-                            fieldCode="product_id"
+                            fieldCode="productId"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

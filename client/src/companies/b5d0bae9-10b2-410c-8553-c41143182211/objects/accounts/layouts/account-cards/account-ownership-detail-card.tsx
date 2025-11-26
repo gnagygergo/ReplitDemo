@@ -10,7 +10,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormMessage,
@@ -35,34 +34,23 @@ export default function AccountDetailOwnershipCard({
       <CardContent className="pt-6">
         <Form {...form}>
           <form className="space-y-6">
-            {isEditing ? (
-              <FormField
-                control={form.control}
-                name="ownerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <LookupFormField
-                        objectCode="accounts"
-                        fieldCode="ownerId"
-                        mode="edit"
-                        value={field.value}
-                        onChange={(value) => field.onChange(value || "")}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            ) : (
-              <LookupFormField
-                objectCode="accounts"
-                fieldCode="ownerId"
-                mode="view"
-                value={account?.ownerId || null}
-                onChange={() => {}}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="ownerId"
+              render={({ field }) => (
+                <FormItem>
+                  <LookupFormField
+                    objectCode="accounts"
+                    fieldCode="ownerId"
+                    mode={isEditing ? "edit" : "view"}
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={!isEditing}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
       </CardContent>

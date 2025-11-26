@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FieldDefinition xmlns="">
   <type>LookupField</type>
-  <apiCode>account_id</apiCode>
+  <apiCode>accountId</apiCode>
   <label>Account</label>
   <helpText>The account this asset belongs to</helpText>
   <placeHolder>Select account...</placeHolder>
-  <testId/>
-  <className/>
   <referencedObject>accounts</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
-  <displayColumns>name,company_registration_id,email</displayColumns>
+  <displayColumns>name, address_city</displayColumns>
+
 </FieldDefinition>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FieldDefinition xmlns="">
   <type>LookupField</type>
-  <apiCode>product_id</apiCode>
+  <apiCode>productId</apiCode>
   <label>Product</label>
   <helpText>The product model for this asset</helpText>
   <placeHolder>Select product...</placeHolder>

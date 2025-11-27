@@ -386,7 +386,7 @@ export default function SmartAccountManagementDetailCard({
                 {!account ? (
                   <div>No account data</div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="">
                     {/* Row 1: First Name + Last Name (grid-cols-2) */}
                     {!account.isShippingAddress && !account.isLegalEntity && (
                       <div className="grid grid-cols-2 gap-4">

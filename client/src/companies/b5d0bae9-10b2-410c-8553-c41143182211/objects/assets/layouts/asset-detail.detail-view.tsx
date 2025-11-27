@@ -1,175 +1,34 @@
-import { useState, useEffect, useMemo, useRef } from "react";
-import { useRoute, useLocation } from "wouter";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  type AssetWithDetails,
-  type InsertAsset,
-  insertAssetSchema,
-} from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Package, Edit, Save, X, Building } from "lucide-react";
+import { Package, Edit, Save, X } from "lucide-react";
 import { Link } from "wouter";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import LookupFormField from "@/components/ui/lookup-form-field";
 import { NumberField } from "@/components/ui/number-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { format } from "date-fns";
-import { useObjectFieldTypes } from "@/hooks/use-object-field-types";
-import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-utils";
-import { AddressField } from "@/components/ui/address-field"
+import { AddressField } from "@/components/ui/address-field";
+import { useAssetDetail } from "@/components/objects/assets/layouts/useAssetDetail";
 
 export default function AssetDetail() {
-  const [match, params] = useRoute("/assets/:id");
-  const [, setLocation] = useLocation();
-  const isCreating = params?.id === "new";
-  const [isEditing, setIsEditing] = useState(isCreating);
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  // Fetch field type definitions for the assets object
-  const { data: fieldTypeMap = {} } = useObjectFieldTypes({ objectCode: "assets" });
-
-  // Fetch asset data (skip when creating new asset)
-  const { data: asset, isLoading: isLoadingAsset } = useQuery<AssetWithDetails>(
-    {
-      queryKey: ["/api/assets", params?.id],
-      enabled: !!params?.id && !isCreating,
-    },
-  );
-
-  // Track whether form has been initialized to prevent reset loops
-  const formInitializedRef = useRef(false);
-  const lastAssetIdRef = useRef<string | undefined>(params?.id);
-  
-  // Check if field metadata is loaded (has any entries)
-  const hasFieldMetadata = Object.keys(fieldTypeMap).length > 0;
-
-  // Build default values dynamically from field types (memoized)
-  const defaultFormValues = useMemo(() => 
-    buildDefaultFormValues(fieldTypeMap) as InsertAsset,
-    [fieldTypeMap]
-  );
-
-  const form = useForm<InsertAsset>({
-    resolver: zodResolver(insertAssetSchema),
-    defaultValues: defaultFormValues,
-  });
-
-  // Reset initialization flag when route changes (navigating to different record)
-  useEffect(() => {
-    if (lastAssetIdRef.current !== params?.id) {
-      formInitializedRef.current = false;
-      lastAssetIdRef.current = params?.id;
-    }
-  }, [params?.id]);
-
-  // Initialize form once when metadata becomes available
-  useEffect(() => {
-    if (formInitializedRef.current) return;
-    
-    if (isCreating && hasFieldMetadata) {
-      form.reset(defaultFormValues);
-      formInitializedRef.current = true;
-    } else if (!isCreating && asset && hasFieldMetadata) {
-      const formValues = transformRecordToFormValues(asset, fieldTypeMap) as InsertAsset;
-      form.reset(formValues);
-      formInitializedRef.current = true;
-    }
-  }, [isCreating, hasFieldMetadata, asset, fieldTypeMap, defaultFormValues, form]);
-
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: async (data: InsertAsset) => {
-      const response = await apiRequest("POST", "/api/assets", data);
-      return await response.json();
-    },
-    onSuccess: (newAsset: AssetWithDetails) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      toast({
-        title: "Asset created successfully",
-      });
-      setIsEditing(false);
-      setLocation(`/assets/${newAsset.id}`);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to create asset",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: async (data: Partial<InsertAsset>) => {
-      const response = await apiRequest(
-        "PATCH",
-        `/api/assets/${params?.id}`,
-        data,
-      );
-      return await response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/assets"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/assets", params?.id] });
-      toast({
-        title: "Asset updated successfully",
-      });
-      setIsEditing(false);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Failed to update asset",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = (data: InsertAsset) => {
-    if (isCreating) {
-      createMutation.mutate(data);
-    } else {
-      updateMutation.mutate(data);
-    }
-  };
-
-  const handleCancel = () => {
-    if (isCreating) {
-      setLocation("/assets");
-    } else {
-      setIsEditing(false);
-      if (asset) {
-        const formValues = transformRecordToFormValues(asset, fieldTypeMap) as InsertAsset;
-        form.reset(formValues);
-      }
-    }
-  };
+  const {
+    asset,
+    isLoadingAsset,
+    isCreating,
+    isEditing,
+    setIsEditing,
+    form,
+    createMutation,
+    updateMutation,
+    onSubmit,
+    handleCancel,
+  } = useAssetDetail();
 
   if (!isCreating) {
     if (isLoadingAsset) {
@@ -286,8 +145,9 @@ export default function AssetDetail() {
                 <Form {...form}>
                   <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-4"
+                    className="space-y-1"
                   >
+                    
                     {/* Serial Number */}
                     <FormField
                       control={form.control}
@@ -324,7 +184,7 @@ export default function AssetDetail() {
                         </FormItem>
                       )}
                     />
-
+                      
                     {/* Description */}
                     <FormField
                       control={form.control}

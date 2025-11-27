@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import LookupFormField from "@/components/ui/lookup-form-field";
+import { CardTitle } from "@/components/ui/card";
+import { CardHeader } from "@/components/ui/card";
 
 interface AccountDetailOwnershipCardProps {
   account: AccountWithOwner | null;
@@ -31,9 +33,10 @@ export default function AccountDetailOwnershipCard({
 }: AccountDetailOwnershipCardProps) {
   return (
     <Card>
-      <CardContent className="pt-6">
+      
+      <CardContent>
         <Form {...form}>
-          <form className="space-y-6">
+          <form>
             <FormField
               control={form.control}
               name="ownerId"

@@ -19,7 +19,7 @@ import { useAssetDetail } from "@/components/objects/assets/layouts/useAssetDeta
 export default function AssetDetail() {
   const {
     asset,
-    isLoadingAsset,
+    isLoading,
     isCreating,
     isEditing,
     setIsEditing,
@@ -31,7 +31,7 @@ export default function AssetDetail() {
   } = useAssetDetail();
 
   if (!isCreating) {
-    if (isLoadingAsset) {
+    if (isLoading) {
       return (
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse">Loading asset details...</div>

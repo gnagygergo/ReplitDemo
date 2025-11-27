@@ -15,7 +15,7 @@ import { buildDefaultFormValues, transformRecordToFormValues } from "@/lib/form-
 
 export interface UseAssetDetailReturn {
   asset: AssetWithDetails | undefined;
-  isLoadingAsset: boolean;
+  isLoading: boolean;
   isCreating: boolean;
   isEditing: boolean;
   setIsEditing: (editing: boolean) => void;
@@ -37,7 +37,7 @@ export function useAssetDetail(): UseAssetDetailReturn {
 
   const { data: fieldTypeMap = {} } = useObjectFieldTypes({ objectCode: "assets" });
 
-  const { data: asset, isLoading: isLoadingAsset } = useQuery<AssetWithDetails>(
+  const { data: asset, isLoading } = useQuery<AssetWithDetails>(
     {
       queryKey: ["/api/assets", params?.id],
       enabled: !!params?.id && !isCreating,
@@ -149,7 +149,7 @@ export function useAssetDetail(): UseAssetDetailReturn {
 
   return {
     asset,
-    isLoadingAsset,
+    isLoading,
     isCreating,
     isEditing,
     setIsEditing,

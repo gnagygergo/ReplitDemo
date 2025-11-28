@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TabDefinition>
+  <TabLabel>Products</TabLabel>
+  <TabCode>products-tab</TabCode>
+  <ObjectCode>products</ObjectCode>
+  <Icon>Package</Icon>
+  <TabOrder>4</TabOrder>
+</TabDefinition>

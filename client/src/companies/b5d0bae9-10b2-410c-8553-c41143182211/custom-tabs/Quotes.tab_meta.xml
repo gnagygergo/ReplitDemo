@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TabDefinition>
+  <TabLabel>Quotes</TabLabel>
+  <TabCode>quotes-tab</TabCode>
+  <ObjectCode>quotes</ObjectCode>
+  <Icon>FileText</Icon>
+  <TabOrder>1</TabOrder>
+</TabDefinition>

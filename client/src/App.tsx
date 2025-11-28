@@ -1,12 +1,10 @@
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { CompanySettingsProvider } from "@/contexts/CompanySettingsContext";
-import { loadCompanyComponent } from "@/lib/loadCompanyComponent";
-import { Suspense, useRef } from "react";
 import Header from "@/components/layout/header";
 import Landing from "@/pages/landing";
 import QuickWinsLogin from "@/pages/quickwins-login";
@@ -15,215 +13,36 @@ import Setup from "@/components/setup/setup";
 import BusinessObjectsManager from "@/components/setup/business-objects/business-objects-main";
 import NotFound from "@/pages/not-found";
 import DigitalOffice from "@/pages/digital-office";
+import ObjectListPage from "@/components/ObjectListPage";
+import ObjectDetailPage from "@/components/ObjectDetailPage";
 
-function AssetsPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const assetsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!assetsRef.current || prevCompanyIdRef.current !== companyId) {
-    assetsRef.current = loadCompanyComponent(companyId, "assets", "assets.table-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const Assets = assetsRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-assets">Loading...</div>}>
-      <Assets />
-    </Suspense>
-  );
-}
-
-function AssetDetailPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const assetDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!assetDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    assetDetailRef.current = loadCompanyComponent(companyId, "assets", "asset-detail.detail-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const AssetDetail = assetDetailRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-asset-detail">Loading...</div>}>
-      <AssetDetail />
-    </Suspense>
-  );
-}
-
-function AccountsPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const accountsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!accountsRef.current || prevCompanyIdRef.current !== companyId) {
-    accountsRef.current = loadCompanyComponent(companyId, "accounts", "accounts.table-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const Accounts = accountsRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-accounts">Loading...</div>}>
-      <Accounts />
-    </Suspense>
-  );
-}
-
-function AccountDetailPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const accountDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!accountDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    accountDetailRef.current = loadCompanyComponent(companyId, "accounts", "account-detail.detail-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const AccountDetail = accountDetailRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-account-detail">Loading...</div>}>
-      <AccountDetail />
-    </Suspense>
-  );
-}
-
-function OpportunitiesPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const opportunitiesRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!opportunitiesRef.current || prevCompanyIdRef.current !== companyId) {
-    opportunitiesRef.current = loadCompanyComponent(companyId, "opportunities", "opportunities.table-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const Opportunities = opportunitiesRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-opportunities">Loading...</div>}>
-      <Opportunities />
-    </Suspense>
-  );
-}
-
-function ProductsPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const productsRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!productsRef.current || prevCompanyIdRef.current !== companyId) {
-    productsRef.current = loadCompanyComponent(companyId, "products", "products.table-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const Products = productsRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-products">Loading...</div>}>
-      <Products />
-    </Suspense>
-  );
-}
-
-function ProductDetailPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const productDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!productDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    productDetailRef.current = loadCompanyComponent(companyId, "products", "product-detail.detail-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const ProductDetail = productDetailRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-product-detail">Loading...</div>}>
-      <ProductDetail />
-    </Suspense>
-  );
-}
-
-function QuotesPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const quotesRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!quotesRef.current || prevCompanyIdRef.current !== companyId) {
-    quotesRef.current = loadCompanyComponent(companyId, "quotes", "quotes.table-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const Quotes = quotesRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-quotes">Loading...</div>}>
-      <Quotes />
-    </Suspense>
-  );
-}
-
-function QuoteDetailPage() {
-  const { user } = useAuth();
-  // Normalize companyId: trim and use default if empty
-  const companyId = user?.companyId?.trim() || "0_default";
-  
-  const quoteDetailRef = useRef<ReturnType<typeof loadCompanyComponent> | null>(null);
-  const prevCompanyIdRef = useRef<string>("0_default");
-  
-  // Load component on first render or when companyId actually changes
-  if (!quoteDetailRef.current || prevCompanyIdRef.current !== companyId) {
-    quoteDetailRef.current = loadCompanyComponent(companyId, "quotes", "quote-detail.detail-view");
-    prevCompanyIdRef.current = companyId;
-  }
-  
-  const QuoteDetail = quoteDetailRef.current;
-  
-  return (
-    <Suspense fallback={<div data-testid="loading-quote-detail">Loading...</div>}>
-      <QuoteDetail />
-    </Suspense>
-  );
+interface TabDefinition {
+  tabLabel: string;
+  tabCode: string;
+  objectCode: string;
+  icon: string;
+  tabOrder: number;
 }
 
 function AuthenticatedRouter() {
+  const { user } = useAuth();
+
+  const { data: tabDefinitions = [], isLoading } = useQuery<TabDefinition[]>({
+    queryKey: ["/api/tab-definitions"],
+    enabled: !!user,
+  });
+
+  if (isLoading) {
+    return (
+      <CompanySettingsProvider>
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div data-testid="loading-app">Loading...</div>
+        </div>
+      </CompanySettingsProvider>
+    );
+  }
+
   return (
     <CompanySettingsProvider>
       <Header />
@@ -236,15 +55,23 @@ function AuthenticatedRouter() {
             </div>
           )}
         />
-        <Route path="/accounts/:id" component={AccountDetailPage} />
-        <Route path="/accounts" component={AccountsPage} />
-        <Route path="/assets/:id" component={AssetDetailPage} />
-        <Route path="/assets" component={AssetsPage} />
-        <Route path="/quotes/:id" component={QuoteDetailPage} />
-        <Route path="/quotes" component={QuotesPage} />
-        <Route path="/opportunities" component={OpportunitiesPage} />
-        <Route path="/products/:id" component={ProductDetailPage} />
-        <Route path="/products" component={ProductsPage} />
+        
+        {tabDefinitions.map((tab) => (
+          <Route
+            key={`${tab.tabCode}-detail`}
+            path={`/${tab.objectCode}/:id`}
+            component={() => <ObjectDetailPage objectCode={tab.objectCode} />}
+          />
+        ))}
+        
+        {tabDefinitions.map((tab) => (
+          <Route
+            key={`${tab.tabCode}-list`}
+            path={`/${tab.objectCode}`}
+            component={() => <ObjectListPage objectCode={tab.objectCode} />}
+          />
+        ))}
+        
         <Route path="/setup" component={Setup} />
         <Route path="setup/business-objects" component={BusinessObjectsManager} />
         <Route path="/digital-office" component={DigitalOffice} />
@@ -266,12 +93,10 @@ function UnauthenticatedRouter() {
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Show unauthenticated routes while loading or if not authenticated
   if (isLoading || !isAuthenticated) {
     return <UnauthenticatedRouter />;
   }
 
-  // Show authenticated CRM interface
   return <AuthenticatedRouter />;
 }
 

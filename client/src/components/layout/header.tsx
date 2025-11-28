@@ -13,6 +13,45 @@ import {
   GraduationCap,
   Lamp,
   PersonStanding,
+  Users,
+  ShoppingCart,
+  Briefcase,
+  File,
+  Folder,
+  Home,
+  Star,
+  Heart,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  Map,
+  Globe,
+  Camera,
+  Image,
+  Video,
+  Music,
+  Book,
+  Bookmark,
+  Tag,
+  Flag,
+  Award,
+  Gift,
+  CreditCard,
+  DollarSign,
+  Truck,
+  Box,
+  Archive,
+  Clipboard,
+  Edit,
+  Trash,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  Share,
+  Link as LinkIcon,
+  type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +66,68 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { type Company } from "@shared/schema";
 
+interface TabDefinition {
+  tabLabel: string;
+  tabCode: string;
+  objectCode: string;
+  icon: string;
+  tabOrder: number;
+}
+
+const iconMap: Record<string, LucideIcon> = {
+  Building,
+  Target,
+  FileText,
+  ChartLine,
+  Bell,
+  LogOut,
+  User,
+  Settings,
+  Package,
+  FileSpreadsheet,
+  GraduationCap,
+  Lamp,
+  PersonStanding,
+  Users,
+  ShoppingCart,
+  Briefcase,
+  File,
+  Folder,
+  Home,
+  Star,
+  Heart,
+  Mail,
+  Phone,
+  Calendar,
+  Clock,
+  Map,
+  Globe,
+  Camera,
+  Image,
+  Video,
+  Music,
+  Book,
+  Bookmark,
+  Tag,
+  Flag,
+  Award,
+  Gift,
+  CreditCard,
+  DollarSign,
+  Truck,
+  Box,
+  Archive,
+  Clipboard,
+  Edit,
+  Trash,
+  Search,
+  Filter,
+  Download,
+  Upload,
+  Share,
+  Link: LinkIcon,
+};
+
 export default function Header() {
   const [location] = useLocation();
   const { user } = useAuth();
@@ -34,7 +135,7 @@ export default function Header() {
   // Fetch company data for current user (includes logo and alias)
   const { data: companyData } = useQuery<Company>({
     queryKey: ["/api/auth/my-company"],
-    enabled: !!user, // Only fetch if user is authenticated
+    enabled: !!user,
   });
 
   // Fetch admin status for current user
@@ -44,15 +145,19 @@ export default function Header() {
     hasAdminAccess: boolean;
   }>({
     queryKey: ["/api/auth/verify-admin-status"],
-    enabled: !!user, // Only fetch if user is authenticated
+    enabled: !!user,
   });
 
-  const navItems = [
-    { path: "/accounts", label: "Accounts", icon: Building },
-    { path: "/assets", label: "Assets", icon: Package },
-    { path: "/quotes", label: "Quotes", icon: FileSpreadsheet },
-    { path: "/products", label: "Products", icon: Package },
-  ];
+  // Fetch tab definitions for the company
+  const { data: tabDefinitions } = useQuery<TabDefinition[]>({
+    queryKey: ["/api/tab-definitions"],
+    enabled: !!user,
+  });
+
+  // Helper to get icon component from icon name
+  const getIconComponent = (iconName: string): LucideIcon => {
+    return iconMap[iconName] || File;
+  };
 
   return (
     <header className="bg-card border-b border-border shadow-sm sticky top-0 z-50">
@@ -77,21 +182,29 @@ export default function Header() {
               </h1>
             )}
             <nav className="hidden md:flex space-x-6">
-              {navItems.map(({ path, label, icon: Icon }) => (
-                <Link
-                  key={path}
-                  href={path}
-                  className={`px-3 py-2 text-sm font-medium transition-colors flex items-center space-x-2 ${
-                    location === path
-                      ? "text-primary bg-primary/10 rounded-md"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  data-testid={`nav-${label.toLowerCase()}`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{label}</span>
-                </Link>
-              ))}
+              {tabDefinitions && tabDefinitions.length > 0 ? (
+                tabDefinitions.map((tab) => {
+                  const Icon = getIconComponent(tab.icon);
+                  const path = `/${tab.objectCode}`;
+                  return (
+                    <Link
+                      key={tab.tabCode}
+                      href={path}
+                      className={`px-3 py-2 text-sm font-medium transition-colors flex items-center space-x-2 ${
+                        location === path || location.startsWith(`${path}/`)
+                          ? "text-primary bg-primary/10 rounded-md"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      data-testid={`nav-${tab.tabCode}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{tab.tabLabel}</span>
+                    </Link>
+                  );
+                })
+              ) : (
+                <span className="text-sm text-muted-foreground">Loading tabs...</span>
+              )}
             </nav>
           </div>
           <div className="flex items-center space-x-4">

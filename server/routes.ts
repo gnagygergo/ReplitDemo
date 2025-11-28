@@ -1367,6 +1367,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all tab definitions for the company
+  app.get("/api/tab-definitions", isAuthenticated, async (req, res) => {
+    try {
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      // Build the path to the custom-tabs directory
+      const customTabsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'custom-tabs'
+      );
+
+      // Check if directory exists and read all files
+      let files: string[];
+      try {
+        const entries = readdirSync(customTabsDir, { withFileTypes: true });
+        files = entries
+          .filter(entry => entry.isFile() && entry.name.endsWith('.tab_meta.xml'))
+          .map(entry => entry.name);
+      } catch (error: any) {
+        if (error.code === 'ENOENT') {
+          // Directory doesn't exist, return empty array
+          return res.json([]);
+        }
+        throw error;
+      }
+
+      // For each file, parse and extract tab definition
+      const tabDefinitions = [];
+      for (const fileName of files) {
+        const filePath = path.join(customTabsDir, fileName);
+
+        try {
+          const xmlContent = readFileSync(filePath, 'utf-8');
+          const parsedData = await parseXML(xmlContent) as any;
+          
+          // Extract the relevant fields from TabDefinition
+          const tabDef = parsedData.TabDefinition || {};
+          tabDefinitions.push({
+            tabLabel: tabDef.TabLabel?.[0] || fileName.replace('.tab_meta.xml', ''),
+            tabCode: tabDef.TabCode?.[0] || fileName.replace('.tab_meta.xml', '').toLowerCase(),
+            objectCode: tabDef.ObjectCode?.[0] || '',
+            icon: tabDef.Icon?.[0] || 'File',
+            tabOrder: parseInt(tabDef.TabOrder?.[0] || '999', 10),
+          });
+        } catch (error: any) {
+          if (error.code !== 'ENOENT') {
+            console.error(`Error reading tab definition for ${fileName}:`, error);
+          }
+        }
+      }
+
+      // Sort by tabOrder
+      tabDefinitions.sort((a, b) => a.tabOrder - b.tabOrder);
+
+      res.json(tabDefinitions);
+    } catch (error) {
+      console.error("Error fetching tab definitions:", error);
+      res.status(500).json({ message: "Failed to fetch tab definitions" });
+    }
+  });
+
   // Get all global value sets for the company
   app.get("/api/global-value-sets", isAuthenticated, async (req, res) => {
     try {

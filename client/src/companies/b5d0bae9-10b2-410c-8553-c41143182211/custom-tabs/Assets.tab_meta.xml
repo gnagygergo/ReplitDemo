@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TabDefinition>
+  <TabLabel>Assets</TabLabel>
+  <TabCode>assets-tab</TabCode>
+  <ObjectCode>assets</ObjectCode>
+  <Icon>Package</Icon>
+  <TabOrder>2</TabOrder>
+</TabDefinition>

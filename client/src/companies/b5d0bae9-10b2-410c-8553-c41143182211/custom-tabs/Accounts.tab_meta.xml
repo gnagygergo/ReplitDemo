@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TabDefinition>
+  <TabLabel>Accounts</TabLabel>
+  <TabCode>accounts-tab</TabCode>
+  <ObjectCode>accounts</ObjectCode>
+  <Icon>Users</Icon>
+  <TabOrder>3</TabOrder>
+</TabDefinition>

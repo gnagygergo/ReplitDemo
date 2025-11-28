@@ -26,6 +26,13 @@ Preferred communication style: Simple, everyday language.
     - **AddressField Type**: Prefix-based auto-generation of 5 database columns (street_address, city, state_province, zip_code, country). Users provide a prefix (e.g., "physical_location") and the system automatically generates column names like "physical_location_street_address". Column names are disabled for editing and displayed in both create (live preview) and edit (read-only) modes.
     - **Dynamic Loading**: Queries `*.object_meta.xml` files to discover and display available business objects.
 - **Company-Specific Component Architecture**: Full component duplication per company (`companies/[companyId]/objects/[objectName]/layouts/`) for maximum customization, loaded dynamically at runtime via `loadCompanyComponent`. Default components are sourced from `companies/0_default/`. All major business objects (accounts, assets, opportunities, products, quotes) use this architecture with companyId normalization and useRef-based component caching.
+- **Dynamic Tab System**: Company-specific tabs are defined in `companies/[companyId]/custom-tabs/` folder using XML files (e.g., `Quotes.tab_meta.xml`). Each tab definition includes:
+    - **TabLabel**: Display name shown in header navigation
+    - **TabCode**: Unique identifier for the tab
+    - **ObjectCode**: Links to the corresponding object folder (e.g., "quotes" links to `objects/quotes/`)
+    - **Icon**: Lucide icon name for the tab
+    - **TabOrder**: Numeric ordering for tab display sequence
+- **Dynamic Routing**: App.tsx generates routes dynamically from tab definitions via `/api/tab-definitions`. Uses generic `ObjectListPage` and `ObjectDetailPage` wrapper components that load the appropriate `[object].table-view.tsx` and `[object]-detail.detail-view.tsx` layouts based on the tab's objectCode.
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.
@@ -35,6 +42,7 @@ Preferred communication style: Simple, everyday language.
 - **Universal Metadata System**: XML-based metadata for static reference data (e.g., currencies, countries) via dedicated API endpoints.
 - **Dynamic Metadata API**: `/api/metadata/*` endpoint serves and updates XML files dynamically from universal and company-specific paths with security validation.
 - **Object Definitions API**: `/api/object-definitions` endpoint scans company-specific `objects/` folders and returns business object metadata from `*.object-meta.xml` files.
+- **Tab Definitions API**: `/api/tab-definitions` endpoint scans company-specific `custom-tabs/` folders and returns tab metadata from `*.tab_meta.xml` files.
 
 ### Data Model
 - **Entities**: Accounts, Opportunities, Assets, Companies, Users with CRUD operations, search, sorting, and filtering.

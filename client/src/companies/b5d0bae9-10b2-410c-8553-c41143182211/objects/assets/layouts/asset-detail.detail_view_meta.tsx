@@ -1,24 +1,71 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Package, Edit, Save, X } from "lucide-react";
-import { Link } from "wouter";
-import LookupFormField from "@/components/ui/lookup-form-field";
-import { NumberField } from "@/components/ui/number-field";
-import { DateTimeField } from "@/components/ui/date-time-field";
-import { TextField } from "@/components/ui/text-field";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { AddressField } from "@/components/ui/address-field";
-import { useAssetDetail } from "@/components/objects/assets/layouts/useAssetDetail";
+/**
+ * asset-detail.detail_view_meta.tsx
+ * 
+ * PURPOSE:
+ * This is the detail view layout for the Assets object. It displays a single
+ * asset record with all its fields and provides editing capabilities.
+ * 
+ * ARCHITECTURE:
+ * This layout receives all its dependencies via props from ObjectDetailPage,
+ * eliminating the need for individual import statements. This pattern:
+ * 1. Reduces import clutter
+ * 2. Ensures consistency across layouts
+ * 3. Makes layouts more portable and testable
+ * 
+ * DEPENDENCIES:
+ * - deps.components: UI components (Button, Card, Form, etc.)
+ * - deps.fields: Field components (TextField, NumberField, etc.)
+ * - deps.panels: Panel components for resizable layouts
+ * - deps.icons: Lucide icons
+ * - deps.routing: Navigation utilities (Link)
+ * - deps.hooks: Custom hooks including useObjectDetail
+ * 
+ * USAGE:
+ * This component is loaded dynamically by ObjectDetailPage and receives:
+ * - deps: The layout dependencies bundle
+ * - objectCode: 'assets'
+ * - id: The record ID from the URL (or 'new' for creating)
+ */
 
-export default function AssetDetail() {
+import type { LayoutDependencies } from "@/lib/layoutDependencies";
+
+// ============================================================================
+// PROPS INTERFACE
+// ============================================================================
+
+interface AssetDetailProps {
+  /** Pre-bundled dependencies (components, hooks, icons, etc.) */
+  deps: LayoutDependencies;
+  /** The object code (should be 'assets') */
+  objectCode: string;
+  /** The record ID from the URL, or 'new' for creating */
+  id: string;
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
+export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) {
+  // ---------------------------------------------------------------------------
+  // DESTRUCTURE DEPENDENCIES
+  // Extract what we need from the dependencies bundle
+  // ---------------------------------------------------------------------------
+  
+  const { Button, Card, CardContent, CardHeader, CardTitle, Form, FormField, FormItem, FormMessage } = deps.components;
+  const { TextField, NumberField, DateTimeField, AddressField, LookupFormField } = deps.fields;
+  const { Panel, PanelGroup, PanelResizeHandle } = deps.panels;
+  const { Package, Edit, Save, X } = deps.icons;
+  const { Link } = deps.routing;
+  const { useObjectDetail } = deps.hooks;
+
+  // ---------------------------------------------------------------------------
+  // DATA & STATE MANAGEMENT
+  // Use the generic useObjectDetail hook for all CRUD operations
+  // ---------------------------------------------------------------------------
+  
   const {
-    asset,
+    record: asset,
     isLoading,
     isCreating,
     isEditing,
@@ -28,38 +75,56 @@ export default function AssetDetail() {
     updateMutation,
     onSubmit,
     handleCancel,
-  } = useAssetDetail();
+  } = useObjectDetail({
+    objectCode,
+    id,
+    labelSingular: "Asset",
+    labelPlural: "Assets",
+  });
 
-  if (!isCreating) {
-    if (isLoading) {
-      return (
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">Loading asset details...</div>
-        </div>
-      );
-    }
-
-    if (!asset) {
-      return (
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Asset not found</h3>
-            <p className="text-muted-foreground mb-4">
-              The asset you're looking for doesn't exist.
-            </p>
-            <Link href="/assets">
-              <Button variant="outline">Back to Assets</Button>
-            </Link>
-          </div>
-        </div>
-      );
-    }
+  // ---------------------------------------------------------------------------
+  // LOADING STATE
+  // Show loading indicator while fetching data
+  // ---------------------------------------------------------------------------
+  
+  if (!isCreating && isLoading) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="animate-pulse">Loading asset details...</div>
+      </div>
+    );
   }
+
+  // ---------------------------------------------------------------------------
+  // NOT FOUND STATE
+  // Show error if record doesn't exist
+  // ---------------------------------------------------------------------------
+  
+  if (!isCreating && !asset) {
+    return (
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="text-center py-12">
+          <Package className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">Asset not found</h3>
+          <p className="text-muted-foreground mb-4">
+            The asset you're looking for doesn't exist.
+          </p>
+          <Link href="/assets">
+            <Button variant="outline">Back to Assets</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // MAIN RENDER
+  // Display the asset detail form
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
+      {/* Breadcrumb Navigation */}
       <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-6">
         <Link href="/assets" className="hover:text-foreground">
           Assets
@@ -70,7 +135,7 @@ export default function AssetDetail() {
         </span>
       </div>
 
-      {/* Asset Headline */}
+      {/* Page Header with Title and Actions */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center space-x-4">
           <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
@@ -94,6 +159,7 @@ export default function AssetDetail() {
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex space-x-3">
           {isEditing ? (
             <>
@@ -133,10 +199,9 @@ export default function AssetDetail() {
 
       {/* Resizable Two-Pane Layout */}
       <PanelGroup direction="horizontal" className="min-h-[600px]">
-        {/* Left Pane - Asset Information Cards */}
+        {/* Left Pane - Asset Information */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
-            {/* Asset Details Card */}
             <Card>
               <CardHeader>
                 <CardTitle>Asset Information</CardTitle>
@@ -147,7 +212,6 @@ export default function AssetDetail() {
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="space-y-1"
                   >
-                    
                     {/* Serial Number */}
                     <FormField
                       control={form.control}
@@ -259,7 +323,7 @@ export default function AssetDetail() {
                       testId="address-location"
                     />
 
-                    {/* Account */}
+                    {/* Account Lookup */}
                     <FormField
                       control={form.control}
                       name="accountId"
@@ -278,7 +342,7 @@ export default function AssetDetail() {
                       )}
                     />
 
-                    {/* Product */}
+                    {/* Product Lookup */}
                     <FormField
                       control={form.control}
                       name="productId"
@@ -306,7 +370,7 @@ export default function AssetDetail() {
         {/* Resize Handle */}
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Pane - Additional Information (Future Use) */}
+        {/* Right Pane - Additional Information */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {/* Future: Asset history, related items, etc. */}

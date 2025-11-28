@@ -1,3 +1,22 @@
+/**
+ * loadCompanyComponent.tsx
+ * 
+ * PURPOSE:
+ * This utility dynamically loads company-specific layout components at runtime.
+ * It allows different companies to have customized layouts while sharing the
+ * same core application code.
+ * 
+ * HOW IT WORKS:
+ * 1. Uses Vite's import.meta.glob to discover all available layout files
+ * 2. Attempts to load the company-specific version first
+ * 3. Falls back to default version if company-specific doesn't exist
+ * 4. Supports fallback component names for legacy file naming
+ * 
+ * FILE NAMING PATTERNS:
+ * - New convention: {object}.table_view_meta.tsx, {object}-detail.detail_view_meta.tsx
+ * - Legacy convention: {object}.table-view.tsx, {object}-detail.detail-view.tsx
+ */
+
 import { lazy, ComponentType } from "react";
 
 // Use import.meta.glob to tell Vite about all possible component paths
@@ -12,45 +31,70 @@ const componentModules = import.meta.glob(
  * 
  * @param companyId - The ID of the company (from user's company context)
  * @param objectName - The business object name (e.g., "assets", "accounts", "quotes")
- * @param componentName - The component filename without extension (e.g., "assets", "asset-detail")
+ * @param componentName - The component filename without extension (e.g., "assets.table_view_meta")
+ * @param fallbackComponentName - Optional fallback filename for legacy naming (e.g., "assets.table-view")
  * @returns A lazily-loaded React component
  * 
  * @example
- * const Assets = loadCompanyComponent(companyId, "assets", "assets");
- * const AssetDetail = loadCompanyComponent(companyId, "assets", "asset-detail");
+ * // New naming with fallback to legacy
+ * const Assets = loadCompanyComponent(companyId, "assets", "assets.table_view_meta", "assets.table-view");
+ * const AssetDetail = loadCompanyComponent(companyId, "assets", "asset-detail.detail_view_meta", "asset-detail.detail-view");
  */
 export function loadCompanyComponent<T extends ComponentType<any>>(
   companyId: string | undefined,
   objectName: string,
-  componentName: string
+  componentName: string,
+  fallbackComponentName?: string
 ): ComponentType<any> {
-  // Construct the relative path (matching the glob pattern above)
-  const componentPath = `../companies/${companyId}/objects/${objectName}/layouts/${componentName}.tsx`;
-
-  // Check if the component exists for this company
-  const moduleLoader = componentModules[componentPath];
-
+  
+  /**
+   * Helper function to try loading a component from a specific path.
+   * Returns the loader function if found, undefined otherwise.
+   */
+  const tryGetLoader = (name: string) => {
+    // Try company-specific path first
+    const companyPath = `../companies/${companyId}/objects/${objectName}/layouts/${name}.tsx`;
+    const companyLoader = componentModules[companyPath];
+    
+    if (companyLoader) {
+      return companyLoader;
+    }
+    
+    // Fall back to default company
+    const defaultPath = `../companies/0_default/objects/${objectName}/layouts/${name}.tsx`;
+    return componentModules[defaultPath];
+  };
+  
+  // Try primary component name first
+  let moduleLoader = tryGetLoader(componentName);
+  
+  // If not found and fallback provided, try fallback name
+  if (!moduleLoader && fallbackComponentName) {
+    moduleLoader = tryGetLoader(fallbackComponentName);
+  }
+  
   if (!moduleLoader) {
-    // If component doesn't exist for this company, fall back to default template
-    const defaultPath = `../companies/0_default/objects/${objectName}/layouts/${componentName}.tsx`;
-    const defaultLoader = componentModules[defaultPath];
-
-    if (!defaultLoader) {
-      throw new Error(
-        `Component not found: ${componentName} for object ${objectName}. ` +
-        `Checked paths: ${componentPath} and ${defaultPath}. ` +
-        `Available keys: ${Object.keys(componentModules).join(", ")}`
+    // Build helpful error message with all paths we tried
+    const triedPaths = [
+      `../companies/${companyId}/objects/${objectName}/layouts/${componentName}.tsx`,
+      `../companies/0_default/objects/${objectName}/layouts/${componentName}.tsx`,
+    ];
+    
+    if (fallbackComponentName) {
+      triedPaths.push(
+        `../companies/${companyId}/objects/${objectName}/layouts/${fallbackComponentName}.tsx`,
+        `../companies/0_default/objects/${objectName}/layouts/${fallbackComponentName}.tsx`
       );
     }
-
-    return lazy(() =>
-      defaultLoader().then((module: any) => ({
-        default: module.default,
-      }))
-    ) as ComponentType<any>;
+    
+    throw new Error(
+      `Component not found for object "${objectName}". ` +
+      `Tried paths: ${triedPaths.join(", ")}. ` +
+      `Available keys: ${Object.keys(componentModules).slice(0, 10).join(", ")}...`
+    );
   }
 
-  // Load the company-specific component
+  // Load the component lazily
   return lazy(() =>
     moduleLoader().then((module: any) => ({
       default: module.default,

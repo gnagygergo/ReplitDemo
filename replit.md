@@ -32,7 +32,20 @@ Preferred communication style: Simple, everyday language.
     - **ObjectCode**: Links to the corresponding object folder (e.g., "quotes" links to `objects/quotes/`)
     - **Icon**: Lucide icon name for the tab
     - **TabOrder**: Numeric ordering for tab display sequence
-- **Dynamic Routing**: App.tsx generates routes dynamically from tab definitions via `/api/tab-definitions`. Uses generic `ObjectListPage` and `ObjectDetailPage` wrapper components that load the appropriate `[object].table-view.tsx` and `[object]-detail.detail-view.tsx` layouts based on the tab's objectCode.
+- **Dynamic Routing**: App.tsx generates routes dynamically from tab definitions via `/api/tab-definitions`. Uses generic `ObjectListPage` and `ObjectDetailPage` wrapper components that load the appropriate layouts based on the tab's objectCode.
+- **Layout File Naming Convention**: Layout files use the `*_view_meta.tsx` suffix pattern:
+    - Detail views: `[singular]-detail.detail_view_meta.tsx` (e.g., `asset-detail.detail_view_meta.tsx`)
+    - Table views: `[plural].table_view_meta.tsx` (e.g., `assets.table_view_meta.tsx`)
+- **Generic Data Hooks**: Two hooks handle all CRUD operations for any object type:
+    - `useObjectDetail(objectCode, id)`: Manages detail page state including fetch, create, update, delete with proper loading/error states and navigation
+    - `useObjectList(objectCode)`: Manages list page state including search, sorting, pagination with delete confirmation
+- **Dependency Injection for Layouts**: Layout files receive all dependencies via props instead of imports:
+    - `layoutDependencies.ts` exports bundled UI components, field components, icons, hooks, and utilities
+    - `ObjectDetailPage` and `ObjectListPage` inject these dependencies into dynamically loaded layouts
+    - Reduces import boilerplate and ensures consistent component versions across layouts
+- **Pluralization Utility**: `client/src/lib/pluralize.ts` handles irregular plurals correctly:
+    - 'opportunities' → 'opportunity', 'companies' → 'company', 'categories' → 'category'
+    - Used throughout the routing and data hooks for proper URL/file path resolution
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js.

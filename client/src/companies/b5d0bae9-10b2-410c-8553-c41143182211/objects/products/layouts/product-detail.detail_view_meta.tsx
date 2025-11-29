@@ -102,7 +102,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
         </Link>
         <span>/</span>
         <span className="text-foreground font-medium">
-          {isCreating ? "New Product" : product?.productName}
+          {isCreating ? "New Product" : product?.name}
         </span>
       </div>
 
@@ -117,7 +117,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
               className="text-3xl font-bold text-foreground"
               data-testid="text-product-serial-number"
             >
-              {isCreating ? "New Product" : product?.serialNumber}
+              {isCreating ? "New Product" : product?.number}
             </h1>
             <p
               className="text-muted-foreground"
@@ -186,12 +186,12 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
                     {/* Product Name */}
                     <FormField
                       control={form.control}
-                      name="productName"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
                           <TextField
                             objectCode="products"
-                            fieldCode="productName"
+                            fieldCode="name"
                             mode={isEditing ? "edit" : "view"}
                             value={field.value}
                             onChange={field.onChange}

@@ -1,10 +1,10 @@
 import { db } from "../db";
-import { products, unitOfMeasures } from "@shared/schema";
-import type { Product, InsertProduct, ProductWithUom } from "@shared/schema";
+import { products } from "@shared/schema";
+import type { Product, InsertProduct } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
 export class ProductStorage {
-  async getProducts(companyContext?: string): Promise<ProductWithUom[]> {
+  async getProducts(companyContext?: string): Promise<Product[]> {
     if (!companyContext) {
       return [];
     }
@@ -13,23 +13,22 @@ export class ProductStorage {
       .select({
         id: products.id,
         salesCategory: products.salesCategory,
-        productName: products.productName,
+        name: products.name,
         salesUomId: products.salesUomId,
         salesUnitPrice: products.salesUnitPrice,
         salesUnitPriceCurrency: products.salesUnitPriceCurrency,
         vatPercent: products.vatPercent,
         companyId: products.companyId,
-        salesUomName: unitOfMeasures.uomName,
+        
       })
       .from(products)
-      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
       .where(eq(products.companyId, companyContext))
-      .orderBy(products.productName);
+      .orderBy(products.name);
 
-    return result as ProductWithUom[];
+    return result as Product[];
   }
 
-  async getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined> {
+  async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
     if (!companyContext) {
       return undefined;
     }
@@ -38,18 +37,17 @@ export class ProductStorage {
       .select({
         id: products.id,
         salesCategory: products.salesCategory,
-        productName: products.productName,
+        name: products.name,
         salesUomId: products.salesUomId,
         salesUnitPrice: products.salesUnitPrice,
         salesUnitPriceCurrency: products.salesUnitPriceCurrency,
         vatPercent: products.vatPercent,
         companyId: products.companyId,
-        salesUomName: unitOfMeasures.uomName,
+        
       })
       .from(products)
-      .leftJoin(unitOfMeasures, eq(products.salesUomId, unitOfMeasures.id))
       .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
-    return product as ProductWithUom | undefined;
+    return product as Product | undefined;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {

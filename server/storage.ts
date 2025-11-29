@@ -1189,11 +1189,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Product methods
-  async getProducts(companyContext?: string): Promise<ProductWithUom[]> {
+  async getProducts(companyContext?: string): Promise<Product[]> {
     return this.productStorage.getProducts(companyContext);
   }
 
-  async getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined> {
+  async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
     return this.productStorage.getProduct(id, companyContext);
   }
 

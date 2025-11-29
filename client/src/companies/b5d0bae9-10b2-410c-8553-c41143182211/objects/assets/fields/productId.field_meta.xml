@@ -6,6 +6,6 @@
   <helpText>The product model for this asset</helpText>
   <placeHolder>Select product...</placeHolder>
   <referencedObject>products</referencedObject>
-  <primaryDisplayField>productName</primaryDisplayField>
-  <displayColumns>productCode,productName</displayColumns>
+  <primaryDisplayField>name</primaryDisplayField>
+  <displayColumns>productCode,name</displayColumns>
 </FieldDefinition>

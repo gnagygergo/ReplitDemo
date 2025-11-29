@@ -139,7 +139,7 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
                       <TableBody>
                         {products.map((product) => (
                           <TableRow
-                            key={product.productName}
+                            key={product.name}
                             data-testid={`row-asset-${product.id}`}
                           >
                             
@@ -149,8 +149,8 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
                               <TextField
                                 mode="table"
                                 objectCode="product"
-                                fieldCode="productName"
-                                value={product.productName || "-"}
+                                fieldCode="name"
+                                value={product.name || "-"}
                                 linkPath="/products"
                                 recordId={product.id}
                               />

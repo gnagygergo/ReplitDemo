@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FieldDefinition xmlns="">
   <type>TextField</type>
-  <apiCode>productName</apiCode>
+  <apiCode>name</apiCode>
   <label>Product Name</label>
   <helpText/>
   <placeHolder/>

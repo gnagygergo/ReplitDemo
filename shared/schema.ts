@@ -254,7 +254,7 @@ export const products = pgTable("products", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   salesCategory: text("sales_category").notNull(),
-  productName: text("product_name").notNull(),
+  name: text("name").notNull(),
   salesUomId: varchar("sales_uom_id")
     .notNull()
     .references(() => unitOfMeasures.id, { onDelete: "restrict" }),
@@ -1062,13 +1062,6 @@ export type OpportunityWithAccountAndOwner = Opportunity & {
   owner: User;
 };
 
-export type AssetWithRelations = Asset & {
-  account: Account | null;
-  product: Product | null;
-};
-
-export type AssetWithDetails = AssetWithRelations;
-
 export type CompanyRoleWithParent = CompanyRole & {
   parentCompanyRole?: CompanyRole | null;
 };
@@ -1076,10 +1069,6 @@ export type CompanyRoleWithParent = CompanyRole & {
 export type UserRoleAssignmentWithUserAndRole = UserRoleAssignment & {
   user: User;
   companyRole: CompanyRole;
-};
-
-export type ProductWithUom = Product & {
-  salesUomName: string;
 };
 
 export type LicenceAgreementTemplateWithLicence = LicenceAgreementTemplate & {

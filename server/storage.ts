@@ -10,7 +10,6 @@ import {
   type AccountWithOwner,
   type Asset,
   type InsertAsset,
-  type AssetWithRelations,
   type User,
   type UpsertUser,
   type CompanyRole,
@@ -25,7 +24,6 @@ import {
   type InsertUnitOfMeasure,
   type Product,
   type InsertProduct,
-  type ProductWithUom,
   type Translation,
   type InsertTranslation,
   type Quote,
@@ -225,8 +223,8 @@ export interface IStorage {
   deleteUnitOfMeasure(id: string): Promise<boolean>;
 
   // Product methods
-  getProducts(companyContext?: string): Promise<ProductWithUom[]>;
-  getProduct(id: string, companyContext?: string): Promise<ProductWithUom | undefined>;
+  getProducts(companyContext?: string): Promise<Product[]>;
+  getProduct(id: string, companyContext?: string): Promise<Product | undefined>;
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(
     id: string,
@@ -753,25 +751,25 @@ export class DatabaseStorage implements IStorage {
     companyContext?: string,
     sortBy?: string,
     sortOrder?: string,
-  ): Promise<AssetWithRelations[]> {
+  ): Promise<Asset[]> {
     return this.assetStorage.getAssets(companyContext, sortBy, sortOrder);
   }
 
   async searchAssets(
     companyContext: string | undefined,
     searchTerm?: string,
-  ): Promise<AssetWithRelations[]> {
+  ): Promise<Asset[]> {
     return this.assetStorage.searchAssets(companyContext, searchTerm);
   }
 
-  async getAsset(id: string, companyContext: string): Promise<AssetWithRelations | undefined> {
+  async getAsset(id: string, companyContext: string): Promise<Asset | undefined> {
     return this.assetStorage.getAsset(id, companyContext);
   }
 
   async getAssetsByAccount(
     accountId: string,
     companyContext?: string,
-  ): Promise<AssetWithRelations[]> {
+  ): Promise<Asset[]> {
     return this.assetStorage.getAssetsByAccount(accountId, companyContext);
   }
 

@@ -27,7 +27,7 @@
  */
 
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
-import type { AssetWithDetails } from "@shared/schema";
+import type { Asset } from "@shared/schema";
 
 // ============================================================================
 // PROPS INTERFACE
@@ -73,7 +73,7 @@ export default function Assets({ deps, objectCode }: AssetsTableProps) {
     sortOrder,
     handleSort,
     handleDelete,
-  } = useObjectList<AssetWithDetails>({
+  } = useObjectList<Asset>({
     objectCode,
     defaultSortBy: "serialNumber",
     labelSingular: "Asset",

@@ -1,5 +1,5 @@
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
-import type { ProductWithUom } from "@shared/schema";
+import type { Product } from "@shared/schema";
 
 
 interface ProductsTableProps {
@@ -16,7 +16,7 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
     Button, Input, Card, CardContent, Skeleton,
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
   } = deps.components;
-  const { TextField, NumberField, DateTimeField, LookupFormField } = deps.fields;
+  const { TextField, NumberField, DateTimeField, LookupFormField, CheckboxField } = deps.fields;
   const { Package, Search, Plus, Edit, Trash2, ArrowUp, ArrowDown } = deps.icons;
   const { Link } = deps.routing;
   const { useObjectList, useSortDirection } = deps.hooks;
@@ -35,7 +35,7 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
     sortOrder,
     handleSort,
     handleDelete,
-  } = useObjectList<ProductWithUom>({
+  } = useObjectList<Product>({
     objectCode,
     defaultSortBy: "serialNumber",
     labelSingular: "Product",
@@ -130,6 +130,7 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
                         <TableRow>
                           
                           <TableHead>Name</TableHead>
+                          <TableHead>UoM</TableHead>
                           
                           
                           <TableHead className="text-right">Actions</TableHead>
@@ -150,6 +151,19 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
                                 objectCode="product"
                                 fieldCode="productName"
                                 value={product.productName || "-"}
+                                linkPath="/products"
+                                recordId={product.id}
+                              />
+                            </TableCell>
+                            
+                            {/* UoM */}
+                            <TableCell>
+                              <LookupFormField
+                                mode="table"
+                                objectCode="products"
+                                fieldCode="salesUomId"
+                                value={product.salesUomId || "-"}
+                                onRecordClick={(id) => window.location.href = `/accounts/${id}`}
                               />
                             </TableCell>
 

@@ -54,7 +54,7 @@ export default function Assets({ deps, objectCode }: AssetsTableProps) {
     Button, Input, Card, CardContent, Skeleton,
     Table, TableBody, TableCell, TableHead, TableHeader, TableRow 
   } = deps.components;
-  const { TextField, NumberField, DateTimeField, LookupFormField } = deps.fields;
+  const { TextField, NumberField, DateTimeField, LookupFormField, CheckboxField } = deps.fields;
   const { Package, Search, Plus, Edit, Trash2, ArrowUp, ArrowDown } = deps.icons;
   const { Link } = deps.routing;
   const { useObjectList, useSortDirection } = deps.hooks;

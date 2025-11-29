@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>LookupField</type>
+  <apiCode>salesUomId</apiCode>
+  <label>Sales Unit of Measure</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <referencedObject>unit-of-measures</referencedObject>
+  <primaryDisplayField>uomName</primaryDisplayField>
+  <displayColumns>uomName</displayColumns>
+</FieldDefinition>

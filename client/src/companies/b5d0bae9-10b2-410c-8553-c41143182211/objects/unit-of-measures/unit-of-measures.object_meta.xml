@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ObjectDefinition xmlns="">
+  <apiCode>unit-of-measures</apiCode>
+  <labelPlural>Unit of Measures</labelPlural>
+  <labelSingular>Unit of Measure</labelSingular>
+  <iconSet>Lucide</iconSet>
+  <icon>Ruler</icon>
+</ObjectDefinition>

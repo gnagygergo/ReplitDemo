@@ -53,7 +53,7 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
   // ---------------------------------------------------------------------------
   
   const { Button, Card, CardContent, CardHeader, CardTitle, Form, FormField, FormItem, FormMessage } = deps.components;
-  const { TextField, NumberField, DateTimeField, AddressField, LookupFormField } = deps.fields;
+  const { TextField, NumberField, DateTimeField, AddressField, LookupFormField, CheckboxField } = deps.fields;
   const { Panel, PanelGroup, PanelResizeHandle } = deps.panels;
   const { Package, Edit, Save, X } = deps.icons;
   const { Link } = deps.routing;

@@ -117,7 +117,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
               className="text-3xl font-bold text-foreground"
               data-testid="text-product-serial-number"
             >
-              {isCreating ? "New Product" : product?.number}
+              {isCreating ? "New Product" : product?.name}
             </h1>
             <p
               className="text-muted-foreground"

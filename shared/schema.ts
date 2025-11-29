@@ -315,7 +315,7 @@ export const quoteLines = pgTable("quote_lines", {
   productId: varchar("product_id").references(() => products.id, {
     onDelete: "restrict",
   }),
-  productName: text("product_name"),
+  name: text("name"),
   productUnitPrice: decimal("product_unit_price", { precision: 12, scale: 3 }),
   unitPriceCurrency: text("unit_price_currency"),
   productUnitPriceOverride: decimal("product_unit_price_override", {
@@ -765,18 +765,6 @@ export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)
 export const insertProductSchema = createInsertSchema(products)
   .omit({
     id: true,
-  })
-  .extend({
-    salesCategory: z.enum(["Saleable", "Quoting only"]),
-    productName: z.string().min(1, "Product name is required"),
-    salesUomId: z.string().min(1, "Sales UoM is required"),
-    salesUnitPrice: optionalNumeric.refine((val) => val === null || val >= 0, {
-      message: "Sales unit price must be 0 or greater",
-    }),
-    salesUnitPriceCurrency: z.string().min(1, "Currency is required"),
-    vatPercent: optionalNumeric.refine((val) => val === null || (val >= 0 && val <= 100), {
-      message: "VAT % must be between 0 and 100",
-    }),
   });
 
 export const insertTranslationSchema = createInsertSchema(translations)

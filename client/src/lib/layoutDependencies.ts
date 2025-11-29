@@ -113,6 +113,7 @@ import { TextField } from "@/components/ui/text-field";
 import { NumberField } from "@/components/ui/number-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { AddressField } from "@/components/ui/address-field";
+import { CheckboxField } from "@/components/ui/checkbox-field";
 import LookupFormField from "@/components/ui/lookup-form-field";
 import { DropDownListField } from "@/components/ui/dropdown-list-field";
 
@@ -341,6 +342,7 @@ export const fields = {
   NumberField,
   DateTimeField,
   AddressField,
+  CheckboxField,
   LookupFormField,
   DropDownListField,
 };

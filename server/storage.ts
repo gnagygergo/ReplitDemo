@@ -8,8 +8,6 @@ import {
   type OpportunityWithAccount,
   type OpportunityWithAccountAndOwner,
   type AccountWithOwner,
-  type Asset,
-  type InsertAsset,
   type User,
   type UpsertUser,
   type CompanyRole,
@@ -22,8 +20,6 @@ import {
   type InsertRelease,
   type UnitOfMeasure,
   type InsertUnitOfMeasure,
-  type Product,
-  type InsertProduct,
   type Translation,
   type InsertTranslation,
   type Quote,
@@ -55,13 +51,11 @@ import {
   companySettings,
   accounts,
   opportunities,
-  assets,
   users,
   companyRoles,
   userRoleAssignments,
   releases,
   unitOfMeasures,
-  products,
   translations,
   quotes,
   quoteLines,
@@ -80,8 +74,6 @@ import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { QuoteLineStorage } from "./business-objects-routes/quote-line-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
 import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
-import { AssetStorage } from "./business-objects-routes/asset-storage";
-import { ProductStorage } from "./business-objects-routes/product-storage";
 import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -221,17 +213,6 @@ export interface IStorage {
     unitOfMeasure: Partial<InsertUnitOfMeasure>,
   ): Promise<UnitOfMeasure | undefined>;
   deleteUnitOfMeasure(id: string): Promise<boolean>;
-
-  // Product methods
-  getProducts(companyContext?: string): Promise<Product[]>;
-  getProduct(id: string, companyContext?: string): Promise<Product | undefined>;
-  createProduct(product: InsertProduct): Promise<Product>;
-  updateProduct(
-    id: string,
-    product: Partial<InsertProduct>,
-    companyContext?: string,
-  ): Promise<Product | undefined>;
-  deleteProduct(id: string, companyContext?: string): Promise<boolean>;
 
   // Translation methods (Global - no company context)
   getTranslations(): Promise<Translation[]>;
@@ -383,8 +364,6 @@ export class DatabaseStorage implements IStorage {
   private quoteLineStorage: QuoteLineStorage;
   private accountStorage: AccountStorage;
   private opportunityStorage: OpportunityStorage;
-  private assetStorage: AssetStorage;
-  private productStorage: ProductStorage;
 
   constructor() {
     this.quoteStorage = new QuoteStorage(
@@ -398,8 +377,6 @@ export class DatabaseStorage implements IStorage {
       this.getAccount.bind(this),
       this.getUser.bind(this)
     );
-    this.assetStorage = new AssetStorage();
-    this.productStorage = new ProductStorage();
   }
 
   // Method called by all GETTERs of business objects

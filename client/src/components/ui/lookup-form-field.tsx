@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { X, ExternalLink } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { FormLabel } from "@/components/ui/form";
@@ -44,6 +45,7 @@ export default function LookupFormField({
   testId,
 }: LookupFormFieldProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   const handleSelect = (record: any) => {
     onChange?.(record.id);
@@ -95,8 +97,12 @@ export default function LookupFormField({
     : [];
 
   const handleRecordClick = () => {
-    if (value && onRecordClick) {
-      onRecordClick(value);
+    if (value) {
+      if (onRecordClick) {
+        onRecordClick(value);
+      } else if (metadata?.referencedObject) {
+        setLocation(`/${metadata.referencedObject}/${value}`);
+      }
     }
   };
 
@@ -139,6 +145,7 @@ export default function LookupFormField({
                 <IconComponent className="w-3 h-3 text-primary" />
               </div>
               <button
+                type="button"
                 onClick={handleRecordClick}
                 className="text-primary hover:underline flex items-center gap-1 font-medium"
                 data-testid={mergedTestId}
@@ -155,7 +162,7 @@ export default function LookupFormField({
     );
   }
 
-  // Table Mode - Display icon and name inline
+  // Table Mode - Display icon and name inline (always clickable for navigation)
   if (mode === "table") {
     if (isLoadingRecord) {
       return <Skeleton className="h-6 w-32" />;
@@ -165,31 +172,19 @@ export default function LookupFormField({
       return <span className="text-muted-foreground text-sm" data-testid={mergedTestId}>-</span>;
     }
 
-    // Render as clickable button if onRecordClick is provided
-    if (onRecordClick) {
-      return (
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-            <IconComponent className="w-3 h-3 text-primary" />
-          </div>
-          <button
-            onClick={handleRecordClick}
-            className="font-medium text-sm text-primary hover:underline"
-            data-testid={mergedTestId}
-          >
-            {primaryDisplayValue}
-          </button>
-        </div>
-      );
-    }
-
-    // Otherwise render as plain text
     return (
       <div className="flex items-center gap-2">
         <div className="w-5 h-5 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
           <IconComponent className="w-3 h-3 text-primary" />
         </div>
-        <span className="font-medium text-sm" data-testid={mergedTestId}>{primaryDisplayValue}</span>
+        <button
+          type="button"
+          onClick={handleRecordClick}
+          className="font-medium text-sm text-primary hover:underline"
+          data-testid={mergedTestId}
+        >
+          {primaryDisplayValue}
+        </button>
       </div>
     );
   }

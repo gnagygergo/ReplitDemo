@@ -51,7 +51,7 @@ export default function Quotes() {
 
   const filteredQuotes = quotes.filter((quote) => {
     const matchesSearch = 
-      (quote.quoteName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quote.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (quote.customerName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (quote.sellerName || "").toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
@@ -67,7 +67,7 @@ export default function Quotes() {
   };
 
   const handleDelete = (quote: Quote) => {
-    if (confirm(`Are you sure you want to delete quote "${quote.quoteName}"?`)) {
+    if (confirm(`Are you sure you want to delete quote "${quote.name}"?`)) {
       deleteMutation.mutate(quote.id);
     }
   };
@@ -119,14 +119,14 @@ export default function Quotes() {
                 <TableHead> {/* Added for sorting capability on Tables */}
                   <div 
                     className="flex items-center gap-1 cursor-pointer hover:text-foreground"
-                    onClick={() => handleSort('quoteName')}
-                    data-testid="header-sort-quoteName"
+                    onClick={() => handleSort('name')}
+                    data-testid="header-sort-name"
                   >
                     <span>Quote Name</span>
-                    {sortBy === 'quoteName' && (
+                    {sortBy === 'name' && (
                       sortOrder === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
                     )}
-                    {sortBy !== 'quoteName' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
+                    {sortBy !== 'name' && <ArrowUpDown className="h-4 w-4 opacity-50" />}
                   </div>
                 </TableHead>
                 <TableHead>Customer</TableHead>
@@ -215,7 +215,7 @@ export default function Quotes() {
                         <div>
                           <Link href={`/quotes/${quote.id}`}>
                             <div className="text-sm font-medium text-foreground hover:text-primary cursor-pointer" data-testid={`link-quote-name-${quote.id}`}>
-                              {quote.quoteName}
+                              {quote.name}
                             </div>
                           </Link>
                           <div className="text-sm text-muted-foreground">Quote</div>

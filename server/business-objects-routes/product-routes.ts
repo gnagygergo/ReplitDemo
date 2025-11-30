@@ -2,15 +2,17 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { insertProductSchema } from "@shared/schema";
+import { ProductStorage } from "./product-storage";
 import type { IStorage } from "../storage";
 import { isAuthenticated } from "../replitAuth";
 
 export function registerProductRoutes(app: Express, storage: IStorage) {
-  // Product routes respecting company context
+  const productStorage = new ProductStorage();
   app.get("/api/products", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const products = await storage.getProducts(companyContext || undefined);
+      
+      const products = await productStorage.getProducts(companyContext || undefined);
       res.json(products);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -21,7 +23,8 @@ export function registerProductRoutes(app: Express, storage: IStorage) {
   app.get("/api/products/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const product = await storage.getProduct(
+      
+      const product = await productStorage.getProduct(
         req.params.id,
         companyContext || undefined,
       );
@@ -38,7 +41,6 @@ export function registerProductRoutes(app: Express, storage: IStorage) {
   app.post("/api/products", isAuthenticated, async (req: any, res) => {
     try {
       const validatedData = insertProductSchema.parse(req.body);
-
       const sessionUser = (req.session as any).user;
       let currentUserId;
 
@@ -63,8 +65,7 @@ export function registerProductRoutes(app: Express, storage: IStorage) {
         ...validatedData,
         companyId: user.companyContext,
       };
-
-      const product = await storage.createProduct(productData);
+      const product = await productStorage.createProduct(productData);
       res.status(201).json(product);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -81,7 +82,7 @@ export function registerProductRoutes(app: Express, storage: IStorage) {
     try {
       const companyContext = await storage.GetCompanyContext(req);
       const validatedData = insertProductSchema.partial().parse(req.body);
-      const product = await storage.updateProduct(
+      const product = await productStorage.updateProduct(
         req.params.id,
         validatedData,
         companyContext || undefined,
@@ -104,7 +105,7 @@ export function registerProductRoutes(app: Express, storage: IStorage) {
   app.delete("/api/products/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const deleted = await storage.deleteProduct(
+      const deleted = await productStorage.deleteProduct(
         req.params.id,
         companyContext || undefined,
       );

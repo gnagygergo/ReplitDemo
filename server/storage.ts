@@ -746,49 +746,6 @@ export class DatabaseStorage implements IStorage {
     return this.opportunityStorage.deleteOpportunity(id);
   }
 
-  // Asset methods
-  async getAssets(
-    companyContext?: string,
-    sortBy?: string,
-    sortOrder?: string,
-  ): Promise<Asset[]> {
-    return this.assetStorage.getAssets(companyContext, sortBy, sortOrder);
-  }
-
-  async searchAssets(
-    companyContext: string | undefined,
-    searchTerm?: string,
-  ): Promise<Asset[]> {
-    return this.assetStorage.searchAssets(companyContext, searchTerm);
-  }
-
-  async getAsset(id: string, companyContext: string): Promise<Asset | undefined> {
-    return this.assetStorage.getAsset(id, companyContext);
-  }
-
-  async getAssetsByAccount(
-    accountId: string,
-    companyContext?: string,
-  ): Promise<Asset[]> {
-    return this.assetStorage.getAssetsByAccount(accountId, companyContext);
-  }
-
-  async createAsset(insertAsset: InsertAsset, companyId: string): Promise<Asset> {
-    return this.assetStorage.createAsset(insertAsset, companyId);
-  }
-
-  async updateAsset(
-    id: string,
-    updates: Partial<InsertAsset>,
-    companyContext: string,
-  ): Promise<Asset | undefined> {
-    return this.assetStorage.updateAsset(id, updates, companyContext);
-  }
-
-  async deleteAsset(id: string, companyContext: string): Promise<boolean> {
-    return this.assetStorage.deleteAsset(id, companyContext);
-  }
-
   // Company Role methods
   async getCompanyRoles(): Promise<CompanyRoleWithParent[]> {
     const parentRole = alias(companyRoles, "parent_role");
@@ -1186,31 +1143,6 @@ export class DatabaseStorage implements IStorage {
         ),
       );
     return (result.rowCount ?? 0) > 0;
-  }
-
-  // Product methods
-  async getProducts(companyContext?: string): Promise<Product[]> {
-    return this.productStorage.getProducts(companyContext);
-  }
-
-  async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
-    return this.productStorage.getProduct(id, companyContext);
-  }
-
-  async createProduct(insertProduct: InsertProduct): Promise<Product> {
-    return this.productStorage.createProduct(insertProduct);
-  }
-
-  async updateProduct(
-    id: string,
-    updates: Partial<InsertProduct>,
-    companyContext?: string,
-  ): Promise<Product | undefined> {
-    return this.productStorage.updateProduct(id, updates, companyContext);
-  }
-
-  async deleteProduct(id: string, companyContext?: string): Promise<boolean> {
-    return this.productStorage.deleteProduct(id, companyContext);
   }
 
   // Translation methods (Global - no company context filtering)

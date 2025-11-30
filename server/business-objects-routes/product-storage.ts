@@ -1,7 +1,8 @@
+//Product Storage - methods don't contain specific fields. This is a generic storage class, meeting standardization requirements.
 import { db } from "../db";
 import { products } from "@shared/schema";
 import type { Product, InsertProduct } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, getTableColumns } from "drizzle-orm";
 
 export class ProductStorage {
   async getProducts(companyContext?: string): Promise<Product[]> {
@@ -10,22 +11,12 @@ export class ProductStorage {
     }
 
     const result = await db
-      .select({
-        id: products.id,
-        salesCategory: products.salesCategory,
-        name: products.name,
-        salesUomId: products.salesUomId,
-        salesUnitPrice: products.salesUnitPrice,
-        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
-        vatPercent: products.vatPercent,
-        companyId: products.companyId,
-        
-      })
+      .select(getTableColumns(products))
       .from(products)
       .where(eq(products.companyId, companyContext))
       .orderBy(products.name);
 
-    return result as Product[];
+    return result;
   }
 
   async getProduct(id: string, companyContext?: string): Promise<Product | undefined> {
@@ -34,20 +25,11 @@ export class ProductStorage {
     }
 
     const [product] = await db
-      .select({
-        id: products.id,
-        salesCategory: products.salesCategory,
-        name: products.name,
-        salesUomId: products.salesUomId,
-        salesUnitPrice: products.salesUnitPrice,
-        salesUnitPriceCurrency: products.salesUnitPriceCurrency,
-        vatPercent: products.vatPercent,
-        companyId: products.companyId,
-        
-      })
+      .select(getTableColumns(products))
       .from(products)
       .where(and(eq(products.id, id), eq(products.companyId, companyContext)));
-    return product as Product | undefined;
+
+    return product;
   }
 
   async createProduct(insertProduct: InsertProduct): Promise<Product> {

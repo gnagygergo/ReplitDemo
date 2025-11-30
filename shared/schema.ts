@@ -295,7 +295,7 @@ export const quotes = pgTable("quotes", {
   sellerBankAccount: text("seller_bank_account"),
   sellerUserId: varchar("seller_user_id"),
   sellerEmail: text("seller_email"),
-  sellerPhone: text("seller_phone"),
+  sellerPhone: varchar("seller_phone"),
   quoteExpirationDate: date("quote_expiration_date"),
   createdBy: varchar("created_by"),
   createdDate: timestamp("created_date").defaultNow(),

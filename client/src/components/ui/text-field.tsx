@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { Copy, Check } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
+import { PhoneField } from "@/components/ui/phone-field";
 
 export interface TextFieldProps {
   mode: "edit" | "view" | "table";
@@ -82,6 +83,19 @@ export function TextField({
   const defaultEditClassName = "w-full";
   const defaultViewClassName = "text-sm py-2";
   const defaultTableClassName = "text-sm";
+
+  if (fieldDef?.subtype === "phone") {
+    return (
+      <PhoneField
+        mode={mode}
+        value={value}
+        onChange={onChange}
+        label={mergedLabel}
+        testId={mergedTestId}
+        className={className}
+      />
+    );
+  }
 
   if (mode === "edit") {
     // Use Textarea for multi-line input

@@ -111,6 +111,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { TextField } from "@/components/ui/text-field";
 import { NumberField } from "@/components/ui/number-field";
+import { PhoneField } from "@/components/ui/phone-field";
 import { DateTimeField } from "@/components/ui/date-time-field";
 import { AddressField } from "@/components/ui/address-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
@@ -340,6 +341,7 @@ export const components = {
 export const fields = {
   TextField,
   NumberField,
+  PhoneField,
   DateTimeField,
   AddressField,
   CheckboxField,

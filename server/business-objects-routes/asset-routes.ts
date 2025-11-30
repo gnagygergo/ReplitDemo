@@ -11,7 +11,6 @@ export function registerAssetRoutes(app: Express, storage: IStorage) {
   app.get("/api/assets", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-
       const assets = await assetStorage.getAssets(companyContext || undefined);
       res.json(assets);
     } catch (error) {

@@ -1,3 +1,4 @@
+// Standardized Layout
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
 
 // ============================================================================

@@ -1,3 +1,4 @@
+//Product Routes - don't contain specific fields. This is a generic codebase, meeting standardization requirements.
 import type { Express } from "express";
 import { z } from "zod";
 import { insertProductSchema } from "@shared/schema";

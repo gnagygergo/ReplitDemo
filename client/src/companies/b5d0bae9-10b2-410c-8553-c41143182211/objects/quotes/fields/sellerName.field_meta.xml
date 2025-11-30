@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>sellerName</apiCode>
+  <label>Seller Name</label>
+  <helpText>The name of the company that issues this Quote.</helpText>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>text</subtype>
+  <maxLength>255</maxLength>
+  <copyAble>false</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView/>
+  <visibleLinesInEdit/>
+</FieldDefinition>

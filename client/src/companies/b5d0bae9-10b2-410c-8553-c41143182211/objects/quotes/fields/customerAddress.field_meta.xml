@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>AddressField</type>
+  <apiCode>customerAddress</apiCode>
+  <label>Customer Address</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <streetAddressColumn>customerAddressStreetAddress</streetAddressColumn>
+  <cityColumn>customerAddressCity</cityColumn>
+  <stateProvinceColumn>customerAddressStateProvince</stateProvinceColumn>
+  <zipCodeColumn>customerAddressZipCode</zipCodeColumn>
+  <countryColumn>customerAddressCountry</countryColumn>
+</FieldDefinition>

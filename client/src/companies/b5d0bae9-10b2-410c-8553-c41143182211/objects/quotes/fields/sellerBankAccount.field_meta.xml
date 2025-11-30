@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>TextField</type>
+  <apiCode>sellerBankAccount</apiCode>
+  <label>Seller Bank Account</label>
+  <helpText>This value is coming from the company settings. </helpText>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>text</subtype>
+  <maxLength>255</maxLength>
+  <copyAble>true</copyAble>
+  <truncate>false</truncate>
+  <visibleLinesInView/>
+  <visibleLinesInEdit/>
+</FieldDefinition>

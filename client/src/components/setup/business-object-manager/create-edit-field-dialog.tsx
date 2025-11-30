@@ -443,11 +443,11 @@ export function CreateEditFieldDialog({
   useEffect(() => {
     if (selectedFieldType === "AddressField" && !fieldToEdit) {
       if (apiCode) {
-        form.setValue("streetAddressColumn", `${apiCode}_street_address`);
-        form.setValue("cityColumn", `${apiCode}_city`);
-        form.setValue("stateProvinceColumn", `${apiCode}_state_province`);
-        form.setValue("zipCodeColumn", `${apiCode}_zip_code`);
-        form.setValue("countryColumn", `${apiCode}_country`);
+        form.setValue("streetAddressColumn", `${apiCode}StreetAddress`);
+        form.setValue("cityColumn", `${apiCode}City`);
+        form.setValue("stateProvinceColumn", `${apiCode}StateProvince`);
+        form.setValue("zipCodeColumn", `${apiCode}ZipCode`);
+        form.setValue("countryColumn", `${apiCode}Country`);
       } else {
         // Reset to empty strings when apiCode is cleared
         form.setValue("streetAddressColumn", "");
@@ -1267,11 +1267,11 @@ export function CreateEditFieldDialog({
                           The API Code you enter will be used as a prefix to automatically generate 5 database columns:
                         </p>
                         <div className="mt-2 space-y-1 text-xs font-mono bg-background rounded p-2">
-                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_street_address</span></div>
-                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_city</span></div>
-                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_state_province</span></div>
-                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_zip_code</span></div>
-                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}_country</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}StreetAddress</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}City</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}StateProvince</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}ZipCode</span></div>
+                          <div><span className="text-primary">{form.watch("apiCode") || "prefix"}Country</span></div>
                         </div>
                       </div>
                     </div>

@@ -280,19 +280,20 @@ export const quotes = pgTable("quotes", {
   id: varchar("id")
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  quoteName: text("quote_name"),
-  customerId: varchar("customer_id").references(() => accounts.id, {
-    onDelete: "restrict",
-  }),
+  name: text("name"),
+  customerId: varchar("customer_id"),
   customerName: text("customer_name"),
   customerAddress: text("customer_address"),
+  customerAddressCity:text("customer_address_city"),
+  customerAddressStreetAddress: text("customer_address_street_address"),
+  customerAddressStateProvince: text("customer_address_state_province"),
+  customerAddressZipCode: text("customer_address_zip_code"),
+  customerAddressCountry: text("customer_address_country"),
   companyId: varchar("company_id"),
   sellerName: text("seller_name"),
   sellerAddress: text("seller_address"),
   sellerBankAccount: text("seller_bank_account"),
-  sellerUserId: varchar("seller_user_id").references(() => users.id, {
-    onDelete: "restrict",
-  }),
+  sellerUserId: varchar("seller_user_id"),
   sellerEmail: text("seller_email"),
   sellerPhone: text("seller_phone"),
   quoteExpirationDate: date("quote_expiration_date"),
@@ -779,15 +780,6 @@ export const insertQuoteSchema = createInsertSchema(quotes)
   .omit({
     id: true,
     createdDate: true,
-  })
-  .extend({
-    customerName: z.string().min(0),
-    createdBy: z.string().min(1, "Created by is required"),
-    quoteExpirationDate: optionalDate,
-    netGrandTotal: optionalNumeric,
-    grossGrandTotal: optionalNumeric,
-    customerId: optionalForeignKey,
-    sellerUserId: optionalForeignKey,
   });
 
 export const insertQuoteLineSchema = createInsertSchema(quoteLines)

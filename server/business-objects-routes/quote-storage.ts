@@ -1,102 +1,43 @@
+//Quote Storage - methods don't contain specific fields. This is a generic storage class, meeting standardization requirements.
 import { db } from "../db";
 import { quotes } from "@shared/schema";
-import { sql } from "drizzle-orm";
-import { quoteLines } from "@shared/schema";
-import type {
-  Quote,
-  InsertQuote,
-  AccountWithOwner,
-  Company,
-  User,
-} from "@shared/schema";
-import { eq, and, asc, desc } from "drizzle-orm";
+import type { Quote, InsertQuote } from "@shared/schema";
+import { eq, and, getTableColumns } from "drizzle-orm";
 
 export class QuoteStorage {
-  private getAccount: (id: string) => Promise<AccountWithOwner | undefined>;
-  private getCompany: (id: string) => Promise<Company | undefined>;
-  private getUser: (id: string) => Promise<User | undefined>;
-
-  constructor(
-    getAccountFn: (id: string) => Promise<AccountWithOwner | undefined>,
-    getCompanyFn: (id: string) => Promise<Company | undefined>,
-    getUserFn: (id: string) => Promise<User | undefined>,
-  ) {
-    this.getAccount = getAccountFn;
-    this.getCompany = getCompanyFn;
-    this.getUser = getUserFn;
-  }
-
-  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> { // Added sortBy, sortOrder for sorting capability on Tables
+  async getQuotes(companyContext?: string): Promise<Quote[]> {
     if (!companyContext) {
       return [];
     }
 
-    // Added for sorting capability on Tables - Determine sort column - default to 'createdDate'
-    let sortColumn;
-    if (sortBy === 'quoteName') {
-      sortColumn = quotes.quoteName;
-    } else if (sortBy === 'quoteExpirationDate') {
-      sortColumn = quotes.quoteExpirationDate;
-    } else {
-      sortColumn = quotes.createdDate;
-    }
-
-    // Added for sorting capability on Tables - Determine sort direction - default to 'desc' for createdDate
-    const orderDirection = sortOrder === 'asc' ? asc : desc;
-
-    return await db
-      .select()
+    const result = await db
+      .select(getTableColumns(quotes))
       .from(quotes)
       .where(eq(quotes.companyId, companyContext))
-      .orderBy(orderDirection(sortColumn)); // Added for sorting capability on Tables
+      .orderBy(quotes.name);
+
+    return result;
   }
 
-  async getQuote(
-    id: string,
-    companyContext?: string,
-  ): Promise<Quote | undefined> {
+  async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {
     if (!companyContext) {
       return undefined;
     }
 
     const [quote] = await db
-      .select()
+      .select(getTableColumns(quotes))
       .from(quotes)
       .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)));
-    return quote || undefined;
+
+    return quote;
   }
 
-  async createQuote(quote: InsertQuote): Promise<Quote> {
-    // If customerId is provided, auto-populate customer fields from Account
-    if (quote.customerId && quote.customerId.trim() !== "") {
-      const account = await this.getAccount(quote.customerId);
-      if (account) {
-        quote.customerName = account.name;
-        quote.customerAddress = account.address;
-      }
-    }
-
-    // If companyId is provided, auto-populate seller fields from Company
-    if (quote.companyId && quote.companyId.trim() !== "") {
-      const company = await this.getCompany(quote.companyId);
-      if (company) {
-        quote.sellerName = company.companyOfficialName;
-        quote.sellerBankAccount = company.bankAccountNumber;
-        quote.sellerAddress = company.address;
-      }
-    }
-
-    // If createdBy is provided, auto-populate seller phone and email from User
-    if (quote.createdBy && quote.createdBy.trim() !== "") {
-      const user = await this.getUser(quote.createdBy);
-      if (user) {
-        quote.sellerPhone = user.phone;
-        quote.sellerEmail = user.email;
-      }
-    }
-
-    const [newQuote] = await db.insert(quotes).values(quote).returning();
-    return newQuote;
+  async createQuote(insertQuote: InsertQuote): Promise<Quote> {
+    const [quote] = await db
+      .insert(quotes)
+      .values(insertQuote as any)
+      .returning();
+    return quote;
   }
 
   async updateQuote(
@@ -108,9 +49,12 @@ export class QuoteStorage {
       return undefined;
     }
 
+    // Remove companyId from updates - it cannot be changed once set
+    const { companyId, ...allowedUpdates } = updates as any;
+
     const [quote] = await db
       .update(quotes)
-      .set(updates)
+      .set(allowedUpdates)
       .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)))
       .returning();
     return quote || undefined;
@@ -125,77 +69,5 @@ export class QuoteStorage {
       .delete(quotes)
       .where(and(eq(quotes.id, id), eq(quotes.companyId, companyContext)));
     return (result.rowCount ?? 0) > 0;
-  }
-
-  async getQuotesByCustomer(
-    customerId: string,
-    companyContext?: string,
-  ): Promise<Quote[]> {
-    if (!companyContext) {
-      return [];
-    }
-
-    return await db
-      .select()
-      .from(quotes)
-      .where(
-        and(
-          eq(quotes.customerId, customerId),
-          eq(quotes.companyId, companyContext),
-        ),
-      )
-      .orderBy(quotes.createdDate);
-  }
-
-
-  /**
-   * Recalculate and persist quote totals (netGrandTotal and grossGrandTotal)
-   * using a single SQL aggregation query, scoped to companyContext.
-   *
-   * - netGrandTotal := SUM(quote_lines.finalSubtotal)
-   * - grossGrandTotal := SUM(quote_lines.grossSubtotal)
-   *
-   * Returns the updated Quote or undefined if companyContext is not provided
-   * or the quote does not belong to the companyContext.
-   */
-  async updateQuoteTotals(
-    quoteId: string,
-    companyContext?: string,
-  ): Promise<Quote | undefined> {
-    if (!companyContext) {
-      return undefined;
-    }
-
-    // Ensure the target quote belongs to the requested company context
-    const [quoteExists] = await db
-      .select()
-      .from(quotes)
-      .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)));
-
-    if (!quoteExists) {
-      return undefined;
-    }
-
-    // Single aggregation query to compute the sums (coalesce to 0 if no rows)
-    const [agg] = await db
-      .select({
-        netGrandTotal: sql`coalesce(sum(${quoteLines.finalSubtotal}), 0)`,
-        grossGrandTotal: sql`coalesce(sum(${quoteLines.grossSubtotal}), 0)`,
-      })
-      .from(quoteLines)
-      .where(eq(quoteLines.quoteId, quoteId));
-
-    // Persist the aggregated totals back to the quotes table (scoped by company)
-    // Convert to string since decimal fields expect string type
-    const [updated] = await db
-      .update(quotes)
-      .set({
-        netGrandTotal: String(agg.netGrandTotal ?? 0),
-        grossGrandTotal: String(agg.grossGrandTotal ?? 0),
-      })
-      .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)))
-      .returning();
-
-    return updated || undefined;
   }
 }

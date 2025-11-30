@@ -1,17 +1,17 @@
+//Quote Routes - don't contain specific fields. This is a generic codebase, meeting standardization requirements.
 import type { Express } from "express";
 import { z } from "zod";
-import { isAuthenticated } from "../replitAuth";
 import { insertQuoteSchema } from "@shared/schema";
+import { QuoteStorage } from "./quote-storage";
 import type { IStorage } from "../storage";
+import { isAuthenticated } from "../replitAuth";
 
 export function registerQuoteRoutes(app: Express, storage: IStorage) {
-  // Quote routes (Company-scoped)
+  const quoteStorage = new QuoteStorage();
   app.get("/api/quotes", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const sortBy = req.query.sortBy as string | undefined; // Added for sorting capability on Tables
-      const sortOrder = req.query.sortOrder as string | undefined; // Added for sorting capability on Tables
-      const quotes = await storage.getQuotes(companyContext || undefined, sortBy, sortOrder); // Added sortBy, sortOrder for sorting capability on Tables
+      const quotes = await quoteStorage.getQuotes(companyContext || undefined);
       res.json(quotes);
     } catch (error) {
       console.error("Error fetching quotes:", error);
@@ -22,7 +22,11 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
   app.get("/api/quotes/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const quote = await storage.getQuote(req.params.id, companyContext || undefined);
+
+      const quote = await quoteStorage.getQuote(
+        req.params.id,
+        companyContext || undefined,
+      );
       if (!quote) {
         return res.status(404).json({ message: "Quote not found" });
       }
@@ -33,36 +37,34 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
     }
   });
 
-  app.post("/api/quotes", isAuthenticated, async (req, res) => {
+  app.post("/api/quotes", isAuthenticated, async (req: any, res) => {
     try {
-      const companyContext = await storage.GetCompanyContext(req);
-      if (!companyContext) {
-        return res.status(400).json({ message: "Company context required" });
-      }
+      const validatedData = insertQuoteSchema.parse(req.body);
+      const sessionUser = (req.session as any).user;
+      let currentUserId;
 
-      console.log("DEBUG POST /api/quotes - Full request body:", JSON.stringify(req.body, null, 2));
-      
-      // Security: Ensure companyId is set from authenticated user's company context
-      const quoteData = {
-        ...req.body,
-        companyId: companyContext, // Override any companyId from request body
-      };
-      
-      console.log("DEBUG - customerId from body:", req.body.customerId, "type:", typeof req.body.customerId);
-      
-      // Convert empty strings to null for optional foreign key fields
-      if (!quoteData.customerId || quoteData.customerId.trim() === '') {
-        console.log("DEBUG - Converting empty customerId to null");
-        quoteData.customerId = null;
+      if (sessionUser && sessionUser.isDbUser) {
+        currentUserId = sessionUser.id;
       } else {
-        console.log("DEBUG - Keeping customerId:", quoteData.customerId);
-      }
-      if (!quoteData.quoteExpirationDate || quoteData.quoteExpirationDate === '') {
-        quoteData.quoteExpirationDate = null;
+        currentUserId = req.user?.claims?.sub;
       }
 
-      const validatedData = insertQuoteSchema.parse(quoteData);
-      const quote = await storage.createQuote(validatedData);
+      if (!currentUserId) {
+        return res.status(401).json({ message: "User not authenticated" });
+      }
+
+      const user = await storage.getUser(currentUserId);
+      if (!user || !user.companyContext) {
+        return res
+          .status(400)
+          .json({ message: "User has no company context set" });
+      }
+
+      const quoteData = {
+        ...validatedData,
+        companyId: user.companyContext,
+      };
+      const quote = await quoteStorage.createQuote(quoteData);
       res.status(201).json(quote);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -78,32 +80,15 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
   app.patch("/api/quotes/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      
-      // Security: Prevent companyId changes on updates
-      const { companyId, ...allowedUpdates } = req.body;
-      
-      // Convert empty strings to null for optional foreign key fields
-      const updateData = {
-        ...allowedUpdates,
-        ...(allowedUpdates.customerId !== undefined && {
-          customerId: allowedUpdates.customerId?.trim() || null,
-        }),
-        ...(allowedUpdates.quoteExpirationDate !== undefined && {
-          quoteExpirationDate: allowedUpdates.quoteExpirationDate || null,
-        }),
-      };
-      
-      const validatedData = insertQuoteSchema.partial().parse(updateData);
-      const quote = await storage.updateQuote(
+      const validatedData = insertQuoteSchema.partial().parse(req.body);
+      const quote = await quoteStorage.updateQuote(
         req.params.id,
         validatedData,
         companyContext || undefined,
       );
-
       if (!quote) {
         return res.status(404).json({ message: "Quote not found" });
       }
-
       res.json(quote);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -119,7 +104,10 @@ export function registerQuoteRoutes(app: Express, storage: IStorage) {
   app.delete("/api/quotes/:id", isAuthenticated, async (req, res) => {
     try {
       const companyContext = await storage.GetCompanyContext(req);
-      const deleted = await storage.deleteQuote(req.params.id, companyContext || undefined);
+      const deleted = await quoteStorage.deleteQuote(
+        req.params.id,
+        companyContext || undefined,
+      );
       if (!deleted) {
         return res.status(404).json({ message: "Quote not found" });
       }

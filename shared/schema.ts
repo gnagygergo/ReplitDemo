@@ -255,8 +255,7 @@ export const products = pgTable("products", {
     .default(sql`gen_random_uuid()`),
   salesCategory: text("sales_category"),
   name: text("name"),
-  salesUomId: varchar("sales_uom_id")
-    .references(() => unitOfMeasures.id, { onDelete: "restrict" }),
+  salesUomId: varchar("sales_uom_id"),
   salesUnitPrice: decimal("sales_unit_price", {
     precision: 12,
     scale: 3,

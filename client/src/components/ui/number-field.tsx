@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
+import { useCultureFormat } from "@/hooks/useCultureFormat";
 
 export interface NumberFieldProps {
   mode: "edit" | "view" | "table";
@@ -32,24 +33,21 @@ export function NumberField({
   objectCode,
   fieldCode,
 }: NumberFieldProps) {
-  // Internal state to track the string representation during editing
-  // This allows intermediate states like "-", "1.", or "-5." while typing
   const [inputValue, setInputValue] = useState<string>("");
 
-  // Fetch field definition if objectCode and fieldCode are provided
   const { data: fieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
   });
 
-  // Merge field definition with explicit props (explicit props take precedence)
+  const { formatNumber, constrainNumberInput } = useCultureFormat();
+
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
   const mergedStep = step ?? 1;
   const mergedFormat = format ?? fieldDef?.format ?? "number";
   const mergedDecimals = decimals ?? (fieldDef?.decimalPlaces ? parseInt(fieldDef.decimalPlaces) : 2);
   
-  // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
     mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
     : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
@@ -60,8 +58,6 @@ export function NumberField({
   const defaultViewClassName = "text-sm py-2";
   const defaultTableClassName = "text-sm";
 
-  // Sync internal state with prop value
-  // Handle both string and number values for flexibility
   useEffect(() => {
     if (mode === "edit") {
       if (value === null || value === undefined) {
@@ -72,48 +68,22 @@ export function NumberField({
     }
   }, [value, mode]);
 
-  // Convert value to number for formatting (handles both string and number inputs)
-  const getNumericValue = (val: string | number | null): number | null => {
-    if (val === null || val === undefined || val === "") return null;
-    const num = typeof val === "string" ? parseFloat(val) : val;
-    return isNaN(num) ? null : num;
-  };
-
-  const formatNumber = (val: string | number | null): string => {
-    const num = getNumericValue(val);
-    if (num === null) return "-";
-
-    const formattedNum = num.toLocaleString("en-US", {
-      minimumFractionDigits: mergedDecimals,
-      maximumFractionDigits: mergedDecimals,
-    });
-
-    if (mergedFormat === "percentage") {
-      return `${formattedNum}%`;
-    }
-
-    return formattedNum;
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newInputValue = e.target.value;
+    const rawValue = e.target.value;
     
-    // Always update the internal string state to preserve what user types
-    setInputValue(newInputValue);
+    const constrainedValue = constrainNumberInput(rawValue, mergedDecimals);
     
-    // Propagate string value to parent (backend expects strings for decimal fields)
-    if (newInputValue === "") {
+    setInputValue(constrainedValue);
+    
+    if (constrainedValue === "") {
       onChange?.(null);
       return;
     }
     
-    const numValue = Number(newInputValue);
+    const numValue = Number(constrainedValue);
     
-    // Only call onChange when we have a valid finite number
-    // This allows intermediate states like "-" or "1." without clearing the field
-    // Pass the string value directly for backend compatibility with decimal fields
     if (isFinite(numValue)) {
-      onChange?.(newInputValue);
+      onChange?.(constrainedValue);
     }
   };
 
@@ -127,11 +97,11 @@ export function NumberField({
         )}
         <FormControl>
           <Input
-            type="number"
+            type="text"
+            inputMode="decimal"
             value={inputValue}
             onChange={handleChange}
             placeholder={mergedPlaceholder}
-            step={mergedStep}
             className={className || defaultEditClassName}
             data-testid={mergedTestId}
           />
@@ -139,6 +109,11 @@ export function NumberField({
       </>
     );
   }
+
+  const formattedValue = formatNumber(value, {
+    decimalPlaces: mergedDecimals,
+    format: mergedFormat as "number" | "percentage",
+  });
 
   if (mode === "view") {
     return (
@@ -149,7 +124,7 @@ export function NumberField({
           </FormLabel>
         )}
         <div className={className || defaultViewClassName} data-testid={mergedTestId}>
-          {formatNumber(value)}
+          {formattedValue}
         </div>
       </>
     );
@@ -158,7 +133,7 @@ export function NumberField({
   if (mode === "table") {
     return (
       <span className={className || defaultTableClassName} data-testid={mergedTestId}>
-        {formatNumber(value)}
+        {formattedValue}
       </span>
     );
   }

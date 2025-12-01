@@ -1527,17 +1527,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!values || !Array.isArray(values) || values.length === 0) {
         return res.status(400).json({ message: "At least one value is required" });
       }
+      
+      // Validate values array
+      if (values.length > 500) {
+        return res.status(400).json({ message: "Maximum 500 values allowed" });
+      }
+      
+      // Filter and validate individual values
+      const validValues = values
+        .filter(v => typeof v === 'string' && v.trim().length > 0)
+        .map(v => v.trim())
+        .filter(v => v.length <= 255); // Max length per value
+      
+      if (validValues.length === 0) {
+        return res.status(400).json({ message: "At least one valid value is required" });
+      }
 
-      // Validate name format (lowercase, starts with letter)
+      // Validate name format (lowercase, starts with letter, no path separators)
       const cleanName = name.trim();
+      
+      // Security: Reject any path traversal attempts
+      if (cleanName.includes('/') || cleanName.includes('\\') || cleanName.includes('..')) {
+        return res.status(400).json({ 
+          message: "Invalid name: path separators are not allowed" 
+        });
+      }
+      
+      // Strict validation: only allow lowercase letters, numbers, and underscores
       if (!/^[a-z][a-z0-9_]*$/.test(cleanName)) {
         return res.status(400).json({ 
           message: "Name must start with a lowercase letter and contain only lowercase letters, numbers, and underscores" 
         });
       }
+      
+      // Validate name length
+      if (cleanName.length > 100) {
+        return res.status(400).json({ 
+          message: "Name must be 100 characters or less" 
+        });
+      }
 
       // Build the path to the global_value_sets directory
-      const globalValueSetsDir = path.join(
+      const globalValueSetsDir = path.resolve(
         process.cwd(),
         'client/src/companies',
         companyContext,
@@ -1549,9 +1580,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         mkdirSync(globalValueSetsDir, { recursive: true });
       }
 
-      // Check if file already exists
+      // Build file path and verify it stays within the intended directory (extra security layer)
       const fileName = `${cleanName}.globalValueSet-meta.xml`;
-      const filePath = path.join(globalValueSetsDir, fileName);
+      const filePath = path.resolve(globalValueSetsDir, fileName);
+      
+      // Security: Verify the resolved path is still within the global_value_sets directory
+      if (!filePath.startsWith(globalValueSetsDir + path.sep)) {
+        return res.status(400).json({ 
+          message: "Invalid name: path traversal not allowed" 
+        });
+      }
       if (existsSync(filePath)) {
         return res.status(409).json({ message: `Global Value Set '${cleanName}' already exists` });
       }
@@ -1559,17 +1597,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Build the XML content matching the structure of industries.globalValueSet-meta.xml
       let xmlContent = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<GlobalValueSet>\n';
       
-      for (const value of values) {
-        if (typeof value === 'string' && value.trim()) {
-          const cleanValue = value.trim();
-          xmlContent += '  <customValue>\n';
-          xmlContent += `    <label>${escapeXml(cleanValue)}</label>\n`;
-          xmlContent += `    <code>${escapeXml(cleanValue)}</code>\n`;
-          xmlContent += '    <default>false</default>\n';
-          xmlContent += '    <iconSet/>\n';
-          xmlContent += '    <icon/>\n';
-          xmlContent += '  </customValue>\n';
-        }
+      for (const value of validValues) {
+        xmlContent += '  <customValue>\n';
+        xmlContent += `    <label>${escapeXml(value)}</label>\n`;
+        xmlContent += `    <code>${escapeXml(value)}</code>\n`;
+        xmlContent += '    <default>false</default>\n';
+        xmlContent += '    <iconSet/>\n';
+        xmlContent += '    <icon/>\n';
+        xmlContent += '  </customValue>\n';
       }
       
       xmlContent += '</GlobalValueSet>';
@@ -1577,12 +1612,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Write the file
       writeFileSync(filePath, xmlContent, 'utf-8');
 
-      console.log(`✓ Created new Global Value Set: ${cleanName} with ${values.length} values`);
+      console.log(`✓ Created new Global Value Set: ${cleanName} with ${validValues.length} values`);
 
       res.status(201).json({
         name: cleanName,
         label: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
-        valueCount: values.filter(v => typeof v === 'string' && v.trim()).length,
+        valueCount: validValues.length,
       });
     } catch (error) {
       console.error("Error creating global value set:", error);

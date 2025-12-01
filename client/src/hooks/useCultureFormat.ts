@@ -53,9 +53,12 @@ export function useCultureFormat() {
       thousandsSeparator
     );
 
-    let result = fractionalPart 
-      ? `${formattedInteger}${decimalSeparator}${fractionalPart}`
-      : formattedInteger;
+    let result: string;
+    if (decimalPlaces === 0) {
+      result = formattedInteger;
+    } else {
+      result = `${formattedInteger}${decimalSeparator}${fractionalPart}`;
+    }
 
     if (format === "percentage") {
       result = `${result}%`;
@@ -63,6 +66,41 @@ export function useCultureFormat() {
 
     return result;
   }, [thousandsSeparator, decimalSeparator]);
+
+  const formatForEdit = useCallback((
+    value: string | number | null,
+    decimalPlaces: number = DEFAULT_DECIMAL_PLACES
+  ): string => {
+    if (value === null || value === undefined || value === "") return "";
+    
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(num)) return "";
+
+    if (decimalPlaces === 0) {
+      const integerPart = Math.round(num).toString();
+      return integerPart;
+    }
+
+    const fixedNum = num.toFixed(decimalPlaces);
+    const [integerPart, fractionalPart] = fixedNum.split(".");
+
+    return `${integerPart}${decimalSeparator}${fractionalPart}`;
+  }, [decimalSeparator]);
+
+  const normalizeForStorage = useCallback((
+    inputValue: string
+  ): string => {
+    if (inputValue === "" || inputValue === "-") {
+      return inputValue;
+    }
+
+    let normalized = inputValue;
+    if (decimalSeparator !== ".") {
+      normalized = normalized.replace(decimalSeparator, ".");
+    }
+    
+    return normalized;
+  }, [decimalSeparator]);
 
   const validateNumberInput = useCallback((
     inputValue: string,
@@ -72,12 +110,13 @@ export function useCultureFormat() {
       return { isValid: true, sanitizedValue: inputValue };
     }
 
-    const numberPattern = /^-?\d*\.?\d*$/;
+    const separatorPattern = decimalSeparator === "." ? "\\." : decimalSeparator;
+    const numberPattern = new RegExp(`^-?\\d*${separatorPattern}?\\d*$`);
     if (!numberPattern.test(inputValue)) {
       return { isValid: false, sanitizedValue: inputValue };
     }
 
-    const parts = inputValue.replace("-", "").split(".");
+    const parts = inputValue.replace("-", "").split(decimalSeparator);
     const integerPart = parts[0] || "";
     const fractionalPart = parts[1] || "";
 
@@ -91,7 +130,7 @@ export function useCultureFormat() {
     }
 
     return { isValid: true, sanitizedValue: inputValue };
-  }, []);
+  }, [decimalSeparator]);
 
   const constrainNumberInput = useCallback((
     inputValue: string,
@@ -104,16 +143,17 @@ export function useCultureFormat() {
     const isNegative = inputValue.startsWith("-");
     let cleanValue = inputValue.replace("-", "");
 
-    cleanValue = cleanValue.replace(/[^\d.]/g, "");
+    const validChars = new RegExp(`[^\\d${decimalSeparator === "." ? "\\." : decimalSeparator}]`, "g");
+    cleanValue = cleanValue.replace(validChars, "");
 
-    const dotIndex = cleanValue.indexOf(".");
-    if (dotIndex !== -1) {
-      const beforeDot = cleanValue.substring(0, dotIndex);
-      const afterDot = cleanValue.substring(dotIndex + 1).replace(/\./g, "");
-      cleanValue = beforeDot + "." + afterDot;
+    const sepIndex = cleanValue.indexOf(decimalSeparator);
+    if (sepIndex !== -1) {
+      const beforeSep = cleanValue.substring(0, sepIndex);
+      const afterSep = cleanValue.substring(sepIndex + 1).replace(new RegExp(`[${decimalSeparator === "." ? "\\." : decimalSeparator}]`, "g"), "");
+      cleanValue = beforeSep + decimalSeparator + afterSep;
     }
 
-    const parts = cleanValue.split(".");
+    const parts = cleanValue.split(decimalSeparator);
     let integerPart = parts[0] || "";
     let fractionalPart = parts[1] || "";
 
@@ -127,8 +167,8 @@ export function useCultureFormat() {
     }
 
     let result = integerPart;
-    if (cleanValue.includes(".")) {
-      result += "." + fractionalPart;
+    if (cleanValue.includes(decimalSeparator) && decimalPlaces > 0) {
+      result += decimalSeparator + fractionalPart;
     }
 
     if (isNegative && result !== "") {
@@ -136,7 +176,7 @@ export function useCultureFormat() {
     }
 
     return result;
-  }, []);
+  }, [decimalSeparator]);
 
   return {
     culture,
@@ -145,6 +185,8 @@ export function useCultureFormat() {
     thousandsSeparator,
     decimalSeparator,
     formatNumber,
+    formatForEdit,
+    normalizeForStorage,
     validateNumberInput,
     constrainNumberInput,
     MAX_PRECISION,

@@ -40,13 +40,19 @@ export function NumberField({
     fieldCode,
   });
 
-  const { formatNumber, constrainNumberInput } = useCultureFormat();
+  const { 
+    formatNumber, 
+    formatForEdit, 
+    normalizeForStorage, 
+    constrainNumberInput,
+    decimalSeparator 
+  } = useCultureFormat();
 
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
   const mergedStep = step ?? 1;
   const mergedFormat = format ?? fieldDef?.format ?? "number";
-  const mergedDecimals = decimals ?? (fieldDef?.decimalPlaces ? parseInt(fieldDef.decimalPlaces) : 2);
+  const mergedDecimals = decimals ?? (fieldDef?.decimalPlaces !== undefined ? parseInt(fieldDef.decimalPlaces) : 2);
   
   const mergedTestId = testId ?? (
     mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
@@ -63,10 +69,11 @@ export function NumberField({
       if (value === null || value === undefined) {
         setInputValue("");
       } else {
-        setInputValue(String(value));
+        const formatted = formatForEdit(value, mergedDecimals);
+        setInputValue(formatted);
       }
     }
-  }, [value, mode]);
+  }, [value, mode, mergedDecimals, formatForEdit]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -80,10 +87,11 @@ export function NumberField({
       return;
     }
     
-    const numValue = Number(constrainedValue);
+    const normalizedValue = normalizeForStorage(constrainedValue);
+    const numValue = Number(normalizedValue);
     
     if (isFinite(numValue)) {
-      onChange?.(constrainedValue);
+      onChange?.(normalizedValue);
     }
   };
 

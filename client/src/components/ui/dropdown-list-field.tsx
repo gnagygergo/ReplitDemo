@@ -30,6 +30,7 @@ export interface DropDownListFieldProps {
   mode: "edit" | "view" | "table";
   value?: string;
   onValueChange?: (value: string) => void;
+  onChange?: (value: string) => void;
   sourceType?: "universalMetadata" | "globalMetadata";
   sourcePath?: string;
   showSearch?: boolean;
@@ -54,6 +55,7 @@ export function DropDownListField({
   mode,
   value,
   onValueChange,
+  onChange,
   sourceType,
   sourcePath,
   showSearch,
@@ -70,6 +72,12 @@ export function DropDownListField({
   fieldCode,
 }: DropDownListFieldProps) {
   const [open, setOpen] = useState(false);
+
+  // Merge onChange and onValueChange - onChange takes precedence for consistency with other field components
+  const handleValueChange = (newValue: string) => {
+    onChange?.(newValue);
+    onValueChange?.(newValue);
+  };
 
   // Fetch field definition if objectCode and fieldCode are provided
   const { data: fieldDef } = useFieldDefinition({
@@ -240,7 +248,7 @@ export function DropDownListField({
                             key={`${itemValue}-${index}`}
                             value={itemDisplay}
                             onSelect={() => {
-                              onValueChange?.(itemValue);
+                              handleValueChange(itemValue);
                               setOpen(false);
                             }}
                             data-testid={`${mergedTestId}-option-${itemValue}`}
@@ -276,7 +284,7 @@ export function DropDownListField({
         <FormControl>
           <Select
             value={value}
-            onValueChange={onValueChange}
+            onValueChange={handleValueChange}
             disabled={disabled}
           >
             <SelectTrigger

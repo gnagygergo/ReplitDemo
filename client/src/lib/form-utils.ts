@@ -15,6 +15,7 @@ function getDefaultValue(fieldInfo: FieldTypeInfo): FieldValue {
     case "DropDownListField":
       return "";
     case "NumberField":
+      // Return null for number fields - they will be stored as strings for decimal compatibility
       return null;
     case "DateTimeField":
       return null;
@@ -70,11 +71,15 @@ function transformFieldValue(value: any, fieldInfo: FieldTypeInfo): FieldValue {
 
   switch (fieldInfo.type) {
     case "NumberField":
+      // Keep numeric values as strings for backend decimal field compatibility
+      // The NumberField component handles display formatting
       if (typeof value === "string") {
+        // If it's a valid numeric string, keep it; otherwise return null
         const parsed = parseFloat(value);
-        return isNaN(parsed) ? null : parsed;
+        return isNaN(parsed) ? null : value;
       }
-      return typeof value === "number" ? value : null;
+      // Convert numbers to strings for consistency
+      return typeof value === "number" ? String(value) : null;
 
     case "DateTimeField":
       return value || null;
@@ -104,16 +109,19 @@ function transformFieldValueByInference(value: any): FieldValue {
     return null;
   }
 
+  // Keep numeric strings as strings for backend decimal field compatibility
+  // Don't convert to float - the backend expects string representation of decimals
   if (typeof value === "string" && value !== "" && !isNaN(Number(value))) {
-    return parseFloat(value);
+    return value; // Keep as string for decimal compatibility
   }
 
   if (typeof value === "boolean") {
     return value;
   }
 
+  // Convert numbers to strings for consistency with decimal fields
   if (typeof value === "number") {
-    return value;
+    return String(value);
   }
 
   if (Array.isArray(value)) {

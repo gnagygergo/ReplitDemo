@@ -5,8 +5,8 @@ import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface NumberFieldProps {
   mode: "edit" | "view" | "table";
-  value: number | null;
-  onChange?: (value: number | null) => void;
+  value: string | number | null;
+  onChange?: (value: string | null) => void;
   label?: string;
   placeholder?: string;
   testId?: string;
@@ -61,14 +61,27 @@ export function NumberField({
   const defaultTableClassName = "text-sm";
 
   // Sync internal state with prop value
+  // Handle both string and number values for flexibility
   useEffect(() => {
     if (mode === "edit") {
-      setInputValue(value !== null ? String(value) : "");
+      if (value === null || value === undefined) {
+        setInputValue("");
+      } else {
+        setInputValue(String(value));
+      }
     }
   }, [value, mode]);
 
-  const formatNumber = (num: number | null): string => {
-    if (num === null || num === undefined) return "-";
+  // Convert value to number for formatting (handles both string and number inputs)
+  const getNumericValue = (val: string | number | null): number | null => {
+    if (val === null || val === undefined || val === "") return null;
+    const num = typeof val === "string" ? parseFloat(val) : val;
+    return isNaN(num) ? null : num;
+  };
+
+  const formatNumber = (val: string | number | null): string => {
+    const num = getNumericValue(val);
+    if (num === null) return "-";
 
     const formattedNum = num.toLocaleString("en-US", {
       minimumFractionDigits: mergedDecimals,
@@ -88,7 +101,7 @@ export function NumberField({
     // Always update the internal string state to preserve what user types
     setInputValue(newInputValue);
     
-    // Parse and propagate to parent only when we have a valid number or empty string
+    // Propagate string value to parent (backend expects strings for decimal fields)
     if (newInputValue === "") {
       onChange?.(null);
       return;
@@ -96,10 +109,11 @@ export function NumberField({
     
     const numValue = Number(newInputValue);
     
-    // Only call onChange when we have a finite number
+    // Only call onChange when we have a valid finite number
     // This allows intermediate states like "-" or "1." without clearing the field
+    // Pass the string value directly for backend compatibility with decimal fields
     if (isFinite(numValue)) {
-      onChange?.(numValue);
+      onChange?.(newInputValue);
     }
   };
 

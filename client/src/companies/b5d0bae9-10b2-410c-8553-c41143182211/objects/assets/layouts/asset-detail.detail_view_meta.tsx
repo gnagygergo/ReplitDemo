@@ -27,6 +27,7 @@
  * - id: The record ID from the URL (or 'new' for creating)
  */
 
+import { DropDownListField } from "@/components/ui/dropdown-list-field";
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
 
 // ============================================================================
@@ -310,6 +311,27 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
                             onChange={field.onChange}
                             testId={
                               isEditing ? "input-deletePhone" : "text-deletePhone"
+                            }
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* deletePhone */}
+                    <FormField
+                      control={form.control}
+                      name="AssetInstallStatus"
+                      render={({ field }) => (
+                        <FormItem>
+                          <DropDownListField
+                            objectCode="assets"
+                            fieldCode="AssetInstallStatus"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            testId={
+                              isEditing ? "input-AssetInstallationStatus" : "text-AssetInstallationStatus"
                             }
                           />
                           <FormMessage />

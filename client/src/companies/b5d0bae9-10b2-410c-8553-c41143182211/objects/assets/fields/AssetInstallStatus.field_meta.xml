@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>DropDownListField</type>
+  <apiCode>AssetInstallStatus</apiCode>
+  <label>Installation Status</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>singleSelect</subtype>
+  <sourceType>globalMetadata</sourceType>
+  <sourcePath>global_value_sets/assetInstallationStatus</sourcePath>
+  <showSearch>false</showSearch>
+</FieldDefinition>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<GlobalValueSet>
+  <customValue>
+    <label>First</label>
+    <code>First</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+  <customValue>
+    <label>Second</label>
+    <code>Second</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+  <customValue>
+    <label>Third</label>
+    <code>Third</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+</GlobalValueSet>

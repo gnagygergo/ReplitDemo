@@ -155,6 +155,7 @@ export const assets = pgTable("assets", {
   locationZipCode: text("location_zip_code"),
   locationCountry: text("location_country"),
   companyId: varchar("company_id"),
+  AssetInstallStatus: text("AssetInstallationStatus"),
   createdDate: timestamp("created_date").defaultNow(),
 });
 

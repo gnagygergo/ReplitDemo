@@ -294,6 +294,8 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
                         </FormItem>
                       )}
                     />
+                    
+                    
 
                     {/* Installation Date */}
                     <FormField

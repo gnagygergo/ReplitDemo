@@ -146,6 +146,7 @@ export const assets = pgTable("assets", {
   quantity: decimal("quantity", { precision: 12 }),
   serialNumber: text("serial_number").notNull(),
   installationDate: date("installation_date"),
+  deletePhone: varchar("delete_phone"),
   productId: varchar("product_id").references(() => products.id),
   accountId: varchar("account_id").references(() => accounts.id),
   locationStreetAddress: text("location_street_address"),
@@ -742,13 +743,6 @@ export const insertAssetSchema = createInsertSchema(assets)
     id: true,
     companyId: true,
     createdDate: true,
-  })
-  .extend({
-    serialNumber: z.string().min(1, "Serial number is required"),
-    quantity: optionalNumeric,
-    installationDate: optionalDate,
-    productId: optionalForeignKey,
-    accountId: optionalForeignKey,
   });
 
 export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)

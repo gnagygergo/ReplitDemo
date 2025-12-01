@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FieldDefinition xmlns="">
   <type>TextField</type>
-  <apiCode>mobilePhone</apiCode>
-  <label>Phone</label>
+  <apiCode>deletePhone</apiCode>
+  <label>Phone field test</label>
   <helpText/>
   <placeHolder/>
   <testId/>
   <className/>
   <subtype>phone</subtype>
   <maxLength>255</maxLength>
-  <copyAble>false</copyAble>
+  <copyAble>true</copyAble>
   <truncate>false</truncate>
   <visibleLinesInView/>
   <visibleLinesInEdit/>

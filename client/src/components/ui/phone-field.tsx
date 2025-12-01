@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ interface Country {
   subRegion: string;
   intermediateRegion: string;
   phoneCountryCode: string;
+  phoneNumberFormat: string;
 }
 
 export interface PhoneFieldProps {
@@ -81,15 +82,51 @@ export function PhoneField({
 
   const { countryCode, phoneNumber } = parsePhoneValue(value);
 
-  const formatPhoneForDisplay = (digits: string): string => {
+  const selectedCountry = countries.find(
+    c => `+${c.phoneCountryCode}` === countryCode
+  );
+
+  const formatPhoneByPattern = (digits: string, pattern: string | undefined): string => {
     if (!digits) return "";
     const clean = digits.replace(/\D/g, "");
-    const parts = [];
-    for (let i = 0; i < clean.length; i += 4) {
-      parts.push(clean.slice(i, i + 4));
+    
+    if (!pattern) {
+      const parts = [];
+      for (let i = 0; i < clean.length; i += 4) {
+        parts.push(clean.slice(i, i + 4));
+      }
+      return parts.join("-");
     }
-    return parts.join("-");
+
+    let result = "";
+    let digitIndex = 0;
+    
+    for (let i = 0; i < pattern.length && digitIndex < clean.length; i++) {
+      const char = pattern[i];
+      if (char.toLowerCase() === "x") {
+        result += clean[digitIndex];
+        digitIndex++;
+      } else {
+        result += char;
+      }
+    }
+    
+    return result;
   };
+
+  const getMaxDigitsFromPattern = (pattern: string | undefined): number => {
+    if (!pattern) return 12;
+    return (pattern.match(/x/gi) || []).length;
+  };
+
+  const getPlaceholderFromPattern = (pattern: string | undefined): string => {
+    if (!pattern) return "1234-5678-9012";
+    return pattern.replace(/x/gi, "0");
+  };
+
+  const phonePattern = selectedCountry?.phoneNumberFormat;
+  const maxDigits = getMaxDigitsFromPattern(phonePattern);
+  const placeholder = getPlaceholderFromPattern(phonePattern);
 
   const combineAndEmitValue = (newCountryCode: string, newPhoneDigits: string) => {
     const cleanDigits = newPhoneDigits.replace(/\D/g, "");
@@ -126,13 +163,9 @@ export function PhoneField({
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     const digitsOnly = inputValue.replace(/\D/g, "");
-    const limitedDigits = digitsOnly.slice(0, 12);
+    const limitedDigits = digitsOnly.slice(0, maxDigits);
     combineAndEmitValue(countryCode, limitedDigits);
   };
-
-  const selectedCountry = countries.find(
-    c => `+${c.phoneCountryCode}` === countryCode
-  );
 
   const filteredCountries = countries.filter(country => {
     const searchTerm = countryCodeInput.toLowerCase().replace(/[^\d\w]/g, "");
@@ -164,7 +197,7 @@ export function PhoneField({
       );
     }
 
-    const formattedDisplay = `${countryCode} ${formatPhoneForDisplay(phoneNumber)}`;
+    const formattedDisplay = `${countryCode} ${formatPhoneByPattern(phoneNumber, phonePattern)}`;
     const telLink = `tel:${countryCode}${phoneNumber}`;
 
     return (
@@ -250,9 +283,9 @@ export function PhoneField({
           <Input
             ref={phoneInputRef}
             type="tel"
-            value={formatPhoneForDisplay(phoneNumber)}
+            value={formatPhoneByPattern(phoneNumber, phonePattern)}
             onChange={handlePhoneNumberChange}
-            placeholder="1234-5678-9012"
+            placeholder={placeholder}
             className={cn("flex-1", className)}
             disabled={disabled}
             data-testid={testId ? `${testId}-number` : undefined}

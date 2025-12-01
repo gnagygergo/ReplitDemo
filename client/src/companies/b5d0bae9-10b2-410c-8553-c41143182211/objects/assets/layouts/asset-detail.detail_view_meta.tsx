@@ -294,7 +294,28 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
                         </FormItem>
                       )}
                     />
+
                     
+                    {/* deletePhone */}
+                    <FormField
+                      control={form.control}
+                      name="deletePhone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <TextField
+                            objectCode="assets"
+                            fieldCode="deletePhone"
+                            mode={isEditing ? "edit" : "view"}
+                            value={field.value}
+                            onChange={field.onChange}
+                            testId={
+                              isEditing ? "input-deletePhone" : "text-deletePhone"
+                            }
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     
 
                     {/* Installation Date */}

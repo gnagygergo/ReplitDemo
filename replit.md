@@ -62,6 +62,15 @@ Preferred communication style: Simple, everyday language.
 - **Relationships**: One-to-many relationships (e.g., accounts to opportunities/assets).
 - **Validation**: Zod schemas for runtime validation.
 - **Key Fields**: Accounts include structured address fields; Assets link to accounts and products; Companies include tax residency country; Users include timezone preferences.
+- **Decimal Field Standard**: All numeric/decimal fields use DECIMAL(17,5) precision (17 total digits, 5 decimal places) for consistency across the application.
+
+### Number Formatting System
+- **Culture-Aware Formatting**: Numbers are formatted using the user's preferred language/culture settings from `culture_codes.xml`.
+- **useCultureFormat Hook**: Provides culture-specific thousand separators and decimal separators based on user's `preferredLanguage` field.
+- **DecimalPlaces Control**: Field definition XML files specify `DecimalPlaces` tag to control:
+    - Maximum decimal digits users can enter in edit mode
+    - Number of decimals displayed in view/table modes
+- **Precision Validation**: Edit mode enforces maximum 17 total digits (precision limit) and respects DecimalPlaces from field metadata.
 
 ### Architecture Decisions
 - **Monorepo Structure**: Client, server, and shared code in a single repository.

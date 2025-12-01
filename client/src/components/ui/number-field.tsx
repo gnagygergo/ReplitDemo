@@ -102,7 +102,6 @@ export function NumberField({
     if (isFinite(numValue)) {
       const formatted = formatForEdit(numValue, mergedDecimals);
       setInputValue(formatted);
-      onChange?.(normalizedValue);
     }
   };
 

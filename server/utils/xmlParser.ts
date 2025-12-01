@@ -25,6 +25,7 @@ export interface Country {
   subRegion: string;
   intermediateRegion: string;
   phoneCountryCode: string;
+  phoneNumberFormat: string;
 }
 
 export interface CultureCode {

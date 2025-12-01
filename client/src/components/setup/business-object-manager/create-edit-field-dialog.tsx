@@ -168,6 +168,24 @@ export function CreateEditFieldDialog({
   // Track which picklist source option is selected (for dropdown list fields)
   const [picklistSourceOption, setPicklistSourceOption] = useState<"countries" | "currencies" | "custom" | "newCustom" | "">("");
 
+  // Sync picklistSourceOption when entering sourceSelection step (for editing or navigating back)
+  useEffect(() => {
+    if (step === "sourceSelection") {
+      const sourcePath = form.getValues("sourcePath" as any) as string | undefined;
+      // Check isNewGlobalValueSet first - takes priority over sourcePath
+      if (isNewGlobalValueSet) {
+        setPicklistSourceOption("newCustom");
+      } else if (sourcePath === "countries.xml") {
+        setPicklistSourceOption("countries");
+      } else if (sourcePath === "currencies.xml") {
+        setPicklistSourceOption("currencies");
+      } else if (sourcePath?.startsWith("global_value_sets/")) {
+        setPicklistSourceOption("custom");
+      }
+      // If none of the above, picklistSourceOption stays empty (for new fields)
+    }
+  }, [step, isNewGlobalValueSet]);
+
   // Helper to get default values based on field type
   const getDefaultValues = (type: string): any => {
     switch (type) {
@@ -745,6 +763,7 @@ export function CreateEditFieldDialog({
       setIsNewGlobalValueSet(false);
       setNewGlobalValueSetName("");
       setNewGlobalValueSetValues("");
+      setPicklistSourceOption("");
       form.reset();
     }
     onOpenChange(open);
@@ -936,13 +955,9 @@ export function CreateEditFieldDialog({
         {step === "sourceSelection" && (
           <div className="space-y-4 py-4">
             <RadioGroup
-              value={
-                form.watch("sourcePath" as any) === "countries.xml" ? "countries" :
-                form.watch("sourcePath" as any) === "currencies.xml" ? "currencies" :
-                isNewGlobalValueSet ? "newCustom" :
-                form.watch("sourcePath" as any)?.startsWith("global_value_sets/") ? "custom" : ""
-              }
-              onValueChange={(value) => {
+              value={picklistSourceOption}
+              onValueChange={(value: "countries" | "currencies" | "custom" | "newCustom") => {
+                setPicklistSourceOption(value);
                 const currentValues = form.getValues() as any;
                 if (value === "countries") {
                   setIsNewGlobalValueSet(false);
@@ -1031,6 +1046,46 @@ export function CreateEditFieldDialog({
                   I need a dropdown list for an existing Global Value Set
                 </Label>
               </div>
+              
+              {/* Global Value Set selector - appears only when 'custom' option is selected */}
+              {picklistSourceOption === "custom" && (
+                <div className="space-y-2 ml-6 mt-2">
+                  <Label htmlFor="globalValueSet" className="text-muted-foreground">
+                    Select Global Value Set <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={form.watch("sourcePath" as any)?.replace("global_value_sets/", "") || ""}
+                    onValueChange={(value) => {
+                      const currentValues = form.getValues() as any;
+                      form.reset({
+                        type: "DropDownListField",
+                        apiCode: currentValues.apiCode || "",
+                        label: currentValues.label || "",
+                        subtype: currentValues.subtype || "singleSelect",
+                        helpText: currentValues.helpText || "",
+                        placeHolder: currentValues.placeHolder || "",
+                        sourceType: "GlobalMetadata",
+                        sourcePath: `global_value_sets/${value}`,
+                        showSearch: false,
+                        rootKey: "",
+                        itemKey: "",
+                      });
+                    }}
+                  >
+                    <SelectTrigger id="globalValueSet" data-testid="select-global-value-set">
+                      <SelectValue placeholder="Select a global value set..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableGlobalValueSets.map((gvs) => (
+                        <SelectItem key={gvs.name} value={gvs.name}>
+                          {gvs.label} ({gvs.valueCount} values)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="newCustom" id="source-new-custom" data-testid="radio-source-new-custom" />
                 <Label htmlFor="source-new-custom" className="font-normal cursor-pointer">
@@ -1039,45 +1094,7 @@ export function CreateEditFieldDialog({
               </div>
             </RadioGroup>
 
-            {form.watch("sourceType" as any) === "GlobalMetadata" && !isNewGlobalValueSet && (
-              <div className="space-y-2 ml-6">
-                <Label htmlFor="globalValueSet" className="text-muted-foreground">
-                  Select Global Value Set <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={form.watch("sourcePath" as any)?.replace("global_value_sets/", "") || ""}
-                  onValueChange={(value) => {
-                    const currentValues = form.getValues() as any;
-                    form.reset({
-                      type: "DropDownListField",
-                      apiCode: currentValues.apiCode || "",
-                      label: currentValues.label || "",
-                      subtype: currentValues.subtype || "singleSelect",
-                      helpText: currentValues.helpText || "",
-                      placeHolder: currentValues.placeHolder || "",
-                      sourceType: "GlobalMetadata",
-                      sourcePath: `global_value_sets/${value}`,
-                      showSearch: false,
-                      rootKey: "",
-                      itemKey: "",
-                    });
-                  }}
-                >
-                  <SelectTrigger id="globalValueSet" data-testid="select-global-value-set">
-                    <SelectValue placeholder="Select a global value set..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableGlobalValueSets.map((gvs) => (
-                      <SelectItem key={gvs.name} value={gvs.name}>
-                        {gvs.label} ({gvs.valueCount} values)
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {isNewGlobalValueSet && (
+            {picklistSourceOption === "newCustom" && (
               <div className="space-y-4 ml-6">
                 <div className="space-y-2">
                   <Label htmlFor="newGlobalValueSetName" className="text-muted-foreground">

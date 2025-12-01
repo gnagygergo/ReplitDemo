@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
@@ -34,6 +34,8 @@ export function NumberField({
   fieldCode,
 }: NumberFieldProps) {
   const [inputValue, setInputValue] = useState<string>("");
+  const isEditingRef = useRef<boolean>(false);
+  const hasInitializedRef = useRef<boolean>(false);
 
   const { data: fieldDef } = useFieldDefinition({
     objectCode,
@@ -65,15 +67,44 @@ export function NumberField({
   const defaultTableClassName = "text-sm";
 
   useEffect(() => {
-    if (mode === "edit") {
+    if (mode === "edit" && !isEditingRef.current) {
       if (value === null || value === undefined) {
         setInputValue("");
       } else {
         const formatted = formatForEdit(value, mergedDecimals);
         setInputValue(formatted);
       }
+      hasInitializedRef.current = true;
     }
   }, [value, mode, mergedDecimals, formatForEdit]);
+
+  useEffect(() => {
+    if (mode !== "edit") {
+      hasInitializedRef.current = false;
+      isEditingRef.current = false;
+    }
+  }, [mode]);
+
+  const handleFocus = () => {
+    isEditingRef.current = true;
+  };
+
+  const handleBlur = () => {
+    isEditingRef.current = false;
+    
+    if (inputValue === "") {
+      return;
+    }
+    
+    const normalizedValue = normalizeForStorage(inputValue);
+    const numValue = Number(normalizedValue);
+    
+    if (isFinite(numValue)) {
+      const formatted = formatForEdit(numValue, mergedDecimals);
+      setInputValue(formatted);
+      onChange?.(normalizedValue);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -109,6 +140,8 @@ export function NumberField({
             inputMode="decimal"
             value={inputValue}
             onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder={mergedPlaceholder}
             className={className || defaultEditClassName}
             data-testid={mergedTestId}

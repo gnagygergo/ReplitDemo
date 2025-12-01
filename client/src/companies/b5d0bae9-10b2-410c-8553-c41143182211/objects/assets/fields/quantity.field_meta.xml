@@ -6,5 +6,5 @@
   <placeHolder>How many of this asset the customer has?</placeHolder>
   <step>1</step>
   <format>number</format>
-  <decimalPlaces>0</decimalPlaces>
+  <decimalPlaces>2</decimalPlaces>
 </FieldDefinition>

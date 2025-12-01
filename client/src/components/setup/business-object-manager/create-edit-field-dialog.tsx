@@ -164,6 +164,9 @@ export function CreateEditFieldDialog({
   const [isNewGlobalValueSet, setIsNewGlobalValueSet] = useState(false);
   const [newGlobalValueSetName, setNewGlobalValueSetName] = useState("");
   const [newGlobalValueSetValues, setNewGlobalValueSetValues] = useState("");
+  
+  // Track which picklist source option is selected (for dropdown list fields)
+  const [picklistSourceOption, setPicklistSourceOption] = useState<"countries" | "currencies" | "custom" | "newCustom" | "">("");
 
   // Helper to get default values based on field type
   const getDefaultValues = (type: string): any => {

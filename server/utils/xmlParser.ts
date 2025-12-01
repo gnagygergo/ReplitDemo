@@ -100,6 +100,7 @@ export async function loadCountriesFromXML(): Promise<Country[]> {
       subRegion: country.subRegion?.[0] ?? '',
       intermediateRegion: country.intermediateRegion?.[0] ?? '',
       phoneCountryCode: country.phoneCountryCode?.[0] ?? '',
+      phoneNumberFormat: country.phoneNumberFormat?.[0] ?? '',
     }));
     
     console.log(`✓ Loaded ${countries.length} countries from XML metadata`);

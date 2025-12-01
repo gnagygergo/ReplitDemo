@@ -646,11 +646,11 @@ export function CreateEditFieldDialog({
           });
           return;
         }
-        // Validate name format (lowercase, no spaces)
-        if (!/^[a-z][a-z0-9_]*$/.test(newGlobalValueSetName.trim())) {
+        // Validate name format (camelCase allowed, must start with letter)
+        if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(newGlobalValueSetName.trim())) {
           toast({
-            title: "Invalid Name",
-            description: "Name must start with a lowercase letter and contain only lowercase letters, numbers, and underscores",
+            title: "Invalid API Code",
+            description: "API Code must start with a letter and contain only letters, numbers, and underscores",
             variant: "destructive",
           });
           return;
@@ -1078,17 +1078,17 @@ export function CreateEditFieldDialog({
               <div className="space-y-4 ml-6">
                 <div className="space-y-2">
                   <Label htmlFor="newGlobalValueSetName" className="text-muted-foreground">
-                    New Global Value Set Name <span className="text-destructive">*</span>
+                    New Global Value Set API Code <span className="text-destructive">*</span>
                   </Label>
                   <Input
                     id="newGlobalValueSetName"
                     data-testid="input-new-gvs-name"
                     value={newGlobalValueSetName}
                     onChange={(e) => setNewGlobalValueSetName(e.target.value)}
-                    placeholder="e.g., industries, statuses, priorities"
+                    placeholder="e.g., industries, productCategories, orderStatuses"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Use lowercase letters, no spaces. This will be used as the filename.
+                    Use letters and numbers, no spaces (camelCase allowed). This will be used as the API identifier.
                   </p>
                 </div>
                 <div className="space-y-2">

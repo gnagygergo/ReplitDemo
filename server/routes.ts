@@ -1543,20 +1543,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "At least one valid value is required" });
       }
 
-      // Validate name format (lowercase, starts with letter, no path separators)
+      // Validate name format (camelCase allowed, starts with letter, no path separators)
       const cleanName = name.trim();
       
       // Security: Reject any path traversal attempts
       if (cleanName.includes('/') || cleanName.includes('\\') || cleanName.includes('..')) {
         return res.status(400).json({ 
-          message: "Invalid name: path separators are not allowed" 
+          message: "Invalid API Code: path separators are not allowed" 
         });
       }
       
-      // Strict validation: only allow lowercase letters, numbers, and underscores
-      if (!/^[a-z][a-z0-9_]*$/.test(cleanName)) {
+      // Allow camelCase: letters, numbers, and underscores (must start with letter)
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(cleanName)) {
         return res.status(400).json({ 
-          message: "Name must start with a lowercase letter and contain only lowercase letters, numbers, and underscores" 
+          message: "API Code must start with a letter and contain only letters, numbers, and underscores" 
         });
       }
       

@@ -159,6 +159,11 @@ export function CreateEditFieldDialog({
   const [selectedFieldType, setSelectedFieldType] = useState<string>(() =>
     fieldToEdit?.type || ""
   );
+  
+  // Track whether we're creating a new Global Value Set or using an existing one
+  const [isNewGlobalValueSet, setIsNewGlobalValueSet] = useState(false);
+  const [newGlobalValueSetName, setNewGlobalValueSetName] = useState("");
+  const [newGlobalValueSetValues, setNewGlobalValueSetValues] = useState("");
 
   // Helper to get default values based on field type
   const getDefaultValues = (type: string): any => {
@@ -473,6 +478,19 @@ export function CreateEditFieldDialog({
       if (data.type === "DropDownListField") {
         payload.showSearch = data.showSearch?.toString() || "false";
         
+        // If we're creating a new Global Value Set, create it first
+        if (isNewGlobalValueSet && newGlobalValueSetName.trim() && newGlobalValueSetValues.trim()) {
+          const values = newGlobalValueSetValues
+            .split('\n')
+            .map(v => v.trim())
+            .filter(v => v.length > 0);
+          
+          await apiRequest("POST", "/api/global-value-sets", {
+            name: newGlobalValueSetName.trim(),
+            values: values,
+          });
+        }
+        
         // Normalize rootKey and itemKey for UniversalMetadata sources
         if (payload.sourceType === "UniversalMetadata") {
           if (!payload.rootKey || payload.rootKey.trim() === "") {
@@ -492,9 +510,12 @@ export function CreateEditFieldDialog({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/object-fields", objectName] });
+      queryClient.invalidateQueries({ queryKey: ["/api/global-value-sets"] });
       toast({
         title: "Success",
-        description: "Field created successfully",
+        description: isNewGlobalValueSet 
+          ? "Global Value Set and field created successfully" 
+          : "Field created successfully",
       });
       onOpenChange(false);
     },
@@ -614,17 +635,64 @@ export function CreateEditFieldDialog({
     } else if (step === "subtype") {
       setStep("form");
     } else if (step === "sourceSelection") {
-      // Validate that sourcePath is set
-      const sourcePath = form.getValues("sourcePath" as any);
-      if (!sourcePath) {
-        toast({
-          title: "Selection Required",
-          description: "Please select a data source to continue",
-          variant: "destructive",
+      // Check if we're creating a new Global Value Set
+      if (isNewGlobalValueSet) {
+        // Validate new GVS name
+        if (!newGlobalValueSetName.trim()) {
+          toast({
+            title: "Name Required",
+            description: "Please enter a name for the new Global Value Set",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Validate name format (lowercase, no spaces)
+        if (!/^[a-z][a-z0-9_]*$/.test(newGlobalValueSetName.trim())) {
+          toast({
+            title: "Invalid Name",
+            description: "Name must start with a lowercase letter and contain only lowercase letters, numbers, and underscores",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Validate values
+        if (!newGlobalValueSetValues.trim()) {
+          toast({
+            title: "Values Required",
+            description: "Please enter at least one value for the Global Value Set",
+            variant: "destructive",
+          });
+          return;
+        }
+        // Set the sourcePath to use the new GVS name
+        const currentValues = form.getValues() as any;
+        form.reset({
+          type: "DropDownListField",
+          apiCode: currentValues.apiCode || "",
+          label: currentValues.label || "",
+          subtype: currentValues.subtype || "singleSelect",
+          helpText: currentValues.helpText || "",
+          placeHolder: currentValues.placeHolder || "",
+          sourceType: "GlobalMetadata",
+          sourcePath: `global_value_sets/${newGlobalValueSetName.trim()}`,
+          showSearch: false,
+          rootKey: "",
+          itemKey: "",
         });
-        return;
+        setStep("form");
+      } else {
+        // Existing flow: Validate that sourcePath is set
+        const sourcePath = form.getValues("sourcePath" as any);
+        if (!sourcePath) {
+          toast({
+            title: "Selection Required",
+            description: "Please select a data source to continue",
+            variant: "destructive",
+          });
+          return;
+        }
+        setStep("form");
       }
-      setStep("form");
     } else if (step === "lookupObject") {
       // Validate that an object has been selected
       const selectedObject = form.getValues("referencedObject" as any);
@@ -671,6 +739,9 @@ export function CreateEditFieldDialog({
     if (!open) {
       setStep("fieldType");
       setSelectedFieldType("");
+      setIsNewGlobalValueSet(false);
+      setNewGlobalValueSetName("");
+      setNewGlobalValueSetValues("");
       form.reset();
     }
     onOpenChange(open);
@@ -865,11 +936,15 @@ export function CreateEditFieldDialog({
               value={
                 form.watch("sourcePath" as any) === "countries.xml" ? "countries" :
                 form.watch("sourcePath" as any) === "currencies.xml" ? "currencies" :
+                isNewGlobalValueSet ? "newCustom" :
                 form.watch("sourcePath" as any)?.startsWith("global_value_sets/") ? "custom" : ""
               }
               onValueChange={(value) => {
                 const currentValues = form.getValues() as any;
                 if (value === "countries") {
+                  setIsNewGlobalValueSet(false);
+                  setNewGlobalValueSetName("");
+                  setNewGlobalValueSetValues("");
                   form.reset({
                     type: "DropDownListField",
                     apiCode: currentValues.apiCode || "",
@@ -884,6 +959,9 @@ export function CreateEditFieldDialog({
                     itemKey: "country",
                   });
                 } else if (value === "currencies") {
+                  setIsNewGlobalValueSet(false);
+                  setNewGlobalValueSetName("");
+                  setNewGlobalValueSetValues("");
                   form.reset({
                     type: "DropDownListField",
                     apiCode: currentValues.apiCode || "",
@@ -898,6 +976,24 @@ export function CreateEditFieldDialog({
                     itemKey: "currency",
                   });
                 } else if (value === "custom") {
+                  setIsNewGlobalValueSet(false);
+                  setNewGlobalValueSetName("");
+                  setNewGlobalValueSetValues("");
+                  form.reset({
+                    type: "DropDownListField",
+                    apiCode: currentValues.apiCode || "",
+                    label: currentValues.label || "",
+                    subtype: currentValues.subtype || "singleSelect",
+                    helpText: currentValues.helpText || "",
+                    placeHolder: currentValues.placeHolder || "",
+                    sourceType: "GlobalMetadata",
+                    sourcePath: "",
+                    showSearch: false,
+                    rootKey: "",
+                    itemKey: "",
+                  });
+                } else if (value === "newCustom") {
+                  setIsNewGlobalValueSet(true);
                   form.reset({
                     type: "DropDownListField",
                     apiCode: currentValues.apiCode || "",
@@ -932,9 +1028,15 @@ export function CreateEditFieldDialog({
                   I need a dropdown list for an existing Global Value Set
                 </Label>
               </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="newCustom" id="source-new-custom" data-testid="radio-source-new-custom" />
+                <Label htmlFor="source-new-custom" className="font-normal cursor-pointer">
+                  I need a dropdown list for a new Global Value Set
+                </Label>
+              </div>
             </RadioGroup>
 
-            {form.watch("sourceType" as any) === "GlobalMetadata" && (
+            {form.watch("sourceType" as any) === "GlobalMetadata" && !isNewGlobalValueSet && (
               <div className="space-y-2 ml-6">
                 <Label htmlFor="globalValueSet" className="text-muted-foreground">
                   Select Global Value Set <span className="text-destructive">*</span>
@@ -969,6 +1071,42 @@ export function CreateEditFieldDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {isNewGlobalValueSet && (
+              <div className="space-y-4 ml-6">
+                <div className="space-y-2">
+                  <Label htmlFor="newGlobalValueSetName" className="text-muted-foreground">
+                    New Global Value Set Name <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="newGlobalValueSetName"
+                    data-testid="input-new-gvs-name"
+                    value={newGlobalValueSetName}
+                    onChange={(e) => setNewGlobalValueSetName(e.target.value)}
+                    placeholder="e.g., industries, statuses, priorities"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use lowercase letters, no spaces. This will be used as the filename.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newGlobalValueSetValues" className="text-muted-foreground">
+                    Values <span className="text-destructive">*</span>
+                  </Label>
+                  <Textarea
+                    id="newGlobalValueSetValues"
+                    data-testid="input-new-gvs-values"
+                    value={newGlobalValueSetValues}
+                    onChange={(e) => setNewGlobalValueSetValues(e.target.value)}
+                    placeholder="Enter each value on a separate line, e.g.:&#10;Technology&#10;Healthcare&#10;Finance&#10;Retail&#10;Manufacturing"
+                    rows={7}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter each value on a separate line. These will become the dropdown options.
+                  </p>
+                </div>
               </div>
             )}
           </div>

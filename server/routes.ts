@@ -11,6 +11,16 @@ import { promisify } from "util";
 const parseXML = promisify(parseString);
 const xmlBuilder = new Builder();
 
+// Helper function to escape special XML characters
+function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 // Helper function to normalize sourceType to camelCase for DropDownListField
 function normalizeSourceType(sourceType: string | undefined): string | undefined {
   if (!sourceType) return undefined;
@@ -1496,6 +1506,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching global value sets:", error);
       res.status(500).json({ message: "Failed to fetch global value sets" });
+    }
+  });
+
+  // Create a new global value set
+  app.post("/api/global-value-sets", isAuthenticated, async (req, res) => {
+    try {
+      // Get company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(403).json({ message: "Company context required" });
+      }
+
+      const { name, values } = req.body;
+
+      // Validate input
+      if (!name || typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ message: "Name is required" });
+      }
+      if (!values || !Array.isArray(values) || values.length === 0) {
+        return res.status(400).json({ message: "At least one value is required" });
+      }
+
+      // Validate name format (lowercase, starts with letter)
+      const cleanName = name.trim();
+      if (!/^[a-z][a-z0-9_]*$/.test(cleanName)) {
+        return res.status(400).json({ 
+          message: "Name must start with a lowercase letter and contain only lowercase letters, numbers, and underscores" 
+        });
+      }
+
+      // Build the path to the global_value_sets directory
+      const globalValueSetsDir = path.join(
+        process.cwd(),
+        'client/src/companies',
+        companyContext,
+        'global_value_sets'
+      );
+
+      // Ensure directory exists
+      if (!existsSync(globalValueSetsDir)) {
+        mkdirSync(globalValueSetsDir, { recursive: true });
+      }
+
+      // Check if file already exists
+      const fileName = `${cleanName}.globalValueSet-meta.xml`;
+      const filePath = path.join(globalValueSetsDir, fileName);
+      if (existsSync(filePath)) {
+        return res.status(409).json({ message: `Global Value Set '${cleanName}' already exists` });
+      }
+
+      // Build the XML content matching the structure of industries.globalValueSet-meta.xml
+      let xmlContent = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<GlobalValueSet>\n';
+      
+      for (const value of values) {
+        if (typeof value === 'string' && value.trim()) {
+          const cleanValue = value.trim();
+          xmlContent += '  <customValue>\n';
+          xmlContent += `    <label>${escapeXml(cleanValue)}</label>\n`;
+          xmlContent += `    <code>${escapeXml(cleanValue)}</code>\n`;
+          xmlContent += '    <default>false</default>\n';
+          xmlContent += '    <iconSet/>\n';
+          xmlContent += '    <icon/>\n';
+          xmlContent += '  </customValue>\n';
+        }
+      }
+      
+      xmlContent += '</GlobalValueSet>';
+
+      // Write the file
+      writeFileSync(filePath, xmlContent, 'utf-8');
+
+      console.log(`✓ Created new Global Value Set: ${cleanName} with ${values.length} values`);
+
+      res.status(201).json({
+        name: cleanName,
+        label: cleanName.charAt(0).toUpperCase() + cleanName.slice(1),
+        valueCount: values.filter(v => typeof v === 'string' && v.trim()).length,
+      });
+    } catch (error) {
+      console.error("Error creating global value set:", error);
+      res.status(500).json({ message: "Failed to create global value set" });
     }
   });
 

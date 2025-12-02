@@ -302,6 +302,8 @@ function AssetDetailContent({ deps, objectCode, id }: AssetDetailProps) {
                       )}
                     />
 
+                
+
                     {/* Quantity */}
                     <FormField
                       control={form.control}

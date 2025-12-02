@@ -1906,6 +1906,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? fieldData.displayColumns.join(',') 
           : (fieldData.displayColumns || '');
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
+        // Relationship attributes
+        if (fieldData.relationshipApiCode) {
+          xmlObject.FieldDefinition.relationshipApiCode = [fieldData.relationshipApiCode];
+        }
+        if (fieldData.relationshipName) {
+          xmlObject.FieldDefinition.relationshipName = [fieldData.relationshipName];
+        }
       } else if (fieldData.type === 'DropDownListField') {
         xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
         // Convert sourceType to camelCase for XML storage
@@ -2057,6 +2064,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? fieldData.displayColumns.join(',') 
           : (fieldData.displayColumns || '');
         xmlObject.FieldDefinition.displayColumns = [displayColumnsStr];
+        // Relationship attributes
+        if (fieldData.relationshipApiCode) {
+          xmlObject.FieldDefinition.relationshipApiCode = [fieldData.relationshipApiCode];
+        }
+        if (fieldData.relationshipName) {
+          xmlObject.FieldDefinition.relationshipName = [fieldData.relationshipName];
+        }
       } else if (fieldData.type === 'DropDownListField') {
         xmlObject.FieldDefinition.subtype = [fieldData.subtype || 'singleSelect'];
         // Convert sourceType to camelCase for XML storage

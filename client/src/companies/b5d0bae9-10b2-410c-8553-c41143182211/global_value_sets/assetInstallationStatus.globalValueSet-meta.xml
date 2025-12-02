@@ -28,6 +28,6 @@
     <iconSet/>
     <icon/>
   </customValue>
-  <title>GVS Name</title>
-  <sorting>ascending</sorting>
+  <title>GVS Name modified</title>
+  <sorting>descending</sorting>
 </GlobalValueSet>

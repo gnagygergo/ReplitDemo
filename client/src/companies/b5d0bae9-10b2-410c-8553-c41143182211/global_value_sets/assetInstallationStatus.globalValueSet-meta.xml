@@ -1,25 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <GlobalValueSet>
   <customValue>
-    <label>First</label>
-    <code>First</code>
-    <default>false</default>
-    <iconSet/>
-    <icon/>
-  </customValue>
-  <customValue>
     <label>Second</label>
     <code>Second</code>
     <default>false</default>
     <iconSet/>
     <icon/>
-  </customValue>
-  <customValue>
-    <label>Third</label>
-    <code>Third</code>
-    <default>false</default>
-    <iconSet/>
-    <icon/>
+    <order>1</order>
   </customValue>
   <customValue>
     <label>Negyedik</label>
@@ -27,7 +14,23 @@
     <default>false</default>
     <iconSet/>
     <icon/>
+    <order>2</order>
+  </customValue>
+  <customValue>
+    <label>First</label>
+    <code>First</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+    <order>3</order>
+  </customValue>
+  <customValue>
+    <label>Third</label>
+    <code>Third</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+    <order>4</order>
   </customValue>
   <title>GVS Name modified</title>
-  <sorting>descending</sorting>
 </GlobalValueSet>

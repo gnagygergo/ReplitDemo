@@ -28,6 +28,7 @@
  */
 
 import { DropDownListField } from "@/components/ui/dropdown-list-field";
+import { LayoutModeProvider, useLayoutMode } from "@/contexts/LayoutModeContext";
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
 
 // ============================================================================
@@ -48,6 +49,18 @@ interface AssetDetailProps {
 // ============================================================================
 
 export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) {
+  return (
+    <LayoutModeProvider key={`${objectCode}-${id}`}>
+      <AssetDetailContent deps={deps} objectCode={objectCode} id={id} />
+    </LayoutModeProvider>
+  );
+}
+
+// ============================================================================
+// INNER COMPONENT (wrapped by LayoutModeProvider)
+// ============================================================================
+
+function AssetDetailContent({ deps, objectCode, id }: AssetDetailProps) {
   // ---------------------------------------------------------------------------
   // DESTRUCTURE DEPENDENCIES
   // Extract what we need from the dependencies bundle
@@ -59,6 +72,13 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
   const { Package, Edit, Save, X } = deps.icons;
   const { Link } = deps.routing;
   const { useObjectDetail } = deps.hooks;
+
+  // ---------------------------------------------------------------------------
+  // LAYOUT MODE CONTEXT
+  // Access validation for mandatory fields
+  // ---------------------------------------------------------------------------
+  
+  const { validateMandatoryFields } = useLayoutMode();
 
   // ---------------------------------------------------------------------------
   // DATA & STATE MANAGEMENT
@@ -174,7 +194,12 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
                 Cancel
               </Button>
               <Button
-                onClick={form.handleSubmit(onSubmit)}
+                onClick={() => {
+                  if (!validateMandatoryFields()) {
+                    return;
+                  }
+                  form.handleSubmit(onSubmit)();
+                }}
                 disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-save-edit"
               >
@@ -226,6 +251,7 @@ export default function AssetDetail({ deps, objectCode, id }: AssetDetailProps) 
                             value={field.value}
                             onChange={field.onChange}
                             placeholder="Enter serial number"
+                            layoutMandatory="true"
                           />
                           <FormMessage />
                         </FormItem>

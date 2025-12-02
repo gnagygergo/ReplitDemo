@@ -43,6 +43,14 @@ Preferred communication style: Simple, everyday language.
     - `layoutDependencies.ts` exports bundled UI components, field components, icons, hooks, and utilities
     - `ObjectDetailPage` and `ObjectListPage` inject these dependencies into dynamically loaded layouts
     - Reduces import boilerplate and ensures consistent component versions across layouts
+- **Layout Mandatory Fields**: Form-level validation system for fields that must have values before saving:
+    - `LayoutModeContext` provides validation state management via `LayoutModeProvider`
+    - `useLayoutMandatoryField` hook registers fields and tracks empty state
+    - All field components (TextField, NumberField, DropDownListField, DateTimeField, LookupFormField, AddressField) support `layoutMandatory` prop
+    - Error message "This field is mandatory" displays on empty mandatory fields when validation fails
+    - `validateMandatoryFields()` is called before form submission to block saving with empty mandatory fields
+    - Layout-level requirement (same field can be mandatory in one layout but optional in another)
+    - **Important**: Use `key={objectCode-id}` on LayoutModeProvider to reset validation state when navigating between records
 - **Pluralization Utility**: `client/src/lib/pluralize.ts` handles irregular plurals correctly:
     - 'opportunities' → 'opportunity', 'companies' → 'company', 'categories' → 'category'
     - Used throughout the routing and data hooks for proper URL/file path resolution

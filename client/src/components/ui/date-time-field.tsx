@@ -11,6 +11,7 @@ import { useDateTimeFormat } from "@/hooks/useDateTimeFormat";
 import { useUserTimezone } from "@/hooks/useUserTimezone";
 import { utcToUserZoned, userZonedToUtc, parseDateInput } from "@/utils/timezone-utils";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 export interface DateTimeFieldProps {
   fieldType?: "Date" | "Time" | "DateTime";
@@ -23,6 +24,7 @@ export interface DateTimeFieldProps {
   className?: string;
   objectCode?: string;
   fieldCode?: string;
+  layoutMandatory?: string | boolean;
 }
 
 export function DateTimeField({
@@ -36,6 +38,7 @@ export function DateTimeField({
   className,
   objectCode,
   fieldCode,
+  layoutMandatory,
 }: DateTimeFieldProps) {
   const { formatDateValue, defaultTimePresentation } = useDateTimeFormat();
   const { timezone } = useUserTimezone();
@@ -46,6 +49,14 @@ export function DateTimeField({
   const { data: fieldDef, isLoading: isLoadingFieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
+  });
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  const fieldId = fieldCode || testId || label || "datetime-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value: value ? String(value) : null,
+    layoutMandatory,
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
@@ -214,6 +225,11 @@ export function DateTimeField({
               </PopoverContent>
             </Popover>
           </FormControl>
+          {mandatoryError && (
+            <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+              {mandatoryError}
+            </p>
+          )}
         </>
       );
     }
@@ -255,6 +271,11 @@ export function DateTimeField({
               data-testid={mergedTestId}
             />
           </FormControl>
+          {mandatoryError && (
+            <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+              {mandatoryError}
+            </p>
+          )}
         </>
       );
     }
@@ -330,6 +351,11 @@ export function DateTimeField({
               />
             </div>
           </FormControl>
+          {mandatoryError && (
+            <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+              {mandatoryError}
+            </p>
+          )}
         </>
       );
     }

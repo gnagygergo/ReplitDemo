@@ -7,6 +7,7 @@ import { FormLabel } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import LookupDialog from "@/components/ui/lookup-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 interface LookupFormFieldProps {
   objectCode: string;
@@ -18,6 +19,7 @@ interface LookupFormFieldProps {
   disabled?: boolean;
   label?: string;
   testId?: string;
+  layoutMandatory?: string | boolean;
 }
 
 interface FieldMetadata {
@@ -43,9 +45,18 @@ export default function LookupFormField({
   disabled = false,
   label,
   testId,
+  layoutMandatory,
 }: LookupFormFieldProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [, setLocation] = useLocation();
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  const fieldId = fieldCode || testId || label || "lookup-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value,
+    layoutMandatory,
+  });
 
   const handleSelect = (record: any) => {
     onChange?.(record.id);
@@ -240,6 +251,11 @@ export default function LookupFormField({
             </span>
           )}
         </div>
+        {mandatoryError && (
+          <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+            {mandatoryError}
+          </p>
+        )}
       </div>
 
       {/* Lookup Dialog */}

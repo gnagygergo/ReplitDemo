@@ -7,6 +7,7 @@ import { FormLabel, FormControl } from "@/components/ui/form";
 import { Copy, Check } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { PhoneField } from "@/components/ui/phone-field";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 export interface TextFieldProps {
   mode: "edit" | "view" | "table";
@@ -26,6 +27,7 @@ export interface TextFieldProps {
   visibleLinesInView?: number;
   objectCode?: string;
   fieldCode?: string;
+  layoutMandatory?: string | boolean;
 }
 
 export function TextField({
@@ -46,6 +48,7 @@ export function TextField({
   visibleLinesInView,
   objectCode,
   fieldCode,
+  layoutMandatory,
 }: TextFieldProps) {
   const [copied, setCopied] = useState(false);
 
@@ -53,6 +56,14 @@ export function TextField({
   const { data: fieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
+  });
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  const fieldId = fieldCode || testId || label || "text-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value,
+    layoutMandatory,
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
@@ -118,6 +129,11 @@ export function TextField({
               data-testid={mergedTestId}
             />
           </FormControl>
+          {mandatoryError && (
+            <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+              {mandatoryError}
+            </p>
+          )}
         </>
       );
     }
@@ -141,6 +157,11 @@ export function TextField({
             data-testid={mergedTestId}
           />
         </FormControl>
+        {mandatoryError && (
+          <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+            {mandatoryError}
+          </p>
+        )}
       </>
     );
   }

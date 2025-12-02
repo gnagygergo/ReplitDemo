@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { useCultureFormat } from "@/hooks/useCultureFormat";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 export interface NumberFieldProps {
   mode: "edit" | "view" | "table";
@@ -17,6 +18,7 @@ export interface NumberFieldProps {
   decimals?: number;
   objectCode?: string;
   fieldCode?: string;
+  layoutMandatory?: string | boolean;
 }
 
 export function NumberField({
@@ -32,6 +34,7 @@ export function NumberField({
   decimals,
   objectCode,
   fieldCode,
+  layoutMandatory,
 }: NumberFieldProps) {
   const [inputValue, setInputValue] = useState<string>("");
   const isEditingRef = useRef<boolean>(false);
@@ -40,6 +43,14 @@ export function NumberField({
   const { data: fieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
+  });
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  const fieldId = fieldCode || testId || label || "number-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value,
+    layoutMandatory,
   });
 
   const { 
@@ -146,6 +157,11 @@ export function NumberField({
             data-testid={mergedTestId}
           />
         </FormControl>
+        {mandatoryError && (
+          <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+            {mandatoryError}
+          </p>
+        )}
       </>
     );
   }

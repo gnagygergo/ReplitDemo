@@ -25,6 +25,7 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 export interface DropDownListFieldProps {
   mode: "edit" | "view" | "table";
@@ -49,6 +50,7 @@ export interface DropDownListFieldProps {
   itemKey?: string;
   objectCode?: string;
   fieldCode?: string;
+  layoutMandatory?: string | boolean;
 }
 
 export function DropDownListField({
@@ -70,6 +72,7 @@ export function DropDownListField({
   itemKey,
   objectCode,
   fieldCode,
+  layoutMandatory,
 }: DropDownListFieldProps) {
   const [open, setOpen] = useState(false);
 
@@ -83,6 +86,14 @@ export function DropDownListField({
   const { data: fieldDef } = useFieldDefinition({
     objectCode,
     fieldCode,
+  });
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  const fieldId = fieldCode || testId || label || "dropdown-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value,
+    layoutMandatory,
   });
 
   // Merge field definition with explicit props (explicit props take precedence)
@@ -308,6 +319,11 @@ export function DropDownListField({
               </PopoverContent>
             </Popover>
           </FormControl>
+          {mandatoryError && (
+            <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+              {mandatoryError}
+            </p>
+          )}
         </>
       );
     }
@@ -349,6 +365,11 @@ export function DropDownListField({
             </SelectContent>
           </Select>
         </FormControl>
+        {mandatoryError && (
+          <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+            {mandatoryError}
+          </p>
+        )}
       </>
     );
   }

@@ -5,6 +5,7 @@ import { FormLabel, FormControl } from "@/components/ui/form";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
+import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
 
 export interface AddressValue {
   streetAddress?: string;
@@ -28,6 +29,7 @@ export interface AddressFieldProps {
   placeholder?: string;
   testId?: string;
   className?: string;
+  layoutMandatory?: string | boolean;
 }
 
 export function AddressField({
@@ -41,6 +43,7 @@ export function AddressField({
   placeholder,
   testId,
   className,
+  layoutMandatory,
 }: AddressFieldProps) {
   const { getSetting } = useCompanySettings();
 
@@ -122,6 +125,16 @@ export function AddressField({
 
   // Get Google Maps API key from company settings
   const googleMapsApiKey = getSetting("google_maps_api_key")?.settingValue || "";
+
+  // Register with LayoutModeContext if layoutMandatory is set
+  // For AddressField, check if any address component has a value
+  const addressHasValue = !!(value.streetAddress || value.city || value.stateProvince || value.zipCode || value.country);
+  const fieldId = fieldCode || testId || label || "address-field";
+  const { error: mandatoryError } = useLayoutMandatoryField({
+    fieldId,
+    value: addressHasValue ? "has-value" : null,
+    layoutMandatory,
+  });
 
   // Handle onChange - either update form fields or call legacy onChange
   const handleAddressChange = useCallback((newValue: AddressValue) => {
@@ -263,6 +276,12 @@ export function AddressField({
             />
           </FormControl>
         </div>
+
+        {mandatoryError && (
+          <p className="text-sm font-medium text-destructive" data-testid={`${mergedTestId}-mandatory-error`}>
+            {mandatoryError}
+          </p>
+        )}
       </div>
     );
   }

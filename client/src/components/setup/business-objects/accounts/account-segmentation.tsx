@@ -9,7 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from "isomorphic-dompurify";
 import SetupToggleLister from "@/components/setup/setup-toggle-lister";
-import { DropDownListFieldTypeEditor } from "@/components/ui/dropdown-list-field-type-editor";
+import { DropDownListFieldTypeEditor } from "@/components/setup/business-object-manager/dropdown-list-field-type-editor";
 
 type CompanySettingWithMaster = {
   id: string;

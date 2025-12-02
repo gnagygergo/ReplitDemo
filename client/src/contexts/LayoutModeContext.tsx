@@ -37,11 +37,11 @@ export function LayoutModeProvider({ children }: { children: React.ReactNode }) 
 
   const unregisterField = useCallback((fieldId: string) => {
     fieldsRef.current.delete(fieldId);
-    setFieldErrors((prev) => {
-      const next = new Map(prev);
-      next.delete(fieldId);
-      return next;
-    });
+    // Note: We intentionally do NOT clear errors here.
+    // Errors should only be cleared when:
+    // 1. The user provides a valid value (via updateFieldValue)
+    // 2. clearAllErrors is called explicitly
+    // 3. The LayoutModeProvider is unmounted (key change)
   }, []);
 
   const updateFieldValue = useCallback((fieldId: string, value: string | number | null | undefined) => {

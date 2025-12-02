@@ -10,4 +10,5 @@
   <referencedObject>accounts</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
   <displayColumns>name,company_registration_id,email</displayColumns>
+  <relationshipName>Assets of the account</relationshipName>
 </FieldDefinition>

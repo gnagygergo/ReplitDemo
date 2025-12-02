@@ -251,7 +251,7 @@ export function LookupFieldDetail({
         <CardContent className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <TextField
-              mode={isEditing ? "edit" : "view"}
+              mode="view"
               value={formData.apiCode}
               onChange={(val) => setFormData({ ...formData, apiCode: val })}
               label="API Code"

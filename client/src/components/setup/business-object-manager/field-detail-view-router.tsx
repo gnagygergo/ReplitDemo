@@ -4,6 +4,7 @@ import { DateTimeFieldDetail } from "./field-details/datetime-field-detail";
 import { CheckboxFieldDetail } from "./field-details/checkbox-field-detail";
 import { DropDownListFieldDetail } from "./field-details/dropdown-list-field-detail";
 import { LookupFieldDetail } from "./field-details/lookup-field-detail";
+import { AddressFieldDetail } from "./field-details/address-field-detail";
 
 interface FieldDefinition {
   type: string;
@@ -101,6 +102,19 @@ export function FieldDetailViewRouter({
     case 'LookupField':
       return (
         <LookupFieldDetail
+          field={field}
+          objectName={objectName}
+          mode={mode}
+          onBack={onBack}
+          onEdit={onEdit}
+          onSave={onSave}
+          onCancel={onCancel}
+        />
+      );
+    
+    case 'AddressField':
+      return (
+        <AddressFieldDetail
           field={field}
           objectName={objectName}
           mode={mode}

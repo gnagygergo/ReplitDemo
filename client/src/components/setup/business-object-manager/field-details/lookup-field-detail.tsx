@@ -266,6 +266,23 @@ export function LookupFieldDetail({
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <TextField
+              mode="view"
+              value={formData.relationshipApiCode || ""}
+              onChange={() => {}}
+              label="Relationship API Code"
+              data-testid="input-relationship-api-code"
+            />
+            <TextField
+              mode={isEditing ? "edit" : "view"}
+              value={formData.relationshipName || ""}
+              onChange={(val) => setFormData({ ...formData, relationshipName: val })}
+              label="Relationship Name"
+              data-testid="input-relationship-name"
+            />
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="referencedObject" className="text-muted-foreground">
               Referenced Object

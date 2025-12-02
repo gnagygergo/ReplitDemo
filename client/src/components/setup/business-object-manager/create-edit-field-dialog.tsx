@@ -105,6 +105,8 @@ const lookupFieldSchema = z.object({
   type: z.literal("LookupField"),
   apiCode: z.string().min(1, "API Code is required").regex(/^[a-zA-Z][a-zA-Z0-9_]*$/, "API Code must start with a letter and contain only letters, numbers, and underscores"),
   label: z.string().min(1, "Label is required"),
+  relationshipApiCode: z.string().optional(),
+  relationshipName: z.string().optional(),
   helpText: z.string().optional(),
   placeHolder: z.string().optional(),
   referencedObject: z.string().min(1, "Referenced object is required"),

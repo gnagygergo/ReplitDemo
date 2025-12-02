@@ -1172,6 +1172,43 @@ export function CreateEditFieldDialog({
               )}
             </div>
 
+            {/* LookupField-Specific Relationship Fields */}
+            {selectedFieldType === "LookupField" && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="relationshipApiCode" className="text-muted-foreground">
+                    Relationship API Code
+                  </Label>
+                  <Input
+                    id="relationshipApiCode"
+                    data-testid="input-relationship-api-code"
+                    {...form.register("relationshipApiCode")}
+                    disabled={!!fieldToEdit}
+                    placeholder="e.g., customerAccounts"
+                    className={fieldToEdit ? "bg-muted" : ""}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A unique identifier for this relationship (cannot be changed after creation)
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="relationshipName" className="text-muted-foreground">
+                    Relationship Name
+                  </Label>
+                  <Input
+                    id="relationshipName"
+                    data-testid="input-relationship-name"
+                    {...form.register("relationshipName")}
+                    placeholder="e.g., Customer Accounts"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    A friendly name for this relationship
+                  </p>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="helpText" className="text-muted-foreground">
                 Help Text

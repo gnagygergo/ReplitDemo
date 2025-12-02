@@ -21,4 +21,13 @@
     <iconSet/>
     <icon/>
   </customValue>
+  <customValue>
+    <label>Negyedik</label>
+    <code>Negyedik</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+  <title>GVS Name</title>
+  <sorting>ascending</sorting>
 </GlobalValueSet>

@@ -72,10 +72,6 @@ export function DropDownListFieldTypeEditor({
   const [xmlSorting, setXmlSorting] = useState<string>("no sorting");
   const [xmlTitle, setXmlTitle] = useState<string>("");
   
-  // Header edit mode
-  const [isEditingHeader, setIsEditingHeader] = useState(false);
-  const [headerBackup, setHeaderBackup] = useState<{ sorting: string; title: string } | null>(null);
-  
   // Snapshot of initial state for change detection
   const initialStateRef = useRef<{
     sorting: string;
@@ -297,26 +293,6 @@ export function DropDownListFieldTypeEditor({
     recomputeHasChanges(items, xmlSorting, value);
   };
 
-  const handleEditHeader = () => {
-    setHeaderBackup({ sorting: xmlSorting, title: xmlTitle });
-    setIsEditingHeader(true);
-  };
-
-  const handleSaveHeader = () => {
-    setIsEditingHeader(false);
-    setHeaderBackup(null);
-  };
-
-  const handleCancelHeader = () => {
-    if (headerBackup) {
-      setXmlSorting(headerBackup.sorting);
-      setXmlTitle(headerBackup.title);
-      recomputeHasChanges(items, headerBackup.sorting, headerBackup.title);
-    }
-    setIsEditingHeader(false);
-    setHeaderBackup(null);
-  };
-
   const handleSave = () => {
     const itemsToSave = items.map((item) => {
       const { _tempId, ...rest } = item;
@@ -405,7 +381,7 @@ export function DropDownListFieldTypeEditor({
       <CardContent>
         {/* Header-level fields */}
         <div className="mb-4">
-          <div className="grid grid-cols-[1fr_1fr_auto] gap-4 items-end">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="xml-title" className="text-muted-foreground">
                 Title
@@ -415,7 +391,6 @@ export function DropDownListFieldTypeEditor({
                 value={xmlTitle}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Enter value set title"
-                disabled={!isEditingHeader}
                 data-testid="input-xml-title"
               />
             </div>
@@ -426,7 +401,6 @@ export function DropDownListFieldTypeEditor({
               <Select
                 value={xmlSorting}
                 onValueChange={handleSortingChange}
-                disabled={!isEditingHeader}
               >
                 <SelectTrigger id="xml-sorting" data-testid="select-xml-sorting">
                   <SelectValue />
@@ -437,36 +411,6 @@ export function DropDownListFieldTypeEditor({
                   <SelectItem value="descending">Descending</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex gap-2">
-              {!isEditingHeader ? (
-                <Button
-                  onClick={handleEditHeader}
-                  size="sm"
-                  variant="outline"
-                  data-testid="button-edit-header"
-                >
-                  Edit
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    onClick={handleSaveHeader}
-                    size="sm"
-                    data-testid="button-save-header"
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    onClick={handleCancelHeader}
-                    size="sm"
-                    variant="outline"
-                    data-testid="button-cancel-header"
-                  >
-                    Cancel
-                  </Button>
-                </>
-              )}
             </div>
           </div>
         </div>

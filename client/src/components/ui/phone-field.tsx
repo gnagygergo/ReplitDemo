@@ -201,7 +201,7 @@ export function PhoneField({
     const telLink = `tel:${countryCode}${phoneNumber}`;
 
     return (
-      <div className={mode === "view" ? "space-y-2" : ""}>
+      <div className={mode === "view" ? "" : ""}>
         {mode === "view" && label && (
           <FormLabel className="text-muted-foreground">{label}</FormLabel>
         )}
@@ -221,7 +221,7 @@ export function PhoneField({
   }
 
   return (
-    <div className="space-y-2">
+    <div>
       {label && (
         <FormLabel className="text-muted-foreground">{label}</FormLabel>
       )}

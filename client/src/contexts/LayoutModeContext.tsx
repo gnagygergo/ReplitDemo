@@ -46,11 +46,17 @@ export function LayoutModeProvider({ children }: { children: React.ReactNode }) 
 
   const updateFieldValue = useCallback((fieldId: string, value: string | number | null | undefined) => {
     const existing = fieldsRef.current.get(fieldId);
+    const wasEmpty = existing?.isEmpty ?? true;
+    const nowEmpty = isValueEmpty(value);
+    
     if (existing) {
       existing.value = value;
-      existing.isEmpty = isValueEmpty(value);
+      existing.isEmpty = nowEmpty;
     }
-    if (!isValueEmpty(value)) {
+    
+    // Only clear errors when value changes from empty to non-empty
+    // This prevents clearing errors during re-renders with the same value
+    if (wasEmpty && !nowEmpty) {
       setFieldErrors((prev) => {
         if (prev.has(fieldId)) {
           const next = new Map(prev);

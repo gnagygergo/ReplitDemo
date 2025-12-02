@@ -208,8 +208,8 @@ export function PhoneField({
         <a
           href={telLink}
           className={cn(
-            "text-primary hover:underline inline-flex items-center gap-1",
-            mode === "table" ? "text-sm" : "text-sm py-2"
+            "text-primary hover:underline items-center gap-1",
+            mode === "table" ? "text-sm inline-flex" : "text-sm py-2 flex"
           )}
           data-testid={testId}
         >

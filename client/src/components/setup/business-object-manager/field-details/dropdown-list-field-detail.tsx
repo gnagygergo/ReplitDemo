@@ -10,6 +10,7 @@ import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useForm, FormProvider } from "react-hook-form";
+import { DropDownListFieldTypeEditor } from "../dropdown-list-field-type-editor";
 
 interface FieldDefinition {
   type: string;
@@ -36,6 +37,8 @@ interface DropDownListFieldMetadata {
   defaultValue?: string;
   required?: boolean;
   helpText?: string;
+  sourceType?: string;
+  sourcePath?: string;
 }
 
 export function DropDownListFieldDetail({
@@ -59,6 +62,15 @@ export function DropDownListFieldDetail({
 
   // Extract fieldCode from filePath (remove .field_meta.xml extension)
   const fieldCode = field.filePath.replace('.field_meta.xml', '');
+
+  // Construct the full metadata path for globalMetadata source type
+  // sourcePath from field metadata is like "global_value_sets/industries"
+  // We need to construct: "companies/[companyId]/global_value_sets/industries.globalValueSet-meta.xml"
+  const getGlobalValueSetPath = (sourcePath: string): string => {
+    // Remove any existing extension if present
+    const pathWithoutExt = sourcePath.replace(/\.globalValueSet-meta\.xml$/i, '');
+    return `companies/[companyId]/${pathWithoutExt}.globalValueSet-meta.xml`;
+  };
 
   useEffect(() => {
     setIsEditing(mode === 'edit');
@@ -264,6 +276,18 @@ export function DropDownListFieldDetail({
           </p>
         </CardContent>
       </Card>
+
+      {/* Show Dropdown List Values editor for globalMetadata source type */}
+      {formData.sourceType === "globalMetadata" && formData.sourcePath && (
+        <DropDownListFieldTypeEditor
+          sourceType="metadata"
+          sourcePath={getGlobalValueSetPath(formData.sourcePath)}
+          title="Dropdown List Values"
+          description="Manage the values available in this dropdown field"
+          rootKey="GlobalValueSet"
+          itemKey="customValue"
+        />
+      )}
     </div>
     </FormProvider>
   );

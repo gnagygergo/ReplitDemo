@@ -26,12 +26,27 @@ import {
   Plus,
   Trash2,
   Save,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
+  GripVertical,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 export interface DropDownListFieldTypeEditorProps {
   sourceType: "metadata";
@@ -42,15 +57,121 @@ export interface DropDownListFieldTypeEditorProps {
   itemKey?: string;
 }
 
-type SortDirection = "asc" | "desc" | "none";
-
 interface CustomValue {
   label: string[];
   code: string[];
   default: string[];
   iconSet: string[];
   icon: string[];
+  order: string[];
   _tempId?: string;
+}
+
+interface SortableRowProps {
+  item: CustomValue;
+  onCellEdit: (tempId: string, field: keyof CustomValue, value: string) => void;
+  onCheckboxChange: (tempId: string, checked: boolean) => void;
+  onDeleteRow: (tempId: string) => void;
+}
+
+function SortableRow({ item, onCellEdit, onCheckboxChange, onDeleteRow }: SortableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item._tempId! });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <TableRow
+      ref={setNodeRef}
+      style={style}
+      data-testid={`row-${item._tempId}`}
+      className={isDragging ? "bg-muted" : ""}
+    >
+      <TableCell className="w-[40px]">
+        <button
+          type="button"
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded"
+          {...attributes}
+          {...listeners}
+          data-testid={`drag-handle-${item._tempId}`}
+        >
+          <GripVertical className="h-4 w-4 text-muted-foreground" />
+        </button>
+      </TableCell>
+      <TableCell>
+        <Input
+          value={item.label?.[0] || ""}
+          onChange={(e) =>
+            onCellEdit(item._tempId!, "label", e.target.value)
+          }
+          className="h-8"
+          data-testid={`input-label-${item._tempId}`}
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          value={item.code?.[0] || ""}
+          onChange={(e) =>
+            onCellEdit(item._tempId!, "code", e.target.value)
+          }
+          className="h-8"
+          data-testid={`input-code-${item._tempId}`}
+        />
+      </TableCell>
+      <TableCell className="text-center">
+        <div className="flex justify-center">
+          <Checkbox
+            checked={item.default?.[0] === "true"}
+            onCheckedChange={(checked) =>
+              onCheckboxChange(item._tempId!, checked === true)
+            }
+            data-testid={`checkbox-default-${item._tempId}`}
+          />
+        </div>
+      </TableCell>
+      <TableCell>
+        <Input
+          value={item.iconSet?.[0] || ""}
+          onChange={(e) =>
+            onCellEdit(item._tempId!, "iconSet", e.target.value)
+          }
+          className="h-8"
+          data-testid={`input-iconset-${item._tempId}`}
+        />
+      </TableCell>
+      <TableCell>
+        <Input
+          value={item.icon?.[0] || ""}
+          onChange={(e) =>
+            onCellEdit(item._tempId!, "icon", e.target.value)
+          }
+          className="h-8"
+          data-testid={`input-icon-${item._tempId}`}
+        />
+      </TableCell>
+      <TableCell>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDeleteRow(item._tempId!)}
+          className="h-8 w-8 p-0"
+          data-testid={`button-delete-${item._tempId}`}
+        >
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
 }
 
 export function DropDownListFieldTypeEditor({
@@ -63,9 +184,6 @@ export function DropDownListFieldTypeEditor({
 }: DropDownListFieldTypeEditorProps) {
   const { toast } = useToast();
   const [items, setItems] = useState<CustomValue[]>([]);
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("none");
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   
   // Header-level XML fields
@@ -79,6 +197,18 @@ export function DropDownListFieldTypeEditor({
     items: any[];
   } | null>(null);
 
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const { data: metadataResponse, isLoading } = useMetadata({
     sourcePath,
     enabled: sourceType === "metadata",
@@ -86,9 +216,12 @@ export function DropDownListFieldTypeEditor({
 
   // Build canonical state for comparison (excludes UI-only fields like _tempId)
   const buildCanonicalState = (currentItems: CustomValue[], sorting: string, titleValue: string) => {
-    const canonicalItems = currentItems.map(item => {
+    const canonicalItems = currentItems.map((item, index) => {
       const { _tempId, ...rest } = item;
-      return rest;
+      return {
+        ...rest,
+        order: [String(index + 1)],
+      };
     });
     
     return {
@@ -124,13 +257,14 @@ export function DropDownListFieldTypeEditor({
       const current = currentState.items[i];
       const orig = initial.items[i];
       
-      // Compare each field (use optional chaining for fields that might be missing)
+      // Compare each field including order
       if (
         (current.label?.[0] || "") !== (orig.label?.[0] || "") ||
         (current.code?.[0] || "") !== (orig.code?.[0] || "") ||
         (current.default?.[0] || "false") !== (orig.default?.[0] || "false") ||
         (current.iconSet?.[0] || "") !== (orig.iconSet?.[0] || "") ||
-        (current.icon?.[0] || "") !== (orig.icon?.[0] || "")
+        (current.icon?.[0] || "") !== (orig.icon?.[0] || "") ||
+        (current.order?.[0] || "") !== (orig.order?.[0] || "")
       ) {
         setHasChanges(true);
         return;
@@ -149,8 +283,16 @@ export function DropDownListFieldTypeEditor({
           ? metadataResponse[rootKey][itemKey]
           : [metadataResponse[rootKey][itemKey]];
         
-        const itemsWithIds = loadedItems.map((item: any, index: number) => ({
+        // Sort by existing order if present, otherwise use array index
+        const sortedLoadedItems = [...loadedItems].sort((a, b) => {
+          const orderA = parseInt(a.order?.[0] || "0", 10) || 0;
+          const orderB = parseInt(b.order?.[0] || "0", 10) || 0;
+          return orderA - orderB;
+        });
+        
+        const itemsWithIds = sortedLoadedItems.map((item: any, index: number) => ({
           ...item,
+          order: item.order || [String(index + 1)],
           _tempId: `existing-${index}`,
         }));
         setItems(itemsWithIds);
@@ -164,9 +306,16 @@ export function DropDownListFieldTypeEditor({
       setXmlTitle(titleValue);
 
       // Snapshot initial state for change detection
+      const sortedForSnapshot = [...loadedItems].sort((a, b) => {
+        const orderA = parseInt(a.order?.[0] || "0", 10) || 0;
+        const orderB = parseInt(b.order?.[0] || "0", 10) || 0;
+        return orderA - orderB;
+      });
+      
       initialStateRef.current = buildCanonicalState(
-        loadedItems.map((item: any, index: number) => ({
+        sortedForSnapshot.map((item: any, index: number) => ({
           ...item,
+          order: item.order || [String(index + 1)],
           _tempId: `existing-${index}`,
         })),
         sorting,
@@ -214,44 +363,35 @@ export function DropDownListFieldTypeEditor({
     },
   });
 
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc");
-      } else if (sortDirection === "desc") {
-        setSortDirection("none");
-        setSortColumn(null);
-      }
-    } else {
-      setSortColumn(column);
-      setSortDirection("asc");
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = items.findIndex((item) => item._tempId === active.id);
+      const newIndex = items.findIndex((item) => item._tempId === over.id);
+
+      const reorderedItems = arrayMove(items, oldIndex, newIndex);
+      
+      // Update order values based on new positions
+      const updatedItems = reorderedItems.map((item, index) => ({
+        ...item,
+        order: [String(index + 1)],
+      }));
+
+      setItems(updatedItems);
+      recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
     }
-  };
-
-  const getSortedItems = () => {
-    if (!sortColumn || sortDirection === "none") {
-      return items;
-    }
-
-    return [...items].sort((a: any, b: any) => {
-      const aValue = a[sortColumn]?.[0] || "";
-      const bValue = b[sortColumn]?.[0] || "";
-
-      if (sortDirection === "asc") {
-        return aValue.localeCompare(bValue);
-      } else {
-        return bValue.localeCompare(aValue);
-      }
-    });
   };
 
   const handleAddRow = () => {
+    const newOrder = items.length + 1;
     const newItem: CustomValue = {
       label: [""],
       code: [""],
       default: ["false"],
       iconSet: [""],
       icon: [""],
+      order: [String(newOrder)],
       _tempId: `new-${Date.now()}`,
     };
     const updatedItems = [...items, newItem];
@@ -260,7 +400,12 @@ export function DropDownListFieldTypeEditor({
   };
 
   const handleDeleteRow = (tempId: string) => {
-    const updatedItems = items.filter((item) => item._tempId !== tempId);
+    const filteredItems = items.filter((item) => item._tempId !== tempId);
+    // Renumber order values after deletion
+    const updatedItems = filteredItems.map((item, index) => ({
+      ...item,
+      order: [String(index + 1)],
+    }));
     setItems(updatedItems);
     recomputeHasChanges(updatedItems, xmlSorting, xmlTitle);
   };
@@ -294,12 +439,16 @@ export function DropDownListFieldTypeEditor({
   };
 
   const handleSave = () => {
-    const itemsToSave = items.map((item) => {
+    // Map items with order tags and remove _tempId
+    const itemsToSave = items.map((item, index) => {
       const { _tempId, ...rest } = item;
-      return rest;
+      return {
+        ...rest,
+        order: [String(index + 1)],
+      };
     });
 
-    // Build clean XML structure to avoid carrying over old values
+    // Build clean XML structure
     const updatedXmlStructure: any = {
       [rootKey]: {
         [itemKey]: itemsToSave,
@@ -307,7 +456,6 @@ export function DropDownListFieldTypeEditor({
     };
 
     // Add header-level fields (xml2js expects arrays)
-    // Only include if they have values
     if (xmlTitle.trim()) {
       updatedXmlStructure[rootKey].title = [xmlTitle.trim()];
     }
@@ -317,19 +465,6 @@ export function DropDownListFieldTypeEditor({
     }
 
     updateMutation.mutate(updatedXmlStructure);
-  };
-
-  const SortIcon = ({ column }: { column: string }) => {
-    if (sortColumn !== column) {
-      return <ArrowUpDown className="h-4 w-4 ml-2 inline" />;
-    }
-    if (sortDirection === "asc") {
-      return <ArrowUp className="h-4 w-4 ml-2 inline" />;
-    }
-    if (sortDirection === "desc") {
-      return <ArrowDown className="h-4 w-4 ml-2 inline" />;
-    }
-    return <ArrowUpDown className="h-4 w-4 ml-2 inline opacity-50" />;
   };
 
   if (isLoading) {
@@ -346,7 +481,7 @@ export function DropDownListFieldTypeEditor({
     );
   }
 
-  const sortedItems = getSortedItems();
+  const itemIds = items.map((item) => item._tempId!);
 
   return (
     <Card>
@@ -416,129 +551,46 @@ export function DropDownListFieldTypeEditor({
         </div>
 
         <div className="border rounded-md overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("label")}
-                  data-testid="header-label"
-                >
-                  Label
-                  <SortIcon column="label" />
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("code")}
-                  data-testid="header-code"
-                >
-                  Code
-                  <SortIcon column="code" />
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-center"
-                  onClick={() => handleSort("default")}
-                  data-testid="header-default"
-                >
-                  Default
-                  <SortIcon column="default" />
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("iconSet")}
-                  data-testid="header-iconset"
-                >
-                  Icon Set
-                  <SortIcon column="iconSet" />
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("icon")}
-                  data-testid="header-icon"
-                >
-                  Icon
-                  <SortIcon column="icon" />
-                </TableHead>
-                <TableHead className="w-[80px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedItems.length === 0 ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No items. Click "Add Row" to create a new entry.
-                  </TableCell>
+                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead data-testid="header-label">Label</TableHead>
+                  <TableHead data-testid="header-code">Code</TableHead>
+                  <TableHead className="text-center" data-testid="header-default">Default</TableHead>
+                  <TableHead data-testid="header-iconset">Icon Set</TableHead>
+                  <TableHead data-testid="header-icon">Icon</TableHead>
+                  <TableHead className="w-[80px]">Actions</TableHead>
                 </TableRow>
-              ) : (
-                sortedItems.map((item) => (
-                  <TableRow key={item._tempId} data-testid={`row-${item._tempId}`}>
-                    <TableCell>
-                      <Input
-                        value={item.label?.[0] || ""}
-                        onChange={(e) =>
-                          handleCellEdit(item._tempId!, "label", e.target.value)
-                        }
-                        className="h-8"
-                        data-testid={`input-label-${item._tempId}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={item.code?.[0] || ""}
-                        onChange={(e) =>
-                          handleCellEdit(item._tempId!, "code", e.target.value)
-                        }
-                        className="h-8"
-                        data-testid={`input-code-${item._tempId}`}
-                      />
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <Checkbox
-                          checked={item.default?.[0] === "true"}
-                          onCheckedChange={(checked) =>
-                            handleCheckboxChange(item._tempId!, checked === true)
-                          }
-                          data-testid={`checkbox-default-${item._tempId}`}
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={item.iconSet?.[0] || ""}
-                        onChange={(e) =>
-                          handleCellEdit(item._tempId!, "iconSet", e.target.value)
-                        }
-                        className="h-8"
-                        data-testid={`input-iconset-${item._tempId}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={item.icon?.[0] || ""}
-                        onChange={(e) =>
-                          handleCellEdit(item._tempId!, "icon", e.target.value)
-                        }
-                        className="h-8"
-                        data-testid={`input-icon-${item._tempId}`}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteRow(item._tempId!)}
-                        className="h-8 w-8 p-0"
-                        data-testid={`button-delete-${item._tempId}`}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      No items. Click "Add Row" to create a new entry.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+                    {items.map((item) => (
+                      <SortableRow
+                        key={item._tempId}
+                        item={item}
+                        onCellEdit={handleCellEdit}
+                        onCheckboxChange={handleCheckboxChange}
+                        onDeleteRow={handleDeleteRow}
+                      />
+                    ))}
+                  </SortableContext>
+                )}
+              </TableBody>
+            </Table>
+          </DndContext>
         </div>
         {hasChanges && (
           <p className="text-sm text-muted-foreground mt-4">

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { CreateEditFieldDialog } from "./create-edit-field-dialog";
 import { FieldDetailViewRouter } from "./field-detail-view-router";
 
@@ -22,17 +22,10 @@ type ViewMode = 'view' | 'edit';
 
 export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [fieldToEdit, setFieldToEdit] = useState<FieldDefinition | null>(null);
   const [selectedField, setSelectedField] = useState<FieldDefinition | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('view');
 
   const handleAddField = () => {
-    setFieldToEdit(null);
-    setDialogOpen(true);
-  };
-
-  const handleEditField = (field: FieldDefinition) => {
-    setFieldToEdit(field);
     setDialogOpen(true);
   };
 
@@ -120,13 +113,12 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
                 <TableHead data-testid="header-field-type">Field Type</TableHead>
                 <TableHead data-testid="header-field-code">Field Code</TableHead>
                 <TableHead data-testid="header-label">Label</TableHead>
-                <TableHead className="w-24" data-testid="header-actions">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {!fieldDefinitions || fieldDefinitions.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground" data-testid="empty-state">
+                  <TableCell colSpan={3} className="text-center text-muted-foreground" data-testid="empty-state">
                     No field definitions found for {selectedObject}
                   </TableCell>
                 </TableRow>
@@ -148,16 +140,6 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
                         {field.label}
                       </button>
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditField(field)}
-                        data-testid={`button-edit-${field.apiCode}`}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -170,7 +152,7 @@ export function CustomFieldBuilder({ selectedObject }: CustomFieldBuilderProps) 
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         objectName={selectedObject}
-        fieldToEdit={fieldToEdit}
+        fieldToEdit={null}
       />
     </div>
   );

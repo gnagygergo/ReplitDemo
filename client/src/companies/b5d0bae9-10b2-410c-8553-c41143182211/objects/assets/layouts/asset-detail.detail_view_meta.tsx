@@ -289,6 +289,7 @@ function AssetDetailContent({ deps, objectCode, id }: AssetDetailProps) {
                             mode={isEditing ? "edit" : "view"}
                             value={field.value || ""}
                             onChange={field.onChange}
+                            layoutMandatory="true"
                             placeholder=""
                             testId={
                               isEditing

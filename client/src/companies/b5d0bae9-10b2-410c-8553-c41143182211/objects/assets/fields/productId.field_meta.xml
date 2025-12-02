@@ -5,7 +5,10 @@
   <label>Product</label>
   <helpText>The product model for this asset</helpText>
   <placeHolder>Select product...</placeHolder>
+  <testId/>
+  <className/>
   <referencedObject>products</referencedObject>
   <primaryDisplayField>name</primaryDisplayField>
   <displayColumns>productCode,name</displayColumns>
+  <relationshipName>Assets</relationshipName>
 </FieldDefinition>

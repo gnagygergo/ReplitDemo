@@ -39,6 +39,8 @@ interface LookupFieldMetadata {
   type: string;
   apiCode: string;
   label: string;
+  relationshipApiCode?: string;
+  relationshipName?: string;
   referencedObject?: string;
   primaryDisplayField?: string;
   displayColumns?: string[];

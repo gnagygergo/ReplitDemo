@@ -105,15 +105,54 @@ export function DropDownListField({
     enabled: !!mergedSourcePath,
   });
 
+  // Extract sorting setting for globalMetadata (ascending, descending, or no sorting)
+  const globalSorting = mergedSourceType === "globalMetadata" 
+    ? metadataResponse?.GlobalValueSet?.sorting?.[0] || "no sorting"
+    : "no sorting";
+
   // Extract items from XML response based on sourceType
-  let items: any[] = [];
+  let rawItems: any[] = [];
   if (mergedSourceType === "globalMetadata") {
     // For globalMetadata, extract from GlobalValueSet.customValue structure
-    items = metadataResponse?.GlobalValueSet?.customValue || [];
+    rawItems = metadataResponse?.GlobalValueSet?.customValue || [];
   } else {
     // For universalMetadata, use rootKey/itemKey
-    items = metadataResponse?.[rootKey || "root"]?.[itemKey || "item"] || [];
+    rawItems = metadataResponse?.[rootKey || "root"]?.[itemKey || "item"] || [];
   }
+
+  // Sort items based on sorting setting (only for globalMetadata)
+  const sortItems = (itemsToSort: any[]): any[] => {
+    if (mergedSourceType !== "globalMetadata") {
+      return itemsToSort;
+    }
+
+    const itemsCopy = [...itemsToSort];
+
+    if (globalSorting === "ascending") {
+      // Sort A-Z by label
+      return itemsCopy.sort((a, b) => {
+        const labelA = (a.label?.[0] || "").toLowerCase();
+        const labelB = (b.label?.[0] || "").toLowerCase();
+        return labelA.localeCompare(labelB);
+      });
+    } else if (globalSorting === "descending") {
+      // Sort Z-A by label
+      return itemsCopy.sort((a, b) => {
+        const labelA = (a.label?.[0] || "").toLowerCase();
+        const labelB = (b.label?.[0] || "").toLowerCase();
+        return labelB.localeCompare(labelA);
+      });
+    } else {
+      // No sorting - use order tag (default to array index if no order)
+      return itemsCopy.sort((a, b) => {
+        const orderA = parseInt(a.order?.[0] || "0", 10) || 0;
+        const orderB = parseInt(b.order?.[0] || "0", 10) || 0;
+        return orderA - orderB;
+      });
+    }
+  };
+
+  const items = sortItems(rawItems);
 
   // Default display value extractor
   const defaultGetDisplayValue = (item: any) => {

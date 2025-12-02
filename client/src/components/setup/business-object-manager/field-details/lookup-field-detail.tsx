@@ -401,39 +401,6 @@ export function LookupFieldDetail({
           />
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Lookup field configuration summary
-          </p>
-          <div className="p-4 border rounded-md bg-muted/50 space-y-2">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Label</p>
-              <p className="text-sm">{formData.label || field.label}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Referenced Object</p>
-              <p className="text-sm">{formData.referencedObject || "Not configured"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Primary Display Field</p>
-              <p className="text-sm">{formData.primaryDisplayField || "Not configured"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Display Columns</p>
-              <p className="text-sm">
-                {normalizeDisplayColumns(formData.displayColumns).length > 0
-                  ? normalizeDisplayColumns(formData.displayColumns).join(", ")
-                  : "Not configured"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
     </FormProvider>
   );

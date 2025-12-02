@@ -276,26 +276,6 @@ export function TextFieldDetail({
           />
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TextField
-            mode="edit"
-            value=""
-            label={formData.label || field.label}
-            placeholder={formData.placeHolder || `Example ${formData.subtype || 'text'} field...`}
-            type={(formData.subtype as any) || "text"}
-            maxLength={formData.maxLength}
-            data-testid="preview-field"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            This is how the field will appear in forms
-          </p>
-        </CardContent>
-        </Card>
       </div>
     </FormProvider>
   );

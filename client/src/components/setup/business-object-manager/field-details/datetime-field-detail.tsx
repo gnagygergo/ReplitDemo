@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DateTimeField } from "@/components/ui/date-time-field";
 import { TextField } from "@/components/ui/text-field";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormLabel } from "@/components/ui/form";
@@ -237,24 +236,6 @@ export function DateTimeFieldDetail({
             label="Help Text"
             data-testid="input-help-text"
           />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DateTimeField
-            mode="edit"
-            value={null}
-            label={formData.label || field.label}
-            fieldType={(formData.fieldType as any) || "DateTime"}
-            data-testid="preview-field"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            This is how the field will appear in forms
-          </p>
         </CardContent>
       </Card>
       </div>

@@ -274,27 +274,6 @@ export function NumberFieldDetail({
           />
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <NumberField
-            mode="edit"
-            value={null}
-            label={formData.label || field.label}
-            placeholder="0.00"
-            decimals={formData.decimalPlaces}
-            step={formData.step}
-            format={(formData.format?.toLowerCase() === "percentage" ? "percentage" : "number") as "number" | "percentage"}
-            data-testid="preview-field"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            This is how the field will appear in forms
-          </p>
-        </CardContent>
-        </Card>
       </div>
     </FormProvider>
   );

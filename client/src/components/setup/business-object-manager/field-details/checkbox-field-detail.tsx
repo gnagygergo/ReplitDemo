@@ -234,23 +234,6 @@ export function CheckboxFieldDetail({
           />
         </CardContent>
       </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CheckboxField
-            mode="edit"
-            value={formData.defaultValue || false}
-            label={formData.label || field.label}
-            data-testid="preview-field"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            This is how the field will appear in forms
-          </p>
-        </CardContent>
-      </Card>
     </div>
     </FormProvider>
   );

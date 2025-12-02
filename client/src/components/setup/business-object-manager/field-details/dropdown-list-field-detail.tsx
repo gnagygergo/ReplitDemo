@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Pencil, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropDownListField } from "@/components/ui/dropdown-list-field";
 import { TextField } from "@/components/ui/text-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import { useToast } from "@/hooks/use-toast";
@@ -254,26 +253,6 @@ export function DropDownListFieldDetail({
             label="Required Field"
             data-testid="input-required"
           />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Field Preview</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DropDownListField
-            mode="edit"
-            value=""
-            onValueChange={() => {}}
-            label={formData.label || field.label}
-            sourceType="universalMetadata"
-            sourcePath={formData.picklistName || "sample_picklist"}
-            data-testid="preview-field"
-          />
-          <p className="text-sm text-muted-foreground mt-2">
-            This is how the field will appear in forms
-          </p>
         </CardContent>
       </Card>
 

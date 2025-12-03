@@ -33,9 +33,21 @@ Preferred communication style: Simple, everyday language.
     - **Icon**: Lucide icon name for the tab
     - **TabOrder**: Numeric ordering for tab display sequence
 - **Dynamic Routing**: App.tsx generates routes dynamically from tab definitions via `/api/tab-definitions`. Uses generic `ObjectListPage` and `ObjectDetailPage` wrapper components that load the appropriate layouts based on the tab's objectCode.
-- **Layout File Naming Convention**: Layout files use the `*_view_meta.tsx` suffix pattern:
-    - Detail views: `[singular]-detail.detail_view_meta.tsx` (e.g., `asset-detail.detail_view_meta.tsx`)
-    - Table views: `[plural].table_view_meta.tsx` (e.g., `assets.table_view_meta.tsx`)
+- **Layout File Naming Convention**: Layout files follow a priority-based naming convention:
+    - **NEW Clean Format** (recommended):
+        - Detail views: `[singular]-detail.layout.tsx` (e.g., `product-detail.layout.tsx`)
+        - Table views: `[plural].table_layout.tsx` (e.g., `products.table_layout.tsx`)
+    - **Legacy Format** (still supported):
+        - Detail views: `[singular]-detail.detail_view_meta.tsx` (e.g., `asset-detail.detail_view_meta.tsx`)
+        - Table views: `[plural].table_view_meta.tsx` (e.g., `assets.table_view_meta.tsx`)
+- **Clean Layout Architecture** (New Pattern - Products as proof of concept):
+    - **LayoutContext** (`client/src/contexts/LayoutContext.tsx`): React context providing form, record, mode, and objectCode to all child components
+    - **Smart Field Component** (`companies/[companyId]/components/ui/Field.tsx`): Auto-detects field type from XML metadata and renders appropriate component with auto-wired props
+    - **DetailViewHandler** (`companies/[companyId]/components/ui/DetailViewHandler.tsx`): Generic wrapper handling loading, error states, header, edit/save buttons, and LayoutContext provision
+    - **TableViewHandler** (`companies/[companyId]/components/ui/TableViewHandler.tsx`): Generic wrapper handling loading, empty states, search, and table structure
+    - **Benefits**: Reduces layout files from ~250 lines to ~30-50 lines of pure field arrangement
+    - **Backward Compatible**: ObjectDetailPage/ObjectListPage check for `.layout.tsx` first, fall back to legacy format if not found
+    - **Incremental Rollout**: New format can be adopted per-object without breaking existing layouts
 - **Generic Data Hooks**: Two hooks handle all CRUD operations for any object type:
     - `useObjectDetail(objectCode, id)`: Manages detail page state including fetch, create, update, delete with proper loading/error states and navigation
     - `useObjectList(objectCode)`: Manages list page state including search, sorting, pagination with delete confirmation

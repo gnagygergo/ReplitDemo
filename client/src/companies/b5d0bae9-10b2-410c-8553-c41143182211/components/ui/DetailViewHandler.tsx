@@ -35,7 +35,7 @@ export interface LayoutComponentProps {
   CardHeader: typeof CardHeader;
   CardTitle: typeof CardTitle;
   RelatedList: ComponentType<RelatedListProps>;
-  record: Record<string, unknown> | null;
+  record: { id: string; [key: string]: unknown } | null;
   isCreating: boolean;
 }
 
@@ -254,7 +254,7 @@ function DetailViewHandlerContent({ objectCode, id, Layout }: DetailViewHandlerP
               CardHeader={CardHeader}
               CardTitle={CardTitle}
               RelatedList={RelatedList}
-              record={record as Record<string, unknown> | null}
+              record={record as { id: string; [key: string]: unknown } | null}
               isCreating={isCreating}
             />
           </form>

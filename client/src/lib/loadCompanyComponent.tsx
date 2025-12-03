@@ -27,6 +27,30 @@ const componentModules = import.meta.glob(
 );
 
 /**
+ * Tries to get a component loader without throwing an error if not found.
+ * Useful for checking if a new-style layout exists before falling back to legacy.
+ * 
+ * @returns The loader function if found, undefined otherwise
+ */
+export function tryLoadCompanyComponent(
+  companyId: string | undefined,
+  objectName: string,
+  componentName: string
+): (() => Promise<any>) | undefined {
+  // Try company-specific path first
+  const companyPath = `../companies/${companyId}/objects/${objectName}/layouts/${componentName}.tsx`;
+  const companyLoader = componentModules[companyPath];
+  
+  if (companyLoader) {
+    return companyLoader;
+  }
+  
+  // Fall back to default company
+  const defaultPath = `../companies/0_default/objects/${objectName}/layouts/${componentName}.tsx`;
+  return componentModules[defaultPath];
+}
+
+/**
  * Dynamically loads a company-specific component based on the logged-in user's company context.
  * 
  * @param companyId - The ID of the company (from user's company context)

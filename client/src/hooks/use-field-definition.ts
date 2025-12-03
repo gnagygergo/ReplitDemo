@@ -30,6 +30,12 @@ export interface FieldDefinition {
   stateProvinceColumn?: string;
   zipCodeColumn?: string;
   countryColumn?: string;
+  // LookupField-specific properties
+  referencedObject?: string;
+  primaryDisplayField?: string;
+  displayColumns?: string;
+  relationshipName?: string;
+  relationshipApiCode?: string;
 }
 
 interface UseFieldDefinitionOptions {

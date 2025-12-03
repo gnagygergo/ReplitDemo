@@ -3927,6 +3927,258 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Quote Line routes - Delegated to business-objects-routes
   registerQuoteLineRoutes(app, storage);
 
+  // ============================================================================
+  // GENERIC RELATED RECORDS ENDPOINT
+  // Fetches child records linked to a parent via Lookup Field relationships
+  // Example: GET /api/products/123/related/assets returns all assets linked to product 123
+  // ============================================================================
+  app.get("/api/:parentObjectCode/:parentId/related/:relationshipApiCode", isAuthenticated, async (req: any, res) => {
+    try {
+      const { parentObjectCode, parentId, relationshipApiCode } = req.params;
+      const companyContext = await storage.GetCompanyContext(req);
+      
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      // Find the child object's field definitions to locate the lookup field
+      // The relationshipApiCode should match the <relationshipApiCode> in a LookupField XML
+      const companiesDir = path.join(process.cwd(), "client/src/companies", companyContext, "objects");
+      
+      // Check if company-specific folder exists, fall back to default
+      const objectsDirExists = existsSync(companiesDir);
+      const searchDir = objectsDirExists 
+        ? companiesDir 
+        : path.join(process.cwd(), "client/src/companies/0_default/objects");
+
+      // Search through all objects to find a LookupField with matching relationshipApiCode
+      // that references the parentObjectCode
+      let childObjectCode: string | null = null;
+      let lookupFieldApiCode: string | null = null;
+
+      if (existsSync(searchDir)) {
+        const objectFolders = readdirSync(searchDir);
+        
+        for (const objectFolder of objectFolders) {
+          const fieldsDir = path.join(searchDir, objectFolder, "fields");
+          if (!existsSync(fieldsDir)) continue;
+          
+          const fieldFiles = readdirSync(fieldsDir).filter(f => f.endsWith(".field_meta.xml"));
+          
+          for (const fieldFile of fieldFiles) {
+            try {
+              const fieldContent = readFileSync(path.join(fieldsDir, fieldFile), "utf-8");
+              const parsed = await parseXML(fieldContent) as any;
+              const fieldDef = parsed?.FieldDefinition;
+              
+              if (!fieldDef) continue;
+              
+              const fieldType = fieldDef.type?.[0];
+              const referencedObject = fieldDef.referencedObject?.[0];
+              const fieldRelationshipApiCode = fieldDef.relationshipApiCode?.[0];
+              
+              // Check if this is a LookupField that:
+              // 1. References the parent object
+              // 2. Has the matching relationshipApiCode
+              if (
+                fieldType === "LookupField" &&
+                referencedObject === parentObjectCode &&
+                fieldRelationshipApiCode === relationshipApiCode
+              ) {
+                childObjectCode = objectFolder;
+                lookupFieldApiCode = fieldDef.apiCode?.[0];
+                break;
+              }
+            } catch (parseErr) {
+              // Skip files that can't be parsed
+              continue;
+            }
+          }
+          
+          if (childObjectCode) break;
+        }
+      }
+
+      if (!childObjectCode || !lookupFieldApiCode) {
+        return res.status(404).json({ 
+          message: `No relationship found with apiCode '${relationshipApiCode}' referencing '${parentObjectCode}'` 
+        });
+      }
+
+      // Now query the child table using the lookup field
+      // Map object codes to database tables and storage classes
+      const tableMap: Record<string, any> = {
+        assets: (await import("@shared/schema")).assets,
+        accounts: (await import("@shared/schema")).accounts,
+        opportunities: (await import("@shared/schema")).opportunities,
+        products: (await import("@shared/schema")).products,
+        quotes: (await import("@shared/schema")).quotes,
+        quoteLines: (await import("@shared/schema")).quoteLines,
+        users: (await import("@shared/schema")).users,
+        "quote-lines": (await import("@shared/schema")).quoteLines,
+        "unit-of-measures": (await import("@shared/schema")).unitOfMeasures,
+      };
+
+      const table = tableMap[childObjectCode];
+      if (!table) {
+        return res.status(404).json({ 
+          message: `Unknown object type: ${childObjectCode}` 
+        });
+      }
+
+      // Build dynamic query using the lookup field
+      // The lookup field's apiCode is the column name that stores the parent ID
+      const { eq, and, getTableColumns } = await import("drizzle-orm");
+      
+      // Query the child records where lookupFieldApiCode column equals parentId
+      // and companyId matches context
+      const query = db
+        .select(getTableColumns(table))
+        .from(table)
+        .where(
+          and(
+            eq(table[lookupFieldApiCode], parentId),
+            table.companyId ? eq(table.companyId, companyContext) : undefined
+          )
+        );
+
+      const records = await query;
+      
+      res.json({
+        records,
+        meta: {
+          parentObjectCode,
+          parentId,
+          relationshipApiCode,
+          childObjectCode,
+          lookupFieldApiCode,
+          count: records.length,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching related records:", error);
+      res.status(500).json({ message: "Failed to fetch related records" });
+    }
+  });
+
+  // ============================================================================
+  // GENERIC RELATED RECORD UPDATE ENDPOINT
+  // Updates a specific child record in a related list
+  // Example: PATCH /api/products/123/related/assets/456
+  // ============================================================================
+  app.patch("/api/:parentObjectCode/:parentId/related/:relationshipApiCode/:childId", isAuthenticated, async (req: any, res) => {
+    try {
+      const { parentObjectCode, parentId, relationshipApiCode, childId } = req.params;
+      const companyContext = await storage.GetCompanyContext(req);
+      
+      if (!companyContext) {
+        return res.status(403).json({ message: "No company context" });
+      }
+
+      // Find the child object by scanning field definitions (same logic as GET)
+      const companiesDir = path.join(process.cwd(), "client/src/companies", companyContext, "objects");
+      const objectsDirExists = existsSync(companiesDir);
+      const searchDir = objectsDirExists 
+        ? companiesDir 
+        : path.join(process.cwd(), "client/src/companies/0_default/objects");
+
+      let childObjectCode: string | null = null;
+      let lookupFieldApiCode: string | null = null;
+
+      if (existsSync(searchDir)) {
+        const objectFolders = readdirSync(searchDir);
+        
+        for (const objectFolder of objectFolders) {
+          const fieldsDir = path.join(searchDir, objectFolder, "fields");
+          if (!existsSync(fieldsDir)) continue;
+          
+          const fieldFiles = readdirSync(fieldsDir).filter(f => f.endsWith(".field_meta.xml"));
+          
+          for (const fieldFile of fieldFiles) {
+            try {
+              const fieldContent = readFileSync(path.join(fieldsDir, fieldFile), "utf-8");
+              const parsed = await parseXML(fieldContent) as any;
+              const fieldDef = parsed?.FieldDefinition;
+              
+              if (!fieldDef) continue;
+              
+              const fieldType = fieldDef.type?.[0];
+              const referencedObject = fieldDef.referencedObject?.[0];
+              const fieldRelationshipApiCode = fieldDef.relationshipApiCode?.[0];
+              
+              if (
+                fieldType === "LookupField" &&
+                referencedObject === parentObjectCode &&
+                fieldRelationshipApiCode === relationshipApiCode
+              ) {
+                childObjectCode = objectFolder;
+                lookupFieldApiCode = fieldDef.apiCode?.[0];
+                break;
+              }
+            } catch (parseErr) {
+              continue;
+            }
+          }
+          
+          if (childObjectCode) break;
+        }
+      }
+
+      if (!childObjectCode || !lookupFieldApiCode) {
+        return res.status(404).json({ 
+          message: `No relationship found with apiCode '${relationshipApiCode}' referencing '${parentObjectCode}'` 
+        });
+      }
+
+      // Map to database table
+      const tableMap: Record<string, any> = {
+        assets: (await import("@shared/schema")).assets,
+        accounts: (await import("@shared/schema")).accounts,
+        opportunities: (await import("@shared/schema")).opportunities,
+        products: (await import("@shared/schema")).products,
+        quotes: (await import("@shared/schema")).quotes,
+        quoteLines: (await import("@shared/schema")).quoteLines,
+        users: (await import("@shared/schema")).users,
+        "quote-lines": (await import("@shared/schema")).quoteLines,
+        "unit-of-measures": (await import("@shared/schema")).unitOfMeasures,
+      };
+
+      const table = tableMap[childObjectCode];
+      if (!table) {
+        return res.status(404).json({ 
+          message: `Unknown object type: ${childObjectCode}` 
+        });
+      }
+
+      const { eq, and } = await import("drizzle-orm");
+      
+      // Remove protected fields from the update
+      const { id, companyId, ...allowedUpdates } = req.body;
+
+      // Update the record
+      const [updatedRecord] = await db
+        .update(table)
+        .set(allowedUpdates)
+        .where(
+          and(
+            eq(table.id, childId),
+            eq(table[lookupFieldApiCode], parentId),
+            table.companyId ? eq(table.companyId, companyContext) : undefined
+          )
+        )
+        .returning();
+
+      if (!updatedRecord) {
+        return res.status(404).json({ message: "Record not found" });
+      }
+
+      res.json(updatedRecord);
+    } catch (error) {
+      console.error("Error updating related record:", error);
+      res.status(500).json({ message: "Failed to update related record" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

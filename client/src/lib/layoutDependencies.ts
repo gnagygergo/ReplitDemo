@@ -117,6 +117,7 @@ import { AddressField } from "@/components/ui/address-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
 import LookupFormField from "@/components/ui/lookup-form-field";
 import { DropDownListField } from "@/components/ui/dropdown-list-field";
+import { RelatedList } from "@/components/ui/related-list";
 
 // ============================================================================
 // PANEL COMPONENTS
@@ -347,6 +348,7 @@ export const fields = {
   CheckboxField,
   LookupFormField,
   DropDownListField,
+  RelatedList,
 };
 
 /**

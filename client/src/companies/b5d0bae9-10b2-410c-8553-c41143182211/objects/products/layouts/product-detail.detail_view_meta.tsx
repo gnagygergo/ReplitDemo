@@ -42,7 +42,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
 
   function ProductDetailContent({ deps, objectCode, id }: ProductDetailProps) {
   const { Button, Card, CardContent, CardHeader, CardTitle, Form, FormField, FormItem, FormMessage } = deps.components;
-  const { TextField, NumberField, DateTimeField, AddressField, LookupFormField, CheckboxField } = deps.fields;
+  const { TextField, NumberField, DateTimeField, AddressField, LookupFormField, CheckboxField, RelatedList } = deps.fields;
   const { Panel, PanelGroup, PanelResizeHandle } = deps.panels;
   const { Package, Edit, Save, X } = deps.icons;
   const { Link } = deps.routing;
@@ -243,10 +243,20 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
         {/* Resize Handle */}
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Pane - Additional Information */}
+        {/* Right Pane - Related Lists */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
-            {/* Future: Product history, related items, etc. */}
+            {/* Related List: Assets linked to this product via productId lookup */}
+            {!isCreating && product?.id && (
+              <RelatedList
+                objectCode="assets"
+                fieldCode="productId"
+                columns="name, serialNumber, quantity"
+                mode={isEditing ? "edit" : "view"}
+                parentId={product.id}
+                testId="related-list-assets"
+              />
+            )}
           </div>
         </Panel>
       </PanelGroup>

@@ -3,6 +3,10 @@
  * 
  * This layout only defines WHAT fields to show - the TableViewHandler
  * provides all the boilerplate (loading states, search, pagination, etc.)
+ * 
+ * The RowWrapper provides LayoutContext for each row, enabling smart TableField
+ * to auto-detect field types from metadata and display appropriate values
+ * (e.g., LookupField shows display name instead of ID).
  */
 
 import type { TableLayoutProps } from "../../../components/ui/TableViewHandler";
@@ -14,11 +18,13 @@ export default function ProductsTableLayout({
   TableField,
   EditButton,
   DeleteButton,
+  RowWrapper,
 }: TableLayoutProps) {
   if (records.length === 0) {
     return (
       <TableRow>
         <TableCell>Name</TableCell>
+        <TableCell>Description</TableCell>
         <TableCell>Sales UoM</TableCell>
         <TableCell className="text-right">Actions</TableCell>
       </TableRow>
@@ -28,25 +34,25 @@ export default function ProductsTableLayout({
   return (
     <>
       {records.map((record) => (
-        <TableRow key={record.id as string} data-testid={`row-product-${record.id}`}>
-          <TableCell>
-            <TableField
-              name="name"
-              value={record.name}
-              linkPath="/products"
-              recordId={record.id as string}
-            />
-          </TableCell>
-          <TableCell>
-            <TableField name="salesUomId" value={record.uomName} />
-          </TableCell>
-          <TableCell className="text-right">
-            <div className="flex justify-end gap-2">
-              <EditButton recordId={record.id as string} />
-              <DeleteButton record={record} />
-            </div>
-          </TableCell>
-        </TableRow>
+        <RowWrapper key={record.id as string} record={record}>
+          <TableRow data-testid={`row-product-${record.id}`}>
+            <TableCell>
+              <TableField name="name" linkPath="/products" />
+            </TableCell>
+            <TableCell>
+              <TableField name="description" />
+            </TableCell>
+            <TableCell>
+              <TableField name="salesUomId" />
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <EditButton recordId={record.id as string} />
+                <DeleteButton record={record} />
+              </div>
+            </TableCell>
+          </TableRow>
+        </RowWrapper>
       ))}
     </>
   );

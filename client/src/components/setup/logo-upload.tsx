@@ -117,30 +117,22 @@ export function LogoUpload({ companyId, currentLogoUrl }: LogoUploadProps) {
       // Get the cropped and resized image
       const croppedImageBlob = await getCroppedImg(selectedFile, croppedAreaPixels);
 
-      // Get presigned upload URL
-      const response = await apiRequest("POST", "/api/objects/upload");
-      const { uploadURL } = await response.json();
-
-      // Upload to object storage
-      const uploadResponse = await fetch(uploadURL, {
-        method: "PUT",
-        body: croppedImageBlob,
-        headers: {
-          "Content-Type": "image/jpeg",
-        },
+      // Convert blob to base64 data URI
+      const base64DataUri = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(croppedImageBlob);
       });
 
-      if (!uploadResponse.ok) {
-        throw new Error("Upload failed");
-      }
-
-      // Update company with logo URL
+      // Update company with base64 logo data directly in database
       await apiRequest("PUT", `/api/companies/${companyId}/logo`, {
-        logoUrl: uploadResponse.url,
+        logoUrl: base64DataUri,
       });
 
       // Invalidate company query
       queryClient.invalidateQueries({ queryKey: ["/api/companies", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/my-company"] });
 
       toast({
         title: "Success",
@@ -165,8 +157,9 @@ export function LogoUpload({ companyId, currentLogoUrl }: LogoUploadProps) {
     try {
       await apiRequest("DELETE", `/api/companies/${companyId}/logo`);
 
-      // Invalidate company query
+      // Invalidate company queries
       queryClient.invalidateQueries({ queryKey: ["/api/companies", companyId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/my-company"] });
 
       toast({
         title: "Success",

@@ -3831,7 +3831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ uploadURL });
   });
 
-  // Update company logo after upload
+  // Update company logo - stores base64 data directly in database
   app.put("/api/companies/:id/logo", isAuthenticated, async (req, res) => {
     if (!req.body.logoUrl) {
       return res.status(400).json({ error: "logoUrl is required" });
@@ -3854,18 +3854,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Not authorized to update this company's logo" });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = objectStorageService.normalizeObjectEntityPath(
-        req.body.logoUrl,
-      );
+      // Store the logo data (base64 data URI) directly in the database
+      const logoData = req.body.logoUrl;
 
-      // Update company with the logo path
+      // Update company with the logo data
       const updatedCompany = await storage.updateCompany(req.params.id, {
-        logoUrl: objectPath,
+        logoUrl: logoData,
       });
 
       res.status(200).json({
-        logoUrl: objectPath,
+        logoUrl: logoData,
         company: updatedCompany,
       });
     } catch (error) {

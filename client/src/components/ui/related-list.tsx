@@ -214,7 +214,7 @@ export function RelatedList({
                     fieldCode={col}
                   />
                 ))}
-                {mode === "edit" && (
+                {mode === "view" && (
                   <TableHead className="w-24 text-right">Actions</TableHead>
                 )}
               </TableRow>
@@ -243,7 +243,7 @@ export function RelatedList({
                       )}
                     </TableCell>
                   ))}
-                  {mode === "edit" && (
+                  {mode === "view" && (
                     <TableCell className="text-right">
                       {editingRowId === record.id ? (
                         <div className="flex justify-end gap-1">

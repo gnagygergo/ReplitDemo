@@ -14,7 +14,7 @@ interface ProductDetailProps {
   
   /** Pre-bundled dependencies (components, hooks, icons, etc.) */
   deps: LayoutDependencies;
-  /** The object code (should be 'assets') */
+  /** The object code (should be 'products') */
   objectCode: string;
   /** The record ID from the URL, or 'new' for creating */
   id: string;

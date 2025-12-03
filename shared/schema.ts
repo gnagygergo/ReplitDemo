@@ -759,6 +759,7 @@ export const insertUnitOfMeasureSchema = createInsertSchema(unitOfMeasures)
 export const insertProductSchema = createInsertSchema(products)
   .omit({
     id: true,
+    createdDate: true,
   });
 
 export const insertTranslationSchema = createInsertSchema(translations)

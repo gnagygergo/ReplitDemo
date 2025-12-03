@@ -97,7 +97,7 @@ export const accounts = pgTable("accounts", {
   isLegalEntity: boolean("is_legal_entity"),
   isShippingAddress: boolean("is_shipping_address"),
   isCompanyContact: boolean("is_company_contact"),
-  name: text("name").notNull(),
+  name: text("name"),
   companyOfficialName: text("company_official_name"),
   companyRegistrationId: text("company_registration_id"),
   taxId: text("tax_id"),
@@ -108,14 +108,9 @@ export const accounts = pgTable("accounts", {
   addressZipCode: text("address_zip_code"),
   addressCountry: text("address_country"),
   industry: text("industry"),
-  ownerId: varchar("owner_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  parentAccountId: varchar("parent_account_id").references(
-    (): AnyPgColumn => accounts.id,
-    { onDelete: "cascade" },
-  ),
-  companyId: varchar("company_id"),
+  ownerId: text("owner_id"),
+  parentAccountId: text("parent_account_id"),
+  companyId: text("company_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
@@ -146,15 +141,15 @@ export const assets = pgTable("assets", {
   quantity: decimal("quantity", { precision: 17, scale: 5 }),
   serialNumber: text("serial_number").notNull(),
   installationDate: date("installation_date"),
-  deletePhone: varchar("delete_phone"),
-  productId: varchar("product_id"),
-  accountId: varchar("account_id"),
+  deletePhone: text("delete_phone"),
+  productId: text("product_id"),
+  accountId: text("account_id"),
   locationStreetAddress: text("location_street_address"),
   locationCity: text("location_city"),
   locationStateProvince: text("location_state_province"),
   locationZipCode: text("location_zip_code"),
   locationCountry: text("location_country"),
-  companyId: varchar("company_id"),
+  companyId: text("company_id"),
   AssetInstallStatus: text("AssetInstallationStatus"),
   createdDate: timestamp("created_date").defaultNow(),
 });
@@ -247,7 +242,7 @@ export const unitOfMeasures = pgTable("unit_of_measures", {
   type: text("type").notNull(),
   uomName: text("uom_name").notNull(),
   baseToType: boolean("base_to_type").notNull().default(false),
-  companyId: varchar("company_id"),
+  companyId: text("company_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
@@ -264,7 +259,7 @@ export const products = pgTable("products", {
   }),
   salesUnitPriceCurrency: text("sales_unit_price_currency"),
   vatPercent: decimal("vat_percent", { precision: 17, scale: 5 }),
-  companyId: varchar("company_id"),
+  companyId: text("company_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
@@ -283,7 +278,7 @@ export const quotes = pgTable("quotes", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   name: text("name"),
-  customerId: varchar("customer_id"),
+  customerId: text("customer_id"),
   customerName: text("customer_name"),
   customerAddress: text("customer_address"),
   customerAddressCity:text("customer_address_city"),
@@ -291,15 +286,15 @@ export const quotes = pgTable("quotes", {
   customerAddressStateProvince: text("customer_address_state_province"),
   customerAddressZipCode: text("customer_address_zip_code"),
   customerAddressCountry: text("customer_address_country"),
-  companyId: varchar("company_id"),
+  companyId: text("company_id"),
   sellerName: text("seller_name"),
   sellerAddress: text("seller_address"),
   sellerBankAccount: text("seller_bank_account"),
-  sellerUserId: varchar("seller_user_id"),
+  sellerUserId: text("seller_user_id"),
   sellerEmail: text("seller_email"),
-  sellerPhone: varchar("seller_phone"),
+  sellerPhone: text("seller_phone"),
   quoteExpirationDate: date("quote_expiration_date"),
-  createdBy: varchar("created_by"),
+  createdBy: text("created_by"),
   createdDate: timestamp("created_date").defaultNow(),
   netGrandTotal: decimal("net_grand_total", { precision: 17, scale: 5 }),
   grossGrandTotal: decimal("gross_grand_total", { precision: 17, scale: 5 }),
@@ -313,9 +308,7 @@ export const quoteLines = pgTable("quote_lines", {
     .notNull()
     .references(() => quotes.id, { onDelete: "cascade" }),
   quoteName: text("quote_name"),
-  productId: varchar("product_id").references(() => products.id, {
-    onDelete: "restrict",
-  }),
+  productId: varchar("product_id"),
   name: text("name"),
   productUnitPrice: decimal("product_unit_price", { precision: 17, scale: 5 }),
   unitPriceCurrency: text("unit_price_currency"),

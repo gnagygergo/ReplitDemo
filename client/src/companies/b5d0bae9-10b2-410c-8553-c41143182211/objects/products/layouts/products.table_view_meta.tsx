@@ -114,7 +114,7 @@ export default function Products({ deps, objectCode }: ProductsTableProps) {
                     <p className="text-muted-foreground mb-4">
                       {searchTerm
                         ? "Try adjusting your search criteria"
-                        : "Get started by creating your first asset"}
+                        : "Get started by creating your first product"}
                     </p>
                     <Link href="/products/new">
                       <Button>

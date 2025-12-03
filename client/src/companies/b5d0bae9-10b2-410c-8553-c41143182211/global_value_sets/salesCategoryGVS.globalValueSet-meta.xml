@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<GlobalValueSet>
+  <customValue>
+    <label>SKU</label>
+    <code>SKU</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+  <customValue>
+    <label>Quote only</label>
+    <code>Quote only</code>
+    <default>false</default>
+    <iconSet/>
+    <icon/>
+  </customValue>
+</GlobalValueSet>

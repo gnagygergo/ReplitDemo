@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FieldDefinition xmlns="">
+  <type>DropDownListField</type>
+  <apiCode>salesCategory</apiCode>
+  <label>Sales Category</label>
+  <helpText/>
+  <placeHolder/>
+  <testId/>
+  <className/>
+  <subtype>singleSelect</subtype>
+  <sourceType>globalMetadata</sourceType>
+  <sourcePath>global_value_sets/salesCategoryGVS</sourcePath>
+  <showSearch>false</showSearch>
+</FieldDefinition>

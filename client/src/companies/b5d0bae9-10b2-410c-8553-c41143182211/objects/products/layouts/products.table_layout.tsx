@@ -25,6 +25,7 @@ export default function ProductsTableLayout({
       <TableRow>
         <TableCell>Name</TableCell>
         <TableCell>Sales UoM</TableCell>
+        <TableCell>Sales Category</TableCell>
         <TableCell className="text-right">Actions</TableCell>
       </TableRow>
     );
@@ -40,6 +41,9 @@ export default function ProductsTableLayout({
             </TableCell>
             <TableCell>
               <TableField name="salesUomId" />
+            </TableCell>
+            <TableCell>
+              <TableField name="salesCategory" />
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">

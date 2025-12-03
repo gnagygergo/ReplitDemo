@@ -19,7 +19,6 @@ export default function ProductsTableLayout({
     return (
       <TableRow>
         <TableCell>Name</TableCell>
-        <TableCell>Description</TableCell>
         <TableCell>Sales UoM</TableCell>
         <TableCell className="text-right">Actions</TableCell>
       </TableRow>
@@ -39,10 +38,7 @@ export default function ProductsTableLayout({
             />
           </TableCell>
           <TableCell>
-            <TableField name="description" value={record.description} />
-          </TableCell>
-          <TableCell>
-            <TableField name="salesUomId" value={record.salesUomId} />
+            <TableField name="salesUomId" value={record.uomName} />
           </TableCell>
           <TableCell className="text-right">
             <div className="flex justify-end gap-2">

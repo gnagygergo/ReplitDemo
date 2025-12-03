@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { useForm } from "react-hook-form";
 import { useObjectList } from "@/hooks/useObjectList";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +17,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import * as LucideIcons from "lucide-react";
 import { Plus, Search, Edit, Trash2, ArrowUp, ArrowDown, Package } from "lucide-react";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType } from "react";
+import { TableField } from "./TableField";
 
 interface ObjectDefinition {
   apiCode: string;
@@ -34,19 +37,12 @@ export interface TableLayoutProps {
   records: Record<string, unknown>[];
   TableRow: typeof TableRow;
   TableCell: typeof TableCell;
-  TableField: ComponentType<TableFieldProps>;
+  TableField: typeof TableField;
   Link: typeof Link;
   Button: typeof Button;
   EditButton: ComponentType<{ recordId: string }>;
   DeleteButton: ComponentType<{ record: Record<string, unknown> }>;
-}
-
-interface TableFieldProps {
-  name: string;
-  value: unknown;
-  linkPath?: string;
-  recordId?: string;
-  onRecordClick?: (id: string) => void;
+  RowWrapper: ComponentType<{ record: Record<string, unknown>; children: React.ReactNode }>;
 }
 
 function useObjectDefinitions() {
@@ -86,6 +82,10 @@ export function TableViewHandler({ objectCode, Layout }: TableViewHandlerProps) 
     labelPlural,
   });
 
+  const dummyForm = useForm<Record<string, unknown>>({
+    defaultValues: {},
+  });
+
   const IconComponent = getIconComponent(iconName);
 
   const getSortIcon = (column: string) => {
@@ -122,19 +122,28 @@ export function TableViewHandler({ objectCode, Layout }: TableViewHandlerProps) 
     </Button>
   );
 
-  const TableField = ({ name, value, linkPath, recordId }: TableFieldProps) => {
-    const displayValue = value == null ? "-" : String(value);
-    
-    if (linkPath && recordId) {
-      return (
-        <Link href={`${linkPath}/${recordId}`} className="text-primary hover:underline">
-          {displayValue}
-        </Link>
-      );
-    }
-    
-    return <span>{displayValue}</span>;
-  };
+  const RowWrapper = ({ record, children }: { record: Record<string, unknown>; children: React.ReactNode }) => (
+    <LayoutProvider
+      value={{
+        objectCode,
+        objectMeta: objectMeta ? {
+          apiCode: objectMeta.apiCode,
+          labelSingular: objectMeta.labelSingular,
+          labelPlural: objectMeta.labelPlural,
+          icon: objectMeta.icon,
+          iconSet: objectMeta.iconSet,
+        } : null,
+        record,
+        form: dummyForm,
+        isEditing: false,
+        isCreating: false,
+        isLoading: false,
+        setIsEditing: () => {},
+      }}
+    >
+      {children}
+    </LayoutProvider>
+  );
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -213,6 +222,7 @@ export function TableViewHandler({ objectCode, Layout }: TableViewHandlerProps) 
                     Button={Button}
                     EditButton={EditButton}
                     DeleteButton={DeleteButton}
+                    RowWrapper={RowWrapper}
                   />
                 </TableHeader>
                 <TableBody>
@@ -225,6 +235,7 @@ export function TableViewHandler({ objectCode, Layout }: TableViewHandlerProps) 
                     Button={Button}
                     EditButton={EditButton}
                     DeleteButton={DeleteButton}
+                    RowWrapper={RowWrapper}
                   />
                 </TableBody>
               </Table>

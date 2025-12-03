@@ -24,6 +24,7 @@ export default function ProductDetailLayout({
             </CardHeader>
             <CardContent className="space-y-1">
               <Field name="name" layoutMandatory />
+              <Field name="salesUomId" />
             </CardContent>
           </Card>
         </div>

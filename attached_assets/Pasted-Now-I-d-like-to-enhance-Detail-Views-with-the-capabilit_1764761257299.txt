@@ -1,0 +1,23 @@
+Now I'd like to enhance Detail Views with the capability to show Related Lists. Related List should be a section on the detail view of a record "A" that shows collection of "B" records that are linked to the "A" record through a Lookup Field relationship. 
+One challenge is that there is no database level connection: the relationship is represented via a field definition XML, for example: client/src/companies/b5d0bae9-10b2-410c-8553-c41143182211/objects/assets/fields/productId.field_meta.xml
+
+<RelatedList>
+objectCode="asset"
+fieldCode="productId"
+columns="name, description"
+mode={isEditing ? "edit" : "view"}
+</RelatedList>
+
+How it should work: 
+Let's say that the above code snippet is added to client/src/companies/b5d0bae9-10b2-410c-8553-c41143182211/objects/products/layouts/product-detail.detail_view_meta.tsx
+The system finds the field definition XML under asset/fields/productId.field_meta.xml and finds the <relationshipApiCode>assets</relationshipApiCode>
+If we are on the detail view of Product record "A" , the system should fetch all records from the Asset table that has the Product "A" record referenced in the productId column. 
+We need to assume that an API endpoint exists for GET [referencedObject]/[productId]/[relationshipApiCode]
+The best would be to have a generic endpoint for this that can fetch records for any object's relationships.
+The columns prop should drive the Related List UI component on which columns to show of the objectCode="asset" in the grid. 
+I'd like mode prop to support edit and view both because I'll want certain field types (FieldText, DateTimeField, DropdownFormField, CheckboxField, NumbderField) be editable in the grid.
+I let you design how the rest of the props should work for this <RelatedList> UI tag:
+value
+testId
+The <RelatedList> tag should provide the Detail View on the UI with a Card, and the Grid. 
+Examine client/src/companies/b5d0bae9-10b2-410c-8553-c41143182211/objects/products/layouts/product-detail.detail_view_meta.tsx to build feasibility. 

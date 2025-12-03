@@ -56,7 +56,6 @@ import UnitOfMeasuresManagement from "@/components/setup/unit-of-measures";
 import AccountManagementModels from "@/components/setup/business-objects/accounts/account-management-models";
 import QuoteManagement from "@/components/setup/business-objects/quotes/quote-settings";
 import PricingMethods from "@/components/setup/business-objects/quotes/pricing-methods";
-import OpportunityManagement from "@/components/setup/business-objects/opportunities/opportunity-settings";
 import CompanyDefaultSettings from "@/components/setup/business-objects/company-defaults/company-defaults";
 import StandardAIServicesSettings from "@/components/setup/business-objects/ai-services/standard-ai-services";
 import BusinessObjectsBuilderModule from "@/components/setup/business-object-manager/business-objects-builder-module"; 
@@ -160,23 +159,6 @@ const setupMenuItems: MenuItem[] = [
         component: PricingMethods,
       },
       
-    ],
-  },
-  {
-    id: "opportunities",
-    label: "Opportunity management",
-    icon: FileCheck,
-    description: "Manage your Sales process",
-    globalAdminOnly: false,
-    category: "business-objects",
-    children: [
-      {
-        id: "opportunity-settings",
-        label: "Opportunity Settings",
-        description: "The fundamentals",
-        component: OpportunityManagement,
-      },
-
     ],
   },
   {

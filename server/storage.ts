@@ -3,10 +3,6 @@ import {
   type InsertCompany,
   type Account,
   type InsertAccount,
-  type Opportunity,
-  type InsertOpportunity,
-  type OpportunityWithAccount,
-  type OpportunityWithAccountAndOwner,
   type AccountWithOwner,
   type User,
   type UpsertUser,
@@ -50,7 +46,6 @@ import {
   companies,
   companySettings,
   accounts,
-  opportunities,
   users,
   companyRoles,
   userRoleAssignments,
@@ -73,7 +68,6 @@ import { db, pool } from "./db";
 import { QuoteStorage } from "./business-objects-routes/quote-storage";
 import { QuoteLineStorage } from "./business-objects-routes/quote-line-storage";
 import { AccountStorage } from "./business-objects-routes/accounts-storage";
-import { OpportunityStorage } from "./business-objects-routes/opportunity-storage";
 import { eq, and, sql, lte, gte, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import * as bcrypt from "bcrypt";
@@ -143,26 +137,6 @@ export interface IStorage {
     account: Partial<InsertAccount>,
   ): Promise<Account | undefined>;
   deleteAccount(id: string): Promise<boolean>;
-
-  // Opportunity methods
-  getOpportunities(
-    companyContext?: string,
-    sortBy?: string,
-    sortOrder?: string,
-  ): Promise<OpportunityWithAccountAndOwner[]>;
-  getOpportunitiesByAccount(
-    accountId: string,
-    companyContext?: string,
-  ): Promise<OpportunityWithAccountAndOwner[]>;
-  getOpportunity(
-    id: string,
-  ): Promise<OpportunityWithAccountAndOwner | undefined>;
-  createOpportunity(opportunity: InsertOpportunity): Promise<Opportunity>;
-  updateOpportunity(
-    id: string,
-    opportunity: Partial<InsertOpportunity>,
-  ): Promise<Opportunity | undefined>;
-  deleteOpportunity(id: string): Promise<boolean>;
 
   // Company Role methods
   getCompanyRoles(): Promise<CompanyRoleWithParent[]>;
@@ -363,20 +337,11 @@ export class DatabaseStorage implements IStorage {
   private quoteStorage: QuoteStorage;
   private quoteLineStorage: QuoteLineStorage;
   private accountStorage: AccountStorage;
-  private opportunityStorage: OpportunityStorage;
 
   constructor() {
-    this.quoteStorage = new QuoteStorage(
-      this.getAccount.bind(this),
-      this.getCompany.bind(this),
-      this.getUser.bind(this)
-    );
+    this.quoteStorage = new QuoteStorage();
     this.quoteLineStorage = new QuoteLineStorage();
     this.accountStorage = new AccountStorage(this.getUser.bind(this));
-    this.opportunityStorage = new OpportunityStorage(
-      this.getAccount.bind(this),
-      this.getUser.bind(this)
-    );
   }
 
   // Method called by all GETTERs of business objects
@@ -535,20 +500,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<boolean> {
-    // Check if user owns any accounts, opportunities
+    // Check if user owns any accounts
     const ownedAccounts = await db
       .select()
       .from(accounts)
       .where(eq(accounts.ownerId, id));
-    const ownedOpportunities = await db
-      .select()
-      .from(opportunities)
-      .where(eq(opportunities.ownerId, id));
 
-    if (
-      ownedAccounts.length > 0 ||
-      ownedOpportunities.length > 0
-    ) {
+    if (ownedAccounts.length > 0) {
       return false; // Cannot delete user who owns records
     }
 
@@ -683,44 +641,6 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAccount(id: string): Promise<boolean> {
     return this.accountStorage.deleteAccount(id);
-  }
-
-  async getOpportunities(
-    companyContext?: string,
-    sortBy?: string,
-    sortOrder?: string,
-  ): Promise<OpportunityWithAccountAndOwner[]> {
-    return this.opportunityStorage.getOpportunities(companyContext, sortBy, sortOrder);
-  }
-
-  async getOpportunitiesByAccount(
-    accountId: string,
-    companyContext?: string,
-  ): Promise<OpportunityWithAccountAndOwner[]> {
-    return this.opportunityStorage.getOpportunitiesByAccount(accountId, companyContext);
-  }
-
-  async getOpportunity(
-    id: string,
-  ): Promise<OpportunityWithAccountAndOwner | undefined> {
-    return this.opportunityStorage.getOpportunity(id);
-  }
-
-  async createOpportunity(
-    insertOpportunity: InsertOpportunity,
-  ): Promise<Opportunity> {
-    return this.opportunityStorage.createOpportunity(insertOpportunity);
-  }
-
-  async updateOpportunity(
-    id: string,
-    updates: Partial<InsertOpportunity>,
-  ): Promise<Opportunity | undefined> {
-    return this.opportunityStorage.updateOpportunity(id, updates);
-  }
-
-  async deleteOpportunity(id: string): Promise<boolean> {
-    return this.opportunityStorage.deleteOpportunity(id);
   }
 
   // Company Role methods

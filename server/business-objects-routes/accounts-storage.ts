@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { accounts, users, opportunities } from "@shared/schema";
+import { accounts, users } from "@shared/schema";
 import type { Account, InsertAccount, AccountWithOwner } from "@shared/schema";
 import { eq, asc, desc, and, isNull, or } from "drizzle-orm";
 
@@ -189,16 +189,6 @@ export class AccountStorage {
   }
 
   async deleteAccount(id: string): Promise<boolean> {
-    // Check if account has opportunities
-    const existingOpportunities = await db
-      .select()
-      .from(opportunities)
-      .where(eq(opportunities.accountId, id));
-
-    if (existingOpportunities.length > 0) {
-      return false; // Cannot delete account with opportunities
-    }
-
     const result = await db.delete(accounts).where(eq(accounts.id, id));
     return (result.rowCount ?? 0) > 0;
   }

@@ -49,7 +49,6 @@ function convertSourceTypeToXmlFormat(sourceType: string | undefined): string | 
 import { registerQuoteRoutes } from "./business-objects-routes/quote-routes";
 import { registerQuoteLineRoutes } from "./business-objects-routes/quote-line-routes";
 import { registerAccountRoutes } from "./business-objects-routes/accounts-routes";
-import { registerOpportunityRoutes } from "./business-objects-routes/opportunity-routes";
 import { registerAssetRoutes } from "./business-objects-routes/asset-routes";
 import { registerProductRoutes } from "./business-objects-routes/product-routes";
 import {
@@ -3912,9 +3911,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Account routes (Company-scoped) - Delegated to business-objects-routes
   registerAccountRoutes(app, storage);
 
-  // Opportunity routes (Company-scoped) - Delegated to business-objects-routes
-  registerOpportunityRoutes(app, storage);
-
   // Asset routes (Company-scoped) - Delegated to business-objects-routes
   registerAssetRoutes(app, storage);
 
@@ -4010,7 +4006,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tableMap: Record<string, any> = {
         assets: (await import("@shared/schema")).assets,
         accounts: (await import("@shared/schema")).accounts,
-        opportunities: (await import("@shared/schema")).opportunities,
         products: (await import("@shared/schema")).products,
         quotes: (await import("@shared/schema")).quotes,
         quoteLines: (await import("@shared/schema")).quoteLines,
@@ -4134,7 +4129,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tableMap: Record<string, any> = {
         assets: (await import("@shared/schema")).assets,
         accounts: (await import("@shared/schema")).accounts,
-        opportunities: (await import("@shared/schema")).opportunities,
         products: (await import("@shared/schema")).products,
         quotes: (await import("@shared/schema")).quotes,
         quoteLines: (await import("@shared/schema")).quoteLines,

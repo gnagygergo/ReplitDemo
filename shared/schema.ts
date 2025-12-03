@@ -114,24 +114,6 @@ export const accounts = pgTable("accounts", {
   createdDate: timestamp("created_date").defaultNow(),
 });
 
-export const opportunities = pgTable("opportunities", {
-  id: varchar("id")
-    .primaryKey()
-    .default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  closeDate: date("close_date").notNull(),
-  totalRevenue: decimal("total_revenue", { precision: 17, scale: 5 }).notNull(),
-  accountId: varchar("account_id")
-    .notNull()
-    .references(() => accounts.id),
-  ownerId: varchar("owner_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "restrict" }),
-  companyId: varchar("company_id"),
-  createdDate: timestamp("created_date").defaultNow(),
-});
-
-
 export const assets = pgTable("assets", {
   id: varchar("id")
     .primaryKey()
@@ -549,21 +531,9 @@ export const emails = pgTable("emails", {
 
 // Define relations
 
-export const accountsRelations = relations(accounts, ({ many, one }) => ({
-  opportunities: many(opportunities),
+export const accountsRelations = relations(accounts, ({ one }) => ({
   owner: one(users, {
     fields: [accounts.ownerId],
-    references: [users.id],
-  }),
-}));
-
-export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
-  account: one(accounts, {
-    fields: [opportunities.accountId],
-    references: [accounts.id],
-  }),
-  owner: one(users, {
-    fields: [opportunities.ownerId],
     references: [users.id],
   }),
 }));
@@ -689,17 +659,6 @@ export const insertAccountSchema = createInsertSchema(accounts)
     parentAccountId: optionalForeignKey,
   });
 
-export const insertOpportunitySchema = createInsertSchema(opportunities)
-  .omit({
-    id: true,
-  })
-  .extend({
-    totalRevenue: z.number().min(0.01, "Total revenue must be greater than 0"),
-    closeDate: optionalDate.refine((val) => val !== null, {
-      message: "Close date is required",
-    }),
-    ownerId: z.string().min(1, "Owner is required"),
-  });
 
 export const insertCompanyRoleSchema = createInsertSchema(companyRoles)
   .omit({
@@ -890,7 +849,7 @@ export const insertEmailSchema = createInsertSchema(emails)
         }),
       )
       .optional(),
-    parentType: z.enum(["Quote", "Opportunity", "Account"]),
+    parentType: z.enum(["Quote", "Account"]),
     parentId: z.string().min(1, "Parent ID is required"),
     createdBy: z.string().min(1, "Created by is required"),
   });
@@ -939,8 +898,6 @@ export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Account = typeof accounts.$inferSelect;
-export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
-export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertAsset = z.infer<typeof insertAssetSchema>;
 export type Asset = typeof assets.$inferSelect;
 export type InsertCompanyRole = z.infer<typeof insertCompanyRoleSchema>;
@@ -1017,15 +974,6 @@ export type CompanySettingWithMaster = {
 };
 
 export type AccountWithOwner = Account & {
-  owner: User;
-};
-
-export type OpportunityWithAccount = Opportunity & {
-  account: Account;
-};
-
-export type OpportunityWithAccountAndOwner = Opportunity & {
-  account: Account;
   owner: User;
 };
 

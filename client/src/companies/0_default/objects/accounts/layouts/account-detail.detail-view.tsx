@@ -58,7 +58,6 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import SmartAccountManagementDetailCard from "./account-cards/smart-account-management-detail-card";
 import AccountDetailOwnershipCard from "./account-cards/account-ownership-detail-card";
 import AccountDetailCategorizationCard from "./account-cards/account-categorization-detail-card";
-import AccountOpportunitiesListCard from "./account-cards/account-opportunities-list-card";
 import AccountQuoteListCard from "./account-cards/account-quote-list-card";
 import AccountCompanyContactsListCard from "./account-cards/smart-account-company-contacts-list-card";
 import AccountShippingAddressesListCard from "./account-cards/smart-account-shipping-addresses-list-card";
@@ -389,19 +388,11 @@ export default function AccountDetail() {
 
         <PanelResizeHandle className="w-2 hover:bg-muted-foreground/20 transition-colors" />
 
-        {/* Right Pane - Opportunities, Quotes, and Hierarchical Accounts (Vertically Stacked) */}
+        {/* Right Pane - Quotes and Hierarchical Accounts (Vertically Stacked) */}
         <Panel defaultSize={50} minSize={30} maxSize={70}>
           <div className="flex flex-col gap-6 h-full overflow-auto p-4">
             {!isCreating && params?.id && (
               <>
-                
-
-                {(isSettingEnabled("opportunity_management_activated") && 
-                <AccountOpportunitiesListCard
-                  accountId={params.id}
-                  isEditing={isEditing}
-                />
-                )}
                 {isSettingEnabled("general_quote_setting_quote_management_activated") && (
                   <AccountQuoteListCard
                     accountId={params.id}

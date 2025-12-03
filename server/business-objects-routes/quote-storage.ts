@@ -2,10 +2,35 @@
 import { db } from "../db";
 import { quotes } from "@shared/schema";
 import type { Quote, InsertQuote } from "@shared/schema";
-import { eq, and, getTableColumns } from "drizzle-orm";
+import { eq, and, getTableColumns, asc, desc, sql } from "drizzle-orm";
 
 export class QuoteStorage {
-  async getQuotes(companyContext?: string): Promise<Quote[]> {
+  async getQuotes(companyContext?: string, sortBy?: string, sortOrder?: string): Promise<Quote[]> {
+    if (!companyContext) {
+      return [];
+    }
+
+    let query = db
+      .select(getTableColumns(quotes))
+      .from(quotes)
+      .where(eq(quotes.companyId, companyContext));
+
+    // Apply sorting if provided
+    if (sortBy) {
+      const column = (quotes as any)[sortBy];
+      if (column) {
+        query = query.orderBy(sortOrder === 'desc' ? desc(column) : asc(column)) as any;
+      } else {
+        query = query.orderBy(quotes.name) as any;
+      }
+    } else {
+      query = query.orderBy(quotes.name) as any;
+    }
+
+    return await query;
+  }
+  
+  async getQuotesByCustomer(customerId: string, companyContext?: string): Promise<Quote[]> {
     if (!companyContext) {
       return [];
     }
@@ -13,10 +38,24 @@ export class QuoteStorage {
     const result = await db
       .select(getTableColumns(quotes))
       .from(quotes)
-      .where(eq(quotes.companyId, companyContext))
+      .where(and(eq(quotes.customerId, customerId), eq(quotes.companyId, companyContext)))
       .orderBy(quotes.name);
 
     return result;
+  }
+  
+  async updateQuoteTotals(quoteId: string, companyContext?: string): Promise<Quote | undefined> {
+    if (!companyContext) {
+      return undefined;
+    }
+
+    // Just return the quote - totals are calculated dynamically in the query
+    const [quote] = await db
+      .select(getTableColumns(quotes))
+      .from(quotes)
+      .where(and(eq(quotes.id, quoteId), eq(quotes.companyId, companyContext)));
+
+    return quote;
   }
 
   async getQuote(id: string, companyContext?: string): Promise<Quote | undefined> {

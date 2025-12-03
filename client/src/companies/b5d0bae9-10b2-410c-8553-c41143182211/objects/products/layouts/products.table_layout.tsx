@@ -24,7 +24,6 @@ export default function ProductsTableLayout({
     return (
       <TableRow>
         <TableCell>Name</TableCell>
-        <TableCell>Description</TableCell>
         <TableCell>Sales UoM</TableCell>
         <TableCell className="text-right">Actions</TableCell>
       </TableRow>
@@ -38,9 +37,6 @@ export default function ProductsTableLayout({
           <TableRow data-testid={`row-product-${record.id}`}>
             <TableCell>
               <TableField name="name" linkPath="/products" />
-            </TableCell>
-            <TableCell>
-              <TableField name="description" />
             </TableCell>
             <TableCell>
               <TableField name="salesUomId" />

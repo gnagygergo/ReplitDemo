@@ -11,4 +11,5 @@
   <primaryDisplayField>name</primaryDisplayField>
   <displayColumns>productCode,name</displayColumns>
   <relationshipName>Assets</relationshipName>
+  <relationshipApiCode>assets</relationshipApiCode>
 </FieldDefinition>

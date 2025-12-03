@@ -1,11 +1,17 @@
 // Standardized Layout
+import { LayoutModeProvider, useLayoutMode } from "@/contexts/LayoutModeContext";
 import type { LayoutDependencies } from "@/lib/layoutDependencies";
-
 // ============================================================================
 // PROPS INTERFACE
 // ============================================================================
 
+
+
 interface ProductDetailProps {
+
+  
+
+  
   /** Pre-bundled dependencies (components, hooks, icons, etc.) */
   deps: LayoutDependencies;
   /** The object code (should be 'assets') */
@@ -23,14 +29,30 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
   // DESTRUCTURE DEPENDENCIES
   // Extract what we need from the dependencies bundle
   // ---------------------------------------------------------------------------
-  
+  return (
+    <LayoutModeProvider key={`${objectCode}-${id}`}>
+      <ProductDetailContent deps={deps} objectCode={objectCode} id={id} />
+    </LayoutModeProvider>
+  );
+  }
+
+  // ============================================================================
+  // INNER COMPONENT (wrapped by LayoutModeProvider)
+  // ============================================================================
+
+  function ProductDetailContent({ deps, objectCode, id }: ProductDetailProps) {
   const { Button, Card, CardContent, CardHeader, CardTitle, Form, FormField, FormItem, FormMessage } = deps.components;
   const { TextField, NumberField, DateTimeField, AddressField, LookupFormField, CheckboxField } = deps.fields;
   const { Panel, PanelGroup, PanelResizeHandle } = deps.panels;
   const { Package, Edit, Save, X } = deps.icons;
   const { Link } = deps.routing;
   const { useObjectDetail } = deps.hooks;
+  // ---------------------------------------------------------------------------
+  // LAYOUT MODE CONTEXT
+  // Access validation for mandatory fields
+  // ---------------------------------------------------------------------------
 
+  const { validateMandatoryFields } = useLayoutMode();
   // ---------------------------------------------------------------------------
   // DATA & STATE MANAGEMENT
   // Use the generic useObjectDetail hook for all CRUD operations
@@ -144,8 +166,14 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
                 <X className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
+              
               <Button
-                onClick={form.handleSubmit(onSubmit)}
+                onClick={() => {
+                  if (!validateMandatoryFields()) {
+                    return;
+                  }
+                  form.handleSubmit(onSubmit)();
+                }}
                 disabled={createMutation.isPending || updateMutation.isPending}
                 data-testid="button-save-edit"
               >
@@ -197,6 +225,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
                             value={field.value}
                             onChange={field.onChange}
                             placeholder="Enter product name"
+                            layoutMandatory="true"
                           />
                           <FormMessage />
                         </FormItem>

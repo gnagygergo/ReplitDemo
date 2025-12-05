@@ -224,6 +224,7 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
             <CardTitle className="text-lg">AI Account Data Finder</CardTitle>
           </div>
           <Button
+            type="button"
             onClick={handleSearch}
             disabled={findRegistrationMutation.isPending}
             size="sm"
@@ -285,6 +286,7 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
 
             {!isUpdated && (result.registrationId !== "Not found" || result.address !== "Not found") && (
               <Button
+                type="button"
                 onClick={handleUpdate}
                 disabled={updateAccountMutation.isPending}
                 size="sm"

@@ -92,6 +92,10 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
 
   app.patch("/api/accounts/:id", async (req, res) => {
     try {
+      // DEBUG: Log incoming request body
+      console.log("[DEBUG] PATCH /api/accounts/:id received data:");
+      console.log(JSON.stringify(req.body, null, 2));
+      
       const validatedData = insertAccountSchema.partial().parse(req.body);
       
       // Auto-populate address from structured fields if any are present
@@ -106,6 +110,16 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       res.json(account);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // DEBUG: Log detailed Zod validation errors
+        console.log("[DEBUG] PATCH /api/accounts/:id Zod validation error:");
+        console.log("Errors:", JSON.stringify(error.errors, null, 2));
+        console.log("Issues:", error.issues.map(issue => ({
+          path: issue.path.join('.'),
+          code: issue.code,
+          message: issue.message,
+          received: (issue as any).received,
+          expected: (issue as any).expected,
+        })));
         return res
           .status(400)
           .json({ message: "Invalid data", errors: error.errors });
@@ -113,6 +127,7 @@ export function registerAccountRoutes(app: Express, storage: IStorage) {
       if (error instanceof Error && error.message === "Owner not found") {
         return res.status(400).json({ message: "Owner not found" });
       }
+      console.error("[DEBUG] PATCH /api/accounts/:id unexpected error:", error);
       res.status(500).json({ message: "Failed to update account" });
     }
   });

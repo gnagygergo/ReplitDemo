@@ -652,11 +652,8 @@ export const insertCompanySchema = createInsertSchema(companies)
 export const insertAccountSchema = createInsertSchema(accounts)
   .omit({
     id: true,
-  })
-  .extend({
-    industry: z.string().optional(),
-    ownerId: z.string().min(1, "Owner is required"),
-    parentAccountId: optionalForeignKey,
+    createdDate: true,
+    companyId: true,
   });
 
 

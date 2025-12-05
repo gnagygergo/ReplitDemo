@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2, CheckCircle, XCircle, Save, PersonStanding } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLayoutContext } from "@/contexts/LayoutContext";
 
 interface FindAccountDataProps {
   accountId: string;
@@ -22,6 +23,7 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
   const [result, setResult] = useState<FindRegistrationIdResponse | null>(null);
   const [isUpdated, setIsUpdated] = useState(false);
   const { toast } = useToast();
+  const { form } = useLayoutContext();
 
   const findRegistrationMutation = useMutation({
     mutationFn: async () => {
@@ -75,8 +77,30 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
       const response = await apiRequest("PATCH", `/api/accounts/${accountId}`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       setIsUpdated(true);
+      
+      // Sync form values with the data we just saved to prevent race condition
+      // where stale form data might overwrite the AI-found values
+      if (variables.companyRegistrationId !== undefined) {
+        form.setValue("companyRegistrationId", variables.companyRegistrationId);
+      }
+      if (variables.addressStreetAddress !== undefined) {
+        form.setValue("addressStreetAddress", variables.addressStreetAddress);
+      }
+      if (variables.addressCity !== undefined) {
+        form.setValue("addressCity", variables.addressCity);
+      }
+      if (variables.addressStateProvince !== undefined) {
+        form.setValue("addressStateProvince", variables.addressStateProvince);
+      }
+      if (variables.addressZipCode !== undefined) {
+        form.setValue("addressZipCode", variables.addressZipCode);
+      }
+      if (variables.addressCountry !== undefined) {
+        form.setValue("addressCountry", variables.addressCountry);
+      }
+      
       toast({
         title: "Success",
         description: "Account updated successfully!",

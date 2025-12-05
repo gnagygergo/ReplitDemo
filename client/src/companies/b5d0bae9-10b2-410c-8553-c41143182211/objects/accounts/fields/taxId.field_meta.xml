@@ -5,6 +5,7 @@
   <label>TAX Id</label>
   <subtype>text</subtype>
   <maxLength>255</maxLength>
+  <helpText>Adószám</helpText>
   <copyAble>true</copyAble>
   <truncate>false</truncate>
 </FieldDefinition>

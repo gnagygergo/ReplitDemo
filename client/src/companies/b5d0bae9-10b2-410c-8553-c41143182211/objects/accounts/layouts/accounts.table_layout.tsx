@@ -25,6 +25,7 @@ export default function AccountsTableLayout({
         <TableCell>Account Name</TableCell>
         <TableCell>Address</TableCell>
         <TableCell>Owner</TableCell>
+        <TableCell>Tax id</TableCell>
         <TableCell className="text-right">Actions</TableCell>
       </TableRow>
     );
@@ -43,6 +44,9 @@ export default function AccountsTableLayout({
             </TableCell>
             <TableCell>
               <TableField name="ownerId" />
+            </TableCell>
+            <TableCell>
+              <TableField name="taxId" />
             </TableCell>
             <TableCell className="text-right">
               <div className="flex justify-end gap-2">

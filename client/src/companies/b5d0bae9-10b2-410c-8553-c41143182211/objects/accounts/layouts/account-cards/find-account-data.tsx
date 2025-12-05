@@ -80,31 +80,24 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
     onSuccess: (_data, variables) => {
       setIsUpdated(true);
       
-      // Sync form values with the data we just saved to prevent race condition
-      // where stale form data might overwrite the AI-found values
-      if (variables.companyRegistrationId !== undefined) {
-        form.setValue("companyRegistrationId", variables.companyRegistrationId);
-      }
-      if (variables.addressStreetAddress !== undefined) {
-        form.setValue("addressStreetAddress", variables.addressStreetAddress);
-      }
-      if (variables.addressCity !== undefined) {
-        form.setValue("addressCity", variables.addressCity);
-      }
-      if (variables.addressStateProvince !== undefined) {
-        form.setValue("addressStateProvince", variables.addressStateProvince);
-      }
-      if (variables.addressZipCode !== undefined) {
-        form.setValue("addressZipCode", variables.addressZipCode);
-      }
-      if (variables.addressCountry !== undefined) {
-        form.setValue("addressCountry", variables.addressCountry);
-      }
+      // IMPORTANT: Use form.reset() with merged values FIRST to update form WITHOUT marking it dirty
+      // This must happen BEFORE query invalidation to prevent race condition where
+      // a dirty form would auto-save stale data after the refetch
+      const currentValues = form.getValues();
+      form.reset({
+        ...currentValues,
+        ...variables,
+      }, {
+        keepDirty: false,
+        keepTouched: false,
+      });
       
       toast({
         title: "Success",
         description: "Account updated successfully!",
       });
+      
+      // Now safe to invalidate queries - form is clean so no auto-save will occur
       queryClient.invalidateQueries({ queryKey: ["/api/accounts", accountId] });
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
     },

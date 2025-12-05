@@ -41,7 +41,7 @@ export function CheckboxField({
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
     mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `checkbox-${fieldCode}` : undefined)
-    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
+    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `checkbox-${fieldCode}-disabled` : undefined)
     : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
   );
 
@@ -77,18 +77,18 @@ export function CheckboxField({
 
   if (mode === "view") {
     return (
-      <>
+      <div className={className || defaultEditClassName}>
+        <Checkbox
+          checked={value}
+          disabled
+          data-testid={mergedTestId}
+        />
         {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
+          <FormLabel className="text-muted-foreground font-normal">
             {mergedLabel}
           </FormLabel>
         )}
-        <div className={className || defaultViewClassName}>
-          <span data-testid={mergedTestId}>
-            {value ? "Yes" : "No"}
-          </span>
-        </div>
-      </>
+      </div>
     );
   }
 

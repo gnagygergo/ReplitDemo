@@ -17,7 +17,7 @@ export default function AccountOwnershipDetailCard() {
       <CardHeader>
         <CardTitle>Ownership</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-1">
         <Field name="ownerId" />
       </CardContent>
     </Card>

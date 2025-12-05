@@ -48,7 +48,7 @@ export default function SmartAccountManagementDetailCard({
       <CardHeader>
         <CardTitle>{isEditing ? "" : (record?.name as string) || ""}</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-1">
         {isEditing ? (
           <>
             {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
@@ -151,7 +151,7 @@ export default function SmartAccountManagementDetailCard({
 
             {/* ====== FIELDS LAYOUT SECTION ====== */}
             {hasAnyAccountNature && (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {/* Row 1: First Name + Last Name */}
                 {!isShippingAddress && !isLegalEntity && (
                   <div className="grid grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ export default function SmartAccountManagementDetailCard({
             {!record ? (
               <div>No account data</div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {/* View Mode: First Name + Last Name */}
                 {!recordIsShippingAddress && !recordIsLegalEntity && (
                   <div className="grid grid-cols-2 gap-4">

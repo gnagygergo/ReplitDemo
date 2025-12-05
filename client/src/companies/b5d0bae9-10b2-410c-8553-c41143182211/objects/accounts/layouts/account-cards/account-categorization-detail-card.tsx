@@ -30,7 +30,7 @@ export default function AccountCategorizationDetailCard() {
       <CardHeader>
         <CardTitle>Categorization</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-1">
         <Field name="industry" />
       </CardContent>
     </Card>

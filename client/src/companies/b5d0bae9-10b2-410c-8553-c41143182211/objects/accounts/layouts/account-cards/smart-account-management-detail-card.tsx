@@ -1,74 +1,66 @@
-// This Card is used on the Account Detail View.
-// It is used when Smart Account Management is activated.
+/**
+ * Smart Account Management Detail Card (Clean Version)
+ * 
+ * Uses LayoutContext to access form and editing state.
+ * Uses the smart Field component where possible.
+ * 
+ * Note: Checkboxes with mutual exclusivity logic use FormField directly
+ * because they need custom onChange handlers that modify other form fields.
+ */
 
-import { type UseFormReturn } from "react-hook-form";
-import { type UseMutationResult } from "@tanstack/react-query";
-import {
-  type AccountWithOwner,
-  type InsertAccount,
-} from "@shared/schema";
+import { useLayoutContext } from "@/contexts/LayoutContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { TextField } from "@/components/ui/text-field";
-import { DateTimeField } from "@/components/ui/date-time-field";
+import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { CheckboxField } from "@/components/ui/checkbox-field";
-import { AddressField } from "@/components/ui/address-field";
+import { Field } from "../../../../components/ui/Field";
 
 interface SmartAccountManagementDetailCardProps {
-  account: AccountWithOwner | null;
-  isEditing: boolean;
-  form: UseFormReturn<InsertAccount>;
-  updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
   isSettingEnabled: (settingCode: string) => boolean;
   showAccountNature?: boolean;
 }
 
 export default function SmartAccountManagementDetailCard({
-  account,
-  isEditing,
-  form,
-  updateMutation,
   isSettingEnabled,
   showAccountNature = true,
 }: SmartAccountManagementDetailCardProps) {
-  
-  // Check if any account nature checkbox is selected
+  const { form, record, isEditing } = useLayoutContext();
+
+  // Form-watched values (for edit mode visibility logic)
+  const isPersonAccount = form.watch("isPersonAccount") as boolean;
+  const isSelfEmployed = form.watch("isSelfEmployed") as boolean;
+  const isCompanyContact = form.watch("isCompanyContact") as boolean;
+  const isLegalEntity = form.watch("isLegalEntity") as boolean;
+  const isShippingAddress = form.watch("isShippingAddress") as boolean;
+
+  // Record values (for view mode and initial edit mode checks)
+  const recordIsShippingAddress = record?.isShippingAddress as boolean | undefined;
+  const recordIsCompanyContact = record?.isCompanyContact as boolean | undefined;
+  const recordIsPersonAccount = record?.isPersonAccount as boolean | undefined;
+  const recordIsSelfEmployed = record?.isSelfEmployed as boolean | undefined;
+  const recordIsLegalEntity = record?.isLegalEntity as boolean | undefined;
+  const recordCreatedDate = record?.createdDate as string | undefined;
+
   const hasAnyAccountNature =
-    form.watch("isPersonAccount") ||
-    form.watch("isSelfEmployed") ||
-    form.watch("isCompanyContact") ||
-    form.watch("isLegalEntity") ||
-    form.watch("isShippingAddress");
+    isPersonAccount || isSelfEmployed || isCompanyContact || isLegalEntity || isShippingAddress;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEditing ? "" : account?.name}</CardTitle>
+        <CardTitle>{isEditing ? "" : (record?.name as string) || ""}</CardTitle>
       </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form className="space-y-4">
-            {isEditing ? (
-              <>
-              {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
-              {showAccountNature && !(account?.isShippingAddress || account?.isCompanyContact) && (
+      <CardContent className="space-y-4">
+        {isEditing ? (
+          <>
+            {/* ====== ACCOUNT NATURE LAYOUT SECTION ====== */}
+            {showAccountNature && !(recordIsShippingAddress || recordIsCompanyContact) && (
               <div className="bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg space-y-4">
                 <h3 className="font-semibold text-sm text-purple-900 dark:text-purple-100">
                   Account Nature
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
-                  {/* Private Person checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_PrivatePerson_enabled") || form.watch("isPersonAccount")) &&
-                    !form.watch("isLegalEntity") &&
-                    !form.watch("isShippingAddress") && (
+                  {/* Private Person checkbox */}
+                  {(isSettingEnabled("smart_account_management_accountType_PrivatePerson_enabled") || isPersonAccount) &&
+                    !isLegalEntity && !isShippingAddress && (
                       <FormField
                         control={form.control}
                         name="isPersonAccount"
@@ -76,7 +68,7 @@ export default function SmartAccountManagementDetailCard({
                           <FormItem>
                             <FormControl>
                               <CheckboxField
-                                mode={account?.isPersonAccount ? "view" : "edit"}
+                                mode={recordIsPersonAccount ? "view" : "edit"}
                                 value={!!field.value}
                                 onChange={(checked) => {
                                   field.onChange(checked);
@@ -95,10 +87,9 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Self Employed checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_SelfEmployed_enabled") || form.watch("isSelfEmployed")) &&
-                    !form.watch("isLegalEntity") &&
-                    !form.watch("isShippingAddress") && (
+                  {/* Self Employed checkbox */}
+                  {(isSettingEnabled("smart_account_management_accountType_SelfEmployed_enabled") || isSelfEmployed) &&
+                    !isLegalEntity && !isShippingAddress && (
                       <FormField
                         control={form.control}
                         name="isSelfEmployed"
@@ -125,11 +116,9 @@ export default function SmartAccountManagementDetailCard({
                       />
                     )}
 
-                  {/* Legal Entity checkbox - Show if setting enabled OR currently checked */}
-                  {(isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") || form.watch("isLegalEntity")) &&
-                    !form.watch("isPersonAccount") &&
-                    !form.watch("isSelfEmployed") &&
-                    !form.watch("isCompanyContact") && (
+                  {/* Legal Entity checkbox */}
+                  {(isSettingEnabled("smart_account_management_accountType_LegalEntity_enabled") || isLegalEntity) &&
+                    !isPersonAccount && !isSelfEmployed && !isCompanyContact && (
                       <FormField
                         control={form.control}
                         name="isLegalEntity"
@@ -156,445 +145,96 @@ export default function SmartAccountManagementDetailCard({
                         )}
                       />
                     )}
-
                 </div>
               </div>
-              )}
+            )}
 
-              {/* ====== FIELDS LAYOUT SECTION ====== */}
-              {/* Only show fields when at least one account nature checkbox is selected */}
-              {hasAnyAccountNature && (
-                <div className="space-y-4">
-                  {/* Row 1: First Name + Last Name (grid-cols-2) */}
-                  {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* First Name - Using metadata-driven TextField */}
-                      <FormField
-                        control={form.control}
-                        name="firstName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={(value) => {
-                                  field.onChange(value);
-                                  const lastName = form.getValues("lastName");
-                                  const newName = `${value} ${lastName || ""}`.trim();
-                                  form.setValue("name", newName);
-                                }}
-                                objectCode="accounts"
-                                fieldCode="firstName"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Last Name - Using metadata-driven TextField */}
-                      <FormField
-                        control={form.control}
-                        name="lastName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={(value) => {
-                                  field.onChange(value);
-                                  const firstName = form.getValues("firstName");
-                                  const newName = `${firstName || ""} ${value}`.trim();
-                                  form.setValue("name", newName);
-                                }}
-                                objectCode="accounts"
-                                fieldCode="lastName"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 2: Account Name (full width) - Using metadata-driven TextField */}
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <TextField
-                            mode="edit"
-                            value={field.value || ""}
-                            onChange={field.onChange}
-                            objectCode="accounts"
-                            fieldCode="name"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Row 3: Company Information - Visible when isSelfEmployed or isLegalEntity */}
-                  {(form.watch("isSelfEmployed") || form.watch("isLegalEntity")) && (
-                    <>
-                      {/* Company Official Name */}
-                      <FormField
-                        control={form.control}
-                        name="companyOfficialName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="companyOfficialName"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Company Registration ID */}
-                      <FormField
-                        control={form.control}
-                        name="companyRegistrationId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="companyRegistrationId"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Tax ID */}
-                      <FormField
-                        control={form.control}
-                        name="taxId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="taxId"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-
-                  {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
-                  {!form.watch("isShippingAddress") && !form.watch("isLegalEntity") && (
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Email - Using metadata-driven TextField */}
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="email"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      {/* Mobile Phone - Using metadata-driven TextField */}
-                      <FormField
-                        control={form.control}
-                        name="mobilePhone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <TextField
-                                mode="edit"
-                                value={field.value || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="mobilePhone"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Row 5: Created Date - Read-only metadata field shown in edit mode */}
-                  {account?.createdDate && (
-                    <FormField
-                      control={form.control}
-                      name="createdDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <DateTimeField
-                              mode="view"
-                              value={field.value ?? null}
-                              onChange={field.onChange}
-                              objectCode="accounts"
-                              fieldCode="createdDate"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  )}
-
-                  {/* Row 6: Address Field with form integration */}
-                  <AddressField
-                    form={form}
-                    mode="edit"
-                    objectCode="accounts"
-                    fieldCode="address"
-                  />
-                </div>
-              )}
-              </>
-            ) : (
-              <>
-                {!account ? (
-                  <div>No account data</div>
-                ) : (
-                  <div className="">
-                    {/* Row 1: First Name + Last Name (grid-cols-2) */}
-                    {!account.isShippingAddress && !account.isLegalEntity && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* First Name - Using metadata-driven TextField */}
-                        <FormField
-                          control={form.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.firstName || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="firstName"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Last Name - Using metadata-driven TextField */}
-                        <FormField
-                          control={form.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.lastName || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="lastName"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-
-                    {/* Row 2: Account Name (full width) - Using metadata-driven TextField */}
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <TextField
-                            mode="view"
-                            value={field.value || account.name || ""}
-                            onChange={field.onChange}
-                            objectCode="accounts"
-                            fieldCode="name"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Row 3: Company Information - Visible when isSelfEmployed or isLegalEntity */}
-                    {(account.isSelfEmployed || account.isLegalEntity) && (
-                      <>
-                        {/* Company Official Name */}
-                        <FormField
-                          control={form.control}
-                          name="companyOfficialName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.companyOfficialName || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="companyOfficialName"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      
-                        {/* Company Registration ID */}
-                        <FormField
-                          control={form.control}
-                          name="companyRegistrationId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.companyRegistrationId || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="companyRegistrationId"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Tax ID */}
-                        <FormField
-                          control={form.control}
-                          name="taxId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.taxId || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="taxId"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </>
-                    )}
-
-                    {/* Row 4: Email + Mobile Phone (grid-cols-2) */}
-                    {!account.isShippingAddress && !account.isLegalEntity && (
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Email - Using metadata-driven TextField */}
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.email || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="email"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {/* Mobile Phone - Using metadata-driven TextField */}
-                        <FormField
-                          control={form.control}
-                          name="mobilePhone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <TextField
-                                mode="view"
-                                value={field.value || account.mobilePhone || ""}
-                                onChange={field.onChange}
-                                objectCode="accounts"
-                                fieldCode="mobilePhone"
-                              />
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-
-                    {/* Row 5: Address Field - explicit value prop in view mode for stable display */}
-                    <FormField
-                      control={form.control}
-                      name="addressStreetAddress"
-                      render={({ field }) => (
-                        <FormItem>
-                          <AddressField
-                            mode="view"
-                            value={{
-                              streetAddress: field.value || account.addressStreetAddress || "",
-                              city: form.getValues("addressCity") || account.addressCity || "",
-                              stateProvince: form.getValues("addressStateProvince") || account.addressStateProvince || "",
-                              zipCode: form.getValues("addressZipCode") || account.addressZipCode || "",
-                              country: form.getValues("addressCountry") || account.addressCountry || ""
-                            }}
-                            onChange={() => {}}
-                            objectCode="accounts"
-                            fieldCode="address"
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Row 6: Created Date - Using metadata-driven DateTimeField */}
-                    {account.createdDate && (
-                      <FormField
-                        control={form.control}
-                        name="createdDate"
-                        render={({ field }) => (
-                          <FormItem>
-                            <DateTimeField
-                              mode="view"
-                              value={field.value || account.createdDate || null}
-                              onChange={field.onChange}
-                              objectCode="accounts"
-                              fieldCode="createdDate"
-                            />
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+            {/* ====== FIELDS LAYOUT SECTION ====== */}
+            {hasAnyAccountNature && (
+              <div className="space-y-4">
+                {/* Row 1: First Name + Last Name */}
+                {!isShippingAddress && !isLegalEntity && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field name="firstName" />
+                    <Field name="lastName" />
                   </div>
                 )}
-              </>
+
+                {/* Row 2: Account Name */}
+                <Field name="name" />
+
+                {/* Row 3: Company Information */}
+                {(isSelfEmployed || isLegalEntity) && (
+                  <>
+                    <Field name="companyOfficialName" />
+                    <Field name="companyRegistrationId" />
+                    <Field name="taxId" />
+                  </>
+                )}
+
+                {/* Row 4: Email + Mobile Phone */}
+                {!isShippingAddress && !isLegalEntity && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field name="email" />
+                    <Field name="mobilePhone" />
+                  </div>
+                )}
+
+                {/* Row 5: Created Date (read-only) */}
+                {recordCreatedDate && (
+                  <Field name="createdDate" />
+                )}
+
+                {/* Row 6: Address Field */}
+                <Field name="address" />
+              </div>
             )}
-          </form>
-        </Form>
+          </>
+        ) : (
+          <>
+            {!record ? (
+              <div>No account data</div>
+            ) : (
+              <div className="space-y-4">
+                {/* View Mode: First Name + Last Name */}
+                {!recordIsShippingAddress && !recordIsLegalEntity && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field name="firstName" />
+                    <Field name="lastName" />
+                  </div>
+                )}
+
+                {/* View Mode: Account Name */}
+                <Field name="name" />
+
+                {/* View Mode: Company Information */}
+                {(recordIsSelfEmployed || recordIsLegalEntity) && (
+                  <>
+                    <Field name="companyOfficialName" />
+                    <Field name="companyRegistrationId" />
+                    <Field name="taxId" />
+                  </>
+                )}
+
+                {/* View Mode: Email + Mobile Phone */}
+                {!recordIsShippingAddress && !recordIsLegalEntity && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field name="email" />
+                    <Field name="mobilePhone" />
+                  </div>
+                )}
+
+                {/* View Mode: Created Date */}
+                {recordCreatedDate && (
+                  <Field name="createdDate" />
+                )}
+
+                {/* View Mode: Address Field */}
+                <Field name="address" />
+              </div>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   );

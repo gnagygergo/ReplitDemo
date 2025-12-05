@@ -1,61 +1,24 @@
-// This Card is used on the Account Detail View.
-// It shows Account Owner using LookupFormField.
+/**
+ * Account Ownership Detail Card (Clean Version)
+ * 
+ * Uses LayoutContext to access form and editing state.
+ * Uses the smart Field component for metadata-driven rendering.
+ */
 
-import { type UseFormReturn } from "react-hook-form";
-import { type UseMutationResult } from "@tanstack/react-query";
-import {
-  type AccountWithOwner,
-  type InsertAccount,
-} from "@shared/schema";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import LookupFormField from "@/components/ui/lookup-form-field";
-import { CardTitle } from "@/components/ui/card";
-import { CardHeader } from "@/components/ui/card";
+import { useLayoutContext } from "@/contexts/LayoutContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field } from "../../../../components/ui/Field";
 
-interface AccountDetailOwnershipCardProps {
-  account: AccountWithOwner | null;
-  isEditing: boolean;
-  form: UseFormReturn<InsertAccount>;
-  updateMutation: UseMutationResult<any, any, InsertAccount, unknown>;
-}
+export default function AccountOwnershipDetailCard() {
+  const { record, isEditing } = useLayoutContext();
 
-export default function AccountDetailOwnershipCard({
-  account,
-  isEditing,
-  form,
-  updateMutation,
-}: AccountDetailOwnershipCardProps) {
   return (
     <Card>
-      
-      <CardContent>
-        <Form {...form}>
-          <form>
-            <FormField
-              control={form.control}
-              name="ownerId"
-              render={({ field }) => (
-                <FormItem>
-                  <LookupFormField
-                    objectCode="accounts"
-                    fieldCode="ownerId"
-                    mode={isEditing ? "edit" : "view"}
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={!isEditing}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </form>
-        </Form>
+      <CardHeader>
+        <CardTitle>Ownership</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Field name="ownerId" />
       </CardContent>
     </Card>
   );

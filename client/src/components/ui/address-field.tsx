@@ -2,6 +2,8 @@ import { useCallback, useMemo, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { FormLabel, FormControl } from "@/components/ui/form";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { MessageCircleQuestion } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
@@ -141,6 +143,7 @@ export function AddressField({
   // Merge field definition with explicit props (explicit props take precedence)
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? "";
+  const mergedHelpText = fieldDef?.helpText ?? "";
 
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -225,7 +228,25 @@ export function AddressField({
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         {mergedLabel && (
-          <h3 className="font-semibold text-sm">{mergedLabel}</h3>
+          <div className="flex items-center gap-1">
+            <h3 className="font-semibold text-sm">{mergedLabel}</h3>
+            {mergedHelpText && (
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <button 
+                    type="button" 
+                    className="text-muted-foreground hover:text-foreground"
+                    data-testid={`button-helptext-${fieldCode || 'address'}`}
+                  >
+                    <MessageCircleQuestion className="h-4 w-4" />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent className="text-sm">
+                  {mergedHelpText}
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </div>
         )}
         
         {/* Google Places Autocomplete */}
@@ -328,9 +349,27 @@ export function AddressField({
     return (
       <>
         {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
+          <div className="flex items-center gap-1">
+            <FormLabel className="text-muted-foreground">
+              {mergedLabel}
+            </FormLabel>
+            {mergedHelpText && (
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <button 
+                    type="button" 
+                    className="text-muted-foreground hover:text-foreground"
+                    data-testid={`button-helptext-${fieldCode || 'address'}-view`}
+                  >
+                    <MessageCircleQuestion className="h-4 w-4" />
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent className="text-sm">
+                  {mergedHelpText}
+                </HoverCardContent>
+              </HoverCard>
+            )}
+          </div>
         )}
         <div className={className || defaultViewClassName}>
           {hasAddress ? (

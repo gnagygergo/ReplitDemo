@@ -1,5 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormLabel, FormControl } from "@/components/ui/form";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { MessageCircleQuestion } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 
 export interface CheckboxFieldProps {
@@ -51,25 +53,30 @@ export function CheckboxField({
 
   if (mode === "edit") {
     return (
-      <div className="space-y-2">
-        <div className={className || defaultEditClassName}>
-          <FormControl>
-            <Checkbox
-              checked={value}
-              onCheckedChange={(checked) => onChange?.(checked as boolean)}
-              data-testid={mergedTestId}
-            />
-          </FormControl>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground font-normal cursor-pointer">
-              {mergedLabel}
-            </FormLabel>
-          )}
-        </div>
+      <div className={className || defaultEditClassName}>
+        <FormControl>
+          <Checkbox
+            checked={value}
+            onCheckedChange={(checked) => onChange?.(checked as boolean)}
+            data-testid={mergedTestId}
+          />
+        </FormControl>
+        {mergedLabel && (
+          <FormLabel className="text-muted-foreground font-normal cursor-pointer">
+            {mergedLabel}
+          </FormLabel>
+        )}
         {mergedHelpText && (
-          <p className="text-xs text-muted-foreground ml-6">
-            {mergedHelpText}
-          </p>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
         )}
       </div>
     );
@@ -87,6 +94,18 @@ export function CheckboxField({
           <FormLabel className="text-muted-foreground font-normal">
             {mergedLabel}
           </FormLabel>
+        )}
+        {mergedHelpText && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
         )}
       </div>
     );

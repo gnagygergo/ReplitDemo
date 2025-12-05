@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { X, ExternalLink } from "lucide-react";
+import { X, ExternalLink, MessageCircleQuestion } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { FormLabel } from "@/components/ui/form";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import LookupDialog from "@/components/ui/lookup-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,6 +120,30 @@ export default function LookupFormField({
 
   // Merge label with metadata (explicit prop takes precedence like NumberField)
   const mergedLabel = label ?? metadata?.label;
+  const mergedHelpText = metadata?.helpText ?? "";
+
+  const renderLabel = () => {
+    if (!mergedLabel) return null;
+    return (
+      <div className="flex items-center gap-1">
+        <FormLabel className="text-sm font-medium text-muted-foreground">
+          {mergedLabel}
+        </FormLabel>
+        {mergedHelpText && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
+        )}
+      </div>
+    );
+  };
   
   // Auto-generate testId based on mode if not provided (matches NumberField pattern)
   const mergedTestId = testId ?? (
@@ -142,11 +167,7 @@ export default function LookupFormField({
   if (mode === "view") {
     return (
       <div className="space-y-2">
-        {mergedLabel && (
-          <FormLabel className="text-sm font-medium text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className="flex items-center gap-2">
           {isLoadingRecord ? (
             <Skeleton className="h-6 w-48" />
@@ -204,14 +225,7 @@ export default function LookupFormField({
   return (
     <>
       <div className="space-y-2">
-        {mergedLabel && (
-          <FormLabel className="text-sm font-medium">
-            {mergedLabel}
-          </FormLabel>
-        )}
-        {metadata.helpText && (
-          <p className="text-xs text-muted-foreground">{metadata.helpText}</p>
-        )}
+        {renderLabel()}
         <div
           className={`
             relative flex items-center gap-2 min-h-10 px-3 py-2 border rounded-md 

@@ -11,6 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { FormLabel, FormControl } from "@/components/ui/form";
 import {
@@ -21,7 +22,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, MessageCircleQuestion } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
@@ -102,6 +103,30 @@ export function DropDownListField({
   const mergedShowSearch = showSearch ?? fieldDef?.allowSearch ?? false;
   const mergedSourcePath = sourcePath ?? fieldDef?.sourcePath ?? fieldDef?.metadataSource ?? "";
   const mergedSourceType = sourceType ?? fieldDef?.sourceType ?? "universalMetadata";
+  const mergedHelpText = fieldDef?.helpText ?? "";
+
+  const renderLabel = () => {
+    if (!mergedLabel) return null;
+    return (
+      <div className="flex items-center gap-1">
+        <FormLabel className="text-muted-foreground">
+          {mergedLabel}
+        </FormLabel>
+        {mergedHelpText && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
+        )}
+      </div>
+    );
+  };
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -224,11 +249,7 @@ export function DropDownListField({
   if (mode === "edit" && !mergedSourcePath) {
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <FormControl>
           <div className={cn("text-sm text-destructive", className || defaultEditClassName)} data-testid={mergedTestId}>
             Missing source path for field
@@ -242,11 +263,7 @@ export function DropDownListField({
     if (isLoading) {
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <div className={className || defaultEditClassName} data-testid={mergedTestId}>
               Loading options...
@@ -260,11 +277,7 @@ export function DropDownListField({
     if (mergedShowSearch) {
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -331,11 +344,7 @@ export function DropDownListField({
     // Use Select component for simple dropdown (no search)
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <FormControl>
           <Select
             value={value}
@@ -377,11 +386,7 @@ export function DropDownListField({
   if (mode === "view") {
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div
           className={className || defaultViewClassName}
           data-testid={mergedTestId}

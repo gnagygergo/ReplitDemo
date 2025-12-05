@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { format as formatDate, set as setDate } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, MessageCircleQuestion } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormLabel, FormControl } from "@/components/ui/form";
@@ -63,6 +64,30 @@ export function DateTimeField({
   const mergedLabel = label ?? fieldDef?.label ?? "";
   const mergedPlaceholder = placeholder ?? fieldDef?.placeHolder ?? undefined;
   const mergedFieldType = fieldType ?? (fieldDef?.fieldType as "Date" | "Time" | "DateTime" | undefined);
+  const mergedHelpText = fieldDef?.helpText ?? "";
+
+  const renderLabel = () => {
+    if (!mergedLabel) return null;
+    return (
+      <div className="flex items-center gap-1">
+        <FormLabel className="text-muted-foreground">
+          {mergedLabel}
+        </FormLabel>
+        {mergedHelpText && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
+        )}
+      </div>
+    );
+  };
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -78,11 +103,7 @@ export function DateTimeField({
     }
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className={mode === "edit" ? "w-full" : "text-sm py-2"}>
           <span data-testid={mergedTestId}>-</span>
         </div>
@@ -98,11 +119,7 @@ export function DateTimeField({
     );
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className="text-sm text-destructive">
           <span data-testid={mergedTestId || "text-fieldtype-missing"}>
             Field type unavailable
@@ -158,11 +175,7 @@ export function DateTimeField({
   if (hasError) {
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className={cn("text-sm text-destructive", className)}>
           <span data-testid={mergedTestId}>Invalid date</span>
         </div>
@@ -186,11 +199,7 @@ export function DateTimeField({
       
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
@@ -241,11 +250,7 @@ export function DateTimeField({
       
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <Input
               type="time"
@@ -287,11 +292,7 @@ export function DateTimeField({
       
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <div className="flex gap-2">
               <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -366,11 +367,7 @@ export function DateTimeField({
     
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className={className || defaultViewClassName}>
           <span data-testid={mergedTestId}>{displayValue}</span>
         </div>

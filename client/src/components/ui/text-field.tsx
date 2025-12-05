@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { FormLabel, FormControl } from "@/components/ui/form";
-import { Copy, Check } from "lucide-react";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Copy, Check, MessageCircleQuestion } from "lucide-react";
 import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { PhoneField } from "@/components/ui/phone-field";
 import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
@@ -75,6 +76,30 @@ export function TextField({
   const mergedTruncate = truncate ?? fieldDef?.truncate ?? false;
   const mergedVisibleLinesInEdit = visibleLinesInEdit ?? (fieldDef?.visibleLinesInEdit ? parseInt(fieldDef.visibleLinesInEdit) : undefined);
   const mergedVisibleLinesInView = visibleLinesInView ?? (fieldDef?.visibleLinesInView ? parseInt(fieldDef.visibleLinesInView) : undefined);
+  const mergedHelpText = fieldDef?.helpText ?? "";
+
+  const renderLabel = () => {
+    if (!mergedLabel) return null;
+    return (
+      <div className="flex items-center gap-1">
+        <FormLabel className="text-muted-foreground">
+          {mergedLabel}
+        </FormLabel>
+        {mergedHelpText && (
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground">
+                <MessageCircleQuestion className="h-4 w-4" />
+              </button>
+            </HoverCardTrigger>
+            <HoverCardContent className="text-sm">
+              {mergedHelpText}
+            </HoverCardContent>
+          </HoverCard>
+        )}
+      </div>
+    );
+  };
   
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
@@ -113,11 +138,7 @@ export function TextField({
     if (mergedVisibleLinesInEdit) {
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <FormControl>
             <Textarea
               value={value}
@@ -141,11 +162,7 @@ export function TextField({
     // Use Input for single-line input
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <FormControl>
           <Input
             type={mergedType}
@@ -176,11 +193,7 @@ export function TextField({
       
       return (
         <>
-          {mergedLabel && (
-            <FormLabel className="text-muted-foreground">
-              {mergedLabel}
-            </FormLabel>
-          )}
+          {renderLabel()}
           <div className={`flex items-start gap-2 ${className || defaultViewClassName}`}>
             <div 
               className="whitespace-pre-wrap overflow-y-auto"
@@ -213,11 +226,7 @@ export function TextField({
     // Single-line view mode (default behavior)
     return (
       <>
-        {mergedLabel && (
-          <FormLabel className="text-muted-foreground">
-            {mergedLabel}
-          </FormLabel>
-        )}
+        {renderLabel()}
         <div className={`flex items-center gap-2 ${className || defaultViewClassName}`}>
           <span data-testid={mergedTestId}>
             {displayValue}

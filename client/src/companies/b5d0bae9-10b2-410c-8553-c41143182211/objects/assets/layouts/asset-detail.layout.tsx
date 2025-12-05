@@ -29,6 +29,9 @@ export default function AssetDetailLayout({
               <Field name="quantity" />
               <Field name="installationDate" />
               <Field name="AssetInstallStatus" />
+              <Field name="location" />
+              <Field name="accountId" />
+              <Field name="productId" />
             </CardContent>
           </Card>
 

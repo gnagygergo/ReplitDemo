@@ -39,7 +39,7 @@ export default function ProductDetailLayout({
             <RelatedList
               objectCode="assets"
               fieldCode="productId"
-              columns="name, serialNumber, quantity"
+              columns="name, serialNumber, , installationDate"
               mode={isEditing ? "edit" : "view"}
               parentId={record.id as string}
               testId="related-list-assets"

@@ -7,5 +7,5 @@
   <placeHolder/>
   <testId/>
   <className/>
-  <fieldType>DateTime</fieldType>
+  <fieldType>Date</fieldType>
 </FieldDefinition>

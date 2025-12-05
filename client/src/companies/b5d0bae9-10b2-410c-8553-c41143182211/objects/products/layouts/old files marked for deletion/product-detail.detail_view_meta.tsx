@@ -251,7 +251,7 @@ export default function ProductDetail({ deps, objectCode, id }: ProductDetailPro
               <RelatedList
                 objectCode="assets"
                 fieldCode="productId"
-                columns="name, serialNumber, quantity"
+                columns="name, quantity, installationDate"
                 mode={isEditing ? "edit" : "view"}
                 parentId={product.id}
                 testId="related-list-assets"

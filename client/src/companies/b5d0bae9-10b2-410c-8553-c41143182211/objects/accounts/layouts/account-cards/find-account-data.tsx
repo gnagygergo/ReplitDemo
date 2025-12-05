@@ -66,11 +66,11 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
   const updateAccountMutation = useMutation({
     mutationFn: async (data: { 
       companyRegistrationId?: string; 
-      streetAddress?: string;
-      city?: string;
-      stateProvince?: string;
-      zipCode?: string;
-      country?: string;
+      addressStreetAddress?: string;
+      addressCity?: string;
+      addressStateProvince?: string;
+      addressZipCode?: string;
+      addressCountry?: string;
     }) => {
       const response = await apiRequest("PATCH", `/api/accounts/${accountId}`, data);
       return response.json();
@@ -103,14 +103,14 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
     const parts = address.split(',').map(p => p.trim()).filter(p => p);
     
     if (parts.length === 0) {
-      return { streetAddress: '', city: '', stateProvince: '', zipCode: '', country: '' };
+      return { addressStreetAddress: '', addressCity: '', addressStateProvince: '', addressZipCode: '', addressCountry: '' };
     }
     
-    let streetAddress = '';
-    let city = '';
-    let stateProvince = '';
-    let zipCode = '';
-    let country = '';
+    let addressStreetAddress = '';
+    let addressCity = '';
+    let addressStateProvince = '';
+    let addressZipCode = '';
+    let addressCountry = '';
     
     const hasLeadingNumber = (str: string) => /^\d/.test(str);
     const extractStateZip = (str: string) => {
@@ -119,39 +119,39 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
     };
     
     if (parts.length >= 4 && hasLeadingNumber(parts[0])) {
-      streetAddress = parts.slice(0, parts.length - 3).join(', ');
-      city = parts[parts.length - 3];
+      addressStreetAddress = parts.slice(0, parts.length - 3).join(', ');
+      addressCity = parts[parts.length - 3];
       const stateZipPart = parts[parts.length - 2];
-      country = parts[parts.length - 1];
+      addressCountry = parts[parts.length - 1];
       
       const extracted = extractStateZip(stateZipPart);
       if (extracted) {
-        stateProvince = extracted.state;
-        zipCode = extracted.zip;
+        addressStateProvince = extracted.state;
+        addressZipCode = extracted.zip;
       } else {
-        stateProvince = stateZipPart;
+        addressStateProvince = stateZipPart;
       }
     } else if (parts.length === 3 && hasLeadingNumber(parts[0])) {
-      streetAddress = parts[0];
-      city = parts[1];
+      addressStreetAddress = parts[0];
+      addressCity = parts[1];
       const lastPart = parts[2];
       const extracted = extractStateZip(lastPart);
       if (extracted) {
-        stateProvince = extracted.state;
-        zipCode = extracted.zip;
+        addressStateProvince = extracted.state;
+        addressZipCode = extracted.zip;
       } else if (/^[A-Z]{2}$/.test(lastPart)) {
-        stateProvince = lastPart;
+        addressStateProvince = lastPart;
       } else {
-        country = lastPart;
+        addressCountry = lastPart;
       }
     } else if (parts.length === 2 && hasLeadingNumber(parts[0])) {
-      streetAddress = parts[0];
-      city = parts[1];
+      addressStreetAddress = parts[0];
+      addressCity = parts[1];
     } else {
-      streetAddress = address;
+      addressStreetAddress = address;
     }
     
-    return { streetAddress, city, stateProvince, zipCode, country };
+    return { addressStreetAddress, addressCity, addressStateProvince, addressZipCode, addressCountry };
   };
 
   const handleUpdate = () => {
@@ -159,11 +159,11 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
 
     const updateData: { 
       companyRegistrationId?: string;
-      streetAddress?: string;
-      city?: string;
-      stateProvince?: string;
-      zipCode?: string;
-      country?: string;
+      addressStreetAddress?: string;
+      addressCity?: string;
+      addressStateProvince?: string;
+      addressZipCode?: string;
+      addressCountry?: string;
     } = {};
     
     if (result.registrationId && result.registrationId !== "Not found") {
@@ -172,11 +172,11 @@ export default function FindAccountData({ accountId, accountName }: FindAccountD
     
     if (result.address && result.address !== "Not found") {
       const parsedAddress = parseAddress(result.address);
-      if (parsedAddress.streetAddress) updateData.streetAddress = parsedAddress.streetAddress;
-      if (parsedAddress.city) updateData.city = parsedAddress.city;
-      if (parsedAddress.stateProvince) updateData.stateProvince = parsedAddress.stateProvince;
-      if (parsedAddress.zipCode) updateData.zipCode = parsedAddress.zipCode;
-      if (parsedAddress.country) updateData.country = parsedAddress.country;
+      if (parsedAddress.addressStreetAddress) updateData.addressStreetAddress = parsedAddress.addressStreetAddress;
+      if (parsedAddress.addressCity) updateData.addressCity = parsedAddress.addressCity;
+      if (parsedAddress.addressStateProvince) updateData.addressStateProvince = parsedAddress.addressStateProvince;
+      if (parsedAddress.addressZipCode) updateData.addressZipCode = parsedAddress.addressZipCode;
+      if (parsedAddress.addressCountry) updateData.addressCountry = parsedAddress.addressCountry;
     }
 
     if (Object.keys(updateData).length === 0) {

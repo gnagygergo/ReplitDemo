@@ -56,6 +56,19 @@ export function Field({
     className,
   };
 
+  // AddressField is special - it binds to multiple form fields (prefix + streetAddress, city, etc.)
+  // So we don't wrap it in FormField, it manages its own form binding via LayoutContext
+  if (fieldType === "AddressField") {
+    return (
+      <AddressField
+        objectCode={objectCode}
+        fieldCode={name}
+        mode={mode}
+        layoutMandatory={layoutMandatory ? "true" : undefined}
+      />
+    );
+  }
+
   return (
     <FormField
       control={form.control}

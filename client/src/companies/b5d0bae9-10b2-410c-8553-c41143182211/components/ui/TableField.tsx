@@ -6,6 +6,7 @@ import { DateTimeField } from "@/components/ui/date-time-field";
 import { DropDownListField } from "@/components/ui/dropdown-list-field";
 import LookupFormField from "@/components/ui/lookup-form-field";
 import { CheckboxField } from "@/components/ui/checkbox-field";
+import { AddressField } from "@/components/ui/address-field";
 
 interface TableFieldProps {
   name: string;
@@ -94,6 +95,16 @@ export function TableField({
         <CheckboxField
           {...commonProps}
           value={value as boolean}
+        />
+      );
+
+    case "AddressField":
+      // AddressField in table mode reads column values from the record based on fieldDef metadata
+      return (
+        <AddressField
+          objectCode={objectCode}
+          fieldCode={name}
+          mode="table"
         />
       );
 

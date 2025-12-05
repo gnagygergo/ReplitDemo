@@ -6,6 +6,7 @@ import { useFieldDefinition } from "@/hooks/use-field-definition";
 import { useCompanySettings } from "@/contexts/CompanySettingsContext";
 import { GooglePlacesAutocomplete } from "@/components/google-places-autocomplete";
 import { useLayoutMandatoryField } from "@/contexts/LayoutModeContext";
+import { useLayoutContextOptional } from "@/contexts/LayoutContext";
 
 export interface AddressValue {
   streetAddress?: string;
@@ -34,8 +35,8 @@ export interface AddressFieldProps {
 
 export function AddressField({
   mode,
-  form,
-  objectCode,
+  form: formProp,
+  objectCode: objectCodeProp,
   fieldCode,
   value: legacyValue,
   onChange: legacyOnChange,
@@ -46,6 +47,19 @@ export function AddressField({
   layoutMandatory,
 }: AddressFieldProps) {
   const { getSetting } = useCompanySettings();
+  
+  // Get form and objectCode from LayoutContext if not provided as props
+  const layoutContext = useLayoutContextOptional();
+  // Cast to UseFormReturn<any> to allow dynamic field name access
+  const form = (formProp ?? layoutContext?.form) as UseFormReturn<any> | undefined;
+  const objectCode = objectCodeProp ?? layoutContext?.objectCode;
+  
+  // Determine mode from context if in layout context and mode not explicitly "table"
+  const effectiveMode = mode === "table" 
+    ? "table" 
+    : layoutContext 
+      ? (layoutContext.isEditing ? "edit" : "view")
+      : mode;
 
   // Fetch field definition if objectCode and fieldCode are provided
   const { data: fieldDef, isLoading: isLoadingFieldDef } = useFieldDefinition({
@@ -93,8 +107,20 @@ export function AddressField({
     }
   }, [useFormIntegration, form, fieldDef, columnNames]);
 
-  // Get current value - either from form or legacy props
+  // Get current value - from record (table mode), form (edit/view mode), or legacy props
   const value: AddressValue = useMemo(() => {
+    // In table mode, read directly from the record in LayoutContext
+    if (effectiveMode === "table" && layoutContext?.record) {
+      const record = layoutContext.record;
+      return {
+        streetAddress: (record[columnNames.streetAddress] as string) || "",
+        city: (record[columnNames.city] as string) || "",
+        stateProvince: (record[columnNames.stateProvince] as string) || "",
+        zipCode: (record[columnNames.zipCode] as string) || "",
+        country: (record[columnNames.country] as string) || "",
+      };
+    }
+    // In edit/view mode, read from form
     if (useFormIntegration && form) {
       return {
         streetAddress: form.watch(columnNames.streetAddress) || "",
@@ -105,7 +131,7 @@ export function AddressField({
       };
     }
     return legacyValue || {};
-  }, [useFormIntegration, form, columnNames, legacyValue, 
+  }, [effectiveMode, layoutContext?.record, useFormIntegration, form, columnNames, legacyValue, 
       form?.watch(columnNames.streetAddress),
       form?.watch(columnNames.city),
       form?.watch(columnNames.stateProvince),
@@ -118,8 +144,8 @@ export function AddressField({
 
   // Auto-generate testId based on mode if not provided and fieldCode is available
   const mergedTestId = testId ?? (
-    mode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
-    : mode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
+    effectiveMode === "edit" ? fieldDef?.testIdEdit ?? (fieldCode ? `input-${fieldCode}` : undefined)
+    : effectiveMode === "view" ? fieldDef?.testIdView ?? (fieldCode ? `text-${fieldCode}` : undefined)
     : fieldDef?.testIdTable ?? (fieldCode ? `text-${fieldCode}` : undefined)
   );
 
@@ -195,7 +221,7 @@ export function AddressField({
   const defaultViewClassName = "text-sm py-2";
   const defaultTableClassName = "text-sm";
 
-  if (mode === "edit") {
+  if (effectiveMode === "edit") {
     return (
       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
         {mergedLabel && (
@@ -286,7 +312,7 @@ export function AddressField({
     );
   }
 
-  if (mode === "view") {
+  if (effectiveMode === "view") {
     // Format address for display
     const parts = [
       value.streetAddress,
@@ -325,7 +351,7 @@ export function AddressField({
     );
   }
 
-  if (mode === "table") {
+  if (effectiveMode === "table") {
     // Format address for table display (compact)
     const parts = [
       value.streetAddress,

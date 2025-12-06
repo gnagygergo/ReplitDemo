@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bot, Edit, Save, X, Eye, EyeOff, Map, Workflow } from "lucide-react";
+import { Bot, Edit, Save, X, Eye, EyeOff, Map, Workflow, HardDrive, Link, Unlink, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -48,14 +48,99 @@ type CompanySetting = {
   settingDescription: string | null;
 };
 
+type GoogleConnectionStatus = {
+  connected: boolean;
+  email: string | null;
+};
+
 export default function IntegrationsGeneral() {
   const [isEditingAI, setIsEditingAI] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [showTavilyKey, setShowTavilyKey] = useState(false);
+  const [isEditingDrive, setIsEditingDrive] = useState(false);
+  const [driveRootFolderId, setDriveRootFolderId] = useState("");
   const { toast } = useToast();
 
   const { data: company, isLoading } = useQuery<Company>({
     queryKey: ["/api/auth/my-company"],
+  });
+
+  const { data: googleStatus, isLoading: isLoadingGoogleStatus } = useQuery<GoogleConnectionStatus>({
+    queryKey: ["/api/integrations/google/status"],
+  });
+
+  const { data: companySettings } = useQuery<Array<{ settingCode: string; settingValue: string | null }>>({
+    queryKey: ["/api/company-settings"],
+  });
+
+  const currentDriveRootFolderId = companySettings?.find(
+    s => s.settingCode === "google_drive_root_folder_id"
+  )?.settingValue || "";
+
+  const connectGoogleMutation = useMutation({
+    mutationFn: async () => {
+      const currentUrl = window.location.pathname;
+      const response = await apiRequest("GET", `/api/integrations/google/oauth/start?returnUrl=${encodeURIComponent(currentUrl)}`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to start Google authentication",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const disconnectGoogleMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/integrations/google/disconnect");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/integrations/google/status"] });
+      toast({
+        title: "Success",
+        description: "Google account disconnected successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to disconnect Google account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveDriveRootFolderMutation = useMutation({
+    mutationFn: async (folderId: string) => {
+      const response = await apiRequest("POST", "/api/company-settings/upsert", {
+        settingCode: "google_drive_root_folder_id",
+        settingValue: folderId,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/company-settings"] });
+      toast({
+        title: "Success",
+        description: "Google Drive root folder saved successfully",
+      });
+      setIsEditingDrive(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save Google Drive root folder",
+        variant: "destructive",
+      });
+    },
   });
 
   
@@ -416,6 +501,157 @@ export default function IntegrationsGeneral() {
             <li>Google Maps Links: Click addresses to view them on Google Maps</li>
           </ul>
           
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5" />
+              Google Drive Integration
+            </CardTitle>
+            <CardDescription>
+              Connect Google Drive to store files for your accounts
+            </CardDescription>
+          </div>
+          {isEditingDrive ? (
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsEditingDrive(false);
+                  setDriveRootFolderId(currentDriveRootFolderId);
+                }}
+                data-testid="button-cancel-drive"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => saveDriveRootFolderMutation.mutate(driveRootFolderId)}
+                disabled={saveDriveRootFolderMutation.isPending}
+                data-testid="button-save-drive"
+              >
+                {saveDriveRootFolderMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-1" />
+                )}
+                Save
+              </Button>
+            </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDriveRootFolderId(currentDriveRootFolderId);
+                setIsEditingDrive(true);
+              }}
+              data-testid="button-edit-drive"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Google Account Connection</h3>
+              {isLoadingGoogleStatus ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking connection status...
+                </div>
+              ) : googleStatus?.connected ? (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Link className="h-4 w-4 text-green-500" />
+                    <span className="text-sm">
+                      Connected as <strong>{googleStatus.email}</strong>
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => disconnectGoogleMutation.mutate()}
+                    disabled={disconnectGoogleMutation.isPending}
+                    data-testid="button-disconnect-google"
+                  >
+                    {disconnectGoogleMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Unlink className="h-4 w-4 mr-1" />
+                    )}
+                    Disconnect
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Unlink className="h-4 w-4" />
+                    <span className="text-sm">Not connected to Google Drive</span>
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => connectGoogleMutation.mutate()}
+                    disabled={connectGoogleMutation.isPending}
+                    data-testid="button-connect-google"
+                  >
+                    {connectGoogleMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Link className="h-4 w-4 mr-1" />
+                    )}
+                    Connect Google Drive
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">Root Folder Configuration</h3>
+              <p className="text-sm text-muted-foreground mb-2">
+                Set the Google Drive folder ID where account folders will be created.
+              </p>
+              {isEditingDrive ? (
+                <Input
+                  value={driveRootFolderId}
+                  onChange={(e) => setDriveRootFolderId(e.target.value)}
+                  placeholder="Enter Google Drive folder ID"
+                  data-testid="input-drive-root-folder"
+                />
+              ) : (
+                <div className="p-3 bg-muted rounded-lg">
+                  <span className="text-sm" data-testid="text-drive-root-folder">
+                    {currentDriveRootFolderId || "Not configured"}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">
+                To find a folder ID: Open the folder in Google Drive, the ID is the last part of the URL.
+              </p>
+            </div>
+          </div>
+
+          <div className="border-t pt-4 space-y-2 text-sm text-muted-foreground">
+            <p><strong>How it works:</strong></p>
+            <ul className="list-disc list-inside space-y-1 ml-2">
+              <li>Connect your Google account to authenticate with Google Drive</li>
+              <li>Set a root folder where all account folders will be stored</li>
+              <li>Each account will have its own subfolder automatically created</li>
+              <li>Upload and view files directly from the Account detail page</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
     </div>

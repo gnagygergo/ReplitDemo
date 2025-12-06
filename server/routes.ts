@@ -75,6 +75,8 @@ import { pool, db } from "./db";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { companySettings } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import * as googleOAuth from "./services/google-oauth";
+import * as googleDrive from "./services/google-drive";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication - Required for Replit Auth
@@ -532,6 +534,295 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (error) {
         console.error("Error switching company context:", error);
         res.status(500).json({ message: "Failed to switch company context" });
+      }
+    },
+  );
+
+  // Google OAuth endpoints for Google Drive integration
+  app.get(
+    "/api/integrations/google/oauth/start",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const returnUrl = (req.query.returnUrl as string) || '/';
+        
+        // Create secure OAuth session with HMAC-signed state and PKCE
+        const { authUrl, codeVerifier } = googleOAuth.createAuthSession(userId, returnUrl);
+        
+        // Store code verifier in session for PKCE validation
+        (req.session as any).googleOAuthCodeVerifier = codeVerifier;
+        
+        res.json({ authUrl });
+      } catch (error) {
+        console.error("Error starting Google OAuth:", error);
+        res.status(500).json({ message: "Failed to start Google authentication" });
+      }
+    },
+  );
+
+  app.get("/api/integrations/google/oauth/callback", async (req: any, res) => {
+    try {
+      const { code, state, error: authError } = req.query;
+
+      if (authError) {
+        console.error("Google OAuth error:", authError);
+        return res.redirect(`/?google_auth_error=${encodeURIComponent(authError as string)}`);
+      }
+
+      if (!code || !state) {
+        return res.redirect('/?google_auth_error=missing_params');
+      }
+
+      // Verify HMAC-signed state and check expiry
+      const stateData = googleOAuth.verifyAndParseState(state as string);
+      if (!stateData) {
+        console.error("Invalid or expired OAuth state");
+        return res.redirect('/?google_auth_error=invalid_state');
+      }
+
+      const { userId, returnUrl } = stateData;
+      
+      // Verify the session user matches the state user (CSRF protection)
+      const sessionUser = (req.session as any).user;
+      let sessionUserId;
+      if (sessionUser && sessionUser.isDbUser) {
+        sessionUserId = sessionUser.id;
+      } else if (req.user?.claims?.sub) {
+        sessionUserId = req.user.claims.sub;
+      }
+      
+      if (sessionUserId && sessionUserId !== userId) {
+        console.error("OAuth state user mismatch: state userId differs from session userId");
+        return res.redirect('/?google_auth_error=user_mismatch');
+      }
+      
+      // Get PKCE code verifier from session
+      const codeVerifier = (req.session as any).googleOAuthCodeVerifier;
+      
+      // Clear the code verifier from session
+      delete (req.session as any).googleOAuthCodeVerifier;
+
+      // Exchange code for tokens with PKCE verification
+      const tokens = await googleOAuth.exchangeCodeForTokens(code as string, codeVerifier);
+      
+      // Get user info from Google
+      const userInfo = await googleOAuth.getGoogleUserInfo(tokens.access_token);
+      
+      // Save tokens to database
+      await googleOAuth.saveUserTokens(userId, tokens, userInfo);
+
+      // Redirect back to the app
+      const redirectUrl = returnUrl || '/';
+      res.redirect(`${redirectUrl}?google_auth_success=true`);
+    } catch (error) {
+      console.error("Error in Google OAuth callback:", error);
+      res.redirect('/?google_auth_error=callback_failed');
+    }
+  });
+
+  app.get(
+    "/api/integrations/google/status",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const isConnected = await googleOAuth.isUserConnectedToGoogle(userId);
+        
+        if (isConnected) {
+          const tokenData = await googleOAuth.getUserGoogleToken(userId);
+          res.json({
+            connected: true,
+            email: tokenData?.providerAccountEmail || null,
+          });
+        } else {
+          res.json({ connected: false, email: null });
+        }
+      } catch (error) {
+        console.error("Error checking Google connection status:", error);
+        res.status(500).json({ message: "Failed to check connection status" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/integrations/google/disconnect",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        await googleOAuth.disconnectGoogleAccount(userId);
+        res.json({ message: "Google account disconnected successfully" });
+      } catch (error) {
+        console.error("Error disconnecting Google account:", error);
+        res.status(500).json({ message: "Failed to disconnect Google account" });
+      }
+    },
+  );
+
+  // Google Drive API endpoints
+  app.get(
+    "/api/integrations/google/drive/account/:accountId/files",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const { accountId } = req.params;
+        const folderId = await googleDrive.getAccountFolderId(accountId);
+        
+        if (!folderId) {
+          return res.json({ files: [], folderId: null, folderNotCreated: true });
+        }
+
+        const files = await googleDrive.listFilesInFolder(userId, folderId);
+        res.json({ files, folderId });
+      } catch (error) {
+        console.error("Error listing Drive files:", error);
+        res.status(500).json({ message: "Failed to list files" });
+      }
+    },
+  );
+
+  app.post(
+    "/api/integrations/google/drive/account/:accountId/ensure-folder",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId, companyId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+          companyId = sessionUser.companyContext || sessionUser.companyId;
+        } else {
+          userId = req.user?.claims?.sub;
+          const dbUser = await storage.getUser(userId);
+          companyId = dbUser?.companyContext || dbUser?.companyId;
+        }
+
+        if (!userId || !companyId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const { accountId } = req.params;
+        const folderId = await googleDrive.ensureAccountFolder(userId, accountId, companyId);
+        
+        res.json({ folderId });
+      } catch (error) {
+        console.error("Error ensuring account folder:", error);
+        const message = error instanceof Error ? error.message : "Failed to create folder";
+        res.status(500).json({ message });
+      }
+    },
+  );
+
+  app.post(
+    "/api/integrations/google/drive/account/:accountId/upload",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId, companyId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+          companyId = sessionUser.companyContext || sessionUser.companyId;
+        } else {
+          userId = req.user?.claims?.sub;
+          const dbUser = await storage.getUser(userId);
+          companyId = dbUser?.companyContext || dbUser?.companyId;
+        }
+
+        if (!userId || !companyId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const { accountId } = req.params;
+        const { fileName, fileContent, mimeType } = req.body;
+
+        if (!fileName || !fileContent || !mimeType) {
+          return res.status(400).json({ message: "Missing required fields" });
+        }
+
+        const folderId = await googleDrive.ensureAccountFolder(userId, accountId, companyId);
+        const fileBuffer = Buffer.from(fileContent, 'base64');
+        const file = await googleDrive.uploadFile(userId, folderId, fileName, fileBuffer, mimeType);
+        
+        res.json({ file });
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        const message = error instanceof Error ? error.message : "Failed to upload file";
+        res.status(500).json({ message });
+      }
+    },
+  );
+
+  app.delete(
+    "/api/integrations/google/drive/files/:fileId",
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const sessionUser = (req.session as any).user;
+        let userId;
+        if (sessionUser && sessionUser.isDbUser) {
+          userId = sessionUser.id;
+        } else {
+          userId = req.user?.claims?.sub;
+        }
+
+        if (!userId) {
+          return res.status(401).json({ message: "User not authenticated" });
+        }
+
+        const { fileId } = req.params;
+        await googleDrive.deleteFile(userId, fileId);
+        
+        res.json({ message: "File deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting file:", error);
+        res.status(500).json({ message: "Failed to delete file" });
       }
     },
   );

@@ -19,6 +19,7 @@ import AccountShippingAddressesListCard from "./account-cards/smart-account-ship
 import AccountSubAccountsListCard from "./account-cards/smart-account-sub-accounts-list-card";
 import AccountParentAccountsListCard from "./account-cards/smart-account-parent-accounts-list-card";
 import FindAccountData from "./account-cards/find-account-data";
+import GoogleDriveFilesCard from "./account-cards/google-drive-files-card";
 
 export default function AccountDetailLayout({
   Field,
@@ -123,6 +124,9 @@ export default function AccountDetailLayout({
                 isSettingEnabled("smart_account_management_activated") && (
                   <AccountParentAccountsListCard accountId={accountId} />
                 )}
+
+              {/* Google Drive Files */}
+              <GoogleDriveFilesCard accountId={accountId} />
             </>
           )}
         </div>

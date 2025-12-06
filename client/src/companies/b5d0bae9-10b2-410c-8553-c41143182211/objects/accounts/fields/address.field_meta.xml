@@ -3,7 +3,7 @@
   <type>AddressField</type>
   <apiCode>address</apiCode>
   <label>Customer Address</label>
-  <helpText/>
+  <helpText>The location of this account, based on if it is a Legal Entity, Shipping Address, etc.</helpText>
   <placeHolder/>
   <testId/>
   <className/>

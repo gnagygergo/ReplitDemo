@@ -111,6 +111,7 @@ export const accounts = pgTable("accounts", {
   ownerId: text("owner_id"),
   parentAccountId: text("parent_account_id"),
   companyId: text("company_id"),
+  googleFolderId: text("google_folder_id"),
   createdDate: timestamp("created_date").defaultNow(),
 });
 
@@ -203,6 +204,30 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// User Google OAuth tokens - stores encrypted OAuth credentials for Google Drive integration
+export const userGoogleTokens = pgTable("user_google_tokens", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  provider: text("provider").default("google").notNull(),
+  providerAccountId: text("provider_account_id").notNull(), // Google's unique user ID (sub)
+  providerAccountEmail: text("provider_account_email"), // User's Google email for display
+  accessTokenCiphertext: text("access_token_ciphertext").notNull(), // Encrypted access token
+  refreshTokenCiphertext: text("refresh_token_ciphertext"), // Encrypted refresh token
+  accessTokenExpiresAt: timestamp("access_token_expires_at"), // When access token expires
+  scopes: text("scopes").array(), // Granted OAuth scopes
+  tokenType: text("token_type").default("Bearer"),
+  latestError: text("latest_error"), // Last error message if any
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  uniqueUserProvider: unique().on(table.userId, table.provider, table.providerAccountId),
+  userIdIdx: index("user_google_tokens_user_id_idx").on(table.userId),
+}));
 
 export const releases = pgTable("releases", {
   id: varchar("id")
@@ -640,6 +665,16 @@ export const knowledgeArticlesRelations = relations(
   }),
 );
 
+export const userGoogleTokensRelations = relations(
+  userGoogleTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userGoogleTokens.userId],
+      references: [users.id],
+    }),
+  }),
+);
+
 export const insertCompanySchema = createInsertSchema(companies)
   .omit({
     id: true,
@@ -675,6 +710,18 @@ export const insertUserRoleAssignmentSchema = createInsertSchema(
   .extend({
     userId: z.string().min(1, "User is required"),
     companyRoleId: z.string().min(1, "Company role is required"),
+  });
+
+export const insertUserGoogleTokenSchema = createInsertSchema(userGoogleTokens)
+  .omit({
+    id: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    userId: z.string().min(1, "User ID is required"),
+    providerAccountId: z.string().min(1, "Provider account ID is required"),
+    accessTokenCiphertext: z.string().min(1, "Access token is required"),
   });
 
 export const insertReleaseSchema = createInsertSchema(releases)
@@ -903,6 +950,8 @@ export type InsertUserRoleAssignment = z.infer<
   typeof insertUserRoleAssignmentSchema
 >;
 export type UserRoleAssignment = typeof userRoleAssignments.$inferSelect;
+export type InsertUserGoogleToken = z.infer<typeof insertUserGoogleTokenSchema>;
+export type UserGoogleToken = typeof userGoogleTokens.$inferSelect;
 export type InsertRelease = z.infer<typeof insertReleaseSchema>;
 export type Release = typeof releases.$inferSelect;
 export type InsertUnitOfMeasure = z.infer<typeof insertUnitOfMeasureSchema>;

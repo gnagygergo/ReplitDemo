@@ -2029,6 +2029,30 @@ export class DatabaseStorage implements IStorage {
     return updatedSetting;
   }
 
+  async updateCompanySettingScoped(id: string, companyId: string, settingValue: string, userId: string): Promise<any> {
+    // Update with companyId in WHERE clause for tenant isolation
+    const [updatedSetting] = await db
+      .update(companySettings)
+      .set({
+        settingValue: settingValue,
+        lastUpdatedDate: sql`NOW()`,
+        lastUpdatedBy: userId,
+      })
+      .where(
+        and(
+          eq(companySettings.id, id),
+          eq(companySettings.companyId, companyId)
+        )
+      )
+      .returning();
+    
+    if (!updatedSetting) {
+      throw new Error("Setting not found or access denied");
+    }
+    
+    return updatedSetting;
+  }
+
   async getDependentSettings(settingCode: string, companyId: string): Promise<CompanySettingWithMaster[]> {
     // Find all settings that have cantBeTrueIfTheFollowingIsFalse = settingCode
     // AND are currently set to TRUE (only TRUE settings matter for cascade off)

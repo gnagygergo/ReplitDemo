@@ -3128,6 +3128,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upsert company setting by code (Company-scoped, admin only)
+  app.post("/api/company-settings/upsert", isAuthenticated, async (req, res) => {
+    try {
+      // Verify user is company admin or global admin
+      const [isCompanyAdmin, isGlobalAdmin] = await Promise.all([
+        storage.verifyCompanyAdmin(req),
+        storage.verifyGlobalAdmin(req),
+      ]);
+      
+      if (!isCompanyAdmin && !isGlobalAdmin) {
+        return res.status(403).json({
+          message: "Access denied. Admin role required.",
+        });
+      }
+
+      // Get user's company context
+      const companyContext = await storage.GetCompanyContext(req);
+      if (!companyContext) {
+        return res.status(400).json({
+          message: "Company context not found for user",
+        });
+      }
+
+      // Get user ID for audit trail
+      const sessionUser = (req.session as any).user;
+      let userId;
+      if (sessionUser) {
+        userId = sessionUser.id;
+      } else {
+        userId = (req.user as any)?.claims?.sub;
+      }
+
+      if (!userId) {
+        return res.status(400).json({
+          message: "User ID not found",
+        });
+      }
+
+      // Validate request body
+      const { settingCode, settingValue } = req.body;
+      
+      if (!settingCode || typeof settingCode !== 'string') {
+        return res.status(400).json({
+          message: "settingCode is required and must be a string",
+        });
+      }
+
+      if (settingValue === undefined || (settingValue !== null && typeof settingValue !== 'string')) {
+        return res.status(400).json({
+          message: "settingValue is required and must be a string or null",
+        });
+      }
+
+      // Get or create the company setting by code (already scoped by companyContext)
+      const setting = await storage.getOrCreateCompanySettingByCode(
+        settingCode,
+        companyContext,
+        userId
+      );
+
+      // Defense in depth: verify the setting belongs to this company
+      if (setting.companyId !== companyContext) {
+        console.error(`Company mismatch: setting.companyId=${setting.companyId}, companyContext=${companyContext}`);
+        return res.status(403).json({
+          message: "Access denied. Setting does not belong to your company.",
+        });
+      }
+
+      // Update the setting value with company-scoped method (enforces companyId in WHERE clause)
+      const updatedSetting = await storage.updateCompanySettingScoped(
+        setting.id,
+        companyContext,
+        settingValue || '',
+        userId
+      );
+
+      res.json(updatedSetting);
+    } catch (error: any) {
+      console.error("Error upserting company setting:", error);
+      
+      if (error.message?.includes("Setting master not found")) {
+        return res.status(400).json({
+          message: error.message,
+        });
+      }
+      
+      if (error.message?.includes("Setting not found or access denied")) {
+        return res.status(403).json({
+          message: "Access denied. Setting not found or does not belong to your company.",
+        });
+      }
+      
+      res.status(500).json({
+        message: "Failed to upsert company setting",
+      });
+    }
+  });
+
   // Business Objects Manager - Company Settings by Domain (Company-scoped)
   app.get("/api/business-objects/company-settings/:domain", isAuthenticated, async (req, res) => {
     try {

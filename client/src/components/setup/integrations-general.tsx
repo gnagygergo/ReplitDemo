@@ -74,7 +74,7 @@ export default function IntegrationsGeneral() {
   });
 
   const currentDriveRootFolderId = companySettings?.find(
-    s => s.settingCode === "google_drive_root_folder_id"
+    s => s.settingCode === "google_drive_integration_company_root_folder"
   )?.settingValue || "";
 
   const connectGoogleMutation = useMutation({
@@ -121,7 +121,7 @@ export default function IntegrationsGeneral() {
   const saveDriveRootFolderMutation = useMutation({
     mutationFn: async (folderId: string) => {
       const response = await apiRequest("POST", "/api/company-settings/upsert", {
-        settingCode: "google_drive_root_folder_id",
+        settingCode: "google_drive_integration_company_root_folder",
         settingValue: folderId,
       });
       return response.json();

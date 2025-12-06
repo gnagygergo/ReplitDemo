@@ -9,12 +9,19 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
+// Check if running on Replit
+const isReplit = !!process.env.REPL_ID;
+
+// Only validate Replit-specific env vars when running on Replit
+if (isReplit && !process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
 const getOidcConfig = memoize(
   async () => {
+    if (!isReplit) {
+      throw new Error("OIDC config is only available on Replit");
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
       process.env.REPL_ID!
@@ -96,91 +103,95 @@ export async function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
-
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
-
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
-  }
-
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
-  });
+  // Only set up Replit OIDC routes when running on Replit
+  if (isReplit) {
+    const config = await getOidcConfig();
 
-  app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any) => {
-      if (err) {
-        console.error("Authentication error:", err);
-        return res.redirect("/api/login");
-      }
-      if (!user) {
-        return res.redirect("/api/login");
-      }
+    const verify: VerifyFunction = async (
+      tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
+      verified: passport.AuthenticateCallback
+    ) => {
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      verified(null, user);
+    };
 
-      // Regenerate session ID to prevent session fixation attacks
-      req.session.regenerate((regenerateErr: any) => {
-        if (regenerateErr) {
-          console.error("Session regeneration error:", regenerateErr);
+    for (const domain of process.env
+      .REPLIT_DOMAINS!.split(",")) {
+      const strategy = new Strategy(
+        {
+          name: `replitauth:${domain}`,
+          config,
+          scope: "openid email profile offline_access",
+          callbackURL: `https://${domain}/api/callback`,
+        },
+        verify,
+      );
+      passport.use(strategy);
+    }
+
+    app.get("/api/login", (req, res, next) => {
+      passport.authenticate(`replitauth:${req.hostname}`, {
+        prompt: "login consent",
+        scope: ["openid", "email", "profile", "offline_access"],
+      })(req, res, next);
+    });
+
+    app.get("/api/callback", (req, res, next) => {
+      passport.authenticate(`replitauth:${req.hostname}`, (err: any, user: any) => {
+        if (err) {
+          console.error("Authentication error:", err);
+          return res.redirect("/api/login");
+        }
+        if (!user) {
           return res.redirect("/api/login");
         }
 
-        // Log in the user after session regeneration
-        req.logIn(user, (loginErr: any) => {
-          if (loginErr) {
-            console.error("Login error:", loginErr);
+        // Regenerate session ID to prevent session fixation attacks
+        req.session.regenerate((regenerateErr: any) => {
+          if (regenerateErr) {
+            console.error("Session regeneration error:", regenerateErr);
             return res.redirect("/api/login");
           }
 
-          // Save session explicitly to ensure persistence
-          req.session.save(async (saveErr: any) => {
-            if (saveErr) {
-              console.error("Session save error:", saveErr);
+          // Log in the user after session regeneration
+          req.logIn(user, (loginErr: any) => {
+            if (loginErr) {
+              console.error("Login error:", loginErr);
               return res.redirect("/api/login");
             }
-            
-            // Set company context after successful OIDC login
-            try {
-              const userId = user.claims?.sub;
-              if (userId) {
-                await storage.setCompanyContext(userId);
+
+            // Save session explicitly to ensure persistence
+            req.session.save(async (saveErr: any) => {
+              if (saveErr) {
+                console.error("Session save error:", saveErr);
+                return res.redirect("/api/login");
               }
-            } catch (contextErr) {
-              console.error("Failed to set company context for OIDC user:", contextErr);
-              // Continue with login even if context setting fails
-            }
-            
-            res.redirect("/");
+              
+              // Set company context after successful OIDC login
+              try {
+                const userId = user.claims?.sub;
+                if (userId) {
+                  await storage.setCompanyContext(userId);
+                }
+              } catch (contextErr) {
+                console.error("Failed to set company context for OIDC user:", contextErr);
+                // Continue with login even if context setting fails
+              }
+              
+              res.redirect("/");
+            });
           });
         });
-      });
-    })(req, res, next);
-  });
+      })(req, res, next);
+    });
+  }
 
+  // Logout route works for both Replit and non-Replit environments
   app.get("/api/logout", async (req, res) => {
     const sessionUser = (req.session as any).user;
     
@@ -212,26 +223,50 @@ export async function setupAuth(app: Express) {
       return;
     }
     
-    // Handle OIDC user logout (original Replit Auth)
-    req.logout(async () => {
-      // Clear company context for OIDC user before destroying session
-      try {
-        const userId = (req.user as any)?.claims?.sub;
-        if (userId) {
-          await storage.clearCompanyContext(userId);
+    // Handle OIDC user logout (only on Replit)
+    if (isReplit) {
+      req.logout(async () => {
+        // Clear company context for OIDC user before destroying session
+        try {
+          const userId = (req.user as any)?.claims?.sub;
+          if (userId) {
+            await storage.clearCompanyContext(userId);
+          }
+        } catch (contextErr) {
+          console.error("Failed to clear company context for OIDC user on logout:", contextErr);
+          // Continue with logout even if context clearing fails
         }
-      } catch (contextErr) {
-        console.error("Failed to clear company context for OIDC user on logout:", contextErr);
-        // Continue with logout even if context clearing fails
-      }
-      
-      // Destroy session and clear session cookie
+        
+        // Destroy session and clear session cookie
+        const config = await getOidcConfig();
+        req.session.destroy((err: any) => {
+          if (err) {
+            console.error("Session destruction error on logout:", err);
+          }
+          
+          // Clear the session cookie explicitly
+          res.clearCookie("connect.sid", {
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax"
+          });
+          
+          res.redirect(
+            client.buildEndSessionUrl(config, {
+              client_id: process.env.REPL_ID!,
+              post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+            }).href
+          );
+        });
+      });
+    } else {
+      // Non-Replit logout - just destroy session
       req.session.destroy((err: any) => {
         if (err) {
           console.error("Session destruction error on logout:", err);
         }
         
-        // Clear the session cookie explicitly
         res.clearCookie("connect.sid", {
           path: "/",
           httpOnly: true,
@@ -239,14 +274,9 @@ export async function setupAuth(app: Express) {
           sameSite: "lax"
         });
         
-        res.redirect(
-          client.buildEndSessionUrl(config, {
-            client_id: process.env.REPL_ID!,
-            post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-          }).href
-        );
+        res.redirect("/");
       });
-    });
+    }
   });
 }
 
@@ -257,6 +287,11 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // Check for database user authentication (email/password login)
   if (sessionUser && sessionUser.isDbUser) {
     return next();
+  }
+
+  // On non-Replit environments, only database user auth is supported
+  if (!isReplit) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   // Check for OIDC authentication (original Replit Auth)

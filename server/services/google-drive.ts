@@ -173,6 +173,7 @@ export async function getCompanyDriveRootFolder(companyId: string): Promise<stri
     .where(eq(companySettings.companyId, companyId));
   
   const googleDriveSetting = allSettings.find(s => 
+    s.settingCode === 'google_drive_integration_company_root_folder' ||
     s.settingCode === 'google_drive_root_folder_id' || 
     s.settingCode === 'googleDriveRootFolderId'
   );

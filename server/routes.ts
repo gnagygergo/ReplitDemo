@@ -701,10 +701,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const sessionUser = (req.session as any).user;
         let userId;
-        if (sessionUser && sessionUser.isDbUser) {
+        if (sessionUser?.id) {
           userId = sessionUser.id;
-        } else {
-          userId = req.user?.claims?.sub;
+        } else if (req.user?.claims?.sub) {
+          userId = req.user.claims.sub;
         }
 
         if (!userId) {
@@ -734,11 +734,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const sessionUser = (req.session as any).user;
         let userId, companyId;
-        if (sessionUser && sessionUser.isDbUser) {
+        if (sessionUser?.id) {
           userId = sessionUser.id;
           companyId = sessionUser.companyContext || sessionUser.companyId;
-        } else {
-          userId = req.user?.claims?.sub;
+          // If companyId not in session, fetch from database
+          if (!companyId) {
+            const dbUser = await storage.getUser(userId);
+            companyId = dbUser?.companyContext || dbUser?.companyId;
+          }
+        } else if (req.user?.claims?.sub) {
+          userId = req.user.claims.sub;
           const dbUser = await storage.getUser(userId);
           companyId = dbUser?.companyContext || dbUser?.companyId;
         }
@@ -766,11 +771,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const sessionUser = (req.session as any).user;
         let userId, companyId;
-        if (sessionUser && sessionUser.isDbUser) {
+        if (sessionUser?.id) {
           userId = sessionUser.id;
           companyId = sessionUser.companyContext || sessionUser.companyId;
-        } else {
-          userId = req.user?.claims?.sub;
+          // If companyId not in session, fetch from database
+          if (!companyId) {
+            const dbUser = await storage.getUser(userId);
+            companyId = dbUser?.companyContext || dbUser?.companyId;
+          }
+        } else if (req.user?.claims?.sub) {
+          userId = req.user.claims.sub;
           const dbUser = await storage.getUser(userId);
           companyId = dbUser?.companyContext || dbUser?.companyId;
         }
@@ -806,10 +816,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const sessionUser = (req.session as any).user;
         let userId;
-        if (sessionUser && sessionUser.isDbUser) {
+        if (sessionUser?.id) {
           userId = sessionUser.id;
-        } else {
-          userId = req.user?.claims?.sub;
+        } else if (req.user?.claims?.sub) {
+          userId = req.user.claims.sub;
         }
 
         if (!userId) {
